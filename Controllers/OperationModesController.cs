@@ -259,7 +259,6 @@ namespace Integracao.ControlID.PoC.Controllers
         private async Task PrepareViewModelAsync(OperationModesViewModel model, bool populateRemoteState = true)
         {
             ApplyRuntimeDefaults(model);
-            PopulateStaticProfiles(model);
 
             if (!_apiService.TryGetConnection(out _, out _))
             {
@@ -273,6 +272,7 @@ namespace Integracao.ControlID.PoC.Controllers
                 model.CurrentModeEvidence = "Sem equipamento conectado.";
                 model.Readiness = BuildReadiness(Array.Empty<MonitorEventLocal>());
                 model.RecentSignals = Array.Empty<OperationModeSignalViewModel>();
+                PopulateStaticProfiles(model);
                 return;
             }
 

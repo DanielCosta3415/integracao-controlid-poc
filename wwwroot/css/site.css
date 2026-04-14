@@ -1379,6 +1379,14 @@ pre,
   gap: 1rem;
 }
 
+/* PERFORMANCE: catálogos longos e páginas técnicas extensas podem adiar a
+   pintura das seções fora da dobra sem alterar o fluxo visual do topo. */
+.official-api-section,
+.product-specific-section {
+  content-visibility: auto;
+  contain-intrinsic-size: 720px;
+}
+
 .official-api-section__header {
   display: flex;
   align-items: flex-start;

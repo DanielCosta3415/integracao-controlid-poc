@@ -27,38 +27,38 @@ namespace Integracao.ControlID.PoC.Controllers
 
         public IActionResult Index(string? category = null, string? method = null, string? direction = null, string? session = null)
         {
-            var endpoints = _catalogService.GetAll();
+            var allEndpoints = _catalogService.GetAll();
+            IEnumerable<OfficialApiEndpointDefinition> filteredEndpoints = allEndpoints;
 
             if (!string.IsNullOrWhiteSpace(category))
             {
-                endpoints = endpoints
-                    .Where(endpoint => endpoint.Category.Equals(category, StringComparison.OrdinalIgnoreCase))
-                    .ToList();
+                filteredEndpoints = filteredEndpoints
+                    .Where(endpoint => endpoint.Category.Equals(category, StringComparison.OrdinalIgnoreCase));
             }
 
             if (!string.IsNullOrWhiteSpace(method))
             {
-                endpoints = endpoints
-                    .Where(endpoint => endpoint.Method.Equals(method, StringComparison.OrdinalIgnoreCase))
-                    .ToList();
+                filteredEndpoints = filteredEndpoints
+                    .Where(endpoint => endpoint.Method.Equals(method, StringComparison.OrdinalIgnoreCase));
             }
 
             if (!string.IsNullOrWhiteSpace(direction))
             {
-                endpoints = endpoints
-                    .Where(endpoint => endpoint.Direction.Equals(direction, StringComparison.OrdinalIgnoreCase))
-                    .ToList();
+                filteredEndpoints = filteredEndpoints
+                    .Where(endpoint => endpoint.Direction.Equals(direction, StringComparison.OrdinalIgnoreCase));
             }
 
             if (!string.IsNullOrWhiteSpace(session))
             {
-                endpoints = session switch
+                filteredEndpoints = session switch
                 {
-                    "required" => endpoints.Where(endpoint => endpoint.RequiresSession).ToList(),
-                    "optional" => endpoints.Where(endpoint => !endpoint.RequiresSession).ToList(),
-                    _ => endpoints
+                    "required" => filteredEndpoints.Where(endpoint => endpoint.RequiresSession),
+                    "optional" => filteredEndpoints.Where(endpoint => !endpoint.RequiresSession),
+                    _ => filteredEndpoints
                 };
             }
+
+            var endpoints = filteredEndpoints.ToList();
 
             var model = new OfficialApiIndexViewModel
             {
@@ -67,8 +67,8 @@ namespace Integracao.ControlID.PoC.Controllers
                 SelectedDirection = direction ?? string.Empty,
                 SelectedSessionFilter = session ?? string.Empty,
                 Categories = _catalogService.GetCategories(),
-                Methods = _catalogService.GetAll().Select(endpoint => endpoint.Method).Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(value => value).ToList(),
-                Directions = _catalogService.GetAll().Select(endpoint => endpoint.Direction).Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(value => value).ToList(),
+                Methods = _catalogService.GetMethods(),
+                Directions = _catalogService.GetDirections(),
                 Endpoints = endpoints
             };
 

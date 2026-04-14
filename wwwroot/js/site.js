@@ -14,6 +14,7 @@
   };
 
   const SEARCH_DEBOUNCE_MS = 140;
+  const SEARCH_CACHE_LIMIT = 40;
   const MAX_SEARCH_RESULTS = 8;
 
   const readStore = (key, fallback) => {
@@ -85,7 +86,10 @@
   const favoriteSet = new Set(readStore(storageKeys.favorites, []));
   let recentKeys = readStore(storageKeys.recent, []);
   const groupState = readStore(storageKeys.groups, {});
+  const searchResultCache = new Map();
   let lastSearchRenderToken = "";
+  let defaultSearchToken = "";
+  let defaultSearchItems = [];
 
   const favoriteContainer = document.getElementById("favoriteModules");
   const recentContainer = document.getElementById("recentModules");
@@ -264,11 +268,49 @@
     });
   };
 
+  const setCachedSearchItems = (term, items) => {
+    if (searchResultCache.has(term)) {
+      searchResultCache.delete(term);
+    }
+
+    searchResultCache.set(term, items);
+
+    if (searchResultCache.size > SEARCH_CACHE_LIMIT) {
+      const oldestKey = searchResultCache.keys().next().value;
+      if (oldestKey) {
+        searchResultCache.delete(oldestKey);
+      }
+    }
+  };
+
   const buildDefaultSearchItems = () => {
-    return dedupeByKey([
+    const token = `${Array.from(favoriteSet).sort().join("|")}::${recentKeys.join("|")}`;
+    if (token === defaultSearchToken) {
+      return defaultSearchItems;
+    }
+
+    defaultSearchToken = token;
+    defaultSearchItems = dedupeByKey([
       ...Array.from(favoriteSet).map((key) => linkMap.get(key)),
       ...recentKeys.map((key) => linkMap.get(key))
     ].filter(Boolean)).slice(0, MAX_SEARCH_RESULTS);
+    return defaultSearchItems;
+  };
+
+  const resolveSearchItems = (term) => {
+    if (!term) {
+      return buildDefaultSearchItems();
+    }
+
+    if (searchResultCache.has(term)) {
+      return searchResultCache.get(term);
+    }
+
+    // PERFORMANCE: os módulos são estáticos durante a sessão; um cache pequeno
+    // evita repetir filtros de string para buscas digitadas com frequência.
+    const items = modules.filter((item) => item.searchIndex.includes(term)).slice(0, MAX_SEARCH_RESULTS);
+    setCachedSearchItems(term, items);
+    return items;
   };
 
   const renderCollections = () => {
@@ -298,9 +340,7 @@
     }
 
     const term = (query || "").trim().toLowerCase();
-    const items = term
-      ? modules.filter((item) => item.searchIndex.includes(term)).slice(0, MAX_SEARCH_RESULTS)
-      : buildDefaultSearchItems();
+    const items = resolveSearchItems(term);
     const token = `${term}|${items.map((item) => item.key).join("|")}`;
 
     if (!force && token === lastSearchRenderToken && !searchResults.hidden) {

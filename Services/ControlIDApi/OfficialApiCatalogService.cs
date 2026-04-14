@@ -116,7 +116,42 @@ namespace Integracao.ControlID.PoC.Services.ControlIDApi
             new() { Id = "has-audio-access-messages", Category = "Audio iDFace", Title = "Verificar Audios de Acesso", Method = "POST", Path = "/has_audio_access_messages.fcgi", BodyKind = "none", RequiresSession = true, Summary = "Consulta quais eventos de identificacao possuem audio customizado no iDFace.", DocumentationUrl = "https://www.controlid.com.br/docs/access-api-en/particularities-of-the-products/access-audio-messages-idface/" }
         ];
 
+        // PERFORMANCE: o catálogo oficial é estático dentro da PoC. Mantemos a
+        // lista normalizada e ordenada em cache para evitar reprocessar dezenas
+        // de endpoints a cada request de índice, filtro ou detalhe.
+        private static readonly IReadOnlyList<OfficialApiEndpointDefinition> NormalizedEndpoints = BuildNormalizedEndpoints();
+        private static readonly IReadOnlyList<string> Categories = BuildDistinctValues(endpoint => endpoint.Category);
+        private static readonly IReadOnlyList<string> Methods = BuildDistinctValues(endpoint => endpoint.Method);
+        private static readonly IReadOnlyList<string> Directions = BuildDistinctValues(endpoint => endpoint.Direction);
+        private static readonly IReadOnlyDictionary<string, OfficialApiEndpointDefinition> EndpointsById = NormalizedEndpoints
+            .ToDictionary(endpoint => endpoint.Id, StringComparer.OrdinalIgnoreCase);
+
         public List<OfficialApiEndpointDefinition> GetAll()
+        {
+            return [.. NormalizedEndpoints];
+        }
+
+        public List<string> GetCategories()
+        {
+            return [.. Categories];
+        }
+
+        public List<string> GetMethods()
+        {
+            return [.. Methods];
+        }
+
+        public List<string> GetDirections()
+        {
+            return [.. Directions];
+        }
+
+        public OfficialApiEndpointDefinition? GetById(string id)
+        {
+            return EndpointsById.TryGetValue(id, out var endpoint) ? endpoint : null;
+        }
+
+        private static IReadOnlyList<OfficialApiEndpointDefinition> BuildNormalizedEndpoints()
         {
             return Endpoints
                 .Concat(AdditionalEndpoints)
@@ -126,24 +161,14 @@ namespace Integracao.ControlID.PoC.Services.ControlIDApi
                 .ToList();
         }
 
-        public List<string> GetCategories()
+        private static IReadOnlyList<string> BuildDistinctValues(Func<OfficialApiEndpointDefinition, string> selector)
         {
-            return Endpoints
-                .Concat(AdditionalEndpoints)
-                .Select(NormalizeEndpointDefinition)
-                .Select(endpoint => endpoint.Category)
+            return NormalizedEndpoints
+                .Select(selector)
+                .Where(value => !string.IsNullOrWhiteSpace(value))
                 .Distinct(StringComparer.OrdinalIgnoreCase)
-                .OrderBy(category => category)
+                .OrderBy(value => value)
                 .ToList();
-        }
-
-        public OfficialApiEndpointDefinition? GetById(string id)
-        {
-            var endpoint = Endpoints
-                .Concat(AdditionalEndpoints)
-                .FirstOrDefault(item => item.Id.Equals(id, StringComparison.OrdinalIgnoreCase));
-
-            return endpoint == null ? null : NormalizeEndpointDefinition(endpoint);
         }
 
         private static OfficialApiEndpointDefinition NormalizeEndpointDefinition(OfficialApiEndpointDefinition endpoint)

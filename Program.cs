@@ -12,6 +12,7 @@ using Integracao.ControlID.PoC.Services.OperationModes;
 using Integracao.ControlID.PoC.Services.ProductSpecific;
 using Integracao.ControlID.PoC.Services.Security;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,6 +20,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using Serilog;
 using System;
+using System.IO.Compression;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -33,6 +35,19 @@ builder.Services.AddDbContext<IntegracaoControlIDContext>(options =>
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddResponseCompression(options =>
+{
+    options.EnableForHttps = true;
+    options.Providers.Add<BrotliCompressionProvider>();
+    options.Providers.Add<GzipCompressionProvider>();
+    options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
+    [
+        "application/json",
+        "image/svg+xml"
+    ]);
+});
+builder.Services.Configure<BrotliCompressionProviderOptions>(options => options.Level = CompressionLevel.Fastest);
+builder.Services.Configure<GzipCompressionProviderOptions>(options => options.Level = CompressionLevel.Fastest);
 
 // Sessão ASP.NET Core (30 min timeout, seguro)
 builder.Services.AddSession(options =>
@@ -109,6 +124,7 @@ app.UseMiddleware<RequestLoggingMiddleware>();
 app.UseMiddleware<SecurityHeadersMiddleware>();
 
 // Ativa arquivos estáticos e roteamento padrão
+app.UseResponseCompression();
 app.UseStaticFiles();
 app.UseRouting();
 
