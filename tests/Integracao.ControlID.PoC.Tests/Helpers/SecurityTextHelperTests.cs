@@ -1,4 +1,4 @@
-using System.Net.Http;
+﻿using System.Net.Http;
 using Integracao.ControlID.PoC.Helpers;
 using Integracao.ControlID.PoC.Models.ControlIDApi;
 
@@ -36,5 +36,13 @@ public class SecurityTextHelperTests
         var masked = SecurityTextHelper.MaskSensitiveValue("0123456789abcdef", prefix: 3, suffix: 2);
 
         Assert.Equal("012...ef", masked);
+    }
+
+    [Fact]
+    public void NormalizeForDisplay_RepairsCommonEncodingArtifacts()
+    {
+        var message = SecurityTextHelper.NormalizeForDisplay("Ã‰ necessÃ¡rio conectar-se e autenticar com um equipamento Control iD.");
+
+        Assert.Equal("É necessário conectar-se e autenticar com um equipamento Control iD.", message);
     }
 }

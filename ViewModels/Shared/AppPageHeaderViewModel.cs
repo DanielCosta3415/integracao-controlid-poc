@@ -17,6 +17,7 @@ namespace Integracao.ControlID.PoC.ViewModels.Shared
         public string Label { get; set; } = string.Empty;
         public string Href { get; set; } = string.Empty;
         public string ButtonClass { get; set; } = "btn btn-outline-secondary";
+        public string? AriaLabel { get; set; }
         public bool NewTab { get; set; }
     }
 }

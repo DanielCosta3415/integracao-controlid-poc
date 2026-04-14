@@ -397,6 +397,12 @@
     return;
   }
 
+  const updateTopMenuLayoutState = () => {
+    // UX: reservamos espaco real para o megamenu aberto no header para que o
+    // painel nao pareca uma camada solta cobrindo a pagina inteira.
+    body.classList.toggle("app-has-open-topnav", topMenus.some((menu) => menu.open));
+  };
+
   // O menu superior usa <details> nativo; aqui mantemos a camada acessivel e
   // o comportamento exclusivo sem recalcular a arvore de navegacao inteira.
   const syncMenuState = (menu) => {
@@ -409,6 +415,8 @@
     if (panel) {
       panel.setAttribute("aria-hidden", String(!menu.open));
     }
+
+    updateTopMenuLayoutState();
   };
 
   const closeTopMenus = (exceptMenu = null) => {

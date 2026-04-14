@@ -11,17 +11,26 @@
         BadgeTone = "neutral",
         Actions = new[]
         {
-            new PageHeaderActionViewModel { Label = "Novo cartão", Href = Url.Action("Create")!, ButtonClass = "btn btn-primary" }
+            new PageHeaderActionViewModel
+            {
+                Label = "Novo cartão",
+                Href = Url.Action("Create")!,
+                ButtonClass = "btn btn-primary",
+                AriaLabel = "Cadastrar um novo cartão RFID"
+            }
         }
     };
+    var errorMessage = SecurityTextHelper.NormalizeForDisplay(Model.ErrorMessage, string.Empty);
 }
 
 <div class="container mt-5 app-stack">
     <partial name="_AppPageHeader" model="header" />
 
-    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    @if (!string.IsNullOrEmpty(errorMessage))
     {
-        <div class="alert alert-danger">@Model.ErrorMessage</div>
+        <div class="alert alert-danger" role="status" aria-live="assertive" aria-atomic="true">
+            @errorMessage
+        </div>
     }
 
     <section class="app-surface-card app-page-section">
@@ -33,7 +42,8 @@
             <span class="app-chip app-chip--neutral">Base oficial</span>
         </div>
 
-        <table class="table table-borderless table-hover align-middle">
+        <table class="table table-borderless table-hover align-middle" aria-label="Tabela de cartões RFID cadastrados">
+            <caption class="visually-hidden">Lista de cartões RFID com status, validade e ações disponíveis.</caption>
             <thead>
                 <tr>
                     <th>ID</th>
@@ -72,9 +82,25 @@
                             </td>
                             <td>@(card.CreatedAt?.ToString("dd/MM/yyyy HH:mm") ?? "-")</td>
                             <td>
-                                <a asp-action="Details" asp-route-id="@card.Id" class="btn btn-sm btn-info">Detalhes</a>
-                                <a asp-action="Edit" asp-route-id="@card.Id" class="btn btn-sm btn-primary">Editar</a>
-                                <a asp-action="Delete" asp-route-id="@card.Id" class="btn btn-sm btn-danger" onclick="return confirm('Deseja excluir este cartão?');">Excluir</a>
+                                <a asp-action="Details"
+                                   asp-route-id="@card.Id"
+                                   class="btn btn-sm btn-info"
+                                   aria-label="Ver detalhes do cartão RFID @card.Value">
+                                    Detalhes
+                                </a>
+                                <a asp-action="Edit"
+                                   asp-route-id="@card.Id"
+                                   class="btn btn-sm btn-primary"
+                                   aria-label="Editar o cartão RFID @card.Value">
+                                    Editar
+                                </a>
+                                <a asp-action="Delete"
+                                   asp-route-id="@card.Id"
+                                   class="btn btn-sm btn-danger"
+                                   aria-label="Excluir o cartão RFID @card.Value"
+                                   onclick="return confirm('Deseja excluir este cartão?');">
+                                    Excluir
+                                </a>
                             </td>
                         </tr>
                     }

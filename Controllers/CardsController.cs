@@ -9,6 +9,11 @@ namespace Integracao.ControlID.PoC.Controllers
 {
     public class CardsController : Controller
     {
+        private const string ConnectionRequiredMessage = "É necessário conectar-se e autenticar com um equipamento Control iD.";
+        private const string CardsQueryErrorPrefix = "Erro ao consultar cartões";
+        private const string CreateCardErrorPrefix = "Erro ao criar cartão";
+        private const string UpdateCardErrorPrefix = "Erro ao atualizar cartão";
+        private const string DeleteCardErrorPrefix = "Erro ao excluir cartão";
         private readonly OfficialControlIdApiService _officialApi;
         private readonly ILogger<CardsController> _logger;
 
@@ -24,7 +29,7 @@ namespace Integracao.ControlID.PoC.Controllers
 
             if (!_officialApi.TryGetConnection(out _, out _))
             {
-                model.ErrorMessage = "Ã‰ necessÃ¡rio conectar-se e autenticar com um equipamento Control iD.";
+                model.ErrorMessage = ConnectionRequiredMessage;
                 return View(model);
             }
 
@@ -37,12 +42,12 @@ namespace Integracao.ControlID.PoC.Controllers
                     .ToList();
 
                 if (model.Cards.Count == 0)
-                    model.ErrorMessage = "Nenhum cartÃ£o encontrado.";
+                    model.ErrorMessage = "Nenhum cartão encontrado.";
             }
             catch (Exception ex)
             {
-                model.ErrorMessage = SecurityTextHelper.BuildSafeUserMessage("Erro ao consultar cartÃµes", ex);
-                _logger.LogError(ex, "Erro ao consultar cartÃµes.");
+                model.ErrorMessage = SecurityTextHelper.BuildSafeUserMessage(CardsQueryErrorPrefix, ex);
+                _logger.LogError(ex, "Erro ao consultar cartões.");
             }
 
             return View(model);
@@ -64,7 +69,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Erro ao consultar detalhes do cartÃ£o {CardId}.", id.Value);
+                _logger.LogError(ex, "Erro ao consultar detalhes do cartão {CardId}.", id.Value);
             }
 
             return NotFound();
@@ -84,7 +89,7 @@ namespace Integracao.ControlID.PoC.Controllers
 
             if (!_officialApi.TryGetConnection(out _, out _))
             {
-                ModelState.AddModelError(string.Empty, "Ã‰ necessÃ¡rio conectar-se e autenticar com um equipamento Control iD.");
+                ModelState.AddModelError(string.Empty, ConnectionRequiredMessage);
                 return View(model);
             }
 
@@ -99,18 +104,18 @@ namespace Integracao.ControlID.PoC.Controllers
 
                 if (!result.Success)
                 {
-                    ModelState.AddModelError(string.Empty, BuildErrorMessage("Erro ao criar cartÃ£o", result));
+                    ModelState.AddModelError(string.Empty, BuildErrorMessage(CreateCardErrorPrefix, result));
                     return View(model);
                 }
 
-                TempData["StatusMessage"] = "CartÃ£o criado com sucesso!";
+                TempData["StatusMessage"] = "Cartão criado com sucesso!";
                 TempData["StatusType"] = "success";
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
-                ModelState.AddModelError(string.Empty, SecurityTextHelper.BuildSafeUserMessage("Erro ao criar cartÃ£o", ex));
-                _logger.LogError(ex, "Erro ao criar cartÃ£o.");
+                ModelState.AddModelError(string.Empty, SecurityTextHelper.BuildSafeUserMessage(CreateCardErrorPrefix, ex));
+                _logger.LogError(ex, "Erro ao criar cartão.");
                 return View(model);
             }
         }
@@ -131,7 +136,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Erro ao buscar cartÃ£o {CardId} para ediÃ§Ã£o.", id.Value);
+                _logger.LogError(ex, "Erro ao buscar cartão {CardId} para edição.", id.Value);
             }
 
             return NotFound();
@@ -149,7 +154,7 @@ namespace Integracao.ControlID.PoC.Controllers
 
             if (!_officialApi.TryGetConnection(out _, out _))
             {
-                ModelState.AddModelError(string.Empty, "Ã‰ necessÃ¡rio conectar-se e autenticar com um equipamento Control iD.");
+                ModelState.AddModelError(string.Empty, ConnectionRequiredMessage);
                 return View(model);
             }
 
@@ -165,18 +170,18 @@ namespace Integracao.ControlID.PoC.Controllers
 
                 if (!result.Success)
                 {
-                    ModelState.AddModelError(string.Empty, BuildErrorMessage("Erro ao atualizar cartÃ£o", result));
+                    ModelState.AddModelError(string.Empty, BuildErrorMessage(UpdateCardErrorPrefix, result));
                     return View(model);
                 }
 
-                TempData["StatusMessage"] = "CartÃ£o atualizado com sucesso!";
+                TempData["StatusMessage"] = "Cartão atualizado com sucesso!";
                 TempData["StatusType"] = "success";
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
-                ModelState.AddModelError(string.Empty, SecurityTextHelper.BuildSafeUserMessage("Erro ao atualizar cartÃ£o", ex));
-                _logger.LogError(ex, "Erro ao atualizar cartÃ£o {CardId}.", id);
+                ModelState.AddModelError(string.Empty, SecurityTextHelper.BuildSafeUserMessage(UpdateCardErrorPrefix, ex));
+                _logger.LogError(ex, "Erro ao atualizar cartão {CardId}.", id);
                 return View(model);
             }
         }
@@ -204,7 +209,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Erro ao buscar cartÃ£o {CardId} para exclusÃ£o.", id.Value);
+                _logger.LogError(ex, "Erro ao buscar cartão {CardId} para exclusão.", id.Value);
             }
 
             return NotFound();
@@ -216,7 +221,7 @@ namespace Integracao.ControlID.PoC.Controllers
         {
             if (!_officialApi.TryGetConnection(out _, out _))
             {
-                TempData["StatusMessage"] = "Ã‰ necessÃ¡rio conectar-se e autenticar com um equipamento Control iD.";
+                TempData["StatusMessage"] = ConnectionRequiredMessage;
                 TempData["StatusType"] = "danger";
                 return RedirectToAction(nameof(Index));
             }
@@ -230,15 +235,15 @@ namespace Integracao.ControlID.PoC.Controllers
                 });
 
                 TempData["StatusMessage"] = result.Success
-                    ? "CartÃ£o excluÃ­do com sucesso!"
-                    : BuildErrorMessage("Erro ao excluir cartÃ£o", result);
+                    ? "Cartão excluído com sucesso!"
+                    : BuildErrorMessage(DeleteCardErrorPrefix, result);
                 TempData["StatusType"] = result.Success ? "success" : "danger";
             }
             catch (Exception ex)
             {
-                TempData["StatusMessage"] = SecurityTextHelper.BuildSafeUserMessage("Erro ao excluir cartÃ£o", ex);
+                TempData["StatusMessage"] = SecurityTextHelper.BuildSafeUserMessage(DeleteCardErrorPrefix, ex);
                 TempData["StatusType"] = "danger";
-                _logger.LogError(ex, "Erro ao excluir cartÃ£o {CardId}.", id);
+                _logger.LogError(ex, "Erro ao excluir cartão {CardId}.", id);
             }
 
             return RedirectToAction(nameof(Index));
@@ -252,7 +257,7 @@ namespace Integracao.ControlID.PoC.Controllers
 
             var (result, document) = await _officialApi.InvokeJsonAsync("load-objects", payload);
             if (!result.Success)
-                throw new InvalidOperationException(BuildErrorMessage("Erro ao consultar cartÃµes", result));
+                throw new InvalidOperationException(BuildErrorMessage(CardsQueryErrorPrefix, result));
 
             if (document == null)
                 return [];

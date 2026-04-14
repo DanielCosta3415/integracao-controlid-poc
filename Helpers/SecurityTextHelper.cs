@@ -8,6 +8,37 @@ namespace Integracao.ControlID.PoC.Helpers
     public static class SecurityTextHelper
     {
         private const int MaxPublicMessageLength = 240;
+        private static readonly (string Source, string Target)[] CommonEncodingArtifacts =
+        [
+            ("Ã¡", "á"),
+            ("Ã¢", "â"),
+            ("Ã£", "ã"),
+            ("Ã ", "à"),
+            ("Ã©", "é"),
+            ("Ãª", "ê"),
+            ("Ã­", "í"),
+            ("Ã³", "ó"),
+            ("Ã´", "ô"),
+            ("Ãµ", "õ"),
+            ("Ãº", "ú"),
+            ("Ã§", "ç"),
+            ("Ã", "Á"),
+            ("Ã‰", "É"),
+            ("Ã“", "Ó"),
+            ("Ãš", "Ú"),
+            ("Ã‡", "Ç"),
+            ("Ã­", "í"),
+            ("Ãœ", "Ü"),
+            ("â€œ", "\""),
+            ("â€", "\""),
+            ("â€˜", "'"),
+            ("â€™", "'"),
+            ("â€“", "–"),
+            ("â€”", "—"),
+            ("Âº", "º"),
+            ("Âª", "ª"),
+            ("Â", string.Empty)
+        ];
 
         public static string NormalizeForDisplay(string? value, string fallback = "Informação indisponível.")
         {
@@ -16,8 +47,9 @@ namespace Integracao.ControlID.PoC.Helpers
                 return fallback;
             }
 
-            var builder = new StringBuilder(value.Length);
-            foreach (var character in value)
+            var sanitizedInput = RepairCommonEncodingArtifacts(value);
+            var builder = new StringBuilder(sanitizedInput.Length);
+            foreach (var character in sanitizedInput)
             {
                 if (!char.IsControl(character) || character == ' ')
                 {
@@ -34,6 +66,20 @@ namespace Integracao.ControlID.PoC.Helpers
             return normalized.Length > MaxPublicMessageLength
                 ? normalized[..(MaxPublicMessageLength - 3)] + "..."
                 : normalized;
+        }
+
+        private static string RepairCommonEncodingArtifacts(string value)
+        {
+            // DOCUMENTAÇÃO: a PoC ainda possui textos antigos que foram salvos com
+            // encoding incorreto. Corrigir aqui evita que a falha continue
+            // escapando para a interface antes da normalização completa do legado.
+            var normalized = value;
+            foreach (var (source, target) in CommonEncodingArtifacts)
+            {
+                normalized = normalized.Replace(source, target, StringComparison.Ordinal);
+            }
+
+            return normalized;
         }
 
         public static string BuildSafeUserMessage(string context, Exception? exception)

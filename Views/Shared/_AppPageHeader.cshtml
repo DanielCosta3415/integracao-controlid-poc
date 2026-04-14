@@ -26,13 +26,20 @@
         <div class="app-page-header__actions">
             @foreach (var action in Model.Actions)
             {
+                var ariaLabel = action.AriaLabel ?? $"{action.Label} na página {Model.Title}";
                 if (action.NewTab)
                 {
-                    <a href="@action.Href" class="@action.ButtonClass" target="_blank" rel="noopener noreferrer">@action.Label</a>
+                    <a href="@action.Href"
+                       class="@action.ButtonClass"
+                       target="_blank"
+                       rel="noopener noreferrer"
+                       aria-label="@ariaLabel">
+                        @action.Label
+                    </a>
                 }
                 else
                 {
-                    <a href="@action.Href" class="@action.ButtonClass">@action.Label</a>
+                    <a href="@action.Href" class="@action.ButtonClass" aria-label="@ariaLabel">@action.Label</a>
                 }
             }
         </div>
