@@ -1,9 +1,16 @@
 ﻿# Services/ControlIDApi
 
-This folder now keeps only the official layer used by the PoC:
+Camada oficial de integracao da PoC com a Access API da Control iD.
 
-- `OfficialApiCatalogService`
-- `OfficialApiInvokerService`
-- `OfficialControlIdApiService`
+Servicos principais:
 
-The legacy wrappers from the old integration model were removed after the controllers migrated to the official Control iD API, avoiding architectural duplication and dead flows.
+- `OfficialApiCatalogService`: catalogo local dos endpoints oficiais usados pela PoC.
+- `OfficialApiInvokerService`: invocacao HTTP oficial com sanitizacao, timeout configuravel e logs estruturados.
+- `OfficialControlIdApiService`: orquestracao de chamadas usando o contexto atual da sessao da PoC.
+- `OfficialApiContractDocumentationService`: composicao da documentacao visual de contrato mostrada no modulo `OfficialApi`.
+
+Pontos operacionais importantes:
+
+- o timeout das chamadas oficiais usa `ControlIDApi__ConnectionTimeoutSeconds`;
+- erros de validacao, timeout e falha inesperada sao registrados em log;
+- a camada visual de `OfficialApi` usa esses servicos para documentar endpoint, query, body e exemplos.

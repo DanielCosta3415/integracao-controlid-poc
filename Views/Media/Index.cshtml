@@ -73,7 +73,11 @@
                                 @if (photo.HasImage && !string.IsNullOrEmpty(photo.Base64Image))
                                 {
                                     <span class="app-media-preview app-media-preview--sm">
-                                        <img src="data:image/@photo.Format;base64,@photo.Base64Image" alt="Foto do usuário @photo.UserId" />
+                                        <img src="data:image/@photo.Format;base64,@photo.Base64Image"
+                                             alt="Foto do usuário @photo.UserId"
+                                             loading="lazy"
+                                             decoding="async"
+                                             fetchpriority="low" />
                                     </span>
                                 }
                                 else

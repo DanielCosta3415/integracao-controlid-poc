@@ -7,16 +7,10 @@
     <h2 class="text-danger">Ocorreu um erro</h2>
     <div class="alert alert-danger">
         <p><strong>@Model.Message</strong></p>
-        @if (!string.IsNullOrEmpty(Model.StackTrace))
-        {
-            <details>
-                <summary>Detalhes técnicos</summary>
-                <pre>@Model.StackTrace</pre>
-            </details>
-        }
+        <p class="mb-0">Os detalhes técnicos completos foram preservados apenas nos logs do servidor para evitar exposição de informações sensíveis.</p>
         @if (!string.IsNullOrEmpty(Model.RequestId))
         {
-            <p><small>ID da Requisição: <code>@Model.RequestId</code></small></p>
+            <p class="mt-3"><small>ID da Requisição: <code>@Model.RequestId</code></small></p>
         }
     </div>
     <a href="@Url.Action("Index", "Home")" class="btn btn-primary">Voltar para a página inicial</a>

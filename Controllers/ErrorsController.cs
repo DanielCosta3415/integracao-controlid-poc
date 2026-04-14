@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using Integracao.ControlID.PoC.Helpers;
 using Integracao.ControlID.PoC.ViewModels.Errors;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
@@ -15,24 +16,19 @@ namespace Integracao.ControlID.PoC.Controllers
             _logger = logger;
         }
 
-        // GET: /Errors/General
         [Route("Errors/General")]
         public IActionResult General()
         {
             var errorViewModel = CreateErrorViewModelFromException();
             if (!string.IsNullOrEmpty(errorViewModel.Message))
             {
-                _logger.LogError("{Message}\nStackTrace: {StackTrace}\nPath: {Path}\nRequestId: {RequestId}",
-                    errorViewModel.Message,
-                    errorViewModel.StackTrace,
-                    errorViewModel.Path,
-                    errorViewModel.RequestId);
+                _logger.LogError("Erro não tratado em {Path} (RequestId: {RequestId})", errorViewModel.Path, errorViewModel.RequestId);
             }
+
             Response.StatusCode = 500;
             return View("Error", errorViewModel);
         }
 
-        // GET: /Errors/NotFound
         [Route("Errors/NotFound")]
         public IActionResult NotFoundPage()
         {
@@ -49,24 +45,19 @@ namespace Integracao.ControlID.PoC.Controllers
             return View("NotFound", errorViewModel);
         }
 
-        // GET: /Errors/ServerError
         [Route("Errors/ServerError")]
         public IActionResult ServerError()
         {
             var errorViewModel = CreateErrorViewModelFromException();
             if (!string.IsNullOrEmpty(errorViewModel.Message))
             {
-                _logger.LogError("{Message}\nStackTrace: {StackTrace}\nPath: {Path}\nRequestId: {RequestId}",
-                    errorViewModel.Message,
-                    errorViewModel.StackTrace,
-                    errorViewModel.Path,
-                    errorViewModel.RequestId);
+                _logger.LogError("Erro de servidor em {Path} (RequestId: {RequestId})", errorViewModel.Path, errorViewModel.RequestId);
             }
+
             Response.StatusCode = 500;
             return View("ServerError", errorViewModel);
         }
 
-        // GET: /Errors/AccessDenied
         [Route("Errors/AccessDenied")]
         public IActionResult AccessDenied()
         {
@@ -83,9 +74,6 @@ namespace Integracao.ControlID.PoC.Controllers
             return View("AccessDenied", errorViewModel);
         }
 
-        /// <summary>
-        /// Helper para criar ErrorViewModel a partir do contexto da exceção.
-        /// </summary>
         private ErrorViewModel CreateErrorViewModelFromException()
         {
             var exceptionFeature = HttpContext.Features.Get<IExceptionHandlerPathFeature>();
@@ -97,15 +85,12 @@ namespace Integracao.ControlID.PoC.Controllers
             if (exceptionFeature != null)
             {
                 errorViewModel.Path = exceptionFeature.Path;
-                errorViewModel.Message = exceptionFeature.Error.Message;
-
-                // Em produção, por padrão, você não mostra StackTrace:
-#if DEBUG
-                errorViewModel.StackTrace = exceptionFeature.Error.StackTrace ?? string.Empty;
-#else
+                // SECURITY: a interface expõe apenas uma mensagem segura e o request id.
+                // Stack trace e detalhes internos permanecem restritos aos logs do servidor.
+                errorViewModel.Message = SecurityTextHelper.BuildSafeUserMessage("Erro interno na aplicação", exceptionFeature.Error);
                 errorViewModel.StackTrace = string.Empty;
-#endif
             }
+
             return errorViewModel;
         }
     }

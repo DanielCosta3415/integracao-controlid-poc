@@ -1,7 +1,8 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using Integracao.ControlID.PoC.Models.ControlIDApi;
 using Integracao.ControlID.PoC.Services.ControlIDApi;
 using Integracao.ControlID.PoC.ViewModels.BiometricTemplates;
+using Integracao.ControlID.PoC.Helpers;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Integracao.ControlID.PoC.Controllers
@@ -23,7 +24,7 @@ namespace Integracao.ControlID.PoC.Controllers
 
             if (!_officialApi.TryGetConnection(out _, out _))
             {
-                model.ErrorMessage = "É necessário conectar-se e autenticar com um equipamento Control iD.";
+                model.ErrorMessage = "Ã‰ necessÃ¡rio conectar-se e autenticar com um equipamento Control iD.";
                 return View(model);
             }
 
@@ -36,12 +37,12 @@ namespace Integracao.ControlID.PoC.Controllers
                     .ToList();
 
                 if (model.Templates.Count == 0)
-                    model.ErrorMessage = "Nenhum template biométrico encontrado.";
+                    model.ErrorMessage = "Nenhum template biomÃ©trico encontrado.";
             }
             catch (Exception ex)
             {
-                model.ErrorMessage = $"Erro ao consultar templates biométricos: {ex.Message}";
-                _logger.LogError(ex, "Erro ao consultar templates biométricos.");
+                model.ErrorMessage = SecurityTextHelper.BuildSafeUserMessage("Erro ao consultar templates biomÃ©tricos", ex);
+                _logger.LogError(ex, "Erro ao consultar templates biomÃ©tricos.");
             }
 
             return View(model);
@@ -63,7 +64,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Erro ao consultar detalhes do template biométrico {TemplateId}.", id.Value);
+                _logger.LogError(ex, "Erro ao consultar detalhes do template biomÃ©trico {TemplateId}.", id.Value);
             }
 
             return NotFound();
@@ -83,7 +84,7 @@ namespace Integracao.ControlID.PoC.Controllers
 
             if (!_officialApi.TryGetConnection(out _, out _))
             {
-                ModelState.AddModelError(string.Empty, "É necessário conectar-se e autenticar com um equipamento Control iD.");
+                ModelState.AddModelError(string.Empty, "Ã‰ necessÃ¡rio conectar-se e autenticar com um equipamento Control iD.");
                 return View(model);
             }
 
@@ -98,18 +99,18 @@ namespace Integracao.ControlID.PoC.Controllers
 
                 if (!result.Success)
                 {
-                    ModelState.AddModelError(string.Empty, BuildErrorMessage("Erro ao criar template biométrico", result));
+                    ModelState.AddModelError(string.Empty, BuildErrorMessage("Erro ao criar template biomÃ©trico", result));
                     return View(model);
                 }
 
-                TempData["StatusMessage"] = "Template biométrico criado com sucesso!";
+                TempData["StatusMessage"] = "Template biomÃ©trico criado com sucesso!";
                 TempData["StatusType"] = "success";
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
-                ModelState.AddModelError(string.Empty, $"Erro ao criar template biométrico: {ex.Message}");
-                _logger.LogError(ex, "Erro ao criar template biométrico.");
+                ModelState.AddModelError(string.Empty, SecurityTextHelper.BuildSafeUserMessage("Erro ao criar template biomÃ©trico", ex));
+                _logger.LogError(ex, "Erro ao criar template biomÃ©trico.");
                 return View(model);
             }
         }
@@ -130,7 +131,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Erro ao buscar template {TemplateId} para edição.", id.Value);
+                _logger.LogError(ex, "Erro ao buscar template {TemplateId} para ediÃ§Ã£o.", id.Value);
             }
 
             return NotFound();
@@ -148,7 +149,7 @@ namespace Integracao.ControlID.PoC.Controllers
 
             if (!_officialApi.TryGetConnection(out _, out _))
             {
-                ModelState.AddModelError(string.Empty, "É necessário conectar-se e autenticar com um equipamento Control iD.");
+                ModelState.AddModelError(string.Empty, "Ã‰ necessÃ¡rio conectar-se e autenticar com um equipamento Control iD.");
                 return View(model);
             }
 
@@ -164,18 +165,18 @@ namespace Integracao.ControlID.PoC.Controllers
 
                 if (!result.Success)
                 {
-                    ModelState.AddModelError(string.Empty, BuildErrorMessage("Erro ao atualizar template biométrico", result));
+                    ModelState.AddModelError(string.Empty, BuildErrorMessage("Erro ao atualizar template biomÃ©trico", result));
                     return View(model);
                 }
 
-                TempData["StatusMessage"] = "Template biométrico atualizado com sucesso!";
+                TempData["StatusMessage"] = "Template biomÃ©trico atualizado com sucesso!";
                 TempData["StatusType"] = "success";
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
-                ModelState.AddModelError(string.Empty, $"Erro ao atualizar template biométrico: {ex.Message}");
-                _logger.LogError(ex, "Erro ao atualizar template biométrico {TemplateId}.", id);
+                ModelState.AddModelError(string.Empty, SecurityTextHelper.BuildSafeUserMessage("Erro ao atualizar template biomÃ©trico", ex));
+                _logger.LogError(ex, "Erro ao atualizar template biomÃ©trico {TemplateId}.", id);
                 return View(model);
             }
         }
@@ -202,7 +203,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Erro ao buscar template {TemplateId} para exclusão.", id.Value);
+                _logger.LogError(ex, "Erro ao buscar template {TemplateId} para exclusÃ£o.", id.Value);
             }
 
             return NotFound();
@@ -214,7 +215,7 @@ namespace Integracao.ControlID.PoC.Controllers
         {
             if (!_officialApi.TryGetConnection(out _, out _))
             {
-                TempData["StatusMessage"] = "É necessário conectar-se e autenticar com um equipamento Control iD.";
+                TempData["StatusMessage"] = "Ã‰ necessÃ¡rio conectar-se e autenticar com um equipamento Control iD.";
                 TempData["StatusType"] = "danger";
                 return RedirectToAction(nameof(Index));
             }
@@ -228,15 +229,15 @@ namespace Integracao.ControlID.PoC.Controllers
                 });
 
                 TempData["StatusMessage"] = result.Success
-                    ? "Template biométrico excluído com sucesso!"
-                    : BuildErrorMessage("Erro ao excluir template biométrico", result);
+                    ? "Template biomÃ©trico excluÃ­do com sucesso!"
+                    : BuildErrorMessage("Erro ao excluir template biomÃ©trico", result);
                 TempData["StatusType"] = result.Success ? "success" : "danger";
             }
             catch (Exception ex)
             {
-                TempData["StatusMessage"] = $"Erro ao excluir template biométrico: {ex.Message}";
+                TempData["StatusMessage"] = SecurityTextHelper.BuildSafeUserMessage("Erro ao excluir template biomÃ©trico", ex);
                 TempData["StatusType"] = "danger";
-                _logger.LogError(ex, "Erro ao excluir template biométrico {TemplateId}.", id);
+                _logger.LogError(ex, "Erro ao excluir template biomÃ©trico {TemplateId}.", id);
             }
 
             return RedirectToAction(nameof(Index));
@@ -250,7 +251,7 @@ namespace Integracao.ControlID.PoC.Controllers
 
             var (result, document) = await _officialApi.InvokeJsonAsync("load-objects", payload);
             if (!result.Success)
-                throw new InvalidOperationException(BuildErrorMessage("Erro ao consultar templates biométricos", result));
+                throw new InvalidOperationException(BuildErrorMessage("Erro ao consultar templates biomÃ©tricos", result));
 
             if (document == null)
                 return [];
@@ -332,10 +333,10 @@ namespace Integracao.ControlID.PoC.Controllers
         private static string BuildErrorMessage(string prefix, OfficialApiInvocationResult result)
         {
             if (!string.IsNullOrWhiteSpace(result.ErrorMessage))
-                return $"{prefix}: {result.ErrorMessage}";
+                return SecurityTextHelper.BuildApiFailureMessage(result, prefix);
 
             if (!string.IsNullOrWhiteSpace(result.ResponseBody) && !result.ResponseBodyIsBase64)
-                return $"{prefix}: {result.ResponseBody}";
+                return SecurityTextHelper.BuildApiFailureMessage(result, prefix);
 
             return $"{prefix} (status: {result.StatusCode}).";
         }
@@ -441,3 +442,7 @@ namespace Integracao.ControlID.PoC.Controllers
         }
     }
 }
+
+
+
+

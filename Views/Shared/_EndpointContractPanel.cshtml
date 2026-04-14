@@ -1,0 +1,134 @@
+﻿@model Integracao.ControlID.PoC.ViewModels.OfficialApi.OfficialApiContractViewModel
+
+<section class="app-surface-card app-stack">
+    <div class="app-page-section__heading">
+        <div>
+            <strong>Guia rápido da requisição</strong>
+            <p>Resumo funcional e contrato operacional do endpoint para quem estiver integrando pela PoC.</p>
+        </div>
+        <span class="app-chip app-chip--info">Contrato visual</span>
+    </div>
+
+    <div class="entity-overview">
+        <div class="entity-overview__item"><span>O que faz</span><strong>@Model.FunctionalSummary</strong></div>
+        <div class="entity-overview__item"><span>Como funciona</span><strong>@Model.InteractionSummary</strong></div>
+        <div class="entity-overview__item"><span>Como preencher</span><strong>@Model.RequestGuidance</strong></div>
+        <div class="entity-overview__item"><span>O que esperar</span><strong>@Model.ResponseGuidance</strong></div>
+    </div>
+
+    @if (Model.HasStructuredQueryParameters || !string.IsNullOrWhiteSpace(Model.QueryGuidance))
+    {
+        <div class="contract-section">
+            <div class="contract-section__heading">
+                <strong>Query adicional</strong>
+                <p>@Model.QueryGuidance</p>
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(Model.QueryTemplate))
+            {
+                <div class="app-note">
+                    <strong>Exemplo rápido:</strong> <code>@Model.QueryTemplate</code>
+                </div>
+            }
+
+            @if (Model.HasStructuredQueryParameters)
+            {
+                <div class="table-responsive app-table-shell">
+                    <table class="table table-sm align-middle contract-table" aria-label="Campos documentados da query adicional">
+                        <thead>
+                            <tr>
+                                <th scope="col">Parâmetro</th>
+                                <th scope="col">Tipo</th>
+                                <th scope="col">Obrigatoriedade</th>
+                                <th scope="col">Exemplo</th>
+                                <th scope="col">Descrição</th>
+                                <th scope="col">Fonte</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var parameter in Model.QueryParameters)
+                            {
+                                <tr>
+                                    <td><code>@parameter.Path</code></td>
+                                    <td>@parameter.TypeLabel</td>
+                                    <td>@parameter.RequirementLabel</td>
+                                    <td><code>@parameter.Example</code></td>
+                                    <td>@parameter.Description</td>
+                                    <td>@parameter.SourceLabel</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    }
+
+    <div class="contract-section">
+        <div class="contract-section__heading">
+            <strong>Corpo da requisição</strong>
+            <p>Campos que a PoC conseguiu documentar de forma explícita ou inferir a partir do exemplo oficial.</p>
+        </div>
+
+        @if (Model.HasStructuredBodyParameters)
+        {
+            <div class="table-responsive app-table-shell">
+                <table class="table table-sm align-middle contract-table" aria-label="Campos documentados do corpo da requisição">
+                    <thead>
+                        <tr>
+                            <th scope="col">Campo</th>
+                            <th scope="col">Tipo</th>
+                            <th scope="col">Obrigatoriedade</th>
+                            <th scope="col">Exemplo</th>
+                            <th scope="col">Descrição</th>
+                            <th scope="col">Fonte</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var parameter in Model.BodyParameters)
+                        {
+                            <tr>
+                                <td class="contract-table__path" style="--depth:@parameter.Depth"><code>@parameter.Path</code></td>
+                                <td>@parameter.TypeLabel</td>
+                                <td>@parameter.RequirementLabel</td>
+                                <td><code>@parameter.Example</code></td>
+                                <td>@parameter.Description</td>
+                                <td>@parameter.SourceLabel</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="app-empty app-empty--compact">
+                Este endpoint não expõe corpo estruturado nesta PoC. Use a orientação de preenchimento e as observações técnicas da página.
+            </div>
+        }
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(Model.SamplePayload))
+    {
+        <details class="raw-panel">
+            <summary class="raw-panel__summary" aria-label="Alternar visualização do payload de exemplo">
+                <div class="raw-panel__summary-copy">
+                    <strong>Payload de exemplo</strong>
+                    <span>Modelo inicial usado pela PoC para preencher o corpo da requisição.</span>
+                </div>
+            </summary>
+            <pre class="app-code-panel">@Model.SamplePayload</pre>
+        </details>
+    }
+
+    @if (Model.DeveloperTips.Any())
+    {
+        <div class="app-stack-sm">
+            <strong>Pontos de atenção</strong>
+            @foreach (var tip in Model.DeveloperTips)
+            {
+                <div class="app-note">@tip</div>
+            }
+        </div>
+    }
+</section>

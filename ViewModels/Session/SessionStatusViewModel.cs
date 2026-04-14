@@ -1,3 +1,5 @@
+using Integracao.ControlID.PoC.Helpers;
+
 namespace Integracao.ControlID.PoC.ViewModels.Session
 {
     public class SessionStatusViewModel
@@ -7,5 +9,6 @@ namespace Integracao.ControlID.PoC.ViewModels.Session
         public bool? SessionValid { get; set; }
         public string? StatusMessage { get; set; }
         public string? StatusType { get; set; }
+        public string MaskedSessionString => SecurityTextHelper.MaskSensitiveValue(SessionString);
     }
 }

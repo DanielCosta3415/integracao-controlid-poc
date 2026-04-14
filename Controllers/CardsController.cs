@@ -1,7 +1,8 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using Integracao.ControlID.PoC.Models.ControlIDApi;
 using Integracao.ControlID.PoC.Services.ControlIDApi;
 using Integracao.ControlID.PoC.ViewModels.Cards;
+using Integracao.ControlID.PoC.Helpers;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Integracao.ControlID.PoC.Controllers
@@ -23,7 +24,7 @@ namespace Integracao.ControlID.PoC.Controllers
 
             if (!_officialApi.TryGetConnection(out _, out _))
             {
-                model.ErrorMessage = "É necessário conectar-se e autenticar com um equipamento Control iD.";
+                model.ErrorMessage = "Ã‰ necessÃ¡rio conectar-se e autenticar com um equipamento Control iD.";
                 return View(model);
             }
 
@@ -36,12 +37,12 @@ namespace Integracao.ControlID.PoC.Controllers
                     .ToList();
 
                 if (model.Cards.Count == 0)
-                    model.ErrorMessage = "Nenhum cartão encontrado.";
+                    model.ErrorMessage = "Nenhum cartÃ£o encontrado.";
             }
             catch (Exception ex)
             {
-                model.ErrorMessage = $"Erro ao consultar cartões: {ex.Message}";
-                _logger.LogError(ex, "Erro ao consultar cartões.");
+                model.ErrorMessage = SecurityTextHelper.BuildSafeUserMessage("Erro ao consultar cartÃµes", ex);
+                _logger.LogError(ex, "Erro ao consultar cartÃµes.");
             }
 
             return View(model);
@@ -63,7 +64,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Erro ao consultar detalhes do cartão {CardId}.", id.Value);
+                _logger.LogError(ex, "Erro ao consultar detalhes do cartÃ£o {CardId}.", id.Value);
             }
 
             return NotFound();
@@ -83,7 +84,7 @@ namespace Integracao.ControlID.PoC.Controllers
 
             if (!_officialApi.TryGetConnection(out _, out _))
             {
-                ModelState.AddModelError(string.Empty, "É necessário conectar-se e autenticar com um equipamento Control iD.");
+                ModelState.AddModelError(string.Empty, "Ã‰ necessÃ¡rio conectar-se e autenticar com um equipamento Control iD.");
                 return View(model);
             }
 
@@ -98,18 +99,18 @@ namespace Integracao.ControlID.PoC.Controllers
 
                 if (!result.Success)
                 {
-                    ModelState.AddModelError(string.Empty, BuildErrorMessage("Erro ao criar cartão", result));
+                    ModelState.AddModelError(string.Empty, BuildErrorMessage("Erro ao criar cartÃ£o", result));
                     return View(model);
                 }
 
-                TempData["StatusMessage"] = "Cartão criado com sucesso!";
+                TempData["StatusMessage"] = "CartÃ£o criado com sucesso!";
                 TempData["StatusType"] = "success";
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
-                ModelState.AddModelError(string.Empty, $"Erro ao criar cartão: {ex.Message}");
-                _logger.LogError(ex, "Erro ao criar cartão.");
+                ModelState.AddModelError(string.Empty, SecurityTextHelper.BuildSafeUserMessage("Erro ao criar cartÃ£o", ex));
+                _logger.LogError(ex, "Erro ao criar cartÃ£o.");
                 return View(model);
             }
         }
@@ -130,7 +131,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Erro ao buscar cartão {CardId} para edição.", id.Value);
+                _logger.LogError(ex, "Erro ao buscar cartÃ£o {CardId} para ediÃ§Ã£o.", id.Value);
             }
 
             return NotFound();
@@ -148,7 +149,7 @@ namespace Integracao.ControlID.PoC.Controllers
 
             if (!_officialApi.TryGetConnection(out _, out _))
             {
-                ModelState.AddModelError(string.Empty, "É necessário conectar-se e autenticar com um equipamento Control iD.");
+                ModelState.AddModelError(string.Empty, "Ã‰ necessÃ¡rio conectar-se e autenticar com um equipamento Control iD.");
                 return View(model);
             }
 
@@ -164,18 +165,18 @@ namespace Integracao.ControlID.PoC.Controllers
 
                 if (!result.Success)
                 {
-                    ModelState.AddModelError(string.Empty, BuildErrorMessage("Erro ao atualizar cartão", result));
+                    ModelState.AddModelError(string.Empty, BuildErrorMessage("Erro ao atualizar cartÃ£o", result));
                     return View(model);
                 }
 
-                TempData["StatusMessage"] = "Cartão atualizado com sucesso!";
+                TempData["StatusMessage"] = "CartÃ£o atualizado com sucesso!";
                 TempData["StatusType"] = "success";
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
-                ModelState.AddModelError(string.Empty, $"Erro ao atualizar cartão: {ex.Message}");
-                _logger.LogError(ex, "Erro ao atualizar cartão {CardId}.", id);
+                ModelState.AddModelError(string.Empty, SecurityTextHelper.BuildSafeUserMessage("Erro ao atualizar cartÃ£o", ex));
+                _logger.LogError(ex, "Erro ao atualizar cartÃ£o {CardId}.", id);
                 return View(model);
             }
         }
@@ -203,7 +204,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Erro ao buscar cartão {CardId} para exclusão.", id.Value);
+                _logger.LogError(ex, "Erro ao buscar cartÃ£o {CardId} para exclusÃ£o.", id.Value);
             }
 
             return NotFound();
@@ -215,7 +216,7 @@ namespace Integracao.ControlID.PoC.Controllers
         {
             if (!_officialApi.TryGetConnection(out _, out _))
             {
-                TempData["StatusMessage"] = "É necessário conectar-se e autenticar com um equipamento Control iD.";
+                TempData["StatusMessage"] = "Ã‰ necessÃ¡rio conectar-se e autenticar com um equipamento Control iD.";
                 TempData["StatusType"] = "danger";
                 return RedirectToAction(nameof(Index));
             }
@@ -229,15 +230,15 @@ namespace Integracao.ControlID.PoC.Controllers
                 });
 
                 TempData["StatusMessage"] = result.Success
-                    ? "Cartão excluído com sucesso!"
-                    : BuildErrorMessage("Erro ao excluir cartão", result);
+                    ? "CartÃ£o excluÃ­do com sucesso!"
+                    : BuildErrorMessage("Erro ao excluir cartÃ£o", result);
                 TempData["StatusType"] = result.Success ? "success" : "danger";
             }
             catch (Exception ex)
             {
-                TempData["StatusMessage"] = $"Erro ao excluir cartão: {ex.Message}";
+                TempData["StatusMessage"] = SecurityTextHelper.BuildSafeUserMessage("Erro ao excluir cartÃ£o", ex);
                 TempData["StatusType"] = "danger";
-                _logger.LogError(ex, "Erro ao excluir cartão {CardId}.", id);
+                _logger.LogError(ex, "Erro ao excluir cartÃ£o {CardId}.", id);
             }
 
             return RedirectToAction(nameof(Index));
@@ -251,7 +252,7 @@ namespace Integracao.ControlID.PoC.Controllers
 
             var (result, document) = await _officialApi.InvokeJsonAsync("load-objects", payload);
             if (!result.Success)
-                throw new InvalidOperationException(BuildErrorMessage("Erro ao consultar cartões", result));
+                throw new InvalidOperationException(BuildErrorMessage("Erro ao consultar cartÃµes", result));
 
             if (document == null)
                 return [];
@@ -333,10 +334,10 @@ namespace Integracao.ControlID.PoC.Controllers
         private static string BuildErrorMessage(string prefix, OfficialApiInvocationResult result)
         {
             if (!string.IsNullOrWhiteSpace(result.ErrorMessage))
-                return $"{prefix}: {result.ErrorMessage}";
+                return SecurityTextHelper.BuildApiFailureMessage(result, prefix);
 
             if (!string.IsNullOrWhiteSpace(result.ResponseBody) && !result.ResponseBodyIsBase64)
-                return $"{prefix}: {result.ResponseBody}";
+                return SecurityTextHelper.BuildApiFailureMessage(result, prefix);
 
             return $"{prefix} (status: {result.StatusCode}).";
         }
@@ -424,3 +425,7 @@ namespace Integracao.ControlID.PoC.Controllers
         }
     }
 }
+
+
+
+

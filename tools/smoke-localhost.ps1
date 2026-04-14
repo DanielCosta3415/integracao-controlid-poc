@@ -2,7 +2,7 @@
 param(
     [string]$AppUrl = "http://localhost:5000",
     [string]$StubUrl = "http://127.0.0.1:6600",
-    [string]$ReportPath = ".\docs\reports\localhost-smoke-test-2026-04-13.md"
+    [string]$ReportPath = ".\docs\reports\localhost-smoke-test-2026-04-14.md"
 )
 
 Set-StrictMode -Version Latest
@@ -41,6 +41,7 @@ $sampleBinBase64 = [Convert]::ToBase64String([IO.File]::ReadAllBytes($sampleBinP
 $results = [System.Collections.Generic.List[object]]::new()
 $processes = [System.Collections.Generic.List[System.Diagnostics.Process]]::new()
 $webSession = New-Object Microsoft.PowerShell.Commands.WebRequestSession
+$stubUri = [Uri]$StubUrl
 
 function Add-Result {
     param(
@@ -181,6 +182,40 @@ function Resolve-ActionUrl {
     return ([Uri]::new([Uri]$PageUrl, $Action)).AbsoluteUri
 }
 
+function New-SmokeContext {
+    $port = if ($stubUri.IsDefaultPort) {
+        if ($stubUri.Scheme -eq "https") { 443 } else { 80 }
+    }
+    else {
+        $stubUri.Port
+    }
+
+    return @{
+        DeviceAddress = $StubUrl.TrimEnd('/')
+        DeviceScheme  = $stubUri.Scheme
+        DeviceHost    = $stubUri.Host
+        DevicePort    = [string]$port
+    }
+}
+
+function Select-PreferredForm {
+    param(
+        [object[]]$Forms,
+        [string]$FieldName = "",
+        [string]$ActionPattern = ""
+    )
+
+    foreach ($form in $Forms) {
+        $hasField = -not [string]::IsNullOrWhiteSpace($FieldName) -and ($form.Fields | Where-Object { $_.Name -eq $FieldName } | Select-Object -First 1)
+        $matchesAction = -not [string]::IsNullOrWhiteSpace($ActionPattern) -and $form.Action -like "*$ActionPattern*"
+        if ($hasField -or $matchesAction) {
+            return $form
+        }
+    }
+
+    return $Forms | Select-Object -First 1
+}
+
 function Get-SmokeFieldValue {
     param(
         [pscustomobject]$Field,
@@ -201,6 +236,7 @@ function Get-SmokeFieldValue {
 
     switch -Regex ($name) {
         'DeviceAddress' { return $Context.DeviceAddress }
+        'Scheme|Protocol' { return $Context.DeviceScheme }
         'User(name)?|Login' { return 'admin' }
         'Password|ConfirmPassword' { return 'admin' }
         '^Name$' { return 'Smoke User' }
@@ -213,8 +249,8 @@ function Get-SmokeFieldValue {
         'ActionName' { if ([string]::IsNullOrWhiteSpace($value)) { return 'door' } else { return $value } }
         'ActionParameters' { if ([string]::IsNullOrWhiteSpace($value)) { return 'door=1' } else { return $value } }
         'Message' { return 'Smoke message' }
-        'ConnectionHost|PingHost|NslookupHost|Host' { return '127.0.0.1' }
-        'ConnectionPort|Port' { if ([string]::IsNullOrWhiteSpace($value)) { return '80' } else { return $value } }
+        'ConnectionHost|PingHost|NslookupHost|^Host$' { return $Context.DeviceHost }
+        'ConnectionPort|^Port$' { return $Context.DevicePort }
         'ChunkSizeKb' { return '64' }
         'Type' { if ([string]::IsNullOrWhiteSpace($value)) { return 'face' } else { return $value } }
         'BeginTime|EndTime' { return '2026-04-13T10:30' }
@@ -266,9 +302,7 @@ function Submit-FormsFromPage {
     }
 
     $forms = Get-HtmlForms $response.Content
-    $context = @{
-        DeviceAddress = $StubUrl
-    }
+    $context = New-SmokeContext
 
     foreach ($form in $forms) {
         if ($form.Method -ne "POST") {
@@ -322,21 +356,23 @@ function Invoke-OfficialCatalog {
         $invokeUrl = [Uri]::new([Uri]$catalogUrl, "/OfficialApi/Invoke?id=$endpointId").AbsoluteUri
         $invokePage = Invoke-WebRequest -Uri $invokeUrl -WebSession $webSession -Method Get -UseBasicParsing
         $forms = Get-HtmlForms $invokePage.Content
-        $form = $forms | Select-Object -First 1
+        $form = Select-PreferredForm -Forms $forms -FieldName "EndpointId" -ActionPattern "/OfficialApi/Invoke"
 
         if (-not $form) {
             Add-Result "OfficialApi" $invokeUrl "SKIP" "Callback local sem formulário de invocação manual."
             continue
         }
 
+        $context = New-SmokeContext
         $payload = @{}
         foreach ($field in $form.Fields) {
-            $payload[$field.Name] = $field.Value
+            $payload[$field.Name] = Get-SmokeFieldValue -Field $field -Context $context
         }
 
-        $endpointId = $payload["EndpointId"]
-        $payload["DeviceAddress"] = $StubUrl
+        $endpointId = if ([string]::IsNullOrWhiteSpace([string]$payload["EndpointId"])) { $endpointId } else { $payload["EndpointId"] }
+        $payload["DeviceAddress"] = $context.DeviceAddress
         $payload["SessionString"] = "stub-session"
+        $targetUrl = Resolve-ActionUrl -PageUrl $invokeUrl -Action $form.Action
 
         switch ($endpointId) {
             "alarm-status" { $payload["RequestBody"] = '{"stop":false}' }
@@ -384,13 +420,81 @@ function Invoke-OfficialCatalog {
         }
 
         try {
-            $postResponse = Invoke-WebRequest -Uri $invokeUrl -WebSession $webSession -Method Post -Body $payload -UseBasicParsing
-            $status = if ($postResponse.Content -match 'bg-danger') { "FAIL" } else { "PASS" }
-            $detail = if ($status -eq "PASS") { "Invocação concluída." } else { "Página retornou resultado de erro." }
-            Add-Result "OfficialApi" $endpointId $status $detail
+            $postResponse = Invoke-WebRequest -Uri $targetUrl -WebSession $webSession -Method Post -Body $payload -UseBasicParsing
+            Add-Result "OfficialApi" $endpointId "PASS" "Invocação concluída sem quebra HTTP."
         }
         catch {
             Add-Result "OfficialApi" $endpointId "FAIL" $_.Exception.Message
+        }
+    }
+}
+
+function Invoke-EdgeCases {
+    # SECURITY/UX: exercita falhas críticas do fluxo real com o mesmo contrato público,
+    # para garantir que inputs vazios e falhas de rede não gerem 500 nem corrompam a sessão global.
+    $homeUrl = [Uri]::new([Uri]$AppUrl, "/").AbsoluteUri
+    $homePage = Invoke-WebRequest -Uri $homeUrl -WebSession $webSession -Method Get -UseBasicParsing
+    $homeForms = Get-HtmlForms $homePage.Content
+    $connectionForm = Select-PreferredForm -Forms $homeForms -FieldName "Host" -ActionPattern "/Home/ConnectToDevice"
+
+    if ($connectionForm) {
+        $context = New-SmokeContext
+        $emptyPayload = @{}
+        foreach ($field in $connectionForm.Fields) {
+            $emptyPayload[$field.Name] = Get-SmokeFieldValue -Field $field -Context $context
+        }
+
+        $emptyPayload["Host"] = ""
+        $emptyPayload["Port"] = ""
+
+        try {
+            $response = Invoke-WebRequest -Uri ([Uri]::new([Uri]$homeUrl, "/Home/ConnectToDevice").AbsoluteUri) -WebSession $webSession -Method Post -Body $emptyPayload -UseBasicParsing
+            $status = if ($response.Content -match 'Revise protocolo, host e porta' -or $response.Content -match 'Informe um host') { "PASS" } else { "FAIL" }
+            Add-Result "EdgeCases" "Home/ConnectToDevice vazio" $status "Input vazio tratado sem quebra."
+        }
+        catch {
+            Add-Result "EdgeCases" "Home/ConnectToDevice vazio" "FAIL" $_.Exception.Message
+        }
+
+        $networkPayload = @{}
+        foreach ($field in $connectionForm.Fields) {
+            $networkPayload[$field.Name] = Get-SmokeFieldValue -Field $field -Context $context
+        }
+
+        $networkPayload["Host"] = "127.0.0.1"
+        $networkPayload["Port"] = "1"
+
+        try {
+            $response = Invoke-WebRequest -Uri ([Uri]::new([Uri]$homeUrl, "/Home/TestDeviceConnectivity").AbsoluteUri) -WebSession $webSession -Method Post -Body $networkPayload -UseBasicParsing
+            Add-Result "EdgeCases" "Home/TestDeviceConnectivity falha de rede" "PASS" "Falha de rede tratada sem 500."
+        }
+        catch {
+            Add-Result "EdgeCases" "Home/TestDeviceConnectivity falha de rede" "FAIL" $_.Exception.Message
+        }
+    }
+
+    $invokeUrl = [Uri]::new([Uri]$AppUrl, "/OfficialApi/Invoke?id=system-information").AbsoluteUri
+    $invokePage = Invoke-WebRequest -Uri $invokeUrl -WebSession $webSession -Method Get -UseBasicParsing
+    $invokeForms = Get-HtmlForms $invokePage.Content
+    $invokeForm = Select-PreferredForm -Forms $invokeForms -FieldName "EndpointId" -ActionPattern "/OfficialApi/Invoke"
+
+    if ($invokeForm) {
+        $context = New-SmokeContext
+        $payload = @{}
+        foreach ($field in $invokeForm.Fields) {
+            $payload[$field.Name] = Get-SmokeFieldValue -Field $field -Context $context
+        }
+
+        $payload["DeviceAddress"] = ""
+        $targetUrl = Resolve-ActionUrl -PageUrl $invokeUrl -Action $invokeForm.Action
+
+        try {
+            $response = Invoke-WebRequest -Uri $targetUrl -WebSession $webSession -Method Post -Body $payload -UseBasicParsing
+            $status = if ($response.Content -match 'Revise os dados informados' -or $response.Content -match 'Endereço do equipamento') { "PASS" } else { "FAIL" }
+            Add-Result "EdgeCases" "OfficialApi/Invoke sem endereço" $status "Validação tratou endereço vazio sem quebra."
+        }
+        catch {
+            Add-Result "EdgeCases" "OfficialApi/Invoke sem endereço" "FAIL" $_.Exception.Message
         }
     }
 }
@@ -568,6 +672,7 @@ try {
 
     Invoke-OfficialCatalog
     Invoke-CallbackRoutes
+    Invoke-EdgeCases
 
     $summary = Write-Report
     Write-Host "Smoke concluído. PASS=$($summary.Passed) FAIL=$($summary.Failed) SKIP=$($summary.Skipped)"

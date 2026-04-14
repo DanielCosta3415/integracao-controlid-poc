@@ -2,6 +2,7 @@
 using Integracao.ControlID.PoC.Models.ControlIDApi;
 using Integracao.ControlID.PoC.Services.ControlIDApi;
 using Integracao.ControlID.PoC.ViewModels.Logo;
+using Integracao.ControlID.PoC.Helpers;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Integracao.ControlID.PoC.Controllers
@@ -33,7 +34,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                model.ErrorMessage = $"Erro ao consultar os slots de logo: {ex.Message}";
+                model.ErrorMessage = SecurityTextHelper.BuildSafeUserMessage("Erro ao consultar os slots de logo", ex);
                 _logger.LogError(ex, "Erro ao consultar os slots de logo.");
             }
 
@@ -112,7 +113,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                ModelState.AddModelError(string.Empty, $"Erro ao enviar logo: {ex.Message}");
+                ModelState.AddModelError(string.Empty, SecurityTextHelper.BuildSafeUserMessage("Erro ao enviar logo", ex));
                 _logger.LogError(ex, "Erro ao enviar o logo do slot {SlotId}.", model.Id);
             }
 
@@ -178,7 +179,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                TempData["StatusMessage"] = $"Erro ao excluir logo: {ex.Message}";
+                TempData["StatusMessage"] = SecurityTextHelper.BuildSafeUserMessage("Erro ao excluir logo", ex);
                 TempData["StatusType"] = "danger";
                 _logger.LogError(ex, "Erro ao excluir o logo do slot {SlotId}.", id);
             }
@@ -239,10 +240,10 @@ namespace Integracao.ControlID.PoC.Controllers
         private static string BuildErrorMessage(string prefix, OfficialApiInvocationResult result)
         {
             if (!string.IsNullOrWhiteSpace(result.ErrorMessage))
-                return $"{prefix}: {result.ErrorMessage}";
+                return SecurityTextHelper.BuildApiFailureMessage(result, prefix);
 
             if (!string.IsNullOrWhiteSpace(result.ResponseBody) && !result.ResponseBodyIsBase64)
-                return $"{prefix}: {result.ResponseBody}";
+                return SecurityTextHelper.BuildApiFailureMessage(result, prefix);
 
             return $"{prefix} (status: {result.StatusCode}).";
         }
@@ -265,3 +266,7 @@ namespace Integracao.ControlID.PoC.Controllers
         }
     }
 }
+
+
+
+

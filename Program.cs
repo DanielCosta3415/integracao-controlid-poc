@@ -5,7 +5,10 @@ using Integracao.ControlID.PoC.Options;
 using Integracao.ControlID.PoC.Services.Callbacks;
 using Integracao.ControlID.PoC.Services.ControlIDApi;
 using Integracao.ControlID.PoC.Services.Database;
+using Integracao.ControlID.PoC.Services.DocumentedFeatures;
 using Integracao.ControlID.PoC.Services.Navigation;
+using Integracao.ControlID.PoC.Services.ProductSpecific;
+using Integracao.ControlID.PoC.Services.Security;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -15,9 +18,6 @@ using Serilog;
 using System;
 
 var builder = WebApplication.CreateBuilder(args);
-
-// Carrega configurações do appsettings.json
-builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
 
 // Configura Serilog
 SeriLogConfiguration.ConfigureSerilog(builder.Host, builder.Configuration);
@@ -36,6 +36,8 @@ builder.Services.AddSession(options =>
 {
     options.Cookie.Name = builder.Configuration["Session:CookieName"] ?? ".IntegracaoControlID.Session";
     options.Cookie.HttpOnly = true;
+    options.Cookie.SameSite = Microsoft.AspNetCore.Http.SameSiteMode.Lax;
+    options.Cookie.IsEssential = true;
     options.Cookie.SecurePolicy = builder.Environment.IsDevelopment()
         ? Microsoft.AspNetCore.Http.CookieSecurePolicy.SameAsRequest
         : Microsoft.AspNetCore.Http.CookieSecurePolicy.Always;
@@ -49,10 +51,19 @@ builder.Services.AddScoped<CallbackSecurityEvaluator>();
 builder.Services.AddScoped<CallbackRequestBodyReader>();
 builder.Services.AddScoped<CallbackIngressService>();
 builder.Services.AddScoped<OfficialApiCatalogService>();
+builder.Services.AddScoped<OfficialApiDocumentationSeedCatalog>();
+builder.Services.AddScoped<OfficialApiQueryParameterStrategy>();
+builder.Services.AddScoped<OfficialApiBodyParameterStrategy>();
+builder.Services.AddScoped<OfficialApiContractDocumentationService>();
 builder.Services.AddScoped<OfficialApiInvokerService>();
+builder.Services.AddScoped<OfficialApiResultPresentationService>();
+builder.Services.AddScoped<OfficialApiBinaryFileResultFactory>();
 builder.Services.AddScoped<OfficialControlIdApiService>();
+builder.Services.AddScoped<ControlIdInputSanitizer>();
 builder.Services.AddSingleton<NavigationCatalogService>();
 builder.Services.AddScoped<PageShellService>();
+builder.Services.AddScoped<ProductSpecificConfigurationPayloadFactory>();
+builder.Services.AddScoped<DocumentedFeaturesPayloadFactory>();
 
 // Repositórios de banco local
 builder.Services.AddScoped<UserRepository>();
@@ -85,6 +96,7 @@ var app = builder.Build();
 // Middlewares customizados (ordem: tratamento de erro → logging de request → sessão → session API)
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseMiddleware<RequestLoggingMiddleware>();
+app.UseMiddleware<SecurityHeadersMiddleware>();
 
 // Ativa arquivos estáticos e roteamento padrão
 app.UseStaticFiles();

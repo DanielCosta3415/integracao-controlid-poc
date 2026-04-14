@@ -81,7 +81,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                ModelState.AddModelError(string.Empty, $"Erro ao autenticar: {ex.Message}");
+                ModelState.AddModelError(string.Empty, SecurityTextHelper.BuildSafeUserMessage("Erro ao autenticar", ex));
                 _logger.LogError(ex, "Erro ao fazer login no dispositivo Control iD em {DeviceAddress}", deviceAddress);
                 return View(model);
             }
@@ -89,6 +89,28 @@ namespace Integracao.ControlID.PoC.Controllers
 
         [HttpGet]
         public async Task<IActionResult> Logout()
+        {
+            // SECURITY: mantém compatibilidade com o endpoint GET existente, mas
+            // bloqueia navegação cross-site para reduzir risco de CSRF em logout.
+            if (!IsSameOriginNavigation(Request))
+            {
+                TempData["StatusMessage"] = "Confirme o logout a partir da própria interface da PoC para proteger a sessão ativa.";
+                TempData["StatusType"] = "warning";
+                return RedirectToAction(nameof(Status));
+            }
+
+            return await LogoutCoreAsync();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [ActionName("Logout")]
+        public async Task<IActionResult> LogoutPost()
+        {
+            return await LogoutCoreAsync();
+        }
+
+        private async Task<IActionResult> LogoutCoreAsync()
         {
             var deviceAddress = HttpContext.Session.GetString(SessionDeviceAddressKey);
             var sessionString = HttpContext.Session.GetString(SessionSessionStringKey);
@@ -119,7 +141,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                TempData["StatusMessage"] = $"Erro ao realizar logout: {ex.Message}";
+                TempData["StatusMessage"] = SecurityTextHelper.BuildSafeUserMessage("Erro ao realizar logout", ex);
                 TempData["StatusType"] = "danger";
                 _logger.LogError(ex, "Erro ao realizar logout do dispositivo Control iD em {DeviceAddress}", deviceAddress);
             }
@@ -239,12 +261,23 @@ namespace Integracao.ControlID.PoC.Controllers
         private static string BuildErrorMessage(string prefix, OfficialApiInvocationResult result)
         {
             if (!string.IsNullOrWhiteSpace(result.ErrorMessage))
-                return $"{prefix}: {result.ErrorMessage}";
+                return $"{prefix}: {SecurityTextHelper.NormalizeForDisplay(result.ErrorMessage)}";
 
             if (!string.IsNullOrWhiteSpace(result.ResponseBody) && !result.ResponseBodyIsBase64)
-                return $"{prefix}: {result.ResponseBody}";
+                return $"{prefix}: {SecurityTextHelper.NormalizeForDisplay(result.ResponseBody)}";
 
             return $"{prefix} (status: {result.StatusCode}).";
+        }
+
+        private static bool IsSameOriginNavigation(HttpRequest request)
+        {
+            var fetchSite = request.Headers["Sec-Fetch-Site"].ToString();
+            if (string.Equals(fetchSite, "cross-site", StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            return true;
         }
 
         private static bool TryGetString(JsonElement element, out string value, params string[] propertyNames)

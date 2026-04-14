@@ -1,10 +1,14 @@
-@model Integracao.ControlID.PoC.ViewModels.Shared.RawResponsePanelViewModel
+﻿@model Integracao.ControlID.PoC.ViewModels.Shared.RawResponsePanelViewModel
 @{
     var panelId = string.IsNullOrWhiteSpace(Model.PanelId) ? $"raw-panel-{Guid.NewGuid():N}" : Model.PanelId;
+    var summaryId = $"{panelId}-summary";
 }
 
 <details class="raw-panel" @(Model.StartExpanded ? "open" : null)>
-    <summary class="raw-panel__summary">
+    <summary class="raw-panel__summary"
+             id="@summaryId"
+             aria-label="Alternar painel de resposta bruta"
+             aria-controls="@panelId">
         <div class="raw-panel__summary-copy">
             <strong>@Model.Title</strong>
             @if (!string.IsNullOrWhiteSpace(Model.Description))
@@ -17,8 +21,13 @@
             {
                 <span class="app-chip app-chip--@Model.BadgeTone">@Model.BadgeText</span>
             }
-            <button type="button" class="btn btn-quiet btn-sm" data-copy-target="@panelId">Copiar</button>
+            <button type="button"
+                    class="btn btn-quiet btn-sm"
+                    data-copy-target="@panelId"
+                    aria-label="Copiar o conteudo bruto exibido neste painel">
+                Copiar
+            </button>
         </div>
     </summary>
-    <pre id="@panelId" class="app-code-panel">@Model.Content</pre>
+    <pre id="@panelId" class="app-code-panel" tabindex="0" aria-labelledby="@summaryId">@Model.Content</pre>
 </details>

@@ -1,7 +1,8 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using Integracao.ControlID.PoC.Models.ControlIDApi;
 using Integracao.ControlID.PoC.Services.ControlIDApi;
 using Integracao.ControlID.PoC.ViewModels.Users;
+using Integracao.ControlID.PoC.Helpers;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Integracao.ControlID.PoC.Controllers
@@ -23,7 +24,7 @@ namespace Integracao.ControlID.PoC.Controllers
 
             if (!_officialApi.TryGetConnection(out _, out _))
             {
-                model.ErrorMessage = "É necessário conectar-se e autenticar com um equipamento Control iD.";
+                model.ErrorMessage = "Ã‰ necessÃ¡rio conectar-se e autenticar com um equipamento Control iD.";
                 return View(model);
             }
 
@@ -35,12 +36,12 @@ namespace Integracao.ControlID.PoC.Controllers
                     .ToList();
 
                 if (model.Users.Count == 0)
-                    model.ErrorMessage = "Nenhum usuário encontrado.";
+                    model.ErrorMessage = "Nenhum usuÃ¡rio encontrado.";
             }
             catch (Exception ex)
             {
-                model.ErrorMessage = $"Erro ao consultar usuários: {ex.Message}";
-                _logger.LogError(ex, "Erro ao consultar usuários.");
+                model.ErrorMessage = SecurityTextHelper.BuildSafeUserMessage("Erro ao consultar usuÃ¡rios", ex);
+                _logger.LogError(ex, "Erro ao consultar usuÃ¡rios.");
             }
 
             return View(model);
@@ -62,7 +63,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Erro ao consultar detalhes do usuário {UserId}.", id.Value);
+                _logger.LogError(ex, "Erro ao consultar detalhes do usuÃ¡rio {UserId}.", id.Value);
             }
 
             return NotFound();
@@ -82,7 +83,7 @@ namespace Integracao.ControlID.PoC.Controllers
 
             if (!_officialApi.TryGetConnection(out _, out _))
             {
-                ModelState.AddModelError(string.Empty, "É necessário conectar-se e autenticar com um equipamento Control iD.");
+                ModelState.AddModelError(string.Empty, "Ã‰ necessÃ¡rio conectar-se e autenticar com um equipamento Control iD.");
                 return View(model);
             }
 
@@ -97,18 +98,18 @@ namespace Integracao.ControlID.PoC.Controllers
 
                 if (!result.Success)
                 {
-                    ModelState.AddModelError(string.Empty, BuildErrorMessage("Erro ao criar usuário", result));
+                    ModelState.AddModelError(string.Empty, BuildErrorMessage("Erro ao criar usuÃ¡rio", result));
                     return View(model);
                 }
 
-                TempData["StatusMessage"] = "Usuário criado com sucesso!";
+                TempData["StatusMessage"] = "UsuÃ¡rio criado com sucesso!";
                 TempData["StatusType"] = "success";
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
-                ModelState.AddModelError(string.Empty, $"Erro ao criar usuário: {ex.Message}");
-                _logger.LogError(ex, "Erro ao criar usuário.");
+                ModelState.AddModelError(string.Empty, SecurityTextHelper.BuildSafeUserMessage("Erro ao criar usuÃ¡rio", ex));
+                _logger.LogError(ex, "Erro ao criar usuÃ¡rio.");
                 return View(model);
             }
         }
@@ -129,7 +130,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Erro ao buscar usuário {UserId} para edição.", id.Value);
+                _logger.LogError(ex, "Erro ao buscar usuÃ¡rio {UserId} para ediÃ§Ã£o.", id.Value);
             }
 
             return NotFound();
@@ -147,7 +148,7 @@ namespace Integracao.ControlID.PoC.Controllers
 
             if (!_officialApi.TryGetConnection(out _, out _))
             {
-                ModelState.AddModelError(string.Empty, "É necessário conectar-se e autenticar com um equipamento Control iD.");
+                ModelState.AddModelError(string.Empty, "Ã‰ necessÃ¡rio conectar-se e autenticar com um equipamento Control iD.");
                 return View(model);
             }
 
@@ -163,18 +164,18 @@ namespace Integracao.ControlID.PoC.Controllers
 
                 if (!result.Success)
                 {
-                    ModelState.AddModelError(string.Empty, BuildErrorMessage("Erro ao atualizar usuário", result));
+                    ModelState.AddModelError(string.Empty, BuildErrorMessage("Erro ao atualizar usuÃ¡rio", result));
                     return View(model);
                 }
 
-                TempData["StatusMessage"] = "Usuário atualizado com sucesso!";
+                TempData["StatusMessage"] = "UsuÃ¡rio atualizado com sucesso!";
                 TempData["StatusType"] = "success";
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
-                ModelState.AddModelError(string.Empty, $"Erro ao atualizar usuário: {ex.Message}");
-                _logger.LogError(ex, "Erro ao atualizar usuário {UserId}.", id);
+                ModelState.AddModelError(string.Empty, SecurityTextHelper.BuildSafeUserMessage("Erro ao atualizar usuÃ¡rio", ex));
+                _logger.LogError(ex, "Erro ao atualizar usuÃ¡rio {UserId}.", id);
                 return View(model);
             }
         }
@@ -202,7 +203,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Erro ao buscar usuário {UserId} para exclusão.", id.Value);
+                _logger.LogError(ex, "Erro ao buscar usuÃ¡rio {UserId} para exclusÃ£o.", id.Value);
             }
 
             return NotFound();
@@ -214,7 +215,7 @@ namespace Integracao.ControlID.PoC.Controllers
         {
             if (!_officialApi.TryGetConnection(out _, out _))
             {
-                TempData["StatusMessage"] = "É necessário conectar-se e autenticar com um equipamento Control iD.";
+                TempData["StatusMessage"] = "Ã‰ necessÃ¡rio conectar-se e autenticar com um equipamento Control iD.";
                 TempData["StatusType"] = "danger";
                 return RedirectToAction(nameof(Index));
             }
@@ -228,15 +229,15 @@ namespace Integracao.ControlID.PoC.Controllers
                 });
 
                 TempData["StatusMessage"] = result.Success
-                    ? "Usuário excluído com sucesso!"
-                    : BuildErrorMessage("Erro ao excluir usuário", result);
+                    ? "UsuÃ¡rio excluÃ­do com sucesso!"
+                    : BuildErrorMessage("Erro ao excluir usuÃ¡rio", result);
                 TempData["StatusType"] = result.Success ? "success" : "danger";
             }
             catch (Exception ex)
             {
-                TempData["StatusMessage"] = $"Erro ao excluir usuário: {ex.Message}";
+                TempData["StatusMessage"] = SecurityTextHelper.BuildSafeUserMessage("Erro ao excluir usuÃ¡rio", ex);
                 TempData["StatusType"] = "danger";
-                _logger.LogError(ex, "Erro ao excluir usuário {UserId}.", id);
+                _logger.LogError(ex, "Erro ao excluir usuÃ¡rio {UserId}.", id);
             }
 
             return RedirectToAction(nameof(Index));
@@ -250,7 +251,7 @@ namespace Integracao.ControlID.PoC.Controllers
 
             var (result, document) = await _officialApi.InvokeJsonAsync("load-objects", payload);
             if (!result.Success)
-                throw new InvalidOperationException(BuildErrorMessage("Erro ao consultar usuários", result));
+                throw new InvalidOperationException(BuildErrorMessage("Erro ao consultar usuÃ¡rios", result));
 
             if (document == null)
                 return [];
@@ -371,10 +372,10 @@ namespace Integracao.ControlID.PoC.Controllers
         private static string BuildErrorMessage(string prefix, OfficialApiInvocationResult result)
         {
             if (!string.IsNullOrWhiteSpace(result.ErrorMessage))
-                return $"{prefix}: {result.ErrorMessage}";
+                return SecurityTextHelper.BuildApiFailureMessage(result, prefix);
 
             if (!string.IsNullOrWhiteSpace(result.ResponseBody) && !result.ResponseBodyIsBase64)
-                return $"{prefix}: {result.ResponseBody}";
+                return SecurityTextHelper.BuildApiFailureMessage(result, prefix);
 
             return $"{prefix} (status: {result.StatusCode}).";
         }
@@ -482,3 +483,7 @@ namespace Integracao.ControlID.PoC.Controllers
         }
     }
 }
+
+
+
+

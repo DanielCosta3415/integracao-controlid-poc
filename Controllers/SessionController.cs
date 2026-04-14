@@ -4,6 +4,7 @@ using Integracao.ControlID.PoC.Models.ControlIDApi;
 using Integracao.ControlID.PoC.Services.ControlIDApi;
 using Integracao.ControlID.PoC.ViewModels.Session;
 using Microsoft.AspNetCore.Http;
+using Integracao.ControlID.PoC.Helpers;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Integracao.ControlID.PoC.Controllers
@@ -83,7 +84,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                TempData["StatusMessage"] = $"Erro ao validar sessão: {ex.Message}";
+                TempData["StatusMessage"] = SecurityTextHelper.BuildSafeUserMessage("Erro ao validar sessão", ex);
                 TempData["StatusType"] = "danger";
                 _logger.LogError(ex, "Erro ao validar sessão no dispositivo {DeviceAddress}", deviceAddress);
             }
@@ -108,10 +109,10 @@ namespace Integracao.ControlID.PoC.Controllers
         private static string BuildErrorMessage(string prefix, OfficialApiInvocationResult result)
         {
             if (!string.IsNullOrWhiteSpace(result.ErrorMessage))
-                return $"{prefix}: {result.ErrorMessage}";
+                return SecurityTextHelper.BuildApiFailureMessage(result, prefix);
 
             if (!string.IsNullOrWhiteSpace(result.ResponseBody) && !result.ResponseBodyIsBase64)
-                return $"{prefix}: {result.ResponseBody}";
+                return SecurityTextHelper.BuildApiFailureMessage(result, prefix);
 
             return $"{prefix} (status: {result.StatusCode}).";
         }
@@ -160,3 +161,7 @@ namespace Integracao.ControlID.PoC.Controllers
         }
     }
 }
+
+
+
+

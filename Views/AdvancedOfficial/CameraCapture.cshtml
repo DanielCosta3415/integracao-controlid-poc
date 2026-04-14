@@ -80,7 +80,10 @@
 
             @if (!string.IsNullOrWhiteSpace(Model.Base64Image))
             {
-                <img src="data:@Model.ImageContentType;base64,@Model.Base64Image" alt="Captura" class="img-fluid rounded border" />
+                <img src="data:@Model.ImageContentType;base64,@Model.Base64Image"
+                     alt="Captura"
+                     class="img-fluid rounded border"
+                     decoding="async" />
             }
             else
             {

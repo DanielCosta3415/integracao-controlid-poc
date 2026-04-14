@@ -4,6 +4,7 @@ using System.Text.Json;
 using Integracao.ControlID.PoC.Models.ControlIDApi;
 using Integracao.ControlID.PoC.Services.ControlIDApi;
 using Integracao.ControlID.PoC.ViewModels.Media;
+using Integracao.ControlID.PoC.Helpers;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Integracao.ControlID.PoC.Controllers
@@ -35,7 +36,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                model.ErrorMessage = $"Erro ao consultar fotos: {ex.Message}";
+                model.ErrorMessage = SecurityTextHelper.BuildSafeUserMessage("Erro ao consultar fotos", ex);
                 _logger.LogError(ex, "Erro ao consultar fotos dos usuários.");
             }
 
@@ -119,7 +120,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                ModelState.AddModelError(string.Empty, $"Erro ao enviar foto: {ex.Message}");
+                ModelState.AddModelError(string.Empty, SecurityTextHelper.BuildSafeUserMessage("Erro ao enviar foto", ex));
                 _logger.LogError(ex, "Erro ao enviar foto do usuário {UserId}.", model.UserId);
             }
 
@@ -186,7 +187,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                TempData["StatusMessage"] = $"Erro ao excluir foto: {ex.Message}";
+                TempData["StatusMessage"] = SecurityTextHelper.BuildSafeUserMessage("Erro ao excluir foto", ex);
                 TempData["StatusType"] = "danger";
                 _logger.LogError(ex, "Erro ao excluir foto do usuário {UserId}.", id);
             }
@@ -277,7 +278,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                model.ResultMessage = ex.Message;
+                model.ResultMessage = SecurityTextHelper.BuildSafeUserMessage("A operação não pôde ser concluída", ex);
                 model.ResultStatusType = "danger";
                 _logger.LogError(ex, "Erro ao enviar vídeo de propaganda.");
             }
@@ -318,7 +319,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                model.ResultMessage = ex.Message;
+                model.ResultMessage = SecurityTextHelper.BuildSafeUserMessage("A operação não pôde ser concluída", ex);
                 model.ResultStatusType = "danger";
                 _logger.LogError(ex, "Erro ao alternar modo propaganda.");
             }
@@ -353,7 +354,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                model.ResultMessage = ex.Message;
+                model.ResultMessage = SecurityTextHelper.BuildSafeUserMessage("A operação não pôde ser concluída", ex);
                 model.ResultStatusType = "danger";
                 _logger.LogError(ex, "Erro ao remover vídeo de propaganda.");
             }
@@ -426,7 +427,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                model.ErrorMessage = $"Erro ao consultar estado do modo propaganda: {ex.Message}";
+                model.ErrorMessage = SecurityTextHelper.BuildSafeUserMessage("Erro ao consultar estado do modo propaganda", ex);
                 _logger.LogWarning(ex, "Erro ao consultar configuração do vídeo personalizado.");
             }
         }
@@ -540,10 +541,10 @@ namespace Integracao.ControlID.PoC.Controllers
         private static string BuildErrorMessage(string prefix, OfficialApiInvocationResult result)
         {
             if (!string.IsNullOrWhiteSpace(result.ErrorMessage))
-                return $"{prefix}: {result.ErrorMessage}";
+                return SecurityTextHelper.BuildApiFailureMessage(result, prefix);
 
             if (!string.IsNullOrWhiteSpace(result.ResponseBody) && !result.ResponseBodyIsBase64)
-                return $"{prefix}: {result.ResponseBody}";
+                return SecurityTextHelper.BuildApiFailureMessage(result, prefix);
 
             return $"{prefix} (status: {result.StatusCode}).";
         }
@@ -612,3 +613,7 @@ namespace Integracao.ControlID.PoC.Controllers
         }
     }
 }
+
+
+
+

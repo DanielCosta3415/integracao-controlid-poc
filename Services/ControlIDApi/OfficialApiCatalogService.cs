@@ -1,3 +1,4 @@
+﻿using System.Text;
 using Integracao.ControlID.PoC.Models.ControlIDApi;
 
 namespace Integracao.ControlID.PoC.Services.ControlIDApi
@@ -6,7 +7,7 @@ namespace Integracao.ControlID.PoC.Services.ControlIDApi
     {
         private static readonly List<OfficialApiEndpointDefinition> Endpoints =
         [
-            new() { Id = "login", Category = "Sessão", Title = "Login", Method = "POST", Path = "/login.fcgi", BodyKind = "json", ContentType = "application/json", Summary = "Autentica no equipamento e retorna a sessão.", DocumentationUrl = "https://www.controlid.com.br/docs/access-api-en/session/create-session/", SamplePayload = "{\n  \"login\": \"admin\",\n  \"password\": \"admin\"\n}" },
+            new() { Id = "login", Category = "Sessão", Title = "Login", Method = "POST", Path = "/login.fcgi", BodyKind = "json", ContentType = "application/json", Summary = "Autentica no equipamento e retorna a sessão.", DocumentationUrl = "https://www.controlid.com.br/docs/access-api-en/session/create-session/", SamplePayload = "{\n  \"login\": \"<usuario>\",\n  \"password\": \"<senha>\"\n}" },
             new() { Id = "logout", Category = "Sessão", Title = "Logout", Method = "POST", Path = "/logout.fcgi", BodyKind = "none", RequiresSession = true, Summary = "Encerra a sessão ativa no equipamento.", DocumentationUrl = "https://www.controlid.com.br/docs/access-api-en/session/destroy-session/" },
             new() { Id = "session-is-valid", Category = "Sessão", Title = "Validar Sessão", Method = "POST", Path = "/session_is_valid.fcgi", BodyKind = "none", RequiresSession = true, Summary = "Verifica se a sessão informada ainda é válida.", DocumentationUrl = "https://www.controlid.com.br/docs/access-api-en/session/check-session/" },
             new() { Id = "hash-password", Category = "Sessão", Title = "Gerar Hash de Senha", Method = "POST", Path = "/user_hash_password.fcgi", BodyKind = "json", ContentType = "application/json", Summary = "Gera hash e salt compatíveis com a API para senha de usuário.", DocumentationUrl = "https://www.controlid.com.br/docs/access-api-en/system/change-login-password/", SamplePayload = "{\n  \"password\": \"123456\"\n}" },
@@ -50,7 +51,7 @@ namespace Integracao.ControlID.PoC.Services.ControlIDApi
             new() { Id = "save-screenshot", Category = "Fotos e Logotipo", Title = "Capturar Imagem da Câmera", Method = "POST", Path = "/save_screenshot.fcgi", BodyKind = "json", RequiresSession = true, Summary = "Captura uma imagem RGB ou IR da câmera do equipamento.", DocumentationUrl = "https://www.controlid.com.br/docs/access-api-en/facial-recognition/camera-capture/", SamplePayload = "{\n  \"frame_type\": \"camera\",\n  \"camera\": \"rgb\"\n}" },
 
             new() { Id = "system-information", Category = "Sistema", Title = "Informações do Sistema", Method = "POST", Path = "/system_information.fcgi", BodyKind = "none", Summary = "Consulta versão, serial, modelo e outras informações do equipamento.", DocumentationUrl = "https://www.controlid.com.br/docs/access-api-en/system/system-information/" },
-            new() { Id = "change-login", Category = "Sistema", Title = "Alterar Login do Equipamento", Method = "POST", Path = "/change_login.fcgi", BodyKind = "json", RequiresSession = true, Summary = "Altera o usuário e/ou senha utilizados para login no equipamento.", DocumentationUrl = "https://www.controlid.com.br/docs/access-api-en/session-management/change-username-and-password-login/", SamplePayload = "{\n  \"login\": \"admin\",\n  \"password\": \"novaSenha123\"\n}" },
+            new() { Id = "change-login", Category = "Sistema", Title = "Alterar Login do Equipamento", Method = "POST", Path = "/change_login.fcgi", BodyKind = "json", RequiresSession = true, Summary = "Altera o usuário e/ou senha utilizados para login no equipamento.", DocumentationUrl = "https://www.controlid.com.br/docs/access-api-en/session-management/change-username-and-password-login/", SamplePayload = "{\n  \"login\": \"<novo-login>\",\n  \"password\": \"<nova-senha>\"\n}" },
             new() { Id = "set-system-time", Category = "Sistema", Title = "Ajustar Data e Hora", Method = "POST", Path = "/set_system_time.fcgi", BodyKind = "json", RequiresSession = true, Summary = "Define data e hora do equipamento.", DocumentationUrl = "https://www.controlid.com.br/docs/access-api-en/system/change-date-and-time/", SamplePayload = "{\n  \"day\": 13,\n  \"month\": 4,\n  \"year\": 2026,\n  \"hour\": 10,\n  \"minute\": 30,\n  \"second\": 0\n}" },
             new() { Id = "reset-to-factory", Category = "Sistema", Title = "Reset de Fábrica", Method = "POST", Path = "/reset_to_factory_default.fcgi", BodyKind = "json", RequiresSession = true, Summary = "Restaura o equipamento ao padrão de fábrica.", DocumentationUrl = "https://www.controlid.com.br/suporte/api_idaccess_V2.6.8.html", SamplePayload = "{\n  \"keep_network_info\": true\n}" },
             new() { Id = "reboot", Category = "Sistema", Title = "Reiniciar Equipamento", Method = "POST", Path = "/reboot.fcgi", BodyKind = "none", RequiresSession = true, Summary = "Reinicia o equipamento.", DocumentationUrl = "https://www.controlid.com.br/suporte/api_idaccess_V2.6.8.html" },
@@ -59,7 +60,7 @@ namespace Integracao.ControlID.PoC.Services.ControlIDApi
             new() { Id = "set-system-network", Category = "Sistema", Title = "Configurar Rede", Method = "POST", Path = "/set_system_network.fcgi", BodyKind = "json", RequiresSession = true, Summary = "Altera parâmetros de rede do equipamento.", DocumentationUrl = "https://www.controlid.com.br/docs/access-api-en/system/network-settings/", SamplePayload = "{\n  \"ip\": \"192.168.0.10\",\n  \"mask\": \"255.255.255.0\",\n  \"gateway\": \"192.168.0.1\"\n}" },
 
             new() { Id = "ssl-certificate-change", Category = "Sistema", Title = "Alterar Certificado SSL", Method = "POST", Path = "/ssl_certificate_change.fcgi", BodyKind = "binary", ContentType = "application/octet-stream", RequiresSession = true, Summary = "Envia um certificado PEM para o servidor web do equipamento.", DocumentationUrl = "https://www.controlid.com.br/docs/access-api-en/system/network-settings/", Notes = "Envie o corpo como base64 puro do arquivo PEM." },
-            new() { Id = "set-vpn-information", Category = "Sistema", Title = "Configurar OpenVPN", Method = "POST", Path = "/set_vpn_information.fcgi", BodyKind = "json", RequiresSession = true, Summary = "Altera as configurações de uso do OpenVPN no equipamento.", DocumentationUrl = "https://www.controlid.com.br/docs/access-api-en/system/network-settings/", SamplePayload = "{\n  \"enabled\": true,\n  \"login_enabled\": true,\n  \"login\": \"Admin\",\n  \"password\": \"Admin\"\n}" },
+            new() { Id = "set-vpn-information", Category = "Sistema", Title = "Configurar OpenVPN", Method = "POST", Path = "/set_vpn_information.fcgi", BodyKind = "json", RequiresSession = true, Summary = "Altera as configurações de uso do OpenVPN no equipamento.", DocumentationUrl = "https://www.controlid.com.br/docs/access-api-en/system/network-settings/", SamplePayload = "{\n  \"enabled\": true,\n  \"login_enabled\": true,\n  \"login\": \"<usuario>\",\n  \"password\": \"<senha>\"\n}" },
             new() { Id = "get-vpn-information", Category = "Sistema", Title = "Ler Configuração OpenVPN", Method = "GET", Path = "/get_vpn_information.fcgi", BodyKind = "none", RequiresSession = true, Summary = "Consulta a configuração atual do OpenVPN.", DocumentationUrl = "https://www.controlid.com.br/docs/access-api-en/system/network-settings/" },
             new() { Id = "get-vpn-status", Category = "Sistema", Title = "Ler Status OpenVPN", Method = "GET", Path = "/get_vpn_status.fcgi", BodyKind = "none", RequiresSession = true, Summary = "Consulta o status atual da conexão OpenVPN.", DocumentationUrl = "https://www.controlid.com.br/docs/access-api-en/system/network-settings/" },
             new() { Id = "has-vpn-file", Category = "Sistema", Title = "Verificar Arquivo OpenVPN", Method = "GET", Path = "/has_vpn_file.fcgi", BodyKind = "none", RequiresSession = true, Summary = "Informa se já existe um arquivo de configuração OpenVPN no equipamento.", DocumentationUrl = "https://www.controlid.com.br/docs/access-api-en/system/network-settings/" },
@@ -117,17 +118,74 @@ namespace Integracao.ControlID.PoC.Services.ControlIDApi
 
         public List<OfficialApiEndpointDefinition> GetAll()
         {
-            return Endpoints.Concat(AdditionalEndpoints).OrderBy(endpoint => endpoint.Category).ThenBy(endpoint => endpoint.Title).ToList();
+            return Endpoints
+                .Concat(AdditionalEndpoints)
+                .Select(NormalizeEndpointDefinition)
+                .OrderBy(endpoint => endpoint.Category)
+                .ThenBy(endpoint => endpoint.Title)
+                .ToList();
         }
 
         public List<string> GetCategories()
         {
-            return Endpoints.Concat(AdditionalEndpoints).Select(endpoint => endpoint.Category).Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(category => category).ToList();
+            return Endpoints
+                .Concat(AdditionalEndpoints)
+                .Select(NormalizeEndpointDefinition)
+                .Select(endpoint => endpoint.Category)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(category => category)
+                .ToList();
         }
 
         public OfficialApiEndpointDefinition? GetById(string id)
         {
-            return Endpoints.Concat(AdditionalEndpoints).FirstOrDefault(endpoint => endpoint.Id.Equals(id, StringComparison.OrdinalIgnoreCase));
+            var endpoint = Endpoints
+                .Concat(AdditionalEndpoints)
+                .FirstOrDefault(item => item.Id.Equals(id, StringComparison.OrdinalIgnoreCase));
+
+            return endpoint == null ? null : NormalizeEndpointDefinition(endpoint);
+        }
+
+        private static OfficialApiEndpointDefinition NormalizeEndpointDefinition(OfficialApiEndpointDefinition endpoint)
+        {
+            return new OfficialApiEndpointDefinition
+            {
+                Id = endpoint.Id,
+                Category = NormalizeText(endpoint.Category),
+                Title = NormalizeText(endpoint.Title),
+                Direction = endpoint.Direction,
+                Method = endpoint.Method,
+                Path = endpoint.Path,
+                BodyKind = endpoint.BodyKind,
+                ContentType = endpoint.ContentType,
+                RequiresSession = endpoint.RequiresSession,
+                Invokable = endpoint.Invokable,
+                Summary = NormalizeText(endpoint.Summary),
+                DocumentationUrl = endpoint.DocumentationUrl,
+                SamplePayload = NormalizeText(endpoint.SamplePayload),
+                Notes = NormalizeText(endpoint.Notes),
+                QueryTemplate = NormalizeText(endpoint.QueryTemplate),
+                FunctionalDescription = NormalizeText(endpoint.FunctionalDescription),
+                DeveloperGuidance = NormalizeText(endpoint.DeveloperGuidance)
+            };
+        }
+
+        private static string NormalizeText(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value) || !(value.Contains('Ã') || value.Contains('Â')))
+            {
+                return value;
+            }
+
+            try
+            {
+                return Encoding.UTF8.GetString(Encoding.Latin1.GetBytes(value));
+            }
+            catch
+            {
+                return value;
+            }
         }
     }
 }
+

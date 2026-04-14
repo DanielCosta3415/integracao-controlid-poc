@@ -5,6 +5,7 @@ using System.IO;
 using Integracao.ControlID.PoC.Models.ControlIDApi;
 using Integracao.ControlID.PoC.Services.ControlIDApi;
 using Integracao.ControlID.PoC.ViewModels.System;
+using Integracao.ControlID.PoC.Helpers;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Integracao.ControlID.PoC.Controllers
@@ -71,7 +72,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                model.ErrorMessage = $"Erro ao consultar informações do sistema: {ex.Message}";
+                model.ErrorMessage = SecurityTextHelper.BuildSafeUserMessage("Erro ao consultar informações do sistema", ex);
                 _logger.LogError(ex, "Erro ao consultar informações do sistema.");
             }
 
@@ -101,7 +102,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                TempData["StatusMessage"] = $"Erro ao reiniciar dispositivo: {ex.Message}";
+                TempData["StatusMessage"] = SecurityTextHelper.BuildSafeUserMessage("Erro ao reiniciar dispositivo", ex);
                 TempData["StatusType"] = "danger";
                 _logger.LogError(ex, "Erro ao reiniciar dispositivo.");
             }
@@ -142,7 +143,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                TempData["StatusMessage"] = $"Erro ao sincronizar data/hora: {ex.Message}";
+                TempData["StatusMessage"] = SecurityTextHelper.BuildSafeUserMessage("Erro ao sincronizar data/hora", ex);
                 TempData["StatusType"] = "danger";
                 _logger.LogError(ex, "Erro ao sincronizar data/hora.");
             }
@@ -206,7 +207,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                ModelState.AddModelError(string.Empty, $"Erro ao gerar hash: {ex.Message}");
+                ModelState.AddModelError(string.Empty, SecurityTextHelper.BuildSafeUserMessage("Erro ao gerar hash", ex));
                 _logger.LogError(ex, "Erro ao gerar hash de senha.");
             }
 
@@ -246,7 +247,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                model.ResultMessage = ex.Message;
+                model.ResultMessage = SecurityTextHelper.BuildSafeUserMessage("A operação não pôde ser concluída", ex);
                 model.ResultStatusType = "danger";
                 _logger.LogError(ex, "Erro ao alterar credenciais de login do equipamento.");
             }
@@ -279,7 +280,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                model.ErrorMessage = $"Erro ao carregar dados de rede: {ex.Message}";
+                model.ErrorMessage = SecurityTextHelper.BuildSafeUserMessage("Erro ao carregar dados de rede", ex);
                 _logger.LogError(ex, "Erro ao carregar página de rede.");
             }
 
@@ -328,7 +329,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                model.ResultMessage = ex.Message;
+                model.ResultMessage = SecurityTextHelper.BuildSafeUserMessage("A operação não pôde ser concluída", ex);
                 model.ResultStatusType = "danger";
                 _logger.LogError(ex, "Erro ao atualizar configurações de rede.");
             }
@@ -385,7 +386,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                model.ResultMessage = ex.Message;
+                model.ResultMessage = SecurityTextHelper.BuildSafeUserMessage("A operação não pôde ser concluída", ex);
                 model.ResultStatusType = "danger";
                 _logger.LogError(ex, "Erro ao enviar certificado SSL.");
             }
@@ -430,7 +431,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                model.ResultMessage = ex.Message;
+                model.ResultMessage = SecurityTextHelper.BuildSafeUserMessage("A operação não pôde ser concluída", ex);
                 model.ResultStatusType = "danger";
                 _logger.LogError(ex, "Erro ao atualizar configurações OpenVPN.");
             }
@@ -483,7 +484,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                model.ResultMessage = ex.Message;
+                model.ResultMessage = SecurityTextHelper.BuildSafeUserMessage("A operação não pôde ser concluída", ex);
                 model.ResultStatusType = "danger";
                 _logger.LogError(ex, "Erro ao enviar arquivo OpenVPN.");
             }
@@ -519,7 +520,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                TempData["StatusMessage"] = $"Erro ao baixar arquivo exemplo do OpenVPN: {ex.Message}";
+                TempData["StatusMessage"] = SecurityTextHelper.BuildSafeUserMessage("Erro ao baixar arquivo exemplo do OpenVPN", ex);
                 TempData["StatusType"] = "danger";
                 _logger.LogError(ex, "Erro ao baixar arquivo exemplo do OpenVPN.");
                 return RedirectToAction(nameof(Vpn));
@@ -555,7 +556,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                TempData["StatusMessage"] = $"Erro ao iniciar reset de fábrica: {ex.Message}";
+                TempData["StatusMessage"] = SecurityTextHelper.BuildSafeUserMessage("Erro ao iniciar reset de fábrica", ex);
                 TempData["StatusType"] = "danger";
                 _logger.LogError(ex, "Erro ao iniciar reset de fábrica.");
             }
@@ -586,7 +587,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                TempData["StatusMessage"] = $"Erro ao reiniciar em modo de update: {ex.Message}";
+                TempData["StatusMessage"] = SecurityTextHelper.BuildSafeUserMessage("Erro ao reiniciar em modo de update", ex);
                 TempData["StatusType"] = "danger";
                 _logger.LogError(ex, "Erro ao reiniciar em modo de update.");
             }
@@ -617,7 +618,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                TempData["StatusMessage"] = $"Erro ao remover administradores: {ex.Message}";
+                TempData["StatusMessage"] = SecurityTextHelper.BuildSafeUserMessage("Erro ao remover administradores", ex);
                 TempData["StatusType"] = "danger";
                 _logger.LogError(ex, "Erro ao remover administradores.");
             }
@@ -627,13 +628,7 @@ namespace Integracao.ControlID.PoC.Controllers
 
         private static string BuildErrorMessage(OfficialApiInvocationResult result, string prefix)
         {
-            if (!string.IsNullOrWhiteSpace(result.ErrorMessage))
-                return $"{prefix}: {result.ErrorMessage}";
-
-            if (!string.IsNullOrWhiteSpace(result.ResponseBody))
-                return $"{prefix}: {result.ResponseBody}";
-
-            return $"{prefix} (status HTTP {result.StatusCode}).";
+            return SecurityTextHelper.BuildApiFailureMessage(result, prefix);
         }
 
         private static string GetString(JsonElement element, params string[] propertyNames)
@@ -738,7 +733,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                model.ErrorMessage = $"Erro ao consultar estado da OpenVPN: {ex.Message}";
+                model.ErrorMessage = SecurityTextHelper.BuildSafeUserMessage("Erro ao consultar estado da OpenVPN", ex);
                 _logger.LogWarning(ex, "Erro ao consultar dados da OpenVPN.");
             }
         }
@@ -804,3 +799,7 @@ namespace Integracao.ControlID.PoC.Controllers
     }
 
 }
+
+
+
+

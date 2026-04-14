@@ -6,7 +6,7 @@
     {
         Eyebrow = "Eventos, logs e push",
         Title = "Detalhes do erro",
-        Description = "Revise a rota afetada, o usuário, o request id e a stack trace completa em um painel técnico mais legível.",
+        Description = "Revise a rota afetada, o usuário e o request id sem expor stack traces completos na interface.",
         BadgeText = $"Status {Model.StatusCode}",
         BadgeTone = "warning",
         Actions = new[]
@@ -17,9 +17,9 @@
     var stackPanel = new RawResponsePanelViewModel
     {
         PanelId = "error-stack-trace",
-        Title = "Stack trace completa",
-        Description = "Use este painel para copiar rapidamente o erro bruto registrado.",
-        Content = string.IsNullOrWhiteSpace(Model.StackTrace) ? "Sem stack trace disponível." : Model.StackTrace,
+        Title = "Detalhes técnicos protegidos",
+        Description = "Para hardening da PoC, stack trace e exceções internas completas permanecem disponíveis apenas nos logs do servidor.",
+        Content = "Consulte o request id e os logs do servidor para investigar este incidente em profundidade.",
         BadgeText = string.IsNullOrWhiteSpace(Model.RequestId) ? "Sem request id" : $"Request {Model.RequestId}",
         BadgeTone = "warning"
     };
@@ -36,7 +36,7 @@
             <div class="app-detail-list__row"><dt>Usuário</dt><dd>@(string.IsNullOrWhiteSpace(Model.User) ? "-" : Model.User)</dd></div>
             <div class="app-detail-list__row"><dt>Data e hora</dt><dd>@(Model.OccurredAt?.ToString("dd/MM/yyyy HH:mm") ?? "-")</dd></div>
             <div class="app-detail-list__row"><dt>Request ID</dt><dd>@(string.IsNullOrWhiteSpace(Model.RequestId) ? "-" : Model.RequestId)</dd></div>
-            <div class="app-detail-list__row"><dt>Inner exception</dt><dd>@(string.IsNullOrWhiteSpace(Model.InnerException) ? "-" : Model.InnerException)</dd></div>
+            <div class="app-detail-list__row"><dt>Inner exception</dt><dd>Disponível apenas nos logs do servidor.</dd></div>
             <div class="app-detail-list__row"><dt>Dados adicionais</dt><dd>@(string.IsNullOrWhiteSpace(Model.AdditionalData) ? "-" : Model.AdditionalData)</dd></div>
         </dl>
     </section>

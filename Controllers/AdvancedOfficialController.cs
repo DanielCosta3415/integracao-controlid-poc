@@ -1,7 +1,8 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using Integracao.ControlID.PoC.Models.ControlIDApi;
 using Integracao.ControlID.PoC.Services.ControlIDApi;
 using Integracao.ControlID.PoC.ViewModels.AdvancedOfficial;
+using Integracao.ControlID.PoC.Helpers;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Integracao.ControlID.PoC.Controllers
@@ -49,13 +50,13 @@ namespace Integracao.ControlID.PoC.Controllers
                     return File(bytes, GetContentType(result.ResponseContentType, "application/octet-stream"), $"{model.ObjectName}-export.bin");
                 }
 
-                model.ResultMessage = "Exportação concluída.";
+                model.ResultMessage = "ExportaÃ§Ã£o concluÃ­da.";
                 model.ResultStatusType = "success";
                 model.ResponseJson = result.ResponseBody;
             }
             catch (Exception ex)
             {
-                model.ErrorMessage = ex.Message;
+                model.ErrorMessage = SecurityTextHelper.BuildSafeUserMessage("A operação não pôde ser concluída", ex);
                 _logger.LogError(ex, "Erro ao exportar objetos do tipo {ObjectName}.", model.ObjectName);
             }
 
@@ -95,7 +96,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                model.ErrorMessage = ex.Message;
+                model.ErrorMessage = SecurityTextHelper.BuildSafeUserMessage("A operação não pôde ser concluída", ex);
                 _logger.LogError(ex, "Erro ao atualizar intertravamento em rede.");
             }
 
@@ -126,7 +127,7 @@ namespace Integracao.ControlID.PoC.Controllers
                 });
 
                 if (!result.Success)
-                    throw new InvalidOperationException(BuildErrorMessage(result, "Erro ao capturar imagem da câmera"));
+                    throw new InvalidOperationException(BuildErrorMessage(result, "Erro ao capturar imagem da cÃ¢mera"));
 
                 model.ResultMessage = "Imagem capturada com sucesso.";
                 model.ResultStatusType = "success";
@@ -144,8 +145,8 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                model.ErrorMessage = ex.Message;
-                _logger.LogError(ex, "Erro ao capturar imagem da câmera.");
+                model.ErrorMessage = SecurityTextHelper.BuildSafeUserMessage("A operação não pôde ser concluída", ex);
+                _logger.LogError(ex, "Erro ao capturar imagem da cÃ¢mera.");
             }
 
             return View(model);
@@ -179,7 +180,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                model.ErrorMessage = ex.Message;
+                model.ErrorMessage = SecurityTextHelper.BuildSafeUserMessage("A operação não pôde ser concluída", ex);
                 _logger.LogError(ex, "Erro ao consultar lista de fotos faciais.");
             }
 
@@ -203,7 +204,7 @@ namespace Integracao.ControlID.PoC.Controllers
                     throw new InvalidOperationException("Selecione ao menos um arquivo para o cadastro em lote.");
 
                 if (userIds.Count != model.BatchFiles.Count)
-                    throw new InvalidOperationException("A quantidade de IDs deve ser igual à quantidade de arquivos enviados no lote.");
+                    throw new InvalidOperationException("A quantidade de IDs deve ser igual Ã  quantidade de arquivos enviados no lote.");
 
                 var userImages = new List<object>();
                 for (var index = 0; index < model.BatchFiles.Count; index++)
@@ -239,7 +240,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                model.ErrorMessage = ex.Message;
+                model.ErrorMessage = SecurityTextHelper.BuildSafeUserMessage("A operação não pôde ser concluída", ex);
                 _logger.LogError(ex, "Erro ao cadastrar lote de fotos faciais.");
             }
 
@@ -275,7 +276,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                model.ErrorMessage = ex.Message;
+                model.ErrorMessage = SecurityTextHelper.BuildSafeUserMessage("A operação não pôde ser concluída", ex);
                 _logger.LogError(ex, "Erro ao testar imagem facial.");
             }
 
@@ -317,7 +318,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                model.ErrorMessage = ex.Message;
+                model.ErrorMessage = SecurityTextHelper.BuildSafeUserMessage("A operação não pôde ser concluída", ex);
                 _logger.LogError(ex, "Erro ao controlar LED remotamente.");
             }
 
@@ -329,7 +330,7 @@ namespace Integracao.ControlID.PoC.Controllers
             if (_apiService.TryGetConnection(out _, out _))
                 return true;
 
-            var message = "É necessário conectar-se e autenticar com um equipamento Control iD.";
+            var message = "Ã‰ necessÃ¡rio conectar-se e autenticar com um equipamento Control iD.";
             switch (model)
             {
                 case ExportObjectsViewModel exportModel:
@@ -362,7 +363,7 @@ namespace Integracao.ControlID.PoC.Controllers
                 .ToList();
 
             if (values.Count == 0)
-                throw new InvalidOperationException("Informe ao menos um ID de usuário válido.");
+                throw new InvalidOperationException("Informe ao menos um ID de usuÃ¡rio vÃ¡lido.");
 
             return values;
         }
@@ -370,12 +371,12 @@ namespace Integracao.ControlID.PoC.Controllers
         private static string BuildErrorMessage(OfficialApiInvocationResult result, string prefix)
         {
             if (!string.IsNullOrWhiteSpace(result.ErrorMessage))
-                return $"{prefix}: {result.ErrorMessage}";
+                return SecurityTextHelper.BuildApiFailureMessage(result, prefix);
 
             if (!string.IsNullOrWhiteSpace(result.ResponseBody) && !result.ResponseBodyIsBase64)
-                return $"{prefix}: {result.ResponseBody}";
+                return SecurityTextHelper.BuildApiFailureMessage(result, prefix);
 
-            return $"{prefix} (status HTTP {result.StatusCode}).";
+            return SecurityTextHelper.BuildApiFailureMessage(result, prefix);
         }
 
         private static string FormatJson(string rawJson, JsonDocument? document)
@@ -395,3 +396,7 @@ namespace Integracao.ControlID.PoC.Controllers
         }
     }
 }
+
+
+
+

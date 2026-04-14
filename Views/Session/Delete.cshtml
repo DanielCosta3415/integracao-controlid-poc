@@ -22,7 +22,7 @@
         <div class="entity-overview">
             <div class="entity-overview__item"><span>Usuário</span><strong>@Model.Username</strong></div>
             <div class="entity-overview__item"><span>Equipamento</span><strong>@Model.DeviceName</strong></div>
-            <div class="entity-overview__item"><span>Sessão</span><strong>@Model.SessionString</strong></div>
+            <div class="entity-overview__item"><span>Sessão</span><strong>@SecurityTextHelper.MaskSensitiveValue(Model.SessionString)</strong></div>
         </div>
         <div class="app-note">Essa ação remove a sessão persistida localmente e pode exigir nova autenticação para os fluxos protegidos do equipamento.</div>
     </section>

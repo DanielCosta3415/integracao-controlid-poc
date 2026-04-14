@@ -1,8 +1,9 @@
-using System;
+﻿using System;
 using System.Text.Json;
 using Integracao.ControlID.PoC.Models.ControlIDApi;
 using Integracao.ControlID.PoC.Services.ControlIDApi;
 using Integracao.ControlID.PoC.ViewModels.Catra;
+using Integracao.ControlID.PoC.Helpers;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Integracao.ControlID.PoC.Controllers
@@ -27,7 +28,7 @@ namespace Integracao.ControlID.PoC.Controllers
 
             if (!_officialApi.TryGetConnection(out _, out _))
             {
-                model.ErrorMessage = "É necessário conectar-se e autenticar com um equipamento Control iD.";
+                model.ErrorMessage = "Ã‰ necessÃ¡rio conectar-se e autenticar com um equipamento Control iD.";
                 return View(model);
             }
 
@@ -43,7 +44,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                model.ErrorMessage = $"Erro ao consultar eventos da catraca: {ex.Message}";
+                model.ErrorMessage = SecurityTextHelper.BuildSafeUserMessage("Erro ao consultar eventos da catraca", ex);
                 _logger.LogError(ex, "Erro ao consultar eventos da catraca.");
             }
 
@@ -88,7 +89,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Erro ao buscar evento de catraca {EventId} para exclusão.", id.Value);
+                _logger.LogError(ex, "Erro ao buscar evento de catraca {EventId} para exclusÃ£o.", id.Value);
             }
 
             return NotFound();
@@ -100,7 +101,7 @@ namespace Integracao.ControlID.PoC.Controllers
         {
             if (!_officialApi.TryGetConnection(out _, out _))
             {
-                TempData["StatusMessage"] = "É necessário conectar-se e autenticar com um equipamento Control iD.";
+                TempData["StatusMessage"] = "Ã‰ necessÃ¡rio conectar-se e autenticar com um equipamento Control iD.";
                 TempData["StatusType"] = "danger";
                 return RedirectToAction(nameof(Index));
             }
@@ -115,12 +116,12 @@ namespace Integracao.ControlID.PoC.Controllers
 
                 EnsureSuccess(result, "Erro ao excluir evento da catraca");
 
-                TempData["StatusMessage"] = "Evento da catraca excluído com sucesso.";
+                TempData["StatusMessage"] = "Evento da catraca excluÃ­do com sucesso.";
                 TempData["StatusType"] = "success";
             }
             catch (Exception ex)
             {
-                TempData["StatusMessage"] = $"Erro ao excluir evento da catraca: {ex.Message}";
+                TempData["StatusMessage"] = SecurityTextHelper.BuildSafeUserMessage("Erro ao excluir evento da catraca", ex);
                 TempData["StatusType"] = "danger";
                 _logger.LogError(ex, "Erro ao excluir evento da catraca {EventId}.", id);
             }
@@ -134,7 +135,7 @@ namespace Integracao.ControlID.PoC.Controllers
         {
             if (!_officialApi.TryGetConnection(out _, out _))
             {
-                TempData["StatusMessage"] = "É necessário conectar-se e autenticar com um equipamento Control iD.";
+                TempData["StatusMessage"] = "Ã‰ necessÃ¡rio conectar-se e autenticar com um equipamento Control iD.";
                 TempData["StatusType"] = "danger";
                 return RedirectToAction(nameof(Index));
             }
@@ -161,7 +162,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                TempData["StatusMessage"] = $"Erro ao enviar comando da catraca: {ex.Message}";
+                TempData["StatusMessage"] = SecurityTextHelper.BuildSafeUserMessage("Erro ao enviar comando da catraca", ex);
                 TempData["StatusType"] = "danger";
                 _logger.LogError(ex, "Erro ao executar comando da catraca.");
             }
@@ -214,8 +215,8 @@ namespace Integracao.ControlID.PoC.Controllers
                 "allow" => ("catra", $"allow={NormalizeDirection(model.AllowDirection)}"),
                 "relay" when model.Relay is 1 or 2 => ("catra", $"relay={model.Relay.Value}"),
                 "collector" => ("open_collector", string.Empty),
-                "relay" => throw new InvalidOperationException("Informe um relé válido da catraca: 1 ou 2."),
-                _ => throw new InvalidOperationException("Tipo de comando de catraca inválido.")
+                "relay" => throw new InvalidOperationException("Informe um relÃ© vÃ¡lido da catraca: 1 ou 2."),
+                _ => throw new InvalidOperationException("Tipo de comando de catraca invÃ¡lido.")
             };
         }
 
@@ -225,7 +226,7 @@ namespace Integracao.ControlID.PoC.Controllers
             return normalized switch
             {
                 "anticlockwise" or "clockwise" or "both" => normalized,
-                _ => throw new InvalidOperationException("Direção inválida para a catraca. Use clockwise, anticlockwise ou both.")
+                _ => throw new InvalidOperationException("DireÃ§Ã£o invÃ¡lida para a catraca. Use clockwise, anticlockwise ou both.")
             };
         }
 
@@ -276,12 +277,12 @@ namespace Integracao.ControlID.PoC.Controllers
         private static string BuildErrorMessage(OfficialApiInvocationResult result, string prefix)
         {
             if (!string.IsNullOrWhiteSpace(result.ErrorMessage))
-                return $"{prefix}: {result.ErrorMessage}";
+                return SecurityTextHelper.BuildApiFailureMessage(result, prefix);
 
             if (!string.IsNullOrWhiteSpace(result.ResponseBody) && !result.ResponseBodyIsBase64)
-                return $"{prefix}: {result.ResponseBody}";
+                return SecurityTextHelper.BuildApiFailureMessage(result, prefix);
 
-            return $"{prefix} (status HTTP {result.StatusCode}).";
+            return SecurityTextHelper.BuildApiFailureMessage(result, prefix);
         }
 
         private static string? GetString(JsonElement element, params string[] propertyNames)
@@ -385,3 +386,7 @@ namespace Integracao.ControlID.PoC.Controllers
         }
     }
 }
+
+
+
+

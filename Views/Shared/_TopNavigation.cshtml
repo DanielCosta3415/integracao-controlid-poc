@@ -8,7 +8,9 @@
 
 <nav class="app-nav" aria-label="Módulos da aplicação">
     <a class="app-nav-home @(string.IsNullOrWhiteSpace(activeDomainId) && string.IsNullOrWhiteSpace(activeModuleKey) ? "is-active" : null)"
-       href="@Url.Action("Index", "Home")">
+       href="@Url.Action("Index", "Home")"
+       aria-current="@(string.IsNullOrWhiteSpace(activeDomainId) && string.IsNullOrWhiteSpace(activeModuleKey) ? "page" : null)"
+       aria-label="Abrir o painel inicial da PoC">
         Painel
     </a>
 
@@ -21,9 +23,16 @@
             .ToList();
         var secondaryCount = domain.Modules.Count - primaryModules.Count;
         var detailsClass = $"app-nav-domain{(isActiveDomain ? " is-current-domain" : string.Empty)}";
+        var panelId = $"domain-panel-{domain.Id}";
+        var summaryId = $"domain-summary-{domain.Id}";
 
         <details class="@detailsClass" data-topnav-menu>
-            <summary class="app-nav-domain__summary">
+            <summary class="app-nav-domain__summary"
+                     id="@summaryId"
+                     data-topnav-summary
+                     aria-label="Abrir menu do domínio @domain.Title"
+                     aria-controls="@panelId"
+                     aria-expanded="false">
                 <span class="app-nav-domain__summary-copy">
                     <strong>@domain.ShortTitle</strong>
                     <small>@primaryModules.Count módulos principais</small>
@@ -31,7 +40,12 @@
                 <span class="app-nav-domain__summary-icon" aria-hidden="true">@domain.Icon</span>
             </summary>
 
-            <div class="app-nav-domain__panel">
+            <div class="app-nav-domain__panel"
+                 id="@panelId"
+                 data-topnav-panel
+                 role="group"
+                 aria-labelledby="@summaryId"
+                 aria-hidden="true">
                 <div class="app-nav-domain__panel-head">
                     <div class="app-stack-sm">
                         <span class="app-chip app-chip--@domain.AccentTone">@domain.Title</span>
@@ -39,7 +53,11 @@
                         <p>@domain.Summary</p>
                     </div>
                     <div class="quick-links">
-                        <a class="btn btn-outline-secondary btn-sm" href="@Url.Action("Domain", "Workspace", new { id = domain.Id })">Abrir domínio</a>
+                        <a class="btn btn-outline-secondary btn-sm"
+                           href="@Url.Action("Domain", "Workspace", new { id = domain.Id })"
+                           aria-label="Abrir a visão completa do domínio @domain.Title">
+                            Abrir domínio
+                        </a>
                     </div>
                 </div>
 
@@ -59,7 +77,9 @@
                                data-module-group="@domain.Title"
                                data-module-label="@item.Label"
                                data-module-tags="@item.Tags"
-                               data-module-short="@item.ShortLabel">
+                               data-module-short="@item.ShortLabel"
+                               aria-label="Abrir @item.Label no domínio @domain.Title"
+                               aria-current="@(isActive ? "page" : null)">
                                 <span class="app-nav-module__icon">@item.ShortLabel</span>
                                 <span class="app-nav-module__copy">
                                     <strong>@item.Label</strong>
@@ -83,7 +103,11 @@
                 {
                     <div class="app-nav-domain__footer">
                         <span class="app-chip app-chip--neutral">+@secondaryCount telas especializadas</span>
-                        <a class="btn btn-quiet btn-sm" href="@Url.Action("Domain", "Workspace", new { id = domain.Id })">Ver tudo neste domínio</a>
+                        <a class="btn btn-quiet btn-sm"
+                           href="@Url.Action("Domain", "Workspace", new { id = domain.Id })"
+                           aria-label="Ver todas as telas do domínio @domain.Title">
+                            Ver tudo neste domínio
+                        </a>
                     </div>
                 }
             </div>

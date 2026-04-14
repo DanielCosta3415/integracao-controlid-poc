@@ -12,11 +12,16 @@ namespace Integracao.ControlID.PoC.Controllers
         private const string SessionSessionStringKey = "ControlID_SessionString";
 
         private readonly OfficialApiCatalogService _catalogService;
+        private readonly OfficialApiContractDocumentationService _documentationService;
         private readonly OfficialApiInvokerService _invokerService;
 
-        public OfficialApiController(OfficialApiCatalogService catalogService, OfficialApiInvokerService invokerService)
+        public OfficialApiController(
+            OfficialApiCatalogService catalogService,
+            OfficialApiContractDocumentationService documentationService,
+            OfficialApiInvokerService invokerService)
         {
             _catalogService = catalogService;
+            _documentationService = documentationService;
             _invokerService = invokerService;
         }
 
@@ -89,6 +94,13 @@ namespace Integracao.ControlID.PoC.Controllers
                 return NotFound();
 
             model.Endpoint = endpoint;
+            model.Contract = _documentationService.Build(endpoint);
+
+            if (!ModelState.IsValid)
+            {
+                model.ErrorMessage = "Revise os dados informados antes de invocar o endpoint.";
+                return View(model);
+            }
 
             if (!endpoint.Invokable)
             {
@@ -115,6 +127,7 @@ namespace Integracao.ControlID.PoC.Controllers
             {
                 EndpointId = endpoint.Id,
                 Endpoint = endpoint,
+                Contract = _documentationService.Build(endpoint),
                 DeviceAddress = HttpContext.Session.GetString(SessionDeviceAddressKey) ?? string.Empty,
                 SessionString = HttpContext.Session.GetString(SessionSessionStringKey) ?? string.Empty,
                 RequestBody = endpoint.SamplePayload

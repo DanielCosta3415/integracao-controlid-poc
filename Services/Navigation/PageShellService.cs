@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using Integracao.ControlID.PoC.Services.Security;
 using Integracao.ControlID.PoC.ViewModels.Shared;
 using Microsoft.AspNetCore.Http;
 
@@ -14,10 +15,12 @@ namespace Integracao.ControlID.PoC.Services.Navigation
         private const string SessionSessionStringKey = "ControlID_SessionString";
 
         private readonly NavigationCatalogService _navigationCatalogService;
+        private readonly ControlIdInputSanitizer _inputSanitizer;
 
-        public PageShellService(NavigationCatalogService navigationCatalogService)
+        public PageShellService(NavigationCatalogService navigationCatalogService, ControlIdInputSanitizer inputSanitizer)
         {
             _navigationCatalogService = navigationCatalogService;
+            _inputSanitizer = inputSanitizer;
         }
 
         public PageShellContextViewModel BuildShellContext(
@@ -72,47 +75,7 @@ namespace Integracao.ControlID.PoC.Services.Navigation
 
         public bool TryNormalizeConnection(ConnectionPanelViewModel model, out string baseAddress, out string errorMessage)
         {
-            baseAddress = string.Empty;
-            errorMessage = string.Empty;
-
-            if (!string.IsNullOrWhiteSpace(model.Host) &&
-                (model.Host.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
-                 model.Host.StartsWith("https://", StringComparison.OrdinalIgnoreCase)))
-            {
-                if (!Uri.TryCreate(model.Host.Trim(), UriKind.Absolute, out var fullUri))
-                {
-                    errorMessage = "Informe um IP, domínio ou URL válida para o equipamento.";
-                    return false;
-                }
-
-                baseAddress = $"{fullUri.Scheme}://{fullUri.Host}{(fullUri.IsDefaultPort ? string.Empty : $":{fullUri.Port}")}";
-                return true;
-            }
-
-            if (string.IsNullOrWhiteSpace(model.Host))
-            {
-                errorMessage = "Informe o IP ou domínio do equipamento Control iD.";
-                return false;
-            }
-
-            var scheme = string.Equals(model.Scheme, "https", StringComparison.OrdinalIgnoreCase) ? "https" : "http";
-
-            try
-            {
-                var builder = new UriBuilder(scheme, model.Host.Trim());
-                if (model.Port.HasValue && model.Port.Value > 0)
-                {
-                    builder.Port = model.Port.Value;
-                }
-
-                baseAddress = builder.Uri.GetLeftPart(UriPartial.Authority).TrimEnd('/');
-                return true;
-            }
-            catch (UriFormatException)
-            {
-                errorMessage = "Não foi possível montar a URL do equipamento com os dados informados.";
-                return false;
-            }
+            return _inputSanitizer.TryNormalizeBaseAddress(model.Host, model.Scheme, model.Port, out baseAddress, out errorMessage);
         }
 
         private static string BuildReturnUrl(HttpContext? httpContext)

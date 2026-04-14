@@ -9,11 +9,33 @@ namespace Integracao.ControlID.PoC.Services.Navigation
     {
         private readonly IReadOnlyList<NavigationDomainViewModel> _domains;
         private readonly IReadOnlyList<NavigationModuleViewModel> _modules;
+        private readonly IReadOnlyDictionary<string, NavigationDomainViewModel> _domainById;
+        private readonly IReadOnlyDictionary<string, NavigationDomainViewModel> _domainByController;
+        private readonly IReadOnlyDictionary<string, NavigationModuleViewModel> _moduleByRoute;
+        private readonly IReadOnlyDictionary<string, NavigationModuleViewModel> _defaultModuleByController;
 
         public NavigationCatalogService()
         {
             _domains = BuildDomains();
             _modules = _domains.SelectMany(domain => domain.Modules).ToList();
+            _domainById = _domains.ToDictionary(domain => domain.Id, StringComparer.OrdinalIgnoreCase);
+            _moduleByRoute = _modules
+                .GroupBy(module => BuildRouteKey(module.Controller, module.Action), StringComparer.OrdinalIgnoreCase)
+                .ToDictionary(group => group.Key, group => group.First(), StringComparer.OrdinalIgnoreCase);
+            _defaultModuleByController = _modules
+                .GroupBy(module => module.Controller, StringComparer.OrdinalIgnoreCase)
+                .ToDictionary(
+                    group => group.Key,
+                    group => group
+                        .OrderBy(module => module.Visibility == "primary" ? 0 : 1)
+                        .ThenBy(module => module.Priority)
+                        .First(),
+                    StringComparer.OrdinalIgnoreCase);
+            _domainByController = _defaultModuleByController
+                .ToDictionary(
+                    pair => pair.Key,
+                    pair => _domainById[pair.Value.DomainId],
+                    StringComparer.OrdinalIgnoreCase);
         }
 
         public IReadOnlyList<NavigationDomainViewModel> GetDomains()
@@ -28,38 +50,37 @@ namespace Integracao.ControlID.PoC.Services.Navigation
 
         public NavigationDomainViewModel? GetDomain(string? id)
         {
-            return _domains.FirstOrDefault(domain => domain.Id.Equals(id ?? string.Empty, StringComparison.OrdinalIgnoreCase));
+            return _domainById.TryGetValue(id ?? string.Empty, out var domain) ? domain : null;
         }
 
         public NavigationDomainViewModel? GetDomainByController(string? controller)
         {
-            var module = GetModule(controller, null);
-            return module == null ? null : GetDomain(module.DomainId);
+            return _domainByController.TryGetValue(controller ?? string.Empty, out var domain) ? domain : null;
         }
 
         public NavigationModuleViewModel? GetModule(string? controller, string? action)
         {
-            var candidates = _modules
-                .Where(module => module.Controller.Equals(controller ?? string.Empty, StringComparison.OrdinalIgnoreCase))
-                .OrderBy(module => module.Visibility == "primary" ? 0 : 1)
-                .ThenBy(module => module.Priority)
-                .ToList();
-
-            if (!candidates.Any())
+            var normalizedController = controller ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(normalizedController))
             {
                 return null;
             }
 
             if (!string.IsNullOrWhiteSpace(action))
             {
-                var exact = candidates.FirstOrDefault(module => module.Action.Equals(action, StringComparison.OrdinalIgnoreCase));
-                if (exact != null)
+                var routeKey = BuildRouteKey(normalizedController, action);
+                if (_moduleByRoute.TryGetValue(routeKey, out var exact))
                 {
                     return exact;
                 }
             }
 
-            return candidates.First();
+            return _defaultModuleByController.TryGetValue(normalizedController, out var fallback) ? fallback : null;
+        }
+
+        private static string BuildRouteKey(string? controller, string? action)
+        {
+            return $"{controller ?? string.Empty}:{action ?? string.Empty}";
         }
 
         private static IReadOnlyList<NavigationDomainViewModel> BuildDomains()

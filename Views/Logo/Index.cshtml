@@ -64,7 +64,11 @@
                                 @if (logo.HasImage && !string.IsNullOrEmpty(logo.Base64Image))
                                 {
                                     <span class="app-media-preview app-media-preview--sm">
-                                        <img src="data:image/@logo.Format;base64,@logo.Base64Image" alt="Logo do slot @logo.Id" />
+                                        <img src="data:image/@logo.Format;base64,@logo.Base64Image"
+                                             alt="Logo do slot @logo.Id"
+                                             loading="lazy"
+                                             decoding="async"
+                                             fetchpriority="low" />
                                     </span>
                                 }
                                 else

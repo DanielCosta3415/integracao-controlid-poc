@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace Integracao.ControlID.PoC.ViewModels.Shared
 {
@@ -39,7 +40,9 @@ namespace Integracao.ControlID.PoC.ViewModels.Shared
     public class ConnectionPanelViewModel
     {
         public string Scheme { get; set; } = "http";
+        [StringLength(2048, ErrorMessage = "Informe um host ou URL com até 2048 caracteres.")]
         public string Host { get; set; } = string.Empty;
+        [Range(1, 65535, ErrorMessage = "Informe uma porta válida entre 1 e 65535.")]
         public int? Port { get; set; }
         public string BaseAddress { get; set; } = string.Empty;
         public string ReturnUrl { get; set; } = "/";

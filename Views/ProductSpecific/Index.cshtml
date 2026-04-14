@@ -36,14 +36,14 @@
                         <div class="col-md-6">
                             <form asp-action="UpgradeIdFace" method="post">
                                 <label asp-for="IdFaceProPassword" class="form-label"></label>
-                                <input asp-for="IdFaceProPassword" class="form-control" />
+                                <input asp-for="IdFaceProPassword" class="form-control" type="password" autocomplete="off" />
                                 <button type="submit" class="btn btn-primary mt-3">Executar upgrade Pro do iDFace</button>
                             </form>
                         </div>
                         <div class="col-md-6">
                             <form asp-action="UpgradeEnterprise" method="post">
                                 <label asp-for="IdFlexEnterprisePassword" class="form-label"></label>
-                                <input asp-for="IdFlexEnterprisePassword" class="form-control" />
+                                <input asp-for="IdFlexEnterprisePassword" class="form-control" type="password" autocomplete="off" />
                                 <button type="submit" class="btn btn-primary mt-3">Executar upgrade Enterprise</button>
                             </form>
                         </div>
@@ -183,7 +183,7 @@
                             <div class="col-md-2"><div class="form-check mt-4"><input asp-for="StreamingRtspEnabled" class="form-check-input" /><label asp-for="StreamingRtspEnabled" class="form-check-label"></label></div></div>
                             <div class="col-md-2"><label asp-for="StreamingRtspPort" class="form-label"></label><input asp-for="StreamingRtspPort" class="form-control" /></div>
                             <div class="col-md-3"><label asp-for="StreamingRtspUsername" class="form-label"></label><input asp-for="StreamingRtspUsername" class="form-control" /></div>
-                            <div class="col-md-3"><label asp-for="StreamingRtspPassword" class="form-label"></label><input asp-for="StreamingRtspPassword" class="form-control" /></div>
+                            <div class="col-md-3"><label asp-for="StreamingRtspPassword" class="form-label"></label><input asp-for="StreamingRtspPassword" class="form-control" type="password" autocomplete="off" /></div>
                             <div class="col-md-2">
                                 <label asp-for="StreamingRtspCodec" class="form-label"></label>
                                 <select asp-for="StreamingRtspCodec" class="form-select">
@@ -227,7 +227,7 @@
                             <div class="col-md-2"><div class="form-check mt-4"><input asp-for="SipNumericBranchEnabled" class="form-check-input" /><label asp-for="SipNumericBranchEnabled" class="form-check-label"></label></div></div>
                             <div class="col-md-2"><label asp-for="SipBranch" class="form-label"></label><input asp-for="SipBranch" class="form-control" /></div>
                             <div class="col-md-2"><label asp-for="SipLogin" class="form-label"></label><input asp-for="SipLogin" class="form-control" /></div>
-                            <div class="col-md-2"><label asp-for="SipPassword" class="form-label"></label><input asp-for="SipPassword" class="form-control" /></div>
+                            <div class="col-md-2"><label asp-for="SipPassword" class="form-label"></label><input asp-for="SipPassword" class="form-control" type="password" autocomplete="off" /></div>
                             <div class="col-md-2"><div class="form-check mt-4"><input asp-for="SipPeerToPeerEnabled" class="form-check-input" /><label asp-for="SipPeerToPeerEnabled" class="form-check-label"></label></div></div>
                             <div class="col-md-2"><label asp-for="SipRegStatusQueryPeriod" class="form-label"></label><input asp-for="SipRegStatusQueryPeriod" class="form-control" /></div>
                             <div class="col-md-2"><label asp-for="SipServerRetryInterval" class="form-label"></label><input asp-for="SipServerRetryInterval" class="form-control" /></div>

@@ -30,15 +30,15 @@ namespace Integracao.ControlID.PoC.Middlewares
 
                 context.Response.ContentType = "application/json";
                 context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+                var traceId = context.TraceIdentifier;
 
                 var errorResponse = new
                 {
                     Success = false,
                     Message = "Ocorreu um erro interno no servidor.",
-                    Exception = ex.Message,
-#if DEBUG
-                    StackTrace = ex.StackTrace
-#endif
+                    // SECURITY: detalhes internos ficam apenas no log para evitar
+                    // vazamento de infraestrutura, paths locais e stack trace ao client-side.
+                    TraceId = traceId
                 };
 
                 var json = JsonSerializer.Serialize(errorResponse, new JsonSerializerOptions

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
+using Integracao.ControlID.PoC.Helpers;
 using Integracao.ControlID.PoC.Models.ControlIDApi;
 using Integracao.ControlID.PoC.Services.ControlIDApi;
 using Integracao.ControlID.PoC.Services.Database;
@@ -145,6 +146,15 @@ namespace Integracao.ControlID.PoC.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ConnectToDevice(ConnectionPanelViewModel connection)
         {
+            if (!ModelState.IsValid)
+            {
+                TempData["StatusMessage"] = SecurityTextHelper.NormalizeForDisplay(
+                    ModelState.Values.SelectMany(entry => entry.Errors).Select(error => error.ErrorMessage).FirstOrDefault(),
+                    "Revise protocolo, host e porta antes de tentar conectar o equipamento.");
+                TempData["StatusType"] = "danger";
+                return RedirectToLocal(connection.ReturnUrl);
+            }
+
             if (!_pageShellService.TryNormalizeConnection(connection, out var baseUrl, out var validationMessage))
             {
                 TempData["StatusMessage"] = validationMessage;
@@ -199,7 +209,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (HttpRequestException ex)
             {
-                TempData["StatusMessage"] = $"Falha de rede ao tentar conectar ao equipamento: {ex.Message}";
+                TempData["StatusMessage"] = SecurityTextHelper.BuildSafeUserMessage("Falha de rede ao tentar conectar ao equipamento", ex);
                 TempData["StatusType"] = "danger";
                 _logger.LogError(ex, "Erro de rede ao conectar no dispositivo Control iD em {BaseAddress}", baseUrl);
             }
@@ -211,7 +221,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                TempData["StatusMessage"] = $"Erro ao conectar ao equipamento: {ex.Message}";
+                TempData["StatusMessage"] = SecurityTextHelper.BuildSafeUserMessage("Erro ao conectar ao equipamento", ex);
                 TempData["StatusType"] = "danger";
                 _logger.LogError(ex, "Erro inesperado ao conectar no dispositivo Control iD em {BaseAddress}", baseUrl);
             }
@@ -223,6 +233,15 @@ namespace Integracao.ControlID.PoC.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> TestDeviceConnectivity(ConnectionPanelViewModel connection)
         {
+            if (!ModelState.IsValid)
+            {
+                TempData["StatusMessage"] = SecurityTextHelper.NormalizeForDisplay(
+                    ModelState.Values.SelectMany(entry => entry.Errors).Select(error => error.ErrorMessage).FirstOrDefault(),
+                    "Revise protocolo, host e porta antes de testar a comunicação.");
+                TempData["StatusType"] = "danger";
+                return RedirectToLocal(connection.ReturnUrl);
+            }
+
             if (!_pageShellService.TryNormalizeConnection(connection, out var baseUrl, out var validationMessage))
             {
                 TempData["StatusMessage"] = validationMessage;
@@ -245,7 +264,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                TempData["StatusMessage"] = $"Falha ao testar comunicação com o equipamento: {ex.Message}";
+                TempData["StatusMessage"] = SecurityTextHelper.BuildSafeUserMessage("Falha ao testar comunicação com o equipamento", ex);
                 TempData["StatusType"] = "danger";
                 _logger.LogError(ex, "Erro ao testar comunicação com o equipamento {BaseAddress}.", baseUrl);
             }
@@ -256,10 +275,10 @@ namespace Integracao.ControlID.PoC.Controllers
         private static string BuildErrorMessage(string prefix, OfficialApiInvocationResult result)
         {
             if (!string.IsNullOrWhiteSpace(result.ErrorMessage))
-                return $"{prefix}: {result.ErrorMessage}";
+                return $"{prefix}: {SecurityTextHelper.NormalizeForDisplay(result.ErrorMessage)}";
 
             if (!string.IsNullOrWhiteSpace(result.ResponseBody) && !result.ResponseBodyIsBase64)
-                return $"{prefix}: {result.ResponseBody}";
+                return $"{prefix}: {SecurityTextHelper.NormalizeForDisplay(result.ResponseBody)}";
 
             return $"{prefix} (status: {result.StatusCode}).";
         }

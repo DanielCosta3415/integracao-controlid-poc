@@ -1,7 +1,8 @@
-using System.Text.Json;
-using Integracao.ControlID.PoC.Models.ControlIDApi;
+﻿using System.Text.Json;
 using Integracao.ControlID.PoC.Services.ControlIDApi;
+using Integracao.ControlID.PoC.Services.DocumentedFeatures;
 using Integracao.ControlID.PoC.ViewModels.DocumentedFeatures;
+using Integracao.ControlID.PoC.Helpers;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Integracao.ControlID.PoC.Controllers
@@ -9,11 +10,22 @@ namespace Integracao.ControlID.PoC.Controllers
     public class DocumentedFeaturesController : Controller
     {
         private readonly OfficialControlIdApiService _apiService;
+        private readonly DocumentedFeaturesPayloadFactory _payloadFactory;
+        private readonly OfficialApiResultPresentationService _resultPresentationService;
+        private readonly OfficialApiBinaryFileResultFactory _binaryFileResultFactory;
         private readonly ILogger<DocumentedFeaturesController> _logger;
 
-        public DocumentedFeaturesController(OfficialControlIdApiService apiService, ILogger<DocumentedFeaturesController> logger)
+        public DocumentedFeaturesController(
+            OfficialControlIdApiService apiService,
+            DocumentedFeaturesPayloadFactory payloadFactory,
+            OfficialApiResultPresentationService resultPresentationService,
+            OfficialApiBinaryFileResultFactory binaryFileResultFactory,
+            ILogger<DocumentedFeaturesController> logger)
         {
             _apiService = apiService;
+            _payloadFactory = payloadFactory;
+            _resultPresentationService = resultPresentationService;
+            _binaryFileResultFactory = binaryFileResultFactory;
             _logger = logger;
         }
 
@@ -37,27 +49,16 @@ namespace Integracao.ControlID.PoC.Controllers
 
             try
             {
-                var (result, document) = await _apiService.InvokeJsonAsync("set-configuration", new
-                {
-                    general = new
-                    {
-                        attendance_mode = BoolString(model.AttendanceModeEnabled),
-                        clear_expired_users = model.AttendanceClearExpiredUsers
-                    },
-                    identifier = new
-                    {
-                        log_type = BoolString(model.AttendanceCustomLogTypesEnabled)
-                    }
-                });
+                var (result, document) = await _apiService.InvokeJsonAsync("set-configuration", _payloadFactory.BuildAttendanceSettings(model));
 
-                EnsureSuccess(result, "Erro ao aplicar modo ponto");
+                _resultPresentationService.EnsureSuccess(result, "Erro ao aplicar modo ponto");
                 model.ResultMessage = "Modo ponto atualizado com sucesso.";
                 model.ResultStatusType = "success";
-                model.ResponseJson = FormatJson(result.ResponseBody, document);
+                model.ResponseJson = _resultPresentationService.FormatJson(result.ResponseBody, document);
             }
             catch (Exception ex)
             {
-                model.ErrorMessage = ex.Message;
+                model.ErrorMessage = SecurityTextHelper.BuildSafeUserMessage("A operação não pôde ser concluída", ex);
                 _logger.LogError(ex, "Erro ao aplicar configuracoes de modo ponto.");
             }
 
@@ -95,34 +96,21 @@ namespace Integracao.ControlID.PoC.Controllers
                         }
                     });
 
-                    EnsureSuccess(createResult, "Erro ao criar device para modo online");
+                    _resultPresentationService.EnsureSuccess(createResult, "Erro ao criar device para modo online");
                     serverId = ReadFirstId(createDocument) ?? throw new InvalidOperationException("A API nao retornou um server_id valido.");
                 }
 
-                var (result, document) = await _apiService.InvokeJsonAsync("set-configuration", new
-                {
-                    general = new
-                    {
-                        online = BoolString(model.OnlineEnabled),
-                        local_identification = BoolString(model.OnlineLocalIdentification)
-                    },
-                    online_client = new
-                    {
-                        server_id = serverId.ToString(),
-                        extract_template = BoolString(model.OnlineExtractTemplate),
-                        max_request_attempts = model.OnlineMaxRequestAttempts.ToString()
-                    }
-                });
+                var (result, document) = await _apiService.InvokeJsonAsync("set-configuration", _payloadFactory.BuildOnlineSettings(model, serverId));
 
-                EnsureSuccess(result, "Erro ao configurar modo online");
+                _resultPresentationService.EnsureSuccess(result, "Erro ao configurar modo online");
                 model.OnlineCurrentServerId = serverId;
                 model.ResultMessage = $"Modo online configurado com sucesso com server_id {serverId}.";
                 model.ResultStatusType = "success";
-                model.ResponseJson = FormatJson(result.ResponseBody, document);
+                model.ResponseJson = _resultPresentationService.FormatJson(result.ResponseBody, document);
             }
             catch (Exception ex)
             {
-                model.ErrorMessage = ex.Message;
+                model.ErrorMessage = SecurityTextHelper.BuildSafeUserMessage("A operação não pôde ser concluída", ex);
                 _logger.LogError(ex, "Erro ao configurar modo online.");
             }
 
@@ -139,28 +127,16 @@ namespace Integracao.ControlID.PoC.Controllers
 
             try
             {
-                var (result, document) = await _apiService.InvokeJsonAsync("set-configuration", new
-                {
-                    general = new
-                    {
-                        ssh_enabled = BoolString(model.SecuritySshEnabled),
-                        usb_port_enabled = BoolString(model.SecurityUsbPortEnabled),
-                        web_server_enabled = BoolString(model.SecurityWebServerEnabled)
-                    },
-                    snmp_agent = new
-                    {
-                        snmp_enabled = BoolString(model.SecuritySnmpEnabled)
-                    }
-                });
+                var (result, document) = await _apiService.InvokeJsonAsync("set-configuration", _payloadFactory.BuildSecuritySettings(model));
 
-                EnsureSuccess(result, "Erro ao aplicar seguranca operacional");
+                _resultPresentationService.EnsureSuccess(result, "Erro ao aplicar seguranca operacional");
                 model.ResultMessage = "Seguranca operacional atualizada com sucesso.";
                 model.ResultStatusType = "success";
-                model.ResponseJson = FormatJson(result.ResponseBody, document);
+                model.ResponseJson = _resultPresentationService.FormatJson(result.ResponseBody, document);
             }
             catch (Exception ex)
             {
-                model.ErrorMessage = ex.Message;
+                model.ErrorMessage = SecurityTextHelper.BuildSafeUserMessage("A operação não pôde ser concluída", ex);
                 _logger.LogError(ex, "Erro ao aplicar configuracoes de seguranca.");
             }
 
@@ -177,26 +153,16 @@ namespace Integracao.ControlID.PoC.Controllers
 
             try
             {
-                var (result, document) = await _apiService.InvokeJsonAsync("set-configuration", new
-                {
-                    general = new
-                    {
-                        clear_expired_users = model.VisitorsClearExpiredUsers
-                    },
-                    sec_box = new
-                    {
-                        catra_collect_visitor_card = BoolString(model.VisitorsCollectCardOnExit)
-                    }
-                });
+                var (result, document) = await _apiService.InvokeJsonAsync("set-configuration", _payloadFactory.BuildVisitorsSettings(model));
 
-                EnsureSuccess(result, "Erro ao aplicar suporte a visitantes");
+                _resultPresentationService.EnsureSuccess(result, "Erro ao aplicar suporte a visitantes");
                 model.ResultMessage = "Configuracoes de visitantes atualizadas com sucesso.";
                 model.ResultStatusType = "success";
-                model.ResponseJson = FormatJson(result.ResponseBody, document);
+                model.ResponseJson = _resultPresentationService.FormatJson(result.ResponseBody, document);
             }
             catch (Exception ex)
             {
-                model.ErrorMessage = ex.Message;
+                model.ErrorMessage = SecurityTextHelper.BuildSafeUserMessage("A operação não pôde ser concluída", ex);
                 _logger.LogError(ex, "Erro ao aplicar suporte a visitantes.");
             }
 
@@ -213,25 +179,17 @@ namespace Integracao.ControlID.PoC.Controllers
 
             try
             {
-                var (result, document) = await _apiService.InvokeJsonAsync("set-configuration", new
-                {
-                    push_server = new
-                    {
-                        push_remote_address = model.IdCloudPushRemoteAddress,
-                        push_request_timeout = model.IdCloudPushRequestTimeout.ToString(),
-                        push_request_period = model.IdCloudPushRequestPeriod.ToString()
-                    }
-                });
+                var (result, document) = await _apiService.InvokeJsonAsync("set-configuration", _payloadFactory.BuildIdCloudSettings(model));
 
-                EnsureSuccess(result, "Erro ao configurar iDCloud");
+                _resultPresentationService.EnsureSuccess(result, "Erro ao configurar iDCloud");
                 await PopulateIdCloudAsync(model);
                 model.ResultMessage = "Configuracao do iDCloud atualizada com sucesso.";
                 model.ResultStatusType = "success";
-                model.ResponseJson = FormatJson(result.ResponseBody, document);
+                model.ResponseJson = _resultPresentationService.FormatJson(result.ResponseBody, document);
             }
             catch (Exception ex)
             {
-                model.ErrorMessage = ex.Message;
+                model.ErrorMessage = SecurityTextHelper.BuildSafeUserMessage("A operação não pôde ser concluída", ex);
                 _logger.LogError(ex, "Erro ao configurar iDCloud.");
             }
 
@@ -249,16 +207,16 @@ namespace Integracao.ControlID.PoC.Controllers
             try
             {
                 var result = await _apiService.InvokeAsync("change-idcloud-code");
-                EnsureSuccess(result, "Erro ao regenerar codigo do iDCloud");
+                _resultPresentationService.EnsureSuccess(result, "Erro ao regenerar codigo do iDCloud");
 
                 await PopulateIdCloudAsync(model);
                 model.ResultMessage = "Codigo de verificacao do iDCloud regenerado com sucesso.";
                 model.ResultStatusType = "success";
-                model.ResponseJson = string.IsNullOrWhiteSpace(result.ResponseBody) ? "Operacao concluida sem corpo de resposta." : result.ResponseBody;
+                model.ResponseJson = _resultPresentationService.FormatResponseBody(result);
             }
             catch (Exception ex)
             {
-                model.ErrorMessage = ex.Message;
+                model.ErrorMessage = SecurityTextHelper.BuildSafeUserMessage("A operação não pôde ser concluída", ex);
                 _logger.LogError(ex, "Erro ao regenerar codigo do iDCloud.");
             }
 
@@ -275,33 +233,17 @@ namespace Integracao.ControlID.PoC.Controllers
 
             try
             {
-                var (result, document) = await _apiService.InvokeJsonAsync("set-configuration", new
-                {
-                    alarm = new
-                    {
-                        device_violation_enabled = BoolString(model.AlarmDeviceViolationEnabled),
-                        door_sensor_alarm_timeout_after_closure = model.AlarmDoorSensorAlarmTimeoutAfterClosure.ToString(),
-                        door_sensor_delay = model.AlarmDoorSensorDelay.ToString(),
-                        door_sensor_enabled = BoolString(model.AlarmDoorSensorEnabled),
-                        forced_access_debounce = model.AlarmForcedAccessDebounce.ToString(),
-                        forced_access_enabled = BoolString(model.AlarmForcedAccessEnabled),
-                        panic_card_enabled = BoolString(model.AlarmPanicCardEnabled),
-                        panic_finger_delay = model.AlarmPanicFingerDelay.ToString(),
-                        panic_finger_enabled = BoolString(model.AlarmPanicFingerEnabled),
-                        panic_password_enabled = BoolString(model.AlarmPanicPasswordEnabled),
-                        panic_pin_enabled = BoolString(model.AlarmPanicPinEnabled)
-                    }
-                });
+                var (result, document) = await _apiService.InvokeJsonAsync("set-configuration", _payloadFactory.BuildAlarmSettings(model));
 
-                EnsureSuccess(result, "Erro ao configurar parametros de alarme");
+                _resultPresentationService.EnsureSuccess(result, "Erro ao configurar parametros de alarme");
                 await PopulateAlarmAsync(model);
                 model.ResultMessage = "Configuracoes de alarme atualizadas com sucesso.";
                 model.ResultStatusType = "success";
-                model.ResponseJson = FormatJson(result.ResponseBody, document);
+                model.ResponseJson = _resultPresentationService.FormatJson(result.ResponseBody, document);
             }
             catch (Exception ex)
             {
-                model.ErrorMessage = ex.Message;
+                model.ErrorMessage = SecurityTextHelper.BuildSafeUserMessage("A operação não pôde ser concluída", ex);
                 _logger.LogError(ex, "Erro ao configurar alarme.");
             }
 
@@ -319,15 +261,15 @@ namespace Integracao.ControlID.PoC.Controllers
             try
             {
                 var (result, document) = await _apiService.InvokeJsonAsync("alarm-status", new { stop = true });
-                EnsureSuccess(result, "Erro ao interromper alarme");
+                _resultPresentationService.EnsureSuccess(result, "Erro ao interromper alarme");
                 await PopulateAlarmAsync(model);
                 model.ResultMessage = "Alarme interrompido com sucesso.";
                 model.ResultStatusType = "success";
-                model.ResponseJson = FormatJson(result.ResponseBody, document);
+                model.ResponseJson = _resultPresentationService.FormatJson(result.ResponseBody, document);
             }
             catch (Exception ex)
             {
-                model.ErrorMessage = ex.Message;
+                model.ErrorMessage = SecurityTextHelper.BuildSafeUserMessage("A operação não pôde ser concluída", ex);
                 _logger.LogError(ex, "Erro ao interromper alarme.");
             }
 
@@ -346,12 +288,12 @@ namespace Integracao.ControlID.PoC.Controllers
             {
                 JsonDocument.Parse(model.ReportPayload);
                 var result = await _apiService.InvokeAsync("report-generate", model.ReportPayload);
-                EnsureSuccess(result, "Erro ao gerar relatorio customizado");
-                return DownloadBinaryResult(result, "report-generate.txt", "text/plain");
+                _resultPresentationService.EnsureSuccess(result, "Erro ao gerar relatorio customizado");
+                return _binaryFileResultFactory.Create(result, "report-generate.txt", "text/plain");
             }
             catch (Exception ex)
             {
-                model.ErrorMessage = ex.Message;
+                model.ErrorMessage = SecurityTextHelper.BuildSafeUserMessage("A operação não pôde ser concluída", ex);
                 _logger.LogError(ex, "Erro ao gerar relatorio customizado.");
                 return View("Index", model);
             }
@@ -367,31 +309,17 @@ namespace Integracao.ControlID.PoC.Controllers
 
             try
             {
-                var payload = new Dictionary<string, object>();
-                if (model.AfdInitialNsr.HasValue)
-                    payload["initial_nsr"] = model.AfdInitialNsr.Value;
-
-                if (model.AfdInitialDate.HasValue)
-                {
-                    payload["initial_date"] = new
-                    {
-                        day = model.AfdInitialDate.Value.Day,
-                        month = model.AfdInitialDate.Value.Month,
-                        year = model.AfdInitialDate.Value.Year
-                    };
-                }
-
                 var result = await _apiService.InvokeAsync(
                     "export-afd",
-                    payload.Count == 0 ? new { } : payload,
+                    _payloadFactory.BuildAfdExport(model),
                     model.AfdMode == "671" ? "mode=671" : string.Empty);
 
-                EnsureSuccess(result, "Erro ao exportar AFD");
-                return DownloadBinaryResult(result, $"AFD-{model.AfdMode}.txt", "text/plain");
+                _resultPresentationService.EnsureSuccess(result, "Erro ao exportar AFD");
+                return _binaryFileResultFactory.Create(result, $"AFD-{model.AfdMode}.txt", "text/plain");
             }
             catch (Exception ex)
             {
-                model.ErrorMessage = ex.Message;
+                model.ErrorMessage = SecurityTextHelper.BuildSafeUserMessage("A operação não pôde ser concluída", ex);
                 _logger.LogError(ex, "Erro ao exportar AFD.");
                 return View("Index", model);
             }
@@ -407,23 +335,14 @@ namespace Integracao.ControlID.PoC.Controllers
 
             try
             {
-                var result = await _apiService.InvokeAsync("export-audit-logs", new
-                {
-                    config = model.AuditConfig ? 1 : 0,
-                    api = model.AuditApi ? 1 : 0,
-                    usb = model.AuditUsb ? 1 : 0,
-                    network = model.AuditNetwork ? 1 : 0,
-                    time = model.AuditTime ? 1 : 0,
-                    online = model.AuditOnline ? 1 : 0,
-                    menu = model.AuditMenu ? 1 : 0
-                });
+                var result = await _apiService.InvokeAsync("export-audit-logs", _payloadFactory.BuildAuditLogsExport(model));
 
-                EnsureSuccess(result, "Erro ao exportar logs de auditoria");
-                return DownloadBinaryResult(result, "audit-logs.txt", "text/plain");
+                _resultPresentationService.EnsureSuccess(result, "Erro ao exportar logs de auditoria");
+                return _binaryFileResultFactory.Create(result, "audit-logs.txt", "text/plain");
             }
             catch (Exception ex)
             {
-                model.ErrorMessage = ex.Message;
+                model.ErrorMessage = SecurityTextHelper.BuildSafeUserMessage("A operação não pôde ser concluída", ex);
                 _logger.LogError(ex, "Erro ao exportar logs de auditoria.");
                 return View("Index", model);
             }
@@ -578,44 +497,6 @@ namespace Integracao.ControlID.PoC.Controllers
             return false;
         }
 
-        private static void EnsureSuccess(OfficialApiInvocationResult result, string message)
-        {
-            if (result.Success)
-                return;
-
-            if (!string.IsNullOrWhiteSpace(result.ErrorMessage))
-                throw new InvalidOperationException($"{message}: {result.ErrorMessage}");
-
-            if (!string.IsNullOrWhiteSpace(result.ResponseBody) && !result.ResponseBodyIsBase64)
-                throw new InvalidOperationException($"{message}: {result.ResponseBody}");
-
-            throw new InvalidOperationException($"{message} (status HTTP {result.StatusCode}).");
-        }
-
-        private IActionResult DownloadBinaryResult(OfficialApiInvocationResult result, string fileName, string fallbackContentType)
-        {
-            if (result.ResponseBodyIsBase64 && !string.IsNullOrWhiteSpace(result.ResponseBody))
-            {
-                var bytes = Convert.FromBase64String(result.ResponseBody);
-                return File(bytes, string.IsNullOrWhiteSpace(result.ResponseContentType) ? fallbackContentType : result.ResponseContentType, fileName);
-            }
-
-            return File(System.Text.Encoding.UTF8.GetBytes(result.ResponseBody ?? string.Empty), fallbackContentType, fileName);
-        }
-
-        private static string FormatJson(string rawJson, JsonDocument? document)
-        {
-            if (document == null)
-                return rawJson;
-
-            return JsonSerializer.Serialize(document.RootElement, new JsonSerializerOptions
-            {
-                WriteIndented = true
-            });
-        }
-
-        private static string BoolString(bool value) => value ? "1" : "0";
-
         private static long? ReadFirstId(JsonDocument? document)
         {
             if (document == null || !document.RootElement.TryGetProperty("ids", out var ids) || ids.ValueKind != JsonValueKind.Array || ids.GetArrayLength() == 0)
@@ -695,3 +576,6 @@ namespace Integracao.ControlID.PoC.Controllers
         }
     }
 }
+
+
+

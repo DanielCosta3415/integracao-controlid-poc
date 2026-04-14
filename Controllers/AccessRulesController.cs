@@ -3,6 +3,7 @@ using System.Text.Json;
 using Integracao.ControlID.PoC.Models.ControlIDApi;
 using Integracao.ControlID.PoC.Services.ControlIDApi;
 using Integracao.ControlID.PoC.ViewModels.AccessRules;
+using Integracao.ControlID.PoC.Helpers;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Integracao.ControlID.PoC.Controllers
@@ -34,7 +35,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                model.ErrorMessage = ex.Message;
+                model.ErrorMessage = SecurityTextHelper.BuildSafeUserMessage("A operação não pôde ser concluída", ex);
                 _logger.LogError(ex, "Erro ao consultar regras de acesso pela API oficial.");
             }
 
@@ -100,7 +101,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                ModelState.AddModelError(string.Empty, ex.Message);
+                ModelState.AddModelError(string.Empty, SecurityTextHelper.BuildSafeUserMessage("A operação não pôde ser concluída", ex));
                 _logger.LogError(ex, "Erro ao criar regra de acesso.");
                 return View(model);
             }
@@ -182,7 +183,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                ModelState.AddModelError(string.Empty, ex.Message);
+                ModelState.AddModelError(string.Empty, SecurityTextHelper.BuildSafeUserMessage("A operação não pôde ser concluída", ex));
                 _logger.LogError(ex, "Erro ao atualizar regra de acesso {RuleId}.", id);
                 return View(model);
             }
@@ -249,7 +250,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                TempData["StatusMessage"] = ex.Message;
+                TempData["StatusMessage"] = SecurityTextHelper.BuildSafeUserMessage("A operação não pôde ser concluída", ex);
                 TempData["StatusType"] = "danger";
                 _logger.LogError(ex, "Erro ao excluir regra de acesso {RuleId}.", id);
             }
@@ -311,13 +312,7 @@ namespace Integracao.ControlID.PoC.Controllers
 
         private static string BuildErrorMessage(OfficialApiInvocationResult result, string errorPrefix)
         {
-            if (!string.IsNullOrWhiteSpace(result.ErrorMessage))
-                return $"{errorPrefix}: {result.ErrorMessage}";
-
-            if (!string.IsNullOrWhiteSpace(result.ResponseBody))
-                return $"{errorPrefix}: {result.ResponseBody}";
-
-            return $"{errorPrefix} (status HTTP {result.StatusCode}).";
+            return SecurityTextHelper.BuildApiFailureMessage(result, errorPrefix);
         }
 
         private static JsonSerializerOptions JsonOptions()
@@ -339,3 +334,6 @@ namespace Integracao.ControlID.PoC.Controllers
         #endregion
     }
 }
+
+
+

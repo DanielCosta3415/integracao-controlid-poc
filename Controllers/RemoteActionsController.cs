@@ -2,6 +2,7 @@
 using Integracao.ControlID.PoC.Models.ControlIDApi;
 using Integracao.ControlID.PoC.Services.ControlIDApi;
 using Integracao.ControlID.PoC.ViewModels.RemoteActions;
+using Integracao.ControlID.PoC.Helpers;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Integracao.ControlID.PoC.Controllers
@@ -152,7 +153,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                TempData["StatusMessage"] = $"Erro ao executar ação remota: {ex.Message}";
+                TempData["StatusMessage"] = SecurityTextHelper.BuildSafeUserMessage("Erro ao executar ação remota", ex);
                 TempData["StatusType"] = "danger";
                 _logger.LogError(ex, "Erro ao executar ação remota.");
             }
@@ -195,7 +196,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                model.ResultMessage = $"Erro ao iniciar cadastro remoto: {ex.Message}";
+                model.ResultMessage = SecurityTextHelper.BuildSafeUserMessage("Erro ao iniciar cadastro remoto", ex);
                 model.ResultStatusType = "danger";
                 _logger.LogError(ex, "Erro ao iniciar cadastro remoto.");
             }
@@ -247,7 +248,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                model.ResultMessage = $"Erro ao executar autorização remota: {ex.Message}";
+                model.ResultMessage = SecurityTextHelper.BuildSafeUserMessage("Erro ao executar autorização remota", ex);
                 model.ResultStatusType = "danger";
                 _logger.LogError(ex, "Erro ao executar autorização remota.");
             }
@@ -274,3 +275,6 @@ namespace Integracao.ControlID.PoC.Controllers
         }
     }
 }
+
+
+

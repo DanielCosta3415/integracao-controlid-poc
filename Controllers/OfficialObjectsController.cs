@@ -1,7 +1,8 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using Integracao.ControlID.PoC.Models.ControlIDApi;
 using Integracao.ControlID.PoC.Services.ControlIDApi;
 using Integracao.ControlID.PoC.ViewModels.OfficialObjects;
+using Integracao.ControlID.PoC.Helpers;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Integracao.ControlID.PoC.Controllers
@@ -83,7 +84,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                model.ErrorMessage = ex.Message;
+                model.ErrorMessage = SecurityTextHelper.BuildSafeUserMessage("A operação não pôde ser concluída", ex);
                 _logger.LogError(ex, "Erro ao consultar objeto oficial {ObjectName}.", model.SelectedObjectName);
             }
 
@@ -118,7 +119,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                model.ErrorMessage = ex.Message;
+                model.ErrorMessage = SecurityTextHelper.BuildSafeUserMessage("A operação não pôde ser concluída", ex);
                 _logger.LogError(ex, "Erro ao criar objeto oficial {ObjectName}.", model.SelectedObjectName);
             }
 
@@ -153,7 +154,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                model.ErrorMessage = ex.Message;
+                model.ErrorMessage = SecurityTextHelper.BuildSafeUserMessage("A operação não pôde ser concluída", ex);
                 _logger.LogError(ex, "Erro ao executar create-or-modify para {ObjectName}.", model.SelectedObjectName);
             }
 
@@ -190,7 +191,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                model.ErrorMessage = ex.Message;
+                model.ErrorMessage = SecurityTextHelper.BuildSafeUserMessage("A operação não pôde ser concluída", ex);
                 _logger.LogError(ex, "Erro ao modificar objeto oficial {ObjectName}.", model.SelectedObjectName);
             }
 
@@ -225,7 +226,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                model.ErrorMessage = ex.Message;
+                model.ErrorMessage = SecurityTextHelper.BuildSafeUserMessage("A operação não pôde ser concluída", ex);
                 _logger.LogError(ex, "Erro ao remover objeto oficial {ObjectName}.", model.SelectedObjectName);
             }
 
@@ -279,7 +280,7 @@ namespace Integracao.ControlID.PoC.Controllers
                 D("timed_alarms", "Agendamentos fixos de alarme.", "id", """[{ "id": 1, "name": "Alarm Morning", "start": 28800, "sun": 0, "mon": 1, "tue": 1, "wed": 1, "thu": 1, "fri": 1, "sat": 0 }]""", """{ "timed_alarms": { "id": 1 } }""", """{ "timed_alarms": { "id": 1 } }""", """{ "start": 32400 }"""),
                 D("access_events", "Eventos operacionais como porta, secbox e catra.", "id", """[{ "id": 1, "event": "door", "type": "OPEN", "identification": "1", "device_id": 1, "timestamp": 1713000000 }]""", """{ "access_events": { "id": 1 } }""", """{ "access_events": { "id": 1 } }""", """{ "type": "CLOSE" }"""),
                 D("custom_thresholds", "Rigidez individual de identificacao facial.", "user_id", """[{ "id": 1, "user_id": 101, "threshold": 1200 }]""", """{ "custom_thresholds": { "user_id": 101 } }""", """{ "custom_thresholds": { "user_id": 101 } }""", """{ "threshold": 1300 }"""),
-                D("network_interlocking_rules", "Regras de intertravamento remoto entre devices.", "id", """[{ "id": 1, "ip": "192.168.0.20", "login": "admin", "password": "admin", "portal_name": "Airlock B", "enabled": 1 }]""", """{ "network_interlocking_rules": { "id": 1 } }""", """{ "network_interlocking_rules": { "id": 1 } }""", """{ "enabled": 0 }""")
+                D("network_interlocking_rules", "Regras de intertravamento remoto entre devices.", "id", """[{ "id": 1, "ip": "192.168.0.20", "login": "<login>", "password": "<senha>", "portal_name": "Airlock B", "enabled": 1 }]""", """{ "network_interlocking_rules": { "id": 1 } }""", """{ "network_interlocking_rules": { "id": 1 } }""", """{ "enabled": 0 }""")
             ];
         }
 
@@ -341,3 +342,6 @@ namespace Integracao.ControlID.PoC.Controllers
         }
     }
 }
+
+
+

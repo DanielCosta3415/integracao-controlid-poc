@@ -3,6 +3,7 @@ using System.Text.Json;
 using Integracao.ControlID.PoC.Models.ControlIDApi;
 using Integracao.ControlID.PoC.Services.ControlIDApi;
 using Integracao.ControlID.PoC.ViewModels.Groups;
+using Integracao.ControlID.PoC.Helpers;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Integracao.ControlID.PoC.Controllers
@@ -35,7 +36,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                model.ErrorMessage = ex.Message;
+                model.ErrorMessage = SecurityTextHelper.BuildSafeUserMessage("A operação não pôde ser concluída", ex);
                 _logger.LogError(ex, "Erro ao consultar grupos pela API oficial.");
             }
 
@@ -98,7 +99,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                ModelState.AddModelError(string.Empty, ex.Message);
+                ModelState.AddModelError(string.Empty, SecurityTextHelper.BuildSafeUserMessage("A operação não pôde ser concluída", ex));
                 _logger.LogError(ex, "Erro ao criar grupo.");
             }
 
@@ -169,7 +170,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                ModelState.AddModelError(string.Empty, ex.Message);
+                ModelState.AddModelError(string.Empty, SecurityTextHelper.BuildSafeUserMessage("A operação não pôde ser concluída", ex));
                 _logger.LogError(ex, "Erro ao atualizar grupo {GroupId}.", id);
             }
 
@@ -232,7 +233,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                TempData["StatusMessage"] = ex.Message;
+                TempData["StatusMessage"] = SecurityTextHelper.BuildSafeUserMessage("A operação não pôde ser concluída", ex);
                 TempData["StatusType"] = "danger";
                 _logger.LogError(ex, "Erro ao excluir grupo {GroupId}.", id);
             }
@@ -290,13 +291,7 @@ namespace Integracao.ControlID.PoC.Controllers
 
         private static string BuildErrorMessage(OfficialApiInvocationResult result, string prefix)
         {
-            if (!string.IsNullOrWhiteSpace(result.ErrorMessage))
-                return $"{prefix}: {result.ErrorMessage}";
-
-            if (!string.IsNullOrWhiteSpace(result.ResponseBody))
-                return $"{prefix}: {result.ResponseBody}";
-
-            return $"{prefix} (status HTTP {result.StatusCode}).";
+            return SecurityTextHelper.BuildApiFailureMessage(result, prefix);
         }
 
         private static JsonSerializerOptions JsonOptions()
@@ -314,3 +309,7 @@ namespace Integracao.ControlID.PoC.Controllers
         }
     }
 }
+
+
+
+

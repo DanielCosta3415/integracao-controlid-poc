@@ -1,18 +1,23 @@
-using System.Text;
+﻿using System.Text;
 using Integracao.ControlID.PoC.Models.Database;
 using Integracao.ControlID.PoC.Services.Database;
 using Integracao.ControlID.PoC.ViewModels.Push;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace Integracao.ControlID.PoC.Controllers
 {
     public class PushCenterController : Controller
     {
         private readonly PushCommandRepository _pushCommandRepository;
+        private readonly ILogger<PushCenterController> _logger;
 
-        public PushCenterController(PushCommandRepository pushCommandRepository)
+        public PushCenterController(
+            PushCommandRepository pushCommandRepository,
+            ILogger<PushCenterController> logger)
         {
             _pushCommandRepository = pushCommandRepository;
+            _logger = logger;
         }
 
         public async Task<IActionResult> Index()
@@ -28,7 +33,9 @@ namespace Integracao.ControlID.PoC.Controllers
         public async Task<IActionResult> Details(Guid? id)
         {
             if (id == null)
+            {
                 return NotFound();
+            }
 
             var command = await _pushCommandRepository.GetPushCommandByIdAsync(id.Value);
             return command == null ? NotFound() : View(ToViewModel(command));
@@ -48,7 +55,7 @@ namespace Integracao.ControlID.PoC.Controllers
                 });
             }
 
-            await _pushCommandRepository.AddPushCommandAsync(new PushCommandLocal
+            var command = new PushCommandLocal
             {
                 CommandId = Guid.NewGuid(),
                 CommandType = model.CommandType,
@@ -58,7 +65,15 @@ namespace Integracao.ControlID.PoC.Controllers
                 RawJson = model.Payload,
                 Status = "pending",
                 CreatedAt = DateTime.UtcNow
-            });
+            };
+
+            await _pushCommandRepository.AddPushCommandAsync(command);
+
+            _logger.LogInformation(
+                "Push command {CommandId} queued for device {DeviceId} with type {CommandType}.",
+                command.CommandId,
+                command.DeviceId,
+                command.CommandType);
 
             TempData["StatusMessage"] = "Comando push enfileirado com sucesso.";
             TempData["StatusType"] = "success";
@@ -71,7 +86,11 @@ namespace Integracao.ControlID.PoC.Controllers
         {
             var commands = await _pushCommandRepository.GetAllPushCommandsAsync();
             foreach (var command in commands)
+            {
                 await _pushCommandRepository.DeletePushCommandAsync(command.CommandId);
+            }
+
+            _logger.LogWarning("Push queue cleared manually. Removed {Count} commands.", commands.Count());
 
             TempData["StatusMessage"] = "Fila de push limpa com sucesso.";
             TempData["StatusType"] = "success";
@@ -85,11 +104,18 @@ namespace Integracao.ControlID.PoC.Controllers
             var command = await _pushCommandRepository.GetNextPendingCommandAsync(resolvedDeviceId);
 
             if (command == null)
+            {
                 return Ok(new { });
+            }
 
             command.Status = "delivered";
             command.UpdatedAt = DateTime.UtcNow;
             await _pushCommandRepository.UpdatePushCommandAsync(command);
+
+            _logger.LogInformation(
+                "Push poll delivered command {CommandId} to device {DeviceId}.",
+                command.CommandId,
+                resolvedDeviceId);
 
             return Content(string.IsNullOrWhiteSpace(command.Payload) ? "{}" : command.Payload, "application/json", Encoding.UTF8);
         }
@@ -128,6 +154,12 @@ namespace Integracao.ControlID.PoC.Controllers
                 command.UpdatedAt = DateTime.UtcNow;
                 await _pushCommandRepository.UpdatePushCommandAsync(command);
             }
+
+            _logger.LogInformation(
+                "Push result stored for command {CommandId}. Device {DeviceId}. Status {Status}.",
+                command.CommandId,
+                command.DeviceId,
+                command.Status);
 
             return Ok();
         }

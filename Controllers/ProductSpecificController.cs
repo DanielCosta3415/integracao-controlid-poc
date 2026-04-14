@@ -1,8 +1,9 @@
-using System.Text.Json;
-using Integracao.ControlID.PoC.Models.ControlIDApi;
+﻿using System.Text.Json;
 using Integracao.ControlID.PoC.Services.ControlIDApi;
+using Integracao.ControlID.PoC.Services.ProductSpecific;
 using Integracao.ControlID.PoC.ViewModels.ProductSpecific;
 using Microsoft.AspNetCore.Http;
+using Integracao.ControlID.PoC.Helpers;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Integracao.ControlID.PoC.Controllers
@@ -10,11 +11,22 @@ namespace Integracao.ControlID.PoC.Controllers
     public class ProductSpecificController : Controller
     {
         private readonly OfficialControlIdApiService _apiService;
+        private readonly ProductSpecificConfigurationPayloadFactory _payloadFactory;
+        private readonly OfficialApiResultPresentationService _resultPresentationService;
+        private readonly OfficialApiBinaryFileResultFactory _binaryFileResultFactory;
         private readonly ILogger<ProductSpecificController> _logger;
 
-        public ProductSpecificController(OfficialControlIdApiService apiService, ILogger<ProductSpecificController> logger)
+        public ProductSpecificController(
+            OfficialControlIdApiService apiService,
+            ProductSpecificConfigurationPayloadFactory payloadFactory,
+            OfficialApiResultPresentationService resultPresentationService,
+            OfficialApiBinaryFileResultFactory binaryFileResultFactory,
+            ILogger<ProductSpecificController> logger)
         {
             _apiService = apiService;
+            _payloadFactory = payloadFactory;
+            _resultPresentationService = resultPresentationService;
+            _binaryFileResultFactory = binaryFileResultFactory;
             _logger = logger;
         }
 
@@ -39,14 +51,14 @@ namespace Integracao.ControlID.PoC.Controllers
             try
             {
                 var result = await _apiService.InvokeAsync("upgrade-idface-pro", new { password = model.IdFaceProPassword });
-                EnsureSuccess(result, "Erro ao executar upgrade Pro do iDFace");
+                _resultPresentationService.EnsureSuccess(result, "Erro ao executar upgrade Pro do iDFace");
                 model.ResultMessage = "Upgrade Pro do iDFace solicitado com sucesso.";
                 model.ResultStatusType = "success";
-                model.ResponseJson = string.IsNullOrWhiteSpace(result.ResponseBody) ? "Operacao concluida sem corpo de resposta." : result.ResponseBody;
+                model.ResponseJson = _resultPresentationService.FormatResponseBody(result);
             }
             catch (Exception ex)
             {
-                model.ErrorMessage = ex.Message;
+                model.ErrorMessage = SecurityTextHelper.BuildSafeUserMessage("A operação não pôde ser concluída", ex);
                 _logger.LogError(ex, "Erro ao executar upgrade Pro do iDFace.");
             }
 
@@ -64,14 +76,14 @@ namespace Integracao.ControlID.PoC.Controllers
             try
             {
                 var result = await _apiService.InvokeAsync("upgrade-idflex-enterprise", new { password = model.IdFlexEnterprisePassword });
-                EnsureSuccess(result, "Erro ao executar upgrade Enterprise");
+                _resultPresentationService.EnsureSuccess(result, "Erro ao executar upgrade Enterprise");
                 model.ResultMessage = "Upgrade Enterprise solicitado com sucesso.";
                 model.ResultStatusType = "success";
-                model.ResponseJson = string.IsNullOrWhiteSpace(result.ResponseBody) ? "Operacao concluida sem corpo de resposta." : result.ResponseBody;
+                model.ResponseJson = _resultPresentationService.FormatResponseBody(result);
             }
             catch (Exception ex)
             {
-                model.ErrorMessage = ex.Message;
+                model.ErrorMessage = SecurityTextHelper.BuildSafeUserMessage("A operação não pôde ser concluída", ex);
                 _logger.LogError(ex, "Erro ao executar upgrade Enterprise.");
             }
 
@@ -88,50 +100,16 @@ namespace Integracao.ControlID.PoC.Controllers
 
             try
             {
-                var (result, document) = await _apiService.InvokeJsonAsync("set-configuration", new
-                {
-                    general = new
-                    {
-                        screen_always_on = BoolString(model.FaceScreenAlwaysOn)
-                    },
-                    identifier = new
-                    {
-                        card_identification_enabled = BoolString(model.IdentifierCardEnabled),
-                        face_identification_enabled = BoolString(model.IdentifierFaceEnabled),
-                        qrcode_identification_enabled = BoolString(model.IdentifierQrCodeEnabled),
-                        pin_identification_enabled = BoolString(model.IdentifierPinEnabled)
-                    },
-                    face_id = new
-                    {
-                        mask_detection_enabled = model.FaceMaskDetectionEnabled,
-                        vehicle_mode = BoolString(model.FaceVehicleModeEnabled),
-                        max_identified_duration = model.FaceMaxIdentifiedDuration.ToString(),
-                        limit_identification_to_display_region = BoolString(model.FaceLimitIdentificationToDisplayRegion),
-                        min_detect_bounds_width = model.FaceMinDetectBoundsWidth
-                    },
-                    camera_overlay = new
-                    {
-                        zoom = model.FaceCameraOverlayZoom,
-                        vertical_crop = model.FaceCameraOverlayVerticalCrop
-                    },
-                    face_module = new
-                    {
-                        light_threshold_led_activation = model.FaceLightThresholdLedActivation
-                    },
-                    led_white = new
-                    {
-                        brightness = model.FaceLedBrightness.ToString()
-                    }
-                });
+                var (result, document) = await _apiService.InvokeJsonAsync("set-configuration", _payloadFactory.BuildFacialSettings(model));
 
-                EnsureSuccess(result, "Erro ao aplicar configuracoes faciais");
+                _resultPresentationService.EnsureSuccess(result, "Erro ao aplicar configuracoes faciais");
                 model.ResultMessage = "Configuracoes faciais atualizadas com sucesso.";
                 model.ResultStatusType = "success";
-                model.ResponseJson = FormatJson(result.ResponseBody, document);
+                model.ResponseJson = _resultPresentationService.FormatJson(result.ResponseBody, document);
             }
             catch (Exception ex)
             {
-                model.ErrorMessage = ex.Message;
+                model.ErrorMessage = SecurityTextHelper.BuildSafeUserMessage("A operação não pôde ser concluída", ex);
                 _logger.LogError(ex, "Erro ao aplicar configuracoes faciais.");
             }
 
@@ -148,29 +126,15 @@ namespace Integracao.ControlID.PoC.Controllers
 
             try
             {
-                var module = model.QrModule.Equals("barras", StringComparison.OrdinalIgnoreCase) ? "barras" : "face_id";
-                var payload = new Dictionary<string, object?>
-                {
-                    [module] = new
-                    {
-                        qrcode_legacy_mode_enabled = model.QrCodeLegacyModeEnabled,
-                        totp_enabled = BoolString(model.QrTotpEnabled),
-                        totp_window_size = model.QrTotpWindowSize.ToString(),
-                        totp_window_num = model.QrTotpWindowNum.ToString(),
-                        totp_single_use = BoolString(model.QrTotpSingleUse),
-                        totp_tz_offset = model.QrTotpTzOffset.ToString()
-                    }
-                };
-
-                var (result, document) = await _apiService.InvokeJsonAsync("set-configuration", payload);
-                EnsureSuccess(result, "Erro ao aplicar configuracoes de QR Code");
+                var (result, document) = await _apiService.InvokeJsonAsync("set-configuration", _payloadFactory.BuildQrCodeSettings(model));
+                _resultPresentationService.EnsureSuccess(result, "Erro ao aplicar configuracoes de QR Code");
                 model.ResultMessage = "Configuracoes de QR Code/TOTP atualizadas com sucesso.";
                 model.ResultStatusType = "success";
-                model.ResponseJson = FormatJson(result.ResponseBody, document);
+                model.ResponseJson = _resultPresentationService.FormatJson(result.ResponseBody, document);
             }
             catch (Exception ex)
             {
-                model.ErrorMessage = ex.Message;
+                model.ErrorMessage = SecurityTextHelper.BuildSafeUserMessage("A operação não pôde ser concluída", ex);
                 _logger.LogError(ex, "Erro ao aplicar configuracoes de QR Code.");
             }
 
@@ -187,27 +151,16 @@ namespace Integracao.ControlID.PoC.Controllers
 
             try
             {
-                var (result, document) = await _apiService.InvokeJsonAsync("set-configuration", new
-                {
-                    general = new
-                    {
-                        screenshot_resize = model.ScreenshotResize,
-                        energy_mode = model.EnergyMode,
-                        energy_display_custom = model.EnergyDisplayCustom,
-                        energy_sound_custom = model.EnergySoundCustom,
-                        energy_ir_custom = model.EnergyIrCustom,
-                        energy_led_custom = model.EnergyLedCustom
-                    }
-                });
+                var (result, document) = await _apiService.InvokeJsonAsync("set-configuration", _payloadFactory.BuildPowerSettings(model));
 
-                EnsureSuccess(result, "Erro ao aplicar configuracoes de energia");
+                _resultPresentationService.EnsureSuccess(result, "Erro ao aplicar configuracoes de energia");
                 model.ResultMessage = "Configuracoes de energia e screenshot atualizadas com sucesso.";
                 model.ResultStatusType = "success";
-                model.ResponseJson = FormatJson(result.ResponseBody, document);
+                model.ResponseJson = _resultPresentationService.FormatJson(result.ResponseBody, document);
             }
             catch (Exception ex)
             {
-                model.ErrorMessage = ex.Message;
+                model.ErrorMessage = SecurityTextHelper.BuildSafeUserMessage("A operação não pôde ser concluída", ex);
                 _logger.LogError(ex, "Erro ao aplicar configuracoes de energia.");
             }
 
@@ -224,33 +177,16 @@ namespace Integracao.ControlID.PoC.Controllers
 
             try
             {
-                var (result, document) = await _apiService.InvokeJsonAsync("set-configuration", new
-                {
-                    onvif = new
-                    {
-                        rtsp_enabled = BoolString(model.StreamingRtspEnabled),
-                        rtsp_port = model.StreamingRtspPort.ToString(),
-                        rtsp_username = model.StreamingRtspUsername,
-                        rtsp_password = model.StreamingRtspPassword,
-                        rtsp_rgb = BoolString(model.StreamingRtspRgb),
-                        rtsp_codec = model.StreamingRtspCodec,
-                        onvif_enabled = BoolString(model.StreamingOnvifEnabled),
-                        onvif_port = model.StreamingOnvifPort.ToString(),
-                        rtsp_flipped = BoolString(model.StreamingRtspFlipped),
-                        rtsp_watermark_enabled = BoolString(model.StreamingWatermarkEnabled),
-                        rtsp_watermark_logo_enabled = BoolString(model.StreamingWatermarkLogoEnabled),
-                        rtsp_watermark_custom_logo_enabled = BoolString(model.StreamingWatermarkCustomLogoEnabled)
-                    }
-                });
+                var (result, document) = await _apiService.InvokeJsonAsync("set-configuration", _payloadFactory.BuildStreamingSettings(model));
 
-                EnsureSuccess(result, "Erro ao aplicar configuracoes de streaming");
+                _resultPresentationService.EnsureSuccess(result, "Erro ao aplicar configuracoes de streaming");
                 model.ResultMessage = "Configuracoes de streaming atualizadas com sucesso.";
                 model.ResultStatusType = "success";
-                model.ResponseJson = FormatJson(result.ResponseBody, document);
+                model.ResponseJson = _resultPresentationService.FormatJson(result.ResponseBody, document);
             }
             catch (Exception ex)
             {
-                model.ErrorMessage = ex.Message;
+                model.ErrorMessage = SecurityTextHelper.BuildSafeUserMessage("A operação não pôde ser concluída", ex);
                 _logger.LogError(ex, "Erro ao aplicar configuracoes de streaming.");
             }
 
@@ -267,51 +203,17 @@ namespace Integracao.ControlID.PoC.Controllers
 
             try
             {
-                var (result, document) = await _apiService.InvokeJsonAsync("set-configuration", new
-                {
-                    pjsip = new
-                    {
-                        enabled = BoolString(model.SipEnabled),
-                        server_ip = model.SipServerIp,
-                        server_port = model.SipServerPort.ToString(),
-                        server_outbound_port = model.SipServerOutboundPort.ToString(),
-                        server_outbound_port_range = model.SipServerOutboundPortRange.ToString(),
-                        numeric_branch_enabled = BoolString(model.SipNumericBranchEnabled),
-                        branch = model.SipBranch,
-                        login = model.SipLogin,
-                        password = model.SipPassword,
-                        peer_to_peer_enabled = BoolString(model.SipPeerToPeerEnabled),
-                        reg_status_query_period = model.SipRegStatusQueryPeriod.ToString(),
-                        server_retry_interval = model.SipServerRetryInterval.ToString(),
-                        max_call_time = model.SipMaxCallTime.ToString(),
-                        push_button_debounce = model.SipPushButtonDebounce.ToString(),
-                        auto_answer_enabled = BoolString(model.SipAutoAnswerEnabled),
-                        auto_answer_delay = model.SipAutoAnswerDelay.ToString(),
-                        auto_call_button_enabled = BoolString(model.SipAutoCallButtonEnabled),
-                        rex_enabled = BoolString(model.SipRexEnabled),
-                        dialing_display_mode = model.SipDialingDisplayMode,
-                        auto_call_target = model.SipAutoCallTarget,
-                        custom_identifier_auto_call = model.SipCustomIdentifierAutoCall,
-                        video_enabled = BoolString(model.SipVideoEnabled),
-                        pjsip_custom_audio_enabled = BoolString(model.SipCustomAudioEnabled),
-                        custom_audio_volume_gain = model.SipCustomAudioVolumeGain,
-                        mic_volume = model.SipMicVolume.ToString(),
-                        speaker_volume = model.SipSpeakerVolume.ToString(),
-                        open_door_enabled = BoolString(model.SipOpenDoorEnabled),
-                        open_door_command = model.SipOpenDoorCommand,
-                        facial_id_during_call_enabled = BoolString(model.SipFacialIdDuringCallEnabled)
-                    }
-                });
+                var (result, document) = await _apiService.InvokeJsonAsync("set-configuration", _payloadFactory.BuildSipSettings(model));
 
-                EnsureSuccess(result, "Erro ao aplicar configuracoes SIP");
+                _resultPresentationService.EnsureSuccess(result, "Erro ao aplicar configuracoes SIP");
                 await PopulateSipAsync(model);
                 model.ResultMessage = "Configuracoes SIP atualizadas com sucesso.";
                 model.ResultStatusType = "success";
-                model.ResponseJson = FormatJson(result.ResponseBody, document);
+                model.ResponseJson = _resultPresentationService.FormatJson(result.ResponseBody, document);
             }
             catch (Exception ex)
             {
-                model.ErrorMessage = ex.Message;
+                model.ErrorMessage = SecurityTextHelper.BuildSafeUserMessage("A operação não pôde ser concluída", ex);
                 _logger.LogError(ex, "Erro ao aplicar configuracoes SIP.");
             }
 
@@ -329,16 +231,16 @@ namespace Integracao.ControlID.PoC.Controllers
             try
             {
                 var (result, document) = await _apiService.InvokeJsonAsync("get-sip-status");
-                EnsureSuccess(result, "Erro ao consultar status do SIP");
+                _resultPresentationService.EnsureSuccess(result, "Erro ao consultar status do SIP");
                 model.SipStatusCode = document == null ? model.SipStatusCode : GetRootInt(document.RootElement, "status", model.SipStatusCode);
                 model.SipInCall = document != null && GetRootBool(document.RootElement, "in_call");
                 model.ResultMessage = "Status do SIP atualizado.";
                 model.ResultStatusType = "success";
-                model.ResponseJson = FormatJson(result.ResponseBody, document);
+                model.ResponseJson = _resultPresentationService.FormatJson(result.ResponseBody, document);
             }
             catch (Exception ex)
             {
-                model.ErrorMessage = ex.Message;
+                model.ErrorMessage = SecurityTextHelper.BuildSafeUserMessage("A operação não pôde ser concluída", ex);
                 _logger.LogError(ex, "Erro ao consultar status do SIP.");
             }
 
@@ -356,15 +258,15 @@ namespace Integracao.ControlID.PoC.Controllers
             try
             {
                 var (result, document) = await _apiService.InvokeJsonAsync("make-sip-call", new { target = model.SipCallTarget });
-                EnsureSuccess(result, "Erro ao iniciar chamada SIP");
+                _resultPresentationService.EnsureSuccess(result, "Erro ao iniciar chamada SIP");
                 await PopulateSipAsync(model);
                 model.ResultMessage = $"Chamada SIP iniciada para {model.SipCallTarget}.";
                 model.ResultStatusType = "success";
-                model.ResponseJson = FormatJson(result.ResponseBody, document);
+                model.ResponseJson = _resultPresentationService.FormatJson(result.ResponseBody, document);
             }
             catch (Exception ex)
             {
-                model.ErrorMessage = ex.Message;
+                model.ErrorMessage = SecurityTextHelper.BuildSafeUserMessage("A operação não pôde ser concluída", ex);
                 _logger.LogError(ex, "Erro ao iniciar chamada SIP.");
             }
 
@@ -382,15 +284,15 @@ namespace Integracao.ControlID.PoC.Controllers
             try
             {
                 var (result, document) = await _apiService.InvokeJsonAsync("finalize-sip-call");
-                EnsureSuccess(result, "Erro ao finalizar chamada SIP");
+                _resultPresentationService.EnsureSuccess(result, "Erro ao finalizar chamada SIP");
                 await PopulateSipAsync(model);
                 model.ResultMessage = "Chamada SIP finalizada com sucesso.";
                 model.ResultStatusType = "success";
-                model.ResponseJson = FormatJson(result.ResponseBody, document);
+                model.ResponseJson = _resultPresentationService.FormatJson(result.ResponseBody, document);
             }
             catch (Exception ex)
             {
-                model.ErrorMessage = ex.Message;
+                model.ErrorMessage = SecurityTextHelper.BuildSafeUserMessage("A operação não pôde ser concluída", ex);
                 _logger.LogError(ex, "Erro ao finalizar chamada SIP.");
             }
 
@@ -408,15 +310,15 @@ namespace Integracao.ControlID.PoC.Controllers
             try
             {
                 var (result, document) = await _apiService.InvokeJsonAsync("has-pjsip-audio-message");
-                EnsureSuccess(result, "Erro ao consultar audio customizado do SIP");
+                _resultPresentationService.EnsureSuccess(result, "Erro ao consultar audio customizado do SIP");
                 model.SipAudioExists = document != null && GetRootBool(document.RootElement, "file_exists");
                 model.ResultMessage = model.SipAudioExists ? "O dispositivo possui um toque customizado." : "Nao ha toque customizado cadastrado.";
                 model.ResultStatusType = "success";
-                model.ResponseJson = FormatJson(result.ResponseBody, document);
+                model.ResponseJson = _resultPresentationService.FormatJson(result.ResponseBody, document);
             }
             catch (Exception ex)
             {
-                model.ErrorMessage = ex.Message;
+                model.ErrorMessage = SecurityTextHelper.BuildSafeUserMessage("A operação não pôde ser concluída", ex);
                 _logger.LogError(ex, "Erro ao consultar audio customizado do SIP.");
             }
 
@@ -435,15 +337,15 @@ namespace Integracao.ControlID.PoC.Controllers
             {
                 var base64 = await ReadFileAsBase64Async(model.SipAudioFile, "Selecione um arquivo WAV para o toque SIP.");
                 var result = await _apiService.InvokeAsync("set-pjsip-audio-message", base64, $"current={model.SipAudioCurrent}&total={model.SipAudioTotal}");
-                EnsureSuccess(result, "Erro ao enviar audio customizado do SIP");
+                _resultPresentationService.EnsureSuccess(result, "Erro ao enviar audio customizado do SIP");
                 await PopulateSipAudioAsync(model);
                 model.ResultMessage = "Audio customizado do SIP enviado com sucesso.";
                 model.ResultStatusType = "success";
-                model.ResponseJson = string.IsNullOrWhiteSpace(result.ResponseBody) ? "Operacao concluida sem corpo de resposta." : result.ResponseBody;
+                model.ResponseJson = _resultPresentationService.FormatResponseBody(result);
             }
             catch (Exception ex)
             {
-                model.ErrorMessage = ex.Message;
+                model.ErrorMessage = SecurityTextHelper.BuildSafeUserMessage("A operação não pôde ser concluída", ex);
                 _logger.LogError(ex, "Erro ao enviar audio customizado do SIP.");
             }
 
@@ -461,12 +363,12 @@ namespace Integracao.ControlID.PoC.Controllers
             try
             {
                 var result = await _apiService.InvokeAsync("get-pjsip-audio-message");
-                EnsureSuccess(result, "Erro ao baixar audio customizado do SIP");
-                return DownloadBinaryResult(result, "sip-ring.wav", "audio/wav");
+                _resultPresentationService.EnsureSuccess(result, "Erro ao baixar audio customizado do SIP");
+                return _binaryFileResultFactory.Create(result, "sip-ring.wav", "audio/wav");
             }
             catch (Exception ex)
             {
-                model.ErrorMessage = ex.Message;
+                model.ErrorMessage = SecurityTextHelper.BuildSafeUserMessage("A operação não pôde ser concluída", ex);
                 _logger.LogError(ex, "Erro ao baixar audio customizado do SIP.");
                 return View("Index", model);
             }
@@ -482,26 +384,16 @@ namespace Integracao.ControlID.PoC.Controllers
 
             try
             {
-                var (result, document) = await _apiService.InvokeJsonAsync("set-configuration", new
-                {
-                    buzzer = new
-                    {
-                        audio_message_not_identified = model.AccessAudioNotIdentified,
-                        audio_message_authorized = model.AccessAudioAuthorized,
-                        audio_message_not_authorized = model.AccessAudioNotAuthorized,
-                        audio_message_use_mask = model.AccessAudioUseMask,
-                        audio_message_volume_gain = model.AccessAudioVolumeGain
-                    }
-                });
+                var (result, document) = await _apiService.InvokeJsonAsync("set-configuration", _payloadFactory.BuildAccessAudioSettings(model));
 
-                EnsureSuccess(result, "Erro ao aplicar configuracoes de audio de acesso");
+                _resultPresentationService.EnsureSuccess(result, "Erro ao aplicar configuracoes de audio de acesso");
                 model.ResultMessage = "Configuracoes de audio de acesso atualizadas com sucesso.";
                 model.ResultStatusType = "success";
-                model.ResponseJson = FormatJson(result.ResponseBody, document);
+                model.ResponseJson = _resultPresentationService.FormatJson(result.ResponseBody, document);
             }
             catch (Exception ex)
             {
-                model.ErrorMessage = ex.Message;
+                model.ErrorMessage = SecurityTextHelper.BuildSafeUserMessage("A operação não pôde ser concluída", ex);
                 _logger.LogError(ex, "Erro ao aplicar configuracoes de audio de acesso.");
             }
 
@@ -519,7 +411,7 @@ namespace Integracao.ControlID.PoC.Controllers
             try
             {
                 var (result, document) = await _apiService.InvokeJsonAsync("has-audio-access-messages");
-                EnsureSuccess(result, "Erro ao consultar audios de acesso");
+                _resultPresentationService.EnsureSuccess(result, "Erro ao consultar audios de acesso");
                 if (document != null)
                 {
                     model.AccessAudioHasNotIdentified = GetRootBool(document.RootElement, "not_identified");
@@ -530,11 +422,11 @@ namespace Integracao.ControlID.PoC.Controllers
 
                 model.ResultMessage = "Presenca dos audios de acesso atualizada.";
                 model.ResultStatusType = "success";
-                model.ResponseJson = FormatJson(result.ResponseBody, document);
+                model.ResponseJson = _resultPresentationService.FormatJson(result.ResponseBody, document);
             }
             catch (Exception ex)
             {
-                model.ErrorMessage = ex.Message;
+                model.ErrorMessage = SecurityTextHelper.BuildSafeUserMessage("A operação não pôde ser concluída", ex);
                 _logger.LogError(ex, "Erro ao consultar audios de acesso.");
             }
 
@@ -557,15 +449,15 @@ namespace Integracao.ControlID.PoC.Controllers
                     base64,
                     $"event={model.AccessAudioEvent}&current={model.AccessAudioCurrent}&total={model.AccessAudioTotal}");
 
-                EnsureSuccess(result, "Erro ao enviar audio de acesso");
+                _resultPresentationService.EnsureSuccess(result, "Erro ao enviar audio de acesso");
                 await PopulateAccessAudioAsync(model);
                 model.ResultMessage = $"Audio do evento '{model.AccessAudioEvent}' enviado com sucesso.";
                 model.ResultStatusType = "success";
-                model.ResponseJson = string.IsNullOrWhiteSpace(result.ResponseBody) ? "Operacao concluida sem corpo de resposta." : result.ResponseBody;
+                model.ResponseJson = _resultPresentationService.FormatResponseBody(result);
             }
             catch (Exception ex)
             {
-                model.ErrorMessage = ex.Message;
+                model.ErrorMessage = SecurityTextHelper.BuildSafeUserMessage("A operação não pôde ser concluída", ex);
                 _logger.LogError(ex, "Erro ao enviar audio de acesso.");
             }
 
@@ -583,12 +475,12 @@ namespace Integracao.ControlID.PoC.Controllers
             try
             {
                 var result = await _apiService.InvokeAsync("get-audio-access-message", new { @event = model.AccessAudioEvent });
-                EnsureSuccess(result, "Erro ao baixar audio de acesso");
-                return DownloadBinaryResult(result, $"access-{model.AccessAudioEvent}.wav", "audio/wav");
+                _resultPresentationService.EnsureSuccess(result, "Erro ao baixar audio de acesso");
+                return _binaryFileResultFactory.Create(result, $"access-{model.AccessAudioEvent}.wav", "audio/wav");
             }
             catch (Exception ex)
             {
-                model.ErrorMessage = ex.Message;
+                model.ErrorMessage = SecurityTextHelper.BuildSafeUserMessage("A operação não pôde ser concluída", ex);
                 _logger.LogError(ex, "Erro ao baixar audio de acesso.");
                 return View("Index", model);
             }
@@ -604,32 +496,16 @@ namespace Integracao.ControlID.PoC.Controllers
 
             try
             {
-                var (result, document) = await _apiService.InvokeJsonAsync("set-configuration", new
-                {
-                    general = new
-                    {
-                        sec_box_out_mode = model.SignalSecBoxOutMode,
-                        relay_out_mode = model.SignalRelayOutMode,
-                        relay1_enabled = BoolString(model.SignalRelayEnabled),
-                        relay1_auto_close = BoolString(model.SignalRelayAutoClose),
-                        relay1_timeout = model.SignalRelayTimeout.ToString(),
-                        gpio_ext1_mode = model.SignalGpioExt1Mode,
-                        gpio_ext1_idle = model.SignalGpioExt1Idle,
-                        gpio_ext2_mode = model.SignalGpioExt2Mode,
-                        gpio_ext2_idle = model.SignalGpioExt2Idle,
-                        gpio_ext3_mode = model.SignalGpioExt3Mode,
-                        gpio_ext3_idle = model.SignalGpioExt3Idle
-                    }
-                });
+                var (result, document) = await _apiService.InvokeJsonAsync("set-configuration", _payloadFactory.BuildSignalsSettings(model));
 
-                EnsureSuccess(result, "Erro ao aplicar sinais customizados");
+                _resultPresentationService.EnsureSuccess(result, "Erro ao aplicar sinais customizados");
                 model.ResultMessage = "Sinais customizados atualizados com sucesso.";
                 model.ResultStatusType = "success";
-                model.ResponseJson = FormatJson(result.ResponseBody, document);
+                model.ResponseJson = _resultPresentationService.FormatJson(result.ResponseBody, document);
             }
             catch (Exception ex)
             {
-                model.ErrorMessage = ex.Message;
+                model.ErrorMessage = SecurityTextHelper.BuildSafeUserMessage("A operação não pôde ser concluída", ex);
                 _logger.LogError(ex, "Erro ao aplicar sinais customizados.");
             }
 
@@ -647,14 +523,14 @@ namespace Integracao.ControlID.PoC.Controllers
             try
             {
                 var result = await _apiService.InvokeAsync("reread-leds");
-                EnsureSuccess(result, "Erro ao recarregar configuracao de LEDs");
+                _resultPresentationService.EnsureSuccess(result, "Erro ao recarregar configuracao de LEDs");
                 model.ResultMessage = "Configuracao de LEDs reaplicada com sucesso.";
                 model.ResultStatusType = "success";
-                model.ResponseJson = string.IsNullOrWhiteSpace(result.ResponseBody) ? "Operacao concluida sem corpo de resposta." : result.ResponseBody;
+                model.ResponseJson = _resultPresentationService.FormatResponseBody(result);
             }
             catch (Exception ex)
             {
-                model.ErrorMessage = ex.Message;
+                model.ErrorMessage = SecurityTextHelper.BuildSafeUserMessage("A operação não pôde ser concluída", ex);
                 _logger.LogError(ex, "Erro ao recarregar configuracao de LEDs.");
             }
 
@@ -897,31 +773,6 @@ namespace Integracao.ControlID.PoC.Controllers
             return false;
         }
 
-        private static void EnsureSuccess(OfficialApiInvocationResult result, string message)
-        {
-            if (result.Success)
-                return;
-
-            if (!string.IsNullOrWhiteSpace(result.ErrorMessage))
-                throw new InvalidOperationException($"{message}: {result.ErrorMessage}");
-
-            if (!string.IsNullOrWhiteSpace(result.ResponseBody) && !result.ResponseBodyIsBase64)
-                throw new InvalidOperationException($"{message}: {result.ResponseBody}");
-
-            throw new InvalidOperationException($"{message} (status HTTP {result.StatusCode}).");
-        }
-
-        private IActionResult DownloadBinaryResult(OfficialApiInvocationResult result, string fileName, string fallbackContentType)
-        {
-            if (result.ResponseBodyIsBase64 && !string.IsNullOrWhiteSpace(result.ResponseBody))
-            {
-                var bytes = Convert.FromBase64String(result.ResponseBody);
-                return File(bytes, string.IsNullOrWhiteSpace(result.ResponseContentType) ? fallbackContentType : result.ResponseContentType, fileName);
-            }
-
-            return File(System.Text.Encoding.UTF8.GetBytes(result.ResponseBody ?? string.Empty), fallbackContentType, fileName);
-        }
-
         private static async Task<string> ReadFileAsBase64Async(IFormFile? file, string emptyMessage)
         {
             if (file == null || file.Length == 0)
@@ -932,19 +783,6 @@ namespace Integracao.ControlID.PoC.Controllers
             await stream.CopyToAsync(memory);
             return Convert.ToBase64String(memory.ToArray());
         }
-
-        private static string FormatJson(string rawJson, JsonDocument? document)
-        {
-            if (document == null)
-                return rawJson;
-
-            return JsonSerializer.Serialize(document.RootElement, new JsonSerializerOptions
-            {
-                WriteIndented = true
-            });
-        }
-
-        private static string BoolString(bool value) => value ? "1" : "0";
 
         private static string GetConfigString(JsonElement root, string section, string field, string fallback = "")
         {
@@ -993,3 +831,6 @@ namespace Integracao.ControlID.PoC.Controllers
         }
     }
 }
+
+
+

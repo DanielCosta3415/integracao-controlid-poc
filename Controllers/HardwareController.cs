@@ -3,6 +3,7 @@ using System.Text.Json;
 using Integracao.ControlID.PoC.Models.ControlIDApi;
 using Integracao.ControlID.PoC.Services.ControlIDApi;
 using Integracao.ControlID.PoC.ViewModels.Hardware;
+using Integracao.ControlID.PoC.Helpers;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Integracao.ControlID.PoC.Controllers
@@ -72,7 +73,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                model.ErrorMessage = $"Erro ao consultar status do hardware: {ex.Message}";
+                model.ErrorMessage = SecurityTextHelper.BuildSafeUserMessage("Erro ao consultar status do hardware", ex);
                 _logger.LogError(ex, "Erro ao consultar status do hardware.");
             }
 
@@ -143,7 +144,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                model.ErrorMessage = $"Erro ao consultar estado dos GPIOs: {ex.Message}";
+                model.ErrorMessage = SecurityTextHelper.BuildSafeUserMessage("Erro ao consultar estado dos GPIOs", ex);
                 _logger.LogError(ex, "Erro ao consultar estado dos GPIOs.");
             }
 
@@ -179,7 +180,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                model.ErrorMessage = $"Erro ao consultar o estado da porta: {ex.Message}";
+                model.ErrorMessage = SecurityTextHelper.BuildSafeUserMessage("Erro ao consultar o estado da porta", ex);
                 _logger.LogError(ex, "Erro ao consultar o estado das portas.");
             }
 
@@ -246,7 +247,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                TempData["StatusMessage"] = $"Erro ao abrir a saída: {ex.Message}";
+                TempData["StatusMessage"] = SecurityTextHelper.BuildSafeUserMessage("Erro ao abrir a saída", ex);
                 TempData["StatusType"] = "danger";
                 _logger.LogError(ex, "Erro ao abrir a saída remota.");
             }
@@ -277,7 +278,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                TempData["StatusMessage"] = $"Erro ao recarregar LEDs: {ex.Message}";
+                TempData["StatusMessage"] = SecurityTextHelper.BuildSafeUserMessage("Erro ao recarregar LEDs", ex);
                 TempData["StatusType"] = "danger";
                 _logger.LogError(ex, "Erro ao recarregar configuração de LEDs.");
             }
@@ -321,7 +322,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                model.ResultMessage = ex.Message;
+                model.ResultMessage = SecurityTextHelper.BuildSafeUserMessage("A operação não pôde ser concluída", ex);
                 model.ResultStatusType = "danger";
                 _logger.LogError(ex, "Erro ao validar biometria.");
             }
@@ -331,13 +332,7 @@ namespace Integracao.ControlID.PoC.Controllers
 
         private static string BuildErrorMessage(OfficialApiInvocationResult result, string prefix)
         {
-            if (!string.IsNullOrWhiteSpace(result.ErrorMessage))
-                return $"{prefix}: {result.ErrorMessage}";
-
-            if (!string.IsNullOrWhiteSpace(result.ResponseBody))
-                return $"{prefix}: {result.ResponseBody}";
-
-            return $"{prefix} (status HTTP {result.StatusCode}).";
+            return SecurityTextHelper.BuildApiFailureMessage(result, prefix);
         }
 
         private static string GetString(JsonElement element, params string[] propertyNames)
@@ -441,3 +436,7 @@ namespace Integracao.ControlID.PoC.Controllers
     }
 
 }
+
+
+
+

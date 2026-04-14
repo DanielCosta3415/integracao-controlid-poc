@@ -27,7 +27,9 @@
         <header class="app-header">
             <div class="app-topbar">
                 <div class="app-topbar__left">
-                    <a class="app-brand" href="@Url.Action("Index", "Home")">
+                    <a class="app-brand"
+                       href="@Url.Action("Index", "Home")"
+                       aria-label="Voltar para o painel inicial da Control iD PoC">
                         <span class="app-brand__mark" aria-hidden="true">
                             <span class="app-brand__ring"></span>
                             <span class="app-brand__core"></span>
@@ -43,18 +45,49 @@
                     <div class="app-command-palette">
                         <label class="app-command-palette__input-wrap" for="moduleSearchInput">
                             <span class="app-command-palette__icon" aria-hidden="true">/</span>
-                            <input id="moduleSearchInput" type="search" placeholder="Buscar domínio, módulo, API ou auditoria..." aria-label="Buscar módulos" />
+                            <input id="moduleSearchInput"
+                                   type="search"
+                                   placeholder="Buscar domínio, módulo, API ou auditoria..."
+                                   aria-label="Buscar módulos"
+                                   aria-describedby="moduleSearchHint"
+                                   aria-controls="moduleSearchResults"
+                                   aria-expanded="false"
+                                   aria-haspopup="listbox" />
                         </label>
-                        <div class="app-command-palette__results" id="moduleSearchResults" hidden></div>
+                        <span id="moduleSearchHint" class="visually-hidden">Digite para filtrar módulos por domínio, nome e tags operacionais.</span>
+                        <div class="app-command-palette__results"
+                             id="moduleSearchResults"
+                             role="listbox"
+                             aria-label="Resultados da busca de módulos"
+                             aria-hidden="true"
+                             hidden></div>
                     </div>
                 </div>
 
                 <div class="app-topbar__right">
-                    <a class="app-topbar__link" href="@Url.Action("Index", "Workspace")">Mapa funcional</a>
-                    <a class="app-topbar__link" href="@Url.Action("Index", "OfficialApi")">API oficial</a>
-                    <a class="app-topbar__link" href="#connectionPanel">Conexão</a>
-                    <span class="app-chip @(shellContext.ConnectionPanel.IsSessionActive ? "app-chip--success" : "app-chip--warning")">@(shellContext.ConnectionPanel.IsSessionActive ? "Sessão ativa" : "Sessão inativa")</span>
-                    <span class="app-chip @(shellContext.ConnectionPanel.IsDeviceConnected ? "app-chip--success" : "app-chip--neutral")">@(shellContext.ConnectionPanel.IsDeviceConnected ? "Equipamento pronto" : "Sem equipamento")</span>
+                    <a class="app-topbar__link"
+                       href="@Url.Action("Index", "Workspace")"
+                       aria-label="Abrir o mapa funcional da PoC">
+                        Mapa funcional
+                    </a>
+                    <a class="app-topbar__link"
+                       href="@Url.Action("Index", "OfficialApi")"
+                       aria-label="Abrir o catálogo oficial da API">
+                        API oficial
+                    </a>
+                    <a class="app-topbar__link"
+                       href="#connectionPanel"
+                       aria-label="Ir para o painel de conexão do equipamento">
+                        Conexão
+                    </a>
+                    <span class="app-chip @(shellContext.ConnectionPanel.IsSessionActive ? "app-chip--success" : "app-chip--warning")"
+                          aria-label="Status da sessão atual: @(shellContext.ConnectionPanel.IsSessionActive ? "ativa" : "inativa")">
+                        @(shellContext.ConnectionPanel.IsSessionActive ? "Sessão ativa" : "Sessão inativa")
+                    </span>
+                    <span class="app-chip @(shellContext.ConnectionPanel.IsDeviceConnected ? "app-chip--success" : "app-chip--neutral")"
+                          aria-label="Status do equipamento em contexto: @(shellContext.ConnectionPanel.IsDeviceConnected ? "conectado" : "não conectado")">
+                        @(shellContext.ConnectionPanel.IsDeviceConnected ? "Equipamento pronto" : "Sem equipamento")
+                    </span>
                 </div>
             </div>
 
@@ -69,24 +102,23 @@
             </div>
 
             <div class="app-page-context">
-                <div class="app-breadcrumbs">
-                    <a href="@Url.Action("Index", "Home")">PoC</a>
-                    @if (shellContext.CurrentDomain != null)
-                    {
-                        <span>/</span>
-                        <a href="@Url.Action("Domain", "Workspace", new { id = shellContext.CurrentDomain.Id })">@shellContext.CurrentDomain.ShortTitle</a>
-                    }
-                    @if (shellContext.CurrentModule != null)
-                    {
-                        <span>/</span>
-                        <span>@shellContext.CurrentModule.Label</span>
-                    }
-                    else if (controller != "Home")
-                    {
-                        <span>/</span>
-                        <span>@title</span>
-                    }
-                </div>
+                <nav class="app-breadcrumbs" aria-label="Breadcrumb">
+                    <ol class="app-breadcrumbs__list">
+                        <li><a href="@Url.Action("Index", "Home")">PoC</a></li>
+                        @if (shellContext.CurrentDomain != null)
+                        {
+                            <li><a href="@Url.Action("Domain", "Workspace", new { id = shellContext.CurrentDomain.Id })">@shellContext.CurrentDomain.ShortTitle</a></li>
+                        }
+                        @if (shellContext.CurrentModule != null)
+                        {
+                            <li><span class="app-breadcrumbs__current" aria-current="page">@shellContext.CurrentModule.Label</span></li>
+                        }
+                        else if (controller != "Home")
+                        {
+                            <li><span class="app-breadcrumbs__current" aria-current="page">@title</span></li>
+                        }
+                    </ol>
+                </nav>
                 <div class="app-page-context__meta">
                     @if (shellContext.CurrentDomain != null)
                     {
@@ -119,7 +151,6 @@
         }
     </div>
 
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>

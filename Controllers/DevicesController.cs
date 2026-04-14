@@ -1,8 +1,9 @@
-using System;
+﻿using System;
 using System.Text.Json;
 using Integracao.ControlID.PoC.Models.ControlIDApi;
 using Integracao.ControlID.PoC.Services.ControlIDApi;
 using Integracao.ControlID.PoC.ViewModels.Devices;
+using Integracao.ControlID.PoC.Helpers;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Integracao.ControlID.PoC.Controllers
@@ -24,7 +25,7 @@ namespace Integracao.ControlID.PoC.Controllers
 
             if (!_officialApi.TryGetConnection(out _, out _))
             {
-                model.ErrorMessage = "É necessário conectar-se e autenticar com um equipamento Control iD.";
+                model.ErrorMessage = "Ã‰ necessÃ¡rio conectar-se e autenticar com um equipamento Control iD.";
                 return View(model);
             }
 
@@ -41,7 +42,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                model.ErrorMessage = $"Erro ao consultar dispositivos: {ex.Message}";
+                model.ErrorMessage = SecurityTextHelper.BuildSafeUserMessage("Erro ao consultar dispositivos", ex);
                 _logger.LogError(ex, "Erro ao consultar dispositivos.");
             }
 
@@ -84,7 +85,7 @@ namespace Integracao.ControlID.PoC.Controllers
 
             if (!_officialApi.TryGetConnection(out _, out _))
             {
-                ModelState.AddModelError(string.Empty, "É necessário conectar-se e autenticar com um equipamento Control iD.");
+                ModelState.AddModelError(string.Empty, "Ã‰ necessÃ¡rio conectar-se e autenticar com um equipamento Control iD.");
                 return View(model);
             }
 
@@ -104,7 +105,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                ModelState.AddModelError(string.Empty, ex.Message);
+                ModelState.AddModelError(string.Empty, SecurityTextHelper.BuildSafeUserMessage("A operação não pôde ser concluída", ex));
                 _logger.LogError(ex, "Erro ao criar dispositivo.");
                 return View(model);
             }
@@ -126,7 +127,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Erro ao buscar dispositivo {DeviceId} para edição.", id.Value);
+                _logger.LogError(ex, "Erro ao buscar dispositivo {DeviceId} para ediÃ§Ã£o.", id.Value);
             }
 
             return NotFound();
@@ -144,7 +145,7 @@ namespace Integracao.ControlID.PoC.Controllers
 
             if (!_officialApi.TryGetConnection(out _, out _))
             {
-                ModelState.AddModelError(string.Empty, "É necessário conectar-se e autenticar com um equipamento Control iD.");
+                ModelState.AddModelError(string.Empty, "Ã‰ necessÃ¡rio conectar-se e autenticar com um equipamento Control iD.");
                 return View(model);
             }
 
@@ -165,7 +166,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                ModelState.AddModelError(string.Empty, ex.Message);
+                ModelState.AddModelError(string.Empty, SecurityTextHelper.BuildSafeUserMessage("A operação não pôde ser concluída", ex));
                 _logger.LogError(ex, "Erro ao atualizar dispositivo {DeviceId}.", id);
                 return View(model);
             }
@@ -193,7 +194,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Erro ao buscar dispositivo {DeviceId} para exclusão.", id.Value);
+                _logger.LogError(ex, "Erro ao buscar dispositivo {DeviceId} para exclusÃ£o.", id.Value);
             }
 
             return NotFound();
@@ -205,7 +206,7 @@ namespace Integracao.ControlID.PoC.Controllers
         {
             if (!_officialApi.TryGetConnection(out _, out _))
             {
-                TempData["StatusMessage"] = "É necessário conectar-se e autenticar com um equipamento Control iD.";
+                TempData["StatusMessage"] = "Ã‰ necessÃ¡rio conectar-se e autenticar com um equipamento Control iD.";
                 TempData["StatusType"] = "danger";
                 return RedirectToAction(nameof(Index));
             }
@@ -220,12 +221,12 @@ namespace Integracao.ControlID.PoC.Controllers
 
                 EnsureSuccess(result, "Erro ao excluir dispositivo");
 
-                TempData["StatusMessage"] = "Dispositivo excluído com sucesso!";
+                TempData["StatusMessage"] = "Dispositivo excluÃ­do com sucesso!";
                 TempData["StatusType"] = "success";
             }
             catch (Exception ex)
             {
-                TempData["StatusMessage"] = $"Erro ao excluir dispositivo: {ex.Message}";
+                TempData["StatusMessage"] = SecurityTextHelper.BuildSafeUserMessage("Erro ao excluir dispositivo", ex);
                 TempData["StatusType"] = "danger";
                 _logger.LogError(ex, "Erro ao excluir dispositivo {DeviceId}.", id);
             }
@@ -342,12 +343,12 @@ namespace Integracao.ControlID.PoC.Controllers
         private static string BuildErrorMessage(OfficialApiInvocationResult result, string prefix)
         {
             if (!string.IsNullOrWhiteSpace(result.ErrorMessage))
-                return $"{prefix}: {result.ErrorMessage}";
+                return SecurityTextHelper.BuildApiFailureMessage(result, prefix);
 
             if (!string.IsNullOrWhiteSpace(result.ResponseBody) && !result.ResponseBodyIsBase64)
-                return $"{prefix}: {result.ResponseBody}";
+                return SecurityTextHelper.BuildApiFailureMessage(result, prefix);
 
-            return $"{prefix} (status HTTP {result.StatusCode}).";
+            return SecurityTextHelper.BuildApiFailureMessage(result, prefix);
         }
 
         private static string? GetString(JsonElement element, params string[] propertyNames)
@@ -419,3 +420,7 @@ namespace Integracao.ControlID.PoC.Controllers
         }
     }
 }
+
+
+
+

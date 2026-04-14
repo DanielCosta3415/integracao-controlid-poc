@@ -25,7 +25,9 @@
             @if (Model.HasImage && !string.IsNullOrEmpty(Model.Base64Image))
             {
                 <span class="app-media-preview app-media-preview--lg">
-                    <img src="data:image/@Model.Format;base64,@Model.Base64Image" alt="Foto do usuário @Model.UserId" />
+                    <img src="data:image/@Model.Format;base64,@Model.Base64Image"
+                         alt="Foto do usuário @Model.UserId"
+                         decoding="async" />
                 </span>
             }
             else

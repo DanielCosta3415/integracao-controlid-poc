@@ -10,8 +10,7 @@
         BadgeTone = Model.IsAuthenticated ? "success" : "warning",
         Actions = new[]
         {
-            new PageHeaderActionViewModel { Label = "Entrar", Href = Url.Action("Login")!, ButtonClass = "btn btn-primary" },
-            new PageHeaderActionViewModel { Label = "Sair", Href = Url.Action("Logout")!, ButtonClass = "btn btn-outline-danger" }
+            new PageHeaderActionViewModel { Label = "Entrar", Href = Url.Action("Login")!, ButtonClass = "btn btn-primary" }
         }
     };
 }
@@ -40,10 +39,15 @@
             <dd class="col-sm-9">@(!string.IsNullOrWhiteSpace(Model.DeviceAddress) ? Model.DeviceAddress : "-")</dd>
 
             <dt class="col-sm-3">Sessão</dt>
-            <dd class="col-sm-9"><code>@(!string.IsNullOrWhiteSpace(Model.SessionString) ? Model.SessionString : "-")</code></dd>
+            <dd class="col-sm-9"><code>@Model.MaskedSessionString</code></dd>
 
             <dt class="col-sm-3">Autenticado</dt>
             <dd class="col-sm-9">@(Model.IsAuthenticated ? "Sim" : "Não")</dd>
         </dl>
+
+        <form asp-action="Logout" method="post" class="app-inline-form">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn btn-outline-danger">Sair com segurança</button>
+        </form>
     </section>
 </div>

@@ -1,4 +1,4 @@
-using Integracao.ControlID.PoC.Models.Database;
+﻿using Integracao.ControlID.PoC.Models.Database;
 using Integracao.ControlID.PoC.Services.Database;
 using Microsoft.AspNetCore.Http;
 
@@ -23,6 +23,13 @@ namespace Integracao.ControlID.PoC.Services.Callbacks
             _logger = logger;
         }
 
+        /// <summary>
+        /// Valida, le e persiste um callback recebido pelo equipamento para o monitor local da PoC.
+        /// </summary>
+        /// <param name="httpContext">Contexto HTTP bruto da requisicao recebida.</param>
+        /// <param name="eventFamily">Familia funcional usada para agrupar callbacks relacionados.</param>
+        /// <param name="cancellationToken">Token opcional para cancelamento da leitura/persistencia.</param>
+        /// <returns>Resultado padronizado com status HTTP sugerido e id do evento persistido, quando houver.</returns>
         public async Task<CallbackIngressResult> PersistAsync(
             HttpContext httpContext,
             string eventFamily,
@@ -66,12 +73,30 @@ namespace Integracao.ControlID.PoC.Services.Callbacks
                 CreatedAt = DateTime.UtcNow
             };
 
-            await _monitorEventRepository.AddMonitorEventAsync(monitorEvent);
+            try
+            {
+                await _monitorEventRepository.AddMonitorEventAsync(monitorEvent);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Failed to persist callback event for {Path}. EventFamily {EventFamily}. RequestId {RequestId}.",
+                    path,
+                    eventFamily,
+                    httpContext.TraceIdentifier);
+
+                return CallbackIngressResult.Rejected(
+                    StatusCodes.Status500InternalServerError,
+                    "Nao foi possivel persistir o callback recebido.");
+            }
 
             _logger.LogInformation(
-                "Accepted callback request for {Path} as event {EventId}.",
+                "Accepted callback request for {Path} as event {EventId}. EventFamily {EventFamily}. Device {DeviceId}.",
                 path,
-                monitorEvent.EventId);
+                monitorEvent.EventId,
+                eventFamily,
+                monitorEvent.DeviceId);
 
             return CallbackIngressResult.Success(monitorEvent.EventId);
         }

@@ -16,5 +16,8 @@ namespace Integracao.ControlID.PoC.Models.ControlIDApi
         public string DocumentationUrl { get; init; } = string.Empty;
         public string SamplePayload { get; init; } = string.Empty;
         public string Notes { get; init; } = string.Empty;
+        public string QueryTemplate { get; init; } = string.Empty;
+        public string FunctionalDescription { get; init; } = string.Empty;
+        public string DeveloperGuidance { get; init; } = string.Empty;
     }
 }

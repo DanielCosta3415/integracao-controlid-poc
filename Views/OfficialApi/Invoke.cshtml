@@ -1,6 +1,7 @@
 ﻿@model Integracao.ControlID.PoC.ViewModels.OfficialApi.OfficialApiInvokeViewModel
 @{
     var endpoint = Model.Endpoint!;
+    var contract = Model.Contract;
     ViewData["Title"] = endpoint.Title;
     ViewData["Subtitle"] = $"{endpoint.Method} {endpoint.Path}";
     var header = new AppPageHeaderViewModel
@@ -38,6 +39,8 @@
                 <div class="entity-overview__item"><span>Direção</span><strong>@(endpoint.Direction == "server-callback" ? "Servidor recebe callback" : "PoC chama o equipamento")</strong></div>
                 <div class="entity-overview__item"><span>Corpo</span><strong>@endpoint.BodyKind</strong></div>
                 <div class="entity-overview__item"><span>Sessão</span><strong>@(endpoint.RequiresSession ? "Obrigatória" : "Não obrigatória")</strong></div>
+                <div class="entity-overview__item"><span>Content-Type</span><strong>@endpoint.ContentType</strong></div>
+                <div class="entity-overview__item"><span>Path</span><strong>@endpoint.Path</strong></div>
             </div>
 
             @if (!string.IsNullOrWhiteSpace(endpoint.Notes))
@@ -56,18 +59,23 @@
             else
             {
                 <form asp-action="Invoke" method="post" class="form-section">
+                    @Html.AntiForgeryToken()
                     <input type="hidden" asp-for="EndpointId" />
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                     <div>
                         <label asp-for="DeviceAddress" class="form-label">Endereço do equipamento</label>
-                        <input asp-for="DeviceAddress" class="form-control" placeholder="https://ip-ou-host" />
+                        <input asp-for="DeviceAddress" class="form-control" placeholder="https://ip-ou-host" autocomplete="off" />
+                        <span asp-validation-for="DeviceAddress" class="text-danger"></span>
                     </div>
                     <div>
                         <label asp-for="SessionString" class="form-label">Sessão</label>
-                        <input asp-for="SessionString" class="form-control" placeholder="Sessão atual do equipamento" />
+                        <input asp-for="SessionString" class="form-control" type="password" placeholder="Sessão atual do equipamento" autocomplete="off" />
+                        <span asp-validation-for="SessionString" class="text-danger"></span>
                     </div>
                     <div>
                         <label asp-for="AdditionalQuery" class="form-label">Query adicional</label>
-                        <input asp-for="AdditionalQuery" class="form-control" placeholder="id=1&user_id=123" />
+                        <input asp-for="AdditionalQuery" class="form-control" placeholder="id=1&user_id=123" autocomplete="off" />
+                        <span asp-validation-for="AdditionalQuery" class="text-danger"></span>
                     </div>
                     <div>
                         <label asp-for="RequestBody" class="form-label">Corpo da requisição</label>
@@ -85,6 +93,11 @@
             }
         </section>
     </div>
+
+    @if (contract != null)
+    {
+        <partial name="_EndpointContractPanel" model="contract" />
+    }
 
     @if (Model.Result != null)
     {

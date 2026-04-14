@@ -1,0 +1,419 @@
+# Smoke test localhost da PoC Control iD
+
+Data: 2026-04-14 04:02:32 -03:00
+
+## Resumo
+
+- Total: 390
+- PASS: 383
+- FAIL: 0
+- SKIP: 7
+
+## Bootstrap
+
+- [PASS] /: GET 200
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] /Auth/Login: GET 200
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/Auth/Login: POST 200
+- [PASS] /Session/Status: GET 200
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/Session/Validate: POST 200
+- [SKIP] http://localhost:5000/Session/Clear: SessÃ£o nÃ£o Ã© limpa durante o smoke para preservar o contexto dos demais fluxos.
+
+## Callbacks
+
+- [PASS] /new_user_identified.fcgi: POST 200
+- [PASS] /new_card.fcgi: POST 200
+- [PASS] /new_biometric_image.fcgi: POST 200
+- [PASS] /new_qrcode.fcgi: POST 200
+- [PASS] /new_biometric_template.fcgi: POST 200
+- [PASS] /new_uhf_tag.fcgi: POST 200
+- [PASS] /new_user_id_and_password.fcgi: POST 200
+- [PASS] /device_is_alive.fcgi: POST 200
+- [PASS] /card_create.fcgi: POST 200
+- [PASS] /fingerprint_create.fcgi: POST 200
+- [PASS] /template_create.fcgi: POST 200
+- [PASS] /face_create.fcgi: POST 200
+- [PASS] /pin_create.fcgi: POST 200
+- [PASS] /password_create.fcgi: POST 200
+- [PASS] /new_rex_log.fcgi: POST 200
+- [PASS] /api/notifications/user_image: POST 200
+- [PASS] /api/notifications/template: POST 200
+- [PASS] /api/notifications/card: POST 200
+- [PASS] /api/notifications/operation_mode: POST 200
+- [PASS] /api/notifications/pin: POST 200
+- [PASS] /api/notifications/password: POST 200
+- [PASS] /api/notifications/catra_event: POST 200
+- [PASS] /api/notifications/usb_drive: POST 200
+- [PASS] /push?device_id=smoke-device: GET 200
+- [PASS] /result?device_id=smoke-device&status=completed: POST 200
+
+## EdgeCases
+
+- [PASS] Home/ConnectToDevice vazio: Input vazio tratado sem quebra.
+- [PASS] Home/TestDeviceConnectivity falha de rede: Falha de rede tratada sem 500.
+- [PASS] OfficialApi/Invoke sem endereÃ§o: ValidaÃ§Ã£o tratou endereÃ§o vazio sem quebra.
+
+## Forms
+
+- [PASS] /Users/Create: GET 200
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/Users/Create: POST 200
+- [PASS] /Users/Edit/1: GET 200
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/Users/Edit/1: POST 200
+- [PASS] /Users/Delete/1: GET 200
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/Users/Delete/1: POST 200
+- [PASS] /Groups/Create: GET 200
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/Groups/Create: POST 200
+- [PASS] /Groups/Edit/1: GET 200
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/Groups/Edit/1: POST 200
+- [PASS] /Groups/Delete/1: GET 200
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/Groups/Delete/1: POST 200
+- [PASS] /Cards/Create: GET 200
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/Cards/Create: POST 200
+- [PASS] /Cards/Edit/1: GET 200
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/Cards/Edit/1: POST 200
+- [PASS] /Cards/Delete/1: GET 200
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/Cards/Delete/1: POST 200
+- [PASS] /BiometricTemplates/Create: GET 200
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/BiometricTemplates/Create: POST 200
+- [PASS] /BiometricTemplates/Edit/1: GET 200
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/BiometricTemplates/Edit/1: POST 200
+- [PASS] /BiometricTemplates/Delete/1: GET 200
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/BiometricTemplates/Delete/1: POST 200
+- [PASS] /QRCodes/Create: GET 200
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/QRCodes/Create: POST 200
+- [PASS] /QRCodes/Edit/1: GET 200
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/QRCodes/Edit/1: POST 200
+- [PASS] /QRCodes/Delete/1: GET 200
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/QRCodes/Delete/1: POST 200
+- [PASS] /Devices/Create: GET 200
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/Devices/Create: POST 200
+- [PASS] /Devices/Edit/1: GET 200
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/Devices/Edit/1: POST 200
+- [PASS] /Devices/Delete/1: GET 200
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/Devices/Delete/1: POST 200
+- [PASS] /AccessRules/Create: GET 200
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/AccessRules/Create: POST 200
+- [PASS] /AccessRules/Edit/1: GET 200
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/AccessRules/Edit/1: POST 200
+- [PASS] /AccessRules/Delete/1: GET 200
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/AccessRules/Delete/1: POST 200
+- [PASS] /Config/Create: GET 200
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/Config/Create: POST 200
+- [PASS] /Config/Edit/1: GET 200
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/Config/Edit/1: POST 200
+- [PASS] /Config/Delete/1: GET 200
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/Config/Delete/1: POST 200
+- [PASS] /Config/Diagnostics: GET 200
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/Config/ConnectionTest: POST 200
+- [PASS] http://localhost:5000/Config/PingTest: POST 200
+- [PASS] http://localhost:5000/Config/NslookupTest: POST 200
+- [PASS] /Config/Official: GET 200
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/Config/GetOfficial: POST 200
+- [PASS] http://localhost:5000/Config/SetOfficial: POST 200
+- [PASS] /Hardware/Gpio: GET 200
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] /Hardware/DoorState: GET 200
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] /Hardware/RelayAction: GET 200
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/Hardware/RelayAction: POST 200
+- [PASS] /System/HashPassword: GET 200
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/System/HashPassword: POST 200
+- [PASS] /System/LoginCredentials: GET 200
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/System/LoginCredentials: POST 200
+- [PASS] /System/Network: GET 200
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/System/Network: POST 200
+- [SKIP] /System/Network: FormulÃ¡rio com upload binÃ¡rio foi coberto pela trilha do catÃ¡logo oficial.
+- [PASS] /System/Vpn: GET 200
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/System/Vpn: POST 200
+- [SKIP] /System/Vpn: FormulÃ¡rio com upload binÃ¡rio foi coberto pela trilha do catÃ¡logo oficial.
+- [PASS] /AdvancedOfficial/ExportObjects: GET 200
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/AdvancedOfficial/ExportObjects: POST 200
+- [PASS] /AdvancedOfficial/NetworkInterlock: GET 200
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/AdvancedOfficial/NetworkInterlock: POST 200
+- [PASS] /AdvancedOfficial/CameraCapture: GET 200
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/AdvancedOfficial/CameraCapture: POST 200
+- [PASS] /AdvancedOfficial/FacialEnroll: GET 200
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/AdvancedOfficial/GetImageList: POST 200
+- [SKIP] /AdvancedOfficial/FacialEnroll: FormulÃ¡rio com upload binÃ¡rio foi coberto pela trilha do catÃ¡logo oficial.
+- [SKIP] /AdvancedOfficial/FacialEnroll: FormulÃ¡rio com upload binÃ¡rio foi coberto pela trilha do catÃ¡logo oficial.
+- [PASS] /AdvancedOfficial/RemoteLedControl: GET 200
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/AdvancedOfficial/RemoteLedControl: POST 200
+- [PASS] /DocumentedFeatures: GET 200
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/DocumentedFeatures/Attendance: POST 200
+- [PASS] http://localhost:5000/DocumentedFeatures/OnlineMode: POST 200
+- [PASS] http://localhost:5000/DocumentedFeatures/Security: POST 200
+- [PASS] http://localhost:5000/DocumentedFeatures/Visitors: POST 200
+- [PASS] http://localhost:5000/DocumentedFeatures/IdCloud: POST 200
+- [PASS] http://localhost:5000/DocumentedFeatures/Alarm: POST 200
+- [PASS] http://localhost:5000/DocumentedFeatures/GenerateReport: POST 200
+- [PASS] http://localhost:5000/DocumentedFeatures/ExportAfd: POST 200
+- [PASS] http://localhost:5000/DocumentedFeatures/ExportAuditLogs: POST 200
+- [PASS] /OfficialObjects: GET 200
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/OfficialObjects/SelectObject: POST 200
+- [PASS] http://localhost:5000/OfficialObjects/Load: POST 200
+- [PASS] http://localhost:5000/OfficialObjects/Create: POST 200
+- [PASS] http://localhost:5000/OfficialObjects/CreateOrModify: POST 200
+- [PASS] http://localhost:5000/OfficialObjects/Modify: POST 200
+- [PASS] http://localhost:5000/OfficialObjects/Destroy: POST 200
+- [PASS] /ProductSpecific: GET 200
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/ProductSpecific/UpgradeIdFace: POST 200
+- [PASS] http://localhost:5000/ProductSpecific/UpgradeEnterprise: POST 200
+- [PASS] http://localhost:5000/ProductSpecific/FacialSettings: POST 200
+- [PASS] http://localhost:5000/ProductSpecific/QrCodeSettings: POST 200
+- [PASS] http://localhost:5000/ProductSpecific/PowerSettings: POST 200
+- [PASS] http://localhost:5000/ProductSpecific/Streaming: POST 200
+- [PASS] http://localhost:5000/ProductSpecific/SipSettings: POST 200
+- [PASS] http://localhost:5000/ProductSpecific/RefreshSipStatus: POST 200
+- [PASS] http://localhost:5000/ProductSpecific/MakeSipCall: POST 200
+- [PASS] http://localhost:5000/ProductSpecific/FinalizeSipCall: POST 200
+- [SKIP] /ProductSpecific: FormulÃ¡rio com upload binÃ¡rio foi coberto pela trilha do catÃ¡logo oficial.
+- [PASS] http://localhost:5000/ProductSpecific/CheckSipAudio: POST 200
+- [PASS] http://localhost:5000/ProductSpecific/DownloadSipAudio: POST 200
+- [PASS] http://localhost:5000/ProductSpecific/AccessAudioSettings: POST 200
+- [SKIP] /ProductSpecific: FormulÃ¡rio com upload binÃ¡rio foi coberto pela trilha do catÃ¡logo oficial.
+- [PASS] http://localhost:5000/ProductSpecific/CheckAccessAudio: POST 200
+- [PASS] http://localhost:5000/ProductSpecific/DownloadAccessAudio: POST 200
+- [PASS] http://localhost:5000/ProductSpecific/Signals: POST 200
+- [PASS] http://localhost:5000/ProductSpecific/RefreshLeds: POST 200
+- [PASS] /RemoteActions/Authorization: GET 200
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/RemoteActions/Authorization: POST 200
+- [PASS] /RemoteActions/Enroll: GET 200
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/RemoteActions/Enroll: POST 200
+- [PASS] /PushCenter: GET 200
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/PushCenter/Queue: POST 200
+- [PASS] http://localhost:5000/PushCenter/Clear: POST 200
+- [PASS] /OfficialEvents: GET 200
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/OfficialEvents/Clear: POST 200
+
+## OfficialApi
+
+- [PASS] /OfficialApi: GET 200
+- [PASS] alarm-status: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] buzzer-buzz: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] cancel-remote-enroll: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] cb-card-create: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] cb-device-alive: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] cb-face-create: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] cb-monitor-card: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] cb-monitor-catra-event: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] cb-monitor-operation-mode: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] cb-monitor-password: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] cb-monitor-pin: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] cb-monitor-template: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] cb-monitor-usb-drive: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] cb-new-biometric-image: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] cb-new-biometric-template: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] cb-new-card: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] cb-new-qrcode: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] cb-new-uhf-tag: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] cb-new-user-identified: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] cb-new-user-id-password: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] cb-password-create: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] cb-pin-create: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] cb-template-create: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] cb-user-image: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] change-idcloud-code: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] change-login: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] connection-test: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] create-objects: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] create-or-modify-objects: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] delete-admins: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] destroy-objects: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] door-state: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] execute-actions: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] export-afd: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] export-audit-logs: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] export-objects: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] finalize-sip-call: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] get-audio-access-message: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] get-catra-info: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] get-configuration: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] get-pjsip-audio-message: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] get-sip-status: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] get-vpn-file: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] get-vpn-information: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] get-vpn-status: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] gpio-state: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] has-audio-access-messages: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] hash-password: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] has-pjsip-audio-message: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] has-vpn-file: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] load-objects: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] login: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] logo-change: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] logo-destroy: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] logo-get: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] logout: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] make-sip-call: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] message-to-screen: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] modify-objects: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] nslookup-test: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] ping-test: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] push-poll: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] push-result: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] reboot: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] reboot-recovery: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] remote-enroll: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] remote-led-control: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] remote-user-authorization: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] remove-custom-video: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] report-generate: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] reread-leds: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] reset-to-factory: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] save-screenshot: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] send-video: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] session-is-valid: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] set-audio-access-message: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] set-configuration: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] set-custom-video: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] set-network-interlock: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] set-pjsip-audio-message: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] set-system-network: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] set-system-time: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] set-vpn-file: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] set-vpn-information: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] ssl-certificate-change: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] system-information: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] upgrade-idface-pro: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] upgrade-idflex-enterprise: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] user-destroy-image: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] user-get-image: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] user-get-image-list: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] user-list-images: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] user-set-image: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] user-set-image-list: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] user-test-image: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] validate-biometry: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+
+## Pages
+
+- [PASS] /Auth/Status: GET 200
+- [PASS] /Users: GET 200
+- [PASS] /Users/Details/1: GET 200
+- [PASS] /Users/Create: GET 200
+- [PASS] /Users/Edit/1: GET 200
+- [PASS] /Users/Delete/1: GET 200
+- [PASS] /Groups: GET 200
+- [PASS] /Groups/Details/1: GET 200
+- [PASS] /Groups/Create: GET 200
+- [PASS] /Groups/Edit/1: GET 200
+- [PASS] /Groups/Delete/1: GET 200
+- [PASS] /Cards: GET 200
+- [PASS] /Cards/Details/1: GET 200
+- [PASS] /Cards/Create: GET 200
+- [PASS] /Cards/Edit/1: GET 200
+- [PASS] /Cards/Delete/1: GET 200
+- [PASS] /BiometricTemplates: GET 200
+- [PASS] /BiometricTemplates/Details/1: GET 200
+- [PASS] /BiometricTemplates/Create: GET 200
+- [PASS] /BiometricTemplates/Edit/1: GET 200
+- [PASS] /BiometricTemplates/Delete/1: GET 200
+- [PASS] /QRCodes: GET 200
+- [PASS] /QRCodes/Details/1: GET 200
+- [PASS] /QRCodes/Create: GET 200
+- [PASS] /QRCodes/Edit/1: GET 200
+- [PASS] /QRCodes/Delete/1: GET 200
+- [PASS] /Devices: GET 200
+- [PASS] /Devices/Details/1: GET 200
+- [PASS] /Devices/Create: GET 200
+- [PASS] /Devices/Edit/1: GET 200
+- [PASS] /Devices/Delete/1: GET 200
+- [PASS] /AccessRules: GET 200
+- [PASS] /AccessRules/Details/1: GET 200
+- [PASS] /AccessRules/Create: GET 200
+- [PASS] /AccessRules/Edit/1: GET 200
+- [PASS] /AccessRules/Delete/1: GET 200
+- [PASS] /AccessLogs: GET 200
+- [PASS] /AccessLogs/Details/1: GET 200
+- [PASS] /ChangeLogs: GET 200
+- [PASS] /ChangeLogs/Details/1: GET 200
+- [PASS] /Catra: GET 200
+- [PASS] /Catra/Details/1: GET 200
+- [PASS] /Catra/Delete/1: GET 200
+- [PASS] /Config: GET 200
+- [PASS] /Config/Details/1: GET 200
+- [PASS] /Config/Create: GET 200
+- [PASS] /Config/Edit/1: GET 200
+- [PASS] /Config/Delete/1: GET 200
+- [PASS] /Config/Diagnostics: GET 200
+- [PASS] /Config/Official: GET 200
+- [PASS] /Hardware/Status: GET 200
+- [PASS] /Hardware/Gpio: GET 200
+- [PASS] /Hardware/DoorState: GET 200
+- [PASS] /Hardware/RelayAction: GET 200
+- [PASS] /Hardware/ValidateBiometry: GET 200
+- [PASS] /System/Info: GET 200
+- [PASS] /System/HashPassword: GET 200
+- [PASS] /System/LoginCredentials: GET 200
+- [PASS] /System/Network: GET 200
+- [PASS] /System/Vpn: GET 200
+- [PASS] /Media: GET 200
+- [PASS] /Media/Details/1: GET 200
+- [PASS] /Media/Upload: GET 200
+- [PASS] /Media/Delete/1: GET 200
+- [PASS] /Media/AdMode: GET 200
+- [PASS] /Logo: GET 200
+- [PASS] /Logo/Details/1: GET 200
+- [PASS] /Logo/Upload: GET 200
+- [PASS] /Logo/Delete/1: GET 200
+- [PASS] /AdvancedOfficial: GET 200
+- [PASS] /AdvancedOfficial/ExportObjects: GET 200
+- [PASS] /AdvancedOfficial/NetworkInterlock: GET 200
+- [PASS] /AdvancedOfficial/CameraCapture: GET 200
+- [PASS] /AdvancedOfficial/FacialEnroll: GET 200
+- [PASS] /AdvancedOfficial/RemoteLedControl: GET 200
+- [PASS] /DocumentedFeatures: GET 200
+- [PASS] /OfficialObjects: GET 200
+- [PASS] /ProductSpecific: GET 200
+- [PASS] /RemoteActions: GET 200
+- [PASS] /RemoteActions/Authorization: GET 200
+- [PASS] /RemoteActions/Enroll: GET 200
+- [PASS] /RemoteActions/Details?action=open_door: GET 200
+- [PASS] /OfficialEvents: GET 200
+- [PASS] /PushCenter: GET 200
+
