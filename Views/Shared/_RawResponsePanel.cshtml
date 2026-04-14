@@ -19,18 +19,19 @@
                 <span>@description</span>
             }
         </div>
-        <div class="raw-panel__summary-actions">
-            @if (!string.IsNullOrWhiteSpace(badgeText))
-            {
-                <span class="app-chip app-chip--@Model.BadgeTone">@badgeText</span>
-            }
-            <button type="button"
-                    class="btn btn-quiet btn-sm"
-                    data-copy-target="@panelId"
-                    aria-label="Copiar o conteúdo bruto exibido neste painel">
-                Copiar
-            </button>
-        </div>
+        @if (!string.IsNullOrWhiteSpace(badgeText))
+        {
+            <span class="app-chip app-chip--@Model.BadgeTone">@badgeText</span>
+        }
     </summary>
+    <div class="raw-panel__toolbar">
+        <button type="button"
+                class="btn btn-quiet btn-sm"
+                data-copy-target="@panelId"
+                aria-label="Copiar o conteúdo bruto exibido neste painel"
+                aria-controls="@panelId">
+            Copiar
+        </button>
+    </div>
     <pre id="@panelId" class="app-code-panel" tabindex="0" aria-labelledby="@summaryId">@Model.Content</pre>
 </details>

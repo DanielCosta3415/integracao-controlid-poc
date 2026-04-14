@@ -37,6 +37,14 @@ Escopo: todas as superfícies atuais da PoC, com ênfase em shell global, busca 
    - Parte das rotas técnicas ainda ficava espremida no topo dos cards, causando sensação de vazamento para fora do bloco em telas mais densas.
    - Havia também resquícios de linguagem híbrida entre português e termos internos de engenharia, como `workspace` e `troubleshooting`, em superfícies já modernizadas.
 
+9. Semântica inadequada no painel técnico compartilhado.
+   - O painel de resposta bruta ainda trazia um botão de cópia dentro do `summary`, o que criava um controle interativo aninhado em outro.
+   - Isso enfraquecia a acessibilidade para teclado, leitores de tela e comportamento previsível de clique.
+
+10. Nome acessível e contraste ainda incompletos em pontos de alta frequência.
+   - O formulário de filtros do catálogo oficial dependia quase totalmente do texto visível para contexto de navegação assistiva.
+   - Microcopy de estatísticas, contexto de página e descrições técnicas ainda estava mais apagada do que o restante do sistema visual.
+
 ## Correções aplicadas
 
 1. Busca global e navegação superior.
@@ -68,6 +76,14 @@ Escopo: todas as superfícies atuais da PoC, com ênfase em shell global, busca 
    - O identificador técnico do endpoint foi rebaixado para um bloco próprio, separado dos chips e do título, para impedir competição visual e vazamento de rota longa.
    - Textos residuais com anglicismos operacionais foram substituídos por termos em português mais diretos, como `diagnóstico`, `área técnica` e `abrir recurso`.
 
+8. Painel técnico compartilhado e filtros de catálogo.
+   - O botão de cópia do painel bruto saiu de dentro do `summary` e passou para uma barra própria, mantendo a ação acessível sem aninhar controles.
+   - O formulário de filtros do catálogo oficial ganhou nome acessível explícito, assim como as ações de aplicar e limpar filtros.
+
+9. Reforço de contraste em microcopy e metadados.
+   - Estatísticas do catálogo, contexto de página, descrições do painel bruto e metadados técnicos receberam contraste mais firme para aproximar o shell e os catálogos do mesmo padrão visual.
+   - As rotas técnicas também passaram a esconder overflow interno do bloco para evitar sensação de estouro mesmo em endpoints extensos.
+
 ## Revisão interna
 
 As mudanças ficaram concentradas em infraestrutura compartilhada de UI e texto:
@@ -89,4 +105,4 @@ Comandos executados:
 Resultado:
 
 - Build verde com `0 warnings` e `0 errors`.
-- Testes verdes com `25` testes aprovados.
+- Testes verdes com `40` testes aprovados.

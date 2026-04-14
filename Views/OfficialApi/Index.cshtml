@@ -58,7 +58,10 @@
             </div>
         </div>
 
-        <form asp-action="Index" method="get" class="directory-filter-bar">
+        <form asp-action="Index"
+              method="get"
+              class="directory-filter-bar"
+              aria-label="Filtros do catálogo oficial da API">
             <div class="directory-filter-bar__field">
                 <label class="form-label" for="category">Categoria</label>
                 <select id="category" name="category" class="form-select">
@@ -98,8 +101,16 @@
                 </select>
             </div>
             <div class="directory-filter-bar__actions">
-                <button type="submit" class="btn btn-primary">Aplicar filtros</button>
-                <a class="btn btn-quiet" href="@Url.Action("Index")">Limpar</a>
+                <button type="submit"
+                        class="btn btn-primary"
+                        aria-label="Aplicar filtros do catálogo oficial da API">
+                    Aplicar filtros
+                </button>
+                <a class="btn btn-quiet"
+                   href="@Url.Action("Index")"
+                   aria-label="Limpar filtros do catálogo oficial da API">
+                    Limpar
+                </a>
             </div>
         </form>
     </section>
