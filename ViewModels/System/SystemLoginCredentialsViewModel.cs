@@ -1,15 +1,15 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace Integracao.ControlID.PoC.ViewModels.System
 {
     public class SystemLoginCredentialsViewModel
     {
         [Required(ErrorMessage = "Informe o novo usuário de login.")]
-        [Display(Name = "Novo Usuário")]
+        [Display(Name = "Novo usuário")]
         public string Login { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Informe a nova senha de login.")]
-        [Display(Name = "Nova Senha")]
+        [Display(Name = "Nova senha")]
         [DataType(DataType.Password)]
         public string Password { get; set; } = string.Empty;
 

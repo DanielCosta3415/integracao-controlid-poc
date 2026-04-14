@@ -1,114 +1,109 @@
-@model Integracao.ControlID.PoC.ViewModels.Config.ConfigDiagnosticsViewModel
+﻿@model Integracao.ControlID.PoC.ViewModels.Config.ConfigDiagnosticsViewModel
 @{
     ViewData["Title"] = "Diagnósticos";
+    var header = new AppPageHeaderViewModel
+    {
+        Eyebrow = "Infraestrutura",
+        Title = "Diagnósticos de rede",
+        Description = "Execute testes oficiais de conexão TCP, ping e resolução DNS diretamente a partir do equipamento Control iD.",
+        BadgeText = "Ferramenta técnica",
+        BadgeTone = "info",
+        Actions = new[]
+        {
+            new PageHeaderActionViewModel { Label = "Voltar para configurações", Href = Url.Action("Index")!, ButtonClass = "btn btn-outline-secondary" }
+        }
+    };
 }
 
-<div class="container mt-5">
-    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-        <div>
-            <h2 class="mb-1">Diagnósticos de Rede</h2>
-            <p class="text-muted mb-0">Executa os testes oficiais do equipamento para TCP, ping e resolução DNS.</p>
-        </div>
-        <a asp-action="Index" class="btn btn-outline-secondary">Voltar para Configurações</a>
-    </div>
+<div class="container mt-5 app-stack">
+    <partial name="_AppPageHeader" model="header" />
 
     @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
     {
         <div class="alert alert-danger">@Model.ErrorMessage</div>
     }
 
-    <div class="row g-4">
-        <div class="col-lg-4">
-            <div class="card shadow-sm h-100">
-                <div class="card-body">
-                    <h5 class="card-title">Teste de Conexão TCP</h5>
-                    <p class="text-muted small">Valida se o equipamento consegue abrir conexão até um host e porta específicos.</p>
-                    <form asp-action="ConnectionTest" method="post" autocomplete="off">
-                        <div class="mb-3">
-                            <label asp-for="ConnectionHost" class="form-label"></label>
-                            <input asp-for="ConnectionHost" class="form-control" />
-                            <span asp-validation-for="ConnectionHost" class="text-danger"></span>
-                        </div>
-                        <div class="mb-3">
-                            <label asp-for="ConnectionPort" class="form-label"></label>
-                            <input asp-for="ConnectionPort" class="form-control" />
-                            <span asp-validation-for="ConnectionPort" class="text-danger"></span>
-                        </div>
-                        <button type="submit" class="btn btn-primary">Executar</button>
-                    </form>
+    <section class="app-grid-three">
+        <section class="app-surface-card app-stack">
+            <div class="app-page-section__heading">
+                <div>
+                    <strong>Teste de conexão TCP</strong>
+                    <p>Valide se o equipamento consegue abrir conexão até um host e porta específicos.</p>
                 </div>
             </div>
-        </div>
 
-        <div class="col-lg-4">
-            <div class="card shadow-sm h-100">
-                <div class="card-body">
-                    <h5 class="card-title">Ping</h5>
-                    <p class="text-muted small">Executa um `ping` a partir do próprio equipamento Control iD.</p>
-                    <form asp-action="PingTest" method="post" autocomplete="off">
-                        <div class="mb-3">
-                            <label asp-for="PingHost" class="form-label"></label>
-                            <input asp-for="PingHost" class="form-control" />
-                            <span asp-validation-for="PingHost" class="text-danger"></span>
-                        </div>
-                        <button type="submit" class="btn btn-primary">Executar</button>
-                    </form>
+            <form asp-action="ConnectionTest" method="post" autocomplete="off" class="form-section">
+                <div>
+                    <label asp-for="ConnectionHost" class="form-label"></label>
+                    <input asp-for="ConnectionHost" class="form-control" />
+                    <span asp-validation-for="ConnectionHost" class="text-danger"></span>
+                </div>
+                <div>
+                    <label asp-for="ConnectionPort" class="form-label"></label>
+                    <input asp-for="ConnectionPort" class="form-control" />
+                    <span asp-validation-for="ConnectionPort" class="text-danger"></span>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Executar TCP</button>
+                </div>
+            </form>
+
+            @if (!string.IsNullOrWhiteSpace(Model.ConnectionResultJson))
+            {
+                <partial name="_RawResponsePanel" model='new RawResponsePanelViewModel { Title = "Resposta TCP", Description = "JSON bruto do teste de conexão.", Content = Model.ConnectionResultJson, PanelId = "config-diagnostics-tcp", BadgeText = "TCP", BadgeTone = "neutral" }' />
+            }
+        </section>
+
+        <section class="app-surface-card app-stack">
+            <div class="app-page-section__heading">
+                <div>
+                    <strong>Ping</strong>
+                    <p>Execute um ping a partir do próprio equipamento Control iD.</p>
                 </div>
             </div>
-        </div>
 
-        <div class="col-lg-4">
-            <div class="card shadow-sm h-100">
-                <div class="card-body">
-                    <h5 class="card-title">NSLookup</h5>
-                    <p class="text-muted small">Verifica resolução DNS usando a configuração atual do equipamento.</p>
-                    <form asp-action="NslookupTest" method="post" autocomplete="off">
-                        <div class="mb-3">
-                            <label asp-for="NslookupHost" class="form-label"></label>
-                            <input asp-for="NslookupHost" class="form-control" />
-                            <span asp-validation-for="NslookupHost" class="text-danger"></span>
-                        </div>
-                        <button type="submit" class="btn btn-primary">Executar</button>
-                    </form>
+            <form asp-action="PingTest" method="post" autocomplete="off" class="form-section">
+                <div>
+                    <label asp-for="PingHost" class="form-label"></label>
+                    <input asp-for="PingHost" class="form-control" />
+                    <span asp-validation-for="PingHost" class="text-danger"></span>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Executar ping</button>
+                </div>
+            </form>
+
+            @if (!string.IsNullOrWhiteSpace(Model.PingResultJson))
+            {
+                <partial name="_RawResponsePanel" model='new RawResponsePanelViewModel { Title = "Resposta de ping", Description = "JSON bruto do ping oficial.", Content = Model.PingResultJson, PanelId = "config-diagnostics-ping", BadgeText = "Ping", BadgeTone = "neutral" }' />
+            }
+        </section>
+
+        <section class="app-surface-card app-stack">
+            <div class="app-page-section__heading">
+                <div>
+                    <strong>NSLookup</strong>
+                    <p>Verifique a resolução DNS com a configuração atual do equipamento.</p>
                 </div>
             </div>
-        </div>
-    </div>
 
-    @if (!string.IsNullOrWhiteSpace(Model.ConnectionResultJson) ||
-         !string.IsNullOrWhiteSpace(Model.PingResultJson) ||
-         !string.IsNullOrWhiteSpace(Model.NslookupResultJson))
-    {
-        <div class="card shadow-sm mt-4">
-            <div class="card-body">
-                <h5 class="card-title">Respostas Oficiais</h5>
+            <form asp-action="NslookupTest" method="post" autocomplete="off" class="form-section">
+                <div>
+                    <label asp-for="NslookupHost" class="form-label"></label>
+                    <input asp-for="NslookupHost" class="form-control" />
+                    <span asp-validation-for="NslookupHost" class="text-danger"></span>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Executar NSLookup</button>
+                </div>
+            </form>
 
-                @if (!string.IsNullOrWhiteSpace(Model.ConnectionResultJson))
-                {
-                    <div class="mb-4">
-                        <h6>Conexão TCP</h6>
-                        <pre class="small mb-0">@Model.ConnectionResultJson</pre>
-                    </div>
-                }
-
-                @if (!string.IsNullOrWhiteSpace(Model.PingResultJson))
-                {
-                    <div class="mb-4">
-                        <h6>Ping</h6>
-                        <pre class="small mb-0">@Model.PingResultJson</pre>
-                    </div>
-                }
-
-                @if (!string.IsNullOrWhiteSpace(Model.NslookupResultJson))
-                {
-                    <div>
-                        <h6>NSLookup</h6>
-                        <pre class="small mb-0">@Model.NslookupResultJson</pre>
-                    </div>
-                }
-            </div>
-        </div>
-    }
+            @if (!string.IsNullOrWhiteSpace(Model.NslookupResultJson))
+            {
+                <partial name="_RawResponsePanel" model='new RawResponsePanelViewModel { Title = "Resposta DNS", Description = "JSON bruto do teste NSLookup.", Content = Model.NslookupResultJson, PanelId = "config-diagnostics-nslookup", BadgeText = "NSLookup", BadgeTone = "neutral" }' />
+            }
+        </section>
+    </section>
 </div>
 
 @section Scripts {

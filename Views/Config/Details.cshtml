@@ -1,24 +1,49 @@
 ﻿@model Integracao.ControlID.PoC.ViewModels.Config.ConfigViewModel
 @{
-    ViewData["Title"] = "Detalhes da Configuração";
+    ViewData["Title"] = "Detalhes da configuração";
+    var header = new AppPageHeaderViewModel
+    {
+        Eyebrow = "Infraestrutura",
+        Title = "Detalhes da configuração",
+        Description = "Consulte rapidamente o grupo, a chave e o valor atualmente persistidos para essa configuração oficial.",
+        BadgeText = "Consulta",
+        BadgeTone = "neutral",
+        Actions = new[]
+        {
+            new PageHeaderActionViewModel { Label = "Editar configuração", Href = Url.Action("Edit", new { id = Model.Id })!, ButtonClass = "btn btn-primary" },
+            new PageHeaderActionViewModel { Label = "Voltar para configurações", Href = Url.Action("Index")!, ButtonClass = "btn btn-outline-secondary" }
+        }
+    };
 }
 
-<div class="container mt-5">
-    <h2>Detalhes da Configuração</h2>
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <dl class="row">
-                <dt class="col-sm-3">ID</dt>
-                <dd class="col-sm-9">@Model.Id</dd>
-                <dt class="col-sm-3">Grupo</dt>
-                <dd class="col-sm-9">@Model.Group</dd>
-                <dt class="col-sm-3">Chave</dt>
-                <dd class="col-sm-9">@Model.Key</dd>
-                <dt class="col-sm-3">Valor</dt>
-                <dd class="col-sm-9">@Model.Value</dd>
-            </dl>
-            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Editar</a>
-            <a asp-action="Index" class="btn btn-secondary ms-2">Voltar</a>
+<div class="container mt-5 app-stack">
+    <partial name="_AppPageHeader" model="header" />
+
+    <section class="detail-card app-stack">
+        <div class="entity-overview">
+            <div class="entity-overview__item"><span>ID</span><strong>@Model.Id</strong></div>
+            <div class="entity-overview__item"><span>Grupo</span><strong>@Model.Group</strong></div>
+            <div class="entity-overview__item"><span>Chave</span><strong>@Model.Key</strong></div>
         </div>
-    </div>
+    </section>
+
+    <section class="app-surface-card app-stack">
+        <div class="app-page-section__heading">
+            <div>
+                <strong>Resumo da configuração</strong>
+                <p>Esta é a representação atual da configuração dentro da PoC antes de qualquer nova edição ou remoção.</p>
+            </div>
+        </div>
+
+        <dl class="row">
+            <dt class="col-sm-3">ID</dt>
+            <dd class="col-sm-9">@Model.Id</dd>
+            <dt class="col-sm-3">Grupo</dt>
+            <dd class="col-sm-9">@Model.Group</dd>
+            <dt class="col-sm-3">Chave</dt>
+            <dd class="col-sm-9">@Model.Key</dd>
+            <dt class="col-sm-3">Valor</dt>
+            <dd class="col-sm-9">@Model.Value</dd>
+        </dl>
+    </section>
 </div>

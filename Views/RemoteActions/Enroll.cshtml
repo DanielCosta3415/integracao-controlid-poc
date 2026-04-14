@@ -1,16 +1,35 @@
-@model Integracao.ControlID.PoC.ViewModels.RemoteActions.RemoteEnrollViewModel
+﻿@model Integracao.ControlID.PoC.ViewModels.RemoteActions.RemoteEnrollViewModel
 @{
-    ViewData["Title"] = "Cadastro Remoto";
+    ViewData["Title"] = "Cadastro remoto";
+    var header = new AppPageHeaderViewModel
+    {
+        Eyebrow = "Operação",
+        Title = "Cadastro remoto",
+        Description = "Acione o endpoint oficial `remote_enroll` para captura de face, biometria, cartão, PIN ou senha sem sair do contexto operacional da PoC.",
+        BadgeText = "Fluxo assistido",
+        BadgeTone = "info",
+        Actions = new[]
+        {
+            new PageHeaderActionViewModel { Label = "Voltar para ações remotas", Href = Url.Action("Index")!, ButtonClass = "btn btn-outline-secondary" },
+            new PageHeaderActionViewModel { Label = "Eventos oficiais", Href = Url.Action("Index", "OfficialEvents")!, ButtonClass = "btn btn-primary" }
+        }
+    };
+    var responsePanel = string.IsNullOrWhiteSpace(Model.ResponseJson)
+        ? null
+        : new RawResponsePanelViewModel
+        {
+            Title = "Resposta oficial",
+            Description = "Payload bruto retornado pelo endpoint `remote_enroll`.",
+            Content = Model.ResponseJson,
+            PanelId = "remote-enroll-response",
+            BadgeText = string.IsNullOrWhiteSpace(Model.ResultStatusType) ? "Retorno técnico" : Model.ResultStatusType,
+            BadgeTone = string.IsNullOrWhiteSpace(Model.ResultStatusType) ? "neutral" : Model.ResultStatusType,
+            StartExpanded = true
+        };
 }
 
-<div class="container mt-5">
-    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-        <div>
-            <h2 class="mb-1">Cadastro Remoto</h2>
-            <p class="text-muted mb-0">Aciona o endpoint oficial `remote_enroll` para captura de face, biometria, cartão, PIN ou senha.</p>
-        </div>
-        <a asp-action="Index" class="btn btn-outline-secondary">Voltar para Ações Remotas</a>
-    </div>
+<div class="container mt-5 app-stack">
+    <partial name="_AppPageHeader" model="header" />
 
     @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
     {
@@ -19,16 +38,31 @@
 
     @if (!string.IsNullOrWhiteSpace(Model.ResultMessage))
     {
-        <div class="alert alert-@(string.IsNullOrWhiteSpace(Model.ResultStatusType) ? "info" : Model.ResultStatusType)">
-            @Model.ResultMessage
-        </div>
+        <div class="alert alert-@(string.IsNullOrWhiteSpace(Model.ResultStatusType) ? "info" : Model.ResultStatusType)">@Model.ResultMessage</div>
     }
 
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <form asp-action="Enroll" method="post" autocomplete="off">
-                <div class="row g-3">
-                    <div class="col-md-6">
+    <section class="detail-card app-stack">
+        <div class="entity-overview">
+            <div class="entity-overview__item"><span>Tipo atual</span><strong>@Model.Type</strong></div>
+            <div class="entity-overview__item"><span>Usuário</span><strong>@(Model.UserId == 0 ? "Não informado" : Model.UserId)</strong></div>
+            <div class="entity-overview__item"><span>Salvar</span><strong>@(Model.Save ? "Sim" : "Não")</strong></div>
+            <div class="entity-overview__item"><span>Sincronizar</span><strong>@(Model.Sync ? "Sim" : "Não")</strong></div>
+        </div>
+        <div class="app-note">Ideal para demonstrações operacionais e QA de captura remota. O histórico de callbacks e eventos pode ser acompanhado na área de observabilidade.</div>
+    </section>
+
+    <section class="app-grid-two app-grid-two--main">
+        <section class="app-surface-card app-stack">
+            <div class="app-page-section__heading">
+                <div>
+                    <strong>Parâmetros do cadastro</strong>
+                    <p>Escolha o tipo de captura remota, associe o usuário e defina se o resultado deve ser salvo e sincronizado com callbacks.</p>
+                </div>
+            </div>
+
+            <form asp-action="Enroll" method="post" autocomplete="off" class="form-section">
+                <div class="app-form-grid">
+                    <div>
                         <label asp-for="Type" class="form-label"></label>
                         <input asp-for="Type" class="form-control" list="remote-enroll-types" />
                         <datalist id="remote-enroll-types">
@@ -40,39 +74,49 @@
                         </datalist>
                         <span asp-validation-for="Type" class="text-danger"></span>
                     </div>
-                    <div class="col-md-6">
+                    <div>
                         <label asp-for="UserId" class="form-label"></label>
                         <input asp-for="UserId" class="form-control" />
                         <span asp-validation-for="UserId" class="text-danger"></span>
                     </div>
-                    <div class="col-md-6">
-                        <div class="form-check">
-                            <input asp-for="Save" class="form-check-input" />
-                            <label asp-for="Save" class="form-check-label"></label>
-                        </div>
+                </div>
+
+                <div class="app-form-grid">
+                    <div class="form-check">
+                        <input asp-for="Save" class="form-check-input" />
+                        <label asp-for="Save" class="form-check-label"></label>
                     </div>
-                    <div class="col-md-6">
-                        <div class="form-check">
-                            <input asp-for="Sync" class="form-check-input" />
-                            <label asp-for="Sync" class="form-check-label"></label>
-                        </div>
+                    <div class="form-check">
+                        <input asp-for="Sync" class="form-check-input" />
+                        <label asp-for="Sync" class="form-check-label"></label>
                     </div>
                 </div>
 
-                <div class="mt-4 d-flex flex-wrap gap-2">
-                    <button type="submit" class="btn btn-primary">Iniciar Cadastro Remoto</button>
-                    <a asp-controller="OfficialEvents" asp-action="Index" class="btn btn-outline-primary">Ver Eventos Recebidos</a>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Iniciar cadastro remoto</button>
                 </div>
             </form>
+        </section>
 
-            @if (!string.IsNullOrWhiteSpace(Model.ResponseJson))
-            {
-                <hr />
-                <h5>Resposta Oficial</h5>
-                <pre class="small mb-0">@Model.ResponseJson</pre>
-            }
-        </div>
-    </div>
+        <section class="app-surface-card app-stack">
+            <div class="app-page-section__heading">
+                <div>
+                    <strong>Acompanhamento</strong>
+                    <p>Use os eventos oficiais para acompanhar a trilha gerada pelo processo e validar se o equipamento concluiu a captura esperada.</p>
+                </div>
+            </div>
+
+            <div class="detail-actions">
+                <a asp-controller="OfficialEvents" asp-action="Index" class="btn btn-outline-primary">Ver eventos recebidos</a>
+                <a asp-controller="PushCenter" asp-action="Index" class="btn btn-outline-secondary">Abrir central push</a>
+            </div>
+        </section>
+    </section>
+
+    @if (responsePanel != null)
+    {
+        <partial name="_RawResponsePanel" model="responsePanel" />
+    }
 </div>
 
 @section Scripts {

@@ -1,35 +1,61 @@
-@model Integracao.ControlID.PoC.ViewModels.AdvancedOfficial.CameraCaptureViewModel
+﻿@model Integracao.ControlID.PoC.ViewModels.AdvancedOfficial.CameraCaptureViewModel
 @{
-    ViewData["Title"] = "Captura da Câmera";
+    ViewData["Title"] = "Captura da câmera";
+    var header = new AppPageHeaderViewModel
+    {
+        Eyebrow = "API",
+        Title = "Captura da câmera",
+        Description = "Fluxo dedicado para `save_screenshot.fcgi`, com visualização imediata da imagem capturada e do retorno técnico oficial.",
+        BadgeText = "Recurso avançado",
+        BadgeTone = "info",
+        Actions = new[]
+        {
+            new PageHeaderActionViewModel { Label = "Voltar", Href = Url.Action("Index")!, ButtonClass = "btn btn-outline-secondary" }
+        }
+    };
+    var responsePanel = string.IsNullOrWhiteSpace(Model.ResponseJson)
+        ? null
+        : new RawResponsePanelViewModel
+        {
+            Title = "Detalhes técnicos",
+            Description = "JSON bruto retornado pelo endpoint `save_screenshot.fcgi`.",
+            Content = Model.ResponseJson,
+            PanelId = "advanced-camera-capture-response",
+            BadgeText = string.IsNullOrWhiteSpace(Model.ResultStatusType) ? "Retorno técnico" : Model.ResultStatusType,
+            BadgeTone = string.IsNullOrWhiteSpace(Model.ResultStatusType) ? "neutral" : Model.ResultStatusType,
+            StartExpanded = true
+        };
 }
 
-<div class="container mt-5">
-    <div class="d-flex justify-content-between align-items-center gap-2 mb-3">
-        <div>
-            <h2 class="mb-1">Captura da Câmera</h2>
-            <p class="text-muted mb-0">Fluxo dedicado para `save_screenshot.fcgi`.</p>
-        </div>
-        <a asp-action="Index" class="btn btn-outline-secondary">Voltar</a>
-    </div>
+<div class="container mt-5 app-stack">
+    <partial name="_AppPageHeader" model="header" />
 
     @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
     {
         <div class="alert alert-danger">@Model.ErrorMessage</div>
     }
+
     @if (!string.IsNullOrWhiteSpace(Model.ResultMessage))
     {
         <div class="alert alert-@(string.IsNullOrWhiteSpace(Model.ResultStatusType) ? "info" : Model.ResultStatusType)">@Model.ResultMessage</div>
     }
 
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <form asp-action="CameraCapture" method="post">
-                <div class="row g-3">
-                    <div class="col-md-6">
+    <section class="app-grid-two app-grid-two--main">
+        <section class="app-surface-card app-stack">
+            <div class="app-page-section__heading">
+                <div>
+                    <strong>Parâmetros da captura</strong>
+                    <p>Defina o tipo de frame e a câmera de origem antes de solicitar o screenshot ao equipamento.</p>
+                </div>
+            </div>
+
+            <form asp-action="CameraCapture" method="post" autocomplete="off" class="form-section">
+                <div class="app-form-grid">
+                    <div>
                         <label asp-for="FrameType" class="form-label"></label>
                         <input asp-for="FrameType" class="form-control" />
                     </div>
-                    <div class="col-md-6">
+                    <div>
                         <label asp-for="Camera" class="form-label"></label>
                         <select asp-for="Camera" class="form-select">
                             <option value="rgb">rgb</option>
@@ -37,26 +63,36 @@
                         </select>
                     </div>
                 </div>
-                <div class="mt-4">
-                    <button type="submit" class="btn btn-primary">Capturar</button>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Capturar imagem</button>
                 </div>
             </form>
+        </section>
+
+        <section class="app-surface-card app-stack">
+            <div class="app-page-section__heading">
+                <div>
+                    <strong>Prévia operacional</strong>
+                    <p>A imagem capturada aparece abaixo assim que a chamada retorna com sucesso.</p>
+                </div>
+            </div>
 
             @if (!string.IsNullOrWhiteSpace(Model.Base64Image))
             {
-                <hr />
-                <h5>Imagem Capturada</h5>
                 <img src="data:@Model.ImageContentType;base64,@Model.Base64Image" alt="Captura" class="img-fluid rounded border" />
             }
-
-            @if (!string.IsNullOrWhiteSpace(Model.ResponseJson))
+            else
             {
-                <hr />
-                <h5>Detalhes</h5>
-                <pre class="small mb-0">@Model.ResponseJson</pre>
+                <div class="app-empty">Nenhuma captura disponível ainda. Execute a ação para visualizar a imagem aqui.</div>
             }
-        </div>
-    </div>
+        </section>
+    </section>
+
+    @if (responsePanel != null)
+    {
+        <partial name="_RawResponsePanel" model="responsePanel" />
+    }
 </div>
 
 @section Scripts {

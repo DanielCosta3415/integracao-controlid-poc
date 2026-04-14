@@ -1,32 +1,19 @@
 ﻿@model Integracao.ControlID.PoC.ViewModels.QRCodes.QRCodeEditViewModel
 @{
     ViewData["Title"] = "Novo QR Code";
+    var header = new AppPageHeaderViewModel
+    {
+        Eyebrow = "Pessoas",
+        Title = "Novo QR Code",
+        Description = "Cadastre uma credencial QR oficial usando apenas os campos confirmados do objeto `qrcodes`.",
+        BadgeText = "Criação",
+        BadgeTone = "info",
+        Actions = new[] { new PageHeaderActionViewModel { Label = "Voltar para QR Codes", Href = Url.Action("Index")!, ButtonClass = "btn btn-outline-secondary" } }
+    };
 }
-
-<div class="container mt-5">
-    <h2>Novo QR Code</h2>
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <form asp-action="Create" method="post" autocomplete="off">
-                <div class="mb-3">
-                    <label asp-for="UserId" class="form-label"></label>
-                    <input asp-for="UserId" class="form-control" />
-                    <span asp-validation-for="UserId" class="text-danger"></span>
-                </div>
-                <div class="mb-3">
-                    <label asp-for="Value" class="form-label"></label>
-                    <input asp-for="Value" class="form-control" />
-                    <span asp-validation-for="Value" class="text-danger"></span>
-                </div>
-                <p class="text-muted small">
-                    A PoC agora usa o objeto oficial `qrcodes`, que trabalha com `id`, `user_id` e `value`.
-                </p>
-                <button type="submit" class="btn btn-success">Salvar</button>
-                <a asp-action="Index" class="btn btn-secondary ms-2">Cancelar</a>
-            </form>
-        </div>
-    </div>
+<div class="container mt-5 app-stack">
+    <partial name="_AppPageHeader" model="header" />
+    <section class="detail-card app-stack"><div class="entity-overview"><div class="entity-overview__item"><span>Usuário</span><strong>@(Model.UserId == 0 ? "Não definido" : Model.UserId)</strong></div><div class="entity-overview__item"><span>Valor</span><strong>@(string.IsNullOrWhiteSpace(Model.Value) ? "Não definido" : Model.Value)</strong></div><div class="entity-overview__item"><span>Objeto oficial</span><strong>qrcodes</strong></div></div></section>
+    <section class="app-surface-card app-stack"><div class="app-page-section__heading"><div><strong>Dados do QR Code</strong><p>A PoC usa o objeto oficial `qrcodes`, limitado aos campos `id`, `user_id` e `value`.</p></div></div><form asp-action="Create" method="post" autocomplete="off" class="form-section"><div class="app-form-grid"><div><label asp-for="UserId" class="form-label"></label><input asp-for="UserId" class="form-control" /><span asp-validation-for="UserId" class="text-danger"></span></div><div><label asp-for="Value" class="form-label"></label><input asp-for="Value" class="form-control" /><span asp-validation-for="Value" class="text-danger"></span></div></div><div class="form-actions"><button type="submit" class="btn btn-primary">Salvar QR Code</button><a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a></div></form></section>
 </div>
-@section Scripts {
-    <partial name="_ValidationScriptsPartial" />
-}
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

@@ -1,4 +1,4 @@
-@model PageShellContextViewModel
+﻿@model PageShellContextViewModel
 @inject Integracao.ControlID.PoC.Services.Navigation.NavigationCatalogService NavigationCatalog
 @{
     var domains = NavigationCatalog.GetDomains();
@@ -6,7 +6,7 @@
     var activeModuleKey = Model.CurrentModule?.Key ?? string.Empty;
 }
 
-<nav class="app-nav" aria-label="MÃ³dulos da aplicaÃ§Ã£o">
+<nav class="app-nav" aria-label="Módulos da aplicação">
     @foreach (var domain in domains)
     {
         var isActiveDomain = string.Equals(activeDomainId, domain.Id, StringComparison.OrdinalIgnoreCase);
@@ -21,7 +21,7 @@
                         <span class="app-nav-group__icon">@domain.Icon</span>
                         <span>
                             <strong>@domain.ShortTitle</strong>
-                            <small>@primaryModules.Count mÃ³dulos principais</small>
+                            <small>@primaryModules.Count módulos principais</small>
                         </span>
                     </span>
                     <span class="app-nav-group__chevron" aria-hidden="true">v</span>

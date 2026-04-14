@@ -1,105 +1,169 @@
-@model Integracao.ControlID.PoC.ViewModels.AdvancedOfficial.FacialEnrollViewModel
+﻿@model Integracao.ControlID.PoC.ViewModels.AdvancedOfficial.FacialEnrollViewModel
 @{
-    ViewData["Title"] = "Cadastro Facial Avançado";
+    ViewData["Title"] = "Cadastro facial avançado";
+    var header = new AppPageHeaderViewModel
+    {
+        Eyebrow = "API",
+        Title = "Cadastro facial avançado",
+        Description = "Fluxos dedicados para `user_get_image_list`, `user_set_image_list` e `user_test_image`, agora organizados como um workspace técnico completo.",
+        BadgeText = "Recurso avançado",
+        BadgeTone = "info",
+        Actions = new[]
+        {
+            new PageHeaderActionViewModel { Label = "Voltar", Href = Url.Action("Index")!, ButtonClass = "btn btn-outline-secondary" }
+        }
+    };
+    var getListPanel = string.IsNullOrWhiteSpace(Model.GetListResponseJson)
+        ? null
+        : new RawResponsePanelViewModel
+        {
+            Title = "Consulta de fotos cadastradas",
+            Description = "JSON bruto retornado por `user_get_image_list`.",
+            Content = Model.GetListResponseJson,
+            PanelId = "advanced-facial-get-list-response",
+            BadgeText = "get_image_list",
+            BadgeTone = "neutral"
+        };
+    var testPanel = string.IsNullOrWhiteSpace(Model.TestResponseJson)
+        ? null
+        : new RawResponsePanelViewModel
+        {
+            Title = "Teste da foto facial",
+            Description = "JSON bruto retornado por `user_test_image`.",
+            Content = Model.TestResponseJson,
+            PanelId = "advanced-facial-test-response",
+            BadgeText = "test_image",
+            BadgeTone = "neutral"
+        };
+    var setListPanel = string.IsNullOrWhiteSpace(Model.SetListResponseJson)
+        ? null
+        : new RawResponsePanelViewModel
+        {
+            Title = "Cadastro facial em lote",
+            Description = "JSON bruto retornado por `user_set_image_list`.",
+            Content = Model.SetListResponseJson,
+            PanelId = "advanced-facial-set-list-response",
+            BadgeText = "set_image_list",
+            BadgeTone = "neutral"
+        };
 }
 
-<div class="container mt-5">
-    <div class="d-flex justify-content-between align-items-center gap-2 mb-3">
-        <div>
-            <h2 class="mb-1">Cadastro Facial Avançado</h2>
-            <p class="text-muted mb-0">Fluxos dedicados para `user_get_image_list`, `user_set_image_list` e `user_test_image`.</p>
-        </div>
-        <a asp-action="Index" class="btn btn-outline-secondary">Voltar</a>
-    </div>
+<div class="container mt-5 app-stack">
+    <partial name="_AppPageHeader" model="header" />
 
     @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
     {
         <div class="alert alert-danger">@Model.ErrorMessage</div>
     }
+
     @if (!string.IsNullOrWhiteSpace(Model.ResultMessage))
     {
         <div class="alert alert-@(string.IsNullOrWhiteSpace(Model.ResultStatusType) ? "info" : Model.ResultStatusType)">@Model.ResultMessage</div>
     }
 
-    <div class="row g-4">
-        <div class="col-xl-6">
-            <div class="card shadow-sm h-100">
-                <div class="card-body">
-                    <h5>Consultar Fotos por Usuário</h5>
-                    <form asp-action="GetImageList" method="post" autocomplete="off">
-                        <div class="mb-3">
-                            <label asp-for="UserIdsCsv" class="form-label"></label>
-                            <input asp-for="UserIdsCsv" class="form-control" />
-                        </div>
-                        <button type="submit" class="btn btn-primary">Consultar</button>
-                    </form>
+    <section class="detail-card app-stack">
+        <div class="entity-overview">
+            <div class="entity-overview__item"><span>Usuários</span><strong>@(string.IsNullOrWhiteSpace(Model.UserIdsCsv) ? "Não informados" : Model.UserIdsCsv)</strong></div>
+            <div class="entity-overview__item"><span>Rejeitar duplicadas</span><strong>@(Model.MatchDuplicates ? "Sim" : "Não")</strong></div>
+            <div class="entity-overview__item"><span>Fluxos</span><strong>Consulta, teste e lote</strong></div>
+        </div>
+        <div class="app-note">Use essa área para validar imagens cadastradas, testar arquivos isolados e enviar lotes de fotos faciais seguindo o contrato oficial documentado.</div>
+    </section>
 
-                    @if (!string.IsNullOrWhiteSpace(Model.GetListResponseJson))
-                    {
-                        <hr />
-                        <pre class="small mb-0">@Model.GetListResponseJson</pre>
-                    }
+    <section class="app-grid-two app-grid-two--main">
+        <section class="app-surface-card app-stack">
+            <div class="app-page-section__heading">
+                <div>
+                    <strong>Consultar fotos por usuário</strong>
+                    <p>Informe os IDs de usuário em CSV para obter a lista de imagens hoje cadastradas no equipamento.</p>
                 </div>
+            </div>
+
+            <form asp-action="GetImageList" method="post" autocomplete="off" class="form-section">
+                <div class="app-form-grid">
+                    <div>
+                        <label asp-for="UserIdsCsv" class="form-label"></label>
+                        <input asp-for="UserIdsCsv" class="form-control" />
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Consultar fotos</button>
+                </div>
+            </form>
+
+            @if (getListPanel != null)
+            {
+                <partial name="_RawResponsePanel" model="getListPanel" />
+            }
+        </section>
+
+        <section class="app-surface-card app-stack">
+            <div class="app-page-section__heading">
+                <div>
+                    <strong>Testar foto facial</strong>
+                    <p>Envie uma imagem isolada para validar previamente se o arquivo atende às exigências do equipamento.</p>
+                </div>
+            </div>
+
+            <form asp-action="TestImage" method="post" enctype="multipart/form-data" autocomplete="off" class="form-section">
+                <div class="app-form-grid">
+                    <div>
+                        <label asp-for="TestFile" class="form-label"></label>
+                        <input asp-for="TestFile" class="form-control" type="file" accept=".jpg,.jpeg,.png,image/jpeg,image/png" />
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-outline-primary">Testar imagem</button>
+                </div>
+            </form>
+
+            @if (testPanel != null)
+            {
+                <partial name="_RawResponsePanel" model="testPanel" />
+            }
+        </section>
+    </section>
+
+    <section class="app-surface-card app-stack">
+        <div class="app-page-section__heading">
+            <div>
+                <strong>Cadastro facial em lote</strong>
+                <p>Informe a mesma quantidade de IDs e arquivos, na mesma ordem, para enviar múltiplas imagens ao equipamento em uma única operação.</p>
             </div>
         </div>
 
-        <div class="col-xl-6">
-            <div class="card shadow-sm h-100">
-                <div class="card-body">
-                    <h5>Testar Foto Facial</h5>
-                    <form asp-action="TestImage" method="post" enctype="multipart/form-data" autocomplete="off">
-                        <div class="mb-3">
-                            <label asp-for="TestFile" class="form-label"></label>
-                            <input asp-for="TestFile" class="form-control" type="file" accept=".jpg,.jpeg,.png,image/jpeg,image/png" />
-                        </div>
-                        <button type="submit" class="btn btn-outline-primary">Testar</button>
-                    </form>
-
-                    @if (!string.IsNullOrWhiteSpace(Model.TestResponseJson))
-                    {
-                        <hr />
-                        <pre class="small mb-0">@Model.TestResponseJson</pre>
-                    }
+        <form asp-action="SetImageList" method="post" enctype="multipart/form-data" autocomplete="off" class="form-section">
+            <div class="app-form-grid">
+                <div class="app-form-grid__full">
+                    <label asp-for="UserIdsCsv" class="form-label"></label>
+                    <input asp-for="UserIdsCsv" class="form-control" />
+                </div>
+                <div class="app-form-grid__full">
+                    <label asp-for="BatchFiles" class="form-label"></label>
+                    <input asp-for="BatchFiles" class="form-control" type="file" multiple accept=".jpg,.jpeg,.png,image/jpeg,image/png" />
                 </div>
             </div>
-        </div>
 
-        <div class="col-12">
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <h5>Cadastro em Lote</h5>
-                    <p class="text-muted small">Informe a mesma quantidade de IDs e arquivos, na mesma ordem.</p>
-                    <form asp-action="SetImageList" method="post" enctype="multipart/form-data" autocomplete="off">
-                        <div class="row g-3">
-                            <div class="col-lg-8">
-                                <label asp-for="UserIdsCsv" class="form-label"></label>
-                                <input asp-for="UserIdsCsv" class="form-control" />
-                            </div>
-                            <div class="col-lg-4 d-flex align-items-end">
-                                <div class="form-check mb-2">
-                                    <input asp-for="MatchDuplicates" class="form-check-input" />
-                                    <label asp-for="MatchDuplicates" class="form-check-label"></label>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="mt-3">
-                            <label asp-for="BatchFiles" class="form-label"></label>
-                            <input asp-for="BatchFiles" class="form-control" type="file" multiple accept=".jpg,.jpeg,.png,image/jpeg,image/png" />
-                        </div>
-                        <div class="mt-4">
-                            <button type="submit" class="btn btn-success">Cadastrar Lote</button>
-                        </div>
-                    </form>
+            <label class="form-check app-toggle-item">
+                <input asp-for="MatchDuplicates" class="form-check-input" />
+                <span>
+                    <strong>@Html.DisplayNameFor(model => model.MatchDuplicates)</strong>
+                    <small>Ative apenas se o fluxo exigir bloqueio de faces já cadastradas.</small>
+                </span>
+            </label>
 
-                    @if (!string.IsNullOrWhiteSpace(Model.SetListResponseJson))
-                    {
-                        <hr />
-                        <pre class="small mb-0">@Model.SetListResponseJson</pre>
-                    }
-                </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-success">Cadastrar lote</button>
             </div>
-        </div>
-    </div>
+        </form>
+
+        @if (setListPanel != null)
+        {
+            <partial name="_RawResponsePanel" model="setListPanel" />
+        }
+    </section>
 </div>
 
 @section Scripts {

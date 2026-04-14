@@ -1,34 +1,15 @@
 ﻿@model Integracao.ControlID.PoC.ViewModels.Catra.CatraEventViewModel
 @{
-    ViewData["Title"] = "Detalhes do Evento de Catraca";
+    ViewData["Title"] = "Detalhes do evento de catraca";
+    var direction = Model.Direction == 0 ? "Entrada" : Model.Direction == 1 ? "Saída" : Model.Direction.ToString();
+    var header = new AppPageHeaderViewModel
+    {
+        Eyebrow = "Operação",
+        Title = "Detalhes do evento de catraca",
+        Description = "Consulte o evento de giro persistido na PoC com dados de direção, horário e vínculo de usuário/dispositivo.",
+        BadgeText = direction,
+        BadgeTone = "neutral",
+        Actions = new[] { new PageHeaderActionViewModel { Label = "Voltar para catraca", Href = Url.Action("Index")!, ButtonClass = "btn btn-outline-secondary" } }
+    };
 }
-
-<div class="container mt-5">
-    <h2>Detalhes do Evento de Catraca</h2>
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <dl class="row">
-                <dt class="col-sm-3">ID</dt>
-                <dd class="col-sm-9">@Model.Id</dd>
-                <dt class="col-sm-3">Direção</dt>
-                <dd class="col-sm-9">
-                    @(
-                        Model.Direction == 0 ? "Entrada" :
-                        Model.Direction == 1 ? "Saída" : Model.Direction.ToString()
-                    )
-                </dd>
-                <dt class="col-sm-3">Data/Hora</dt>
-                <dd class="col-sm-9">@(Model.Time?.ToString("dd/MM/yyyy HH:mm") ?? "-")</dd>
-                <dt class="col-sm-3">Usuário</dt>
-                <dd class="col-sm-9">@Model.UserId</dd>
-                <dt class="col-sm-3">Dispositivo</dt>
-                <dd class="col-sm-9">@Model.DeviceId</dd>
-                <dt class="col-sm-3">Info</dt>
-                <dd class="col-sm-9">@Model.Info</dd>
-                <dt class="col-sm-3">Criado em</dt>
-                <dd class="col-sm-9">@(Model.CreatedAt?.ToString("dd/MM/yyyy HH:mm") ?? "-")</dd>
-            </dl>
-            <a asp-action="Index" class="btn btn-secondary">Voltar</a>
-        </div>
-    </div>
-</div>
+<div class="container mt-5 app-stack"><partial name="_AppPageHeader" model="header" /><section class="detail-card app-stack"><div class="entity-overview"><div class="entity-overview__item"><span>ID</span><strong>@Model.Id</strong></div><div class="entity-overview__item"><span>Direção</span><strong>@direction</strong></div><div class="entity-overview__item"><span>Usuário</span><strong>@Model.UserId</strong></div><div class="entity-overview__item"><span>Dispositivo</span><strong>@Model.DeviceId</strong></div></div></section><section class="app-surface-card app-stack"><div class="app-page-section__heading"><div><strong>Resumo do evento</strong><p>Leitura consolidada do giro registrado pela catraca no contexto atual da PoC.</p></div></div><dl class="row"><dt class="col-sm-3">ID</dt><dd class="col-sm-9">@Model.Id</dd><dt class="col-sm-3">Direção</dt><dd class="col-sm-9">@direction</dd><dt class="col-sm-3">Data/Hora</dt><dd class="col-sm-9">@(Model.Time?.ToString("dd/MM/yyyy HH:mm") ?? "-")</dd><dt class="col-sm-3">Usuário</dt><dd class="col-sm-9">@Model.UserId</dd><dt class="col-sm-3">Dispositivo</dt><dd class="col-sm-9">@Model.DeviceId</dd><dt class="col-sm-3">Info</dt><dd class="col-sm-9">@Model.Info</dd><dt class="col-sm-3">Criado em</dt><dd class="col-sm-9">@(Model.CreatedAt?.ToString("dd/MM/yyyy HH:mm") ?? "-")</dd></dl></section></div>

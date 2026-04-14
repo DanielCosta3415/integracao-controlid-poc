@@ -1,35 +1,67 @@
 ﻿@model Integracao.ControlID.PoC.ViewModels.Config.ConfigEditViewModel
 @{
-    ViewData["Title"] = "Editar Configuração";
+    ViewData["Title"] = "Editar configuração";
+    var header = new AppPageHeaderViewModel
+    {
+        Eyebrow = "Infraestrutura",
+        Title = "Editar configuração",
+        Description = "Ajuste o grupo, a chave ou o valor de uma configuração existente mantendo contexto e ações mais previsíveis para a operação técnica.",
+        BadgeText = "Edição",
+        BadgeTone = "warning",
+        Actions = new[]
+        {
+            new PageHeaderActionViewModel { Label = "Voltar para configurações", Href = Url.Action("Index")!, ButtonClass = "btn btn-outline-secondary" }
+        }
+    };
 }
 
-<div class="container mt-5">
-    <h2>Editar Configuração</h2>
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <form asp-action="Edit" method="post" autocomplete="off">
-                <input type="hidden" asp-for="Id" />
-                <div class="mb-3">
+<div class="container mt-5 app-stack">
+    <partial name="_AppPageHeader" model="header" />
+
+    <section class="detail-card app-stack">
+        <div class="entity-overview">
+            <div class="entity-overview__item"><span>ID</span><strong>@Model.Id</strong></div>
+            <div class="entity-overview__item"><span>Grupo</span><strong>@(string.IsNullOrWhiteSpace(Model.Group) ? "Não definido" : Model.Group)</strong></div>
+            <div class="entity-overview__item"><span>Chave</span><strong>@(string.IsNullOrWhiteSpace(Model.Key) ? "Não definida" : Model.Key)</strong></div>
+        </div>
+    </section>
+
+    <section class="app-surface-card app-stack">
+        <div class="app-page-section__heading">
+            <div>
+                <strong>Atualizar configuração</strong>
+                <p>Revise com cuidado os campos abaixo antes de salvar, principalmente quando a chave afeta rede, autenticação ou comportamento do equipamento.</p>
+            </div>
+        </div>
+
+        <form asp-action="Edit" method="post" autocomplete="off" class="form-section">
+            <input type="hidden" asp-for="Id" />
+            <div class="app-form-grid">
+                <div>
                     <label asp-for="Group" class="form-label"></label>
                     <input asp-for="Group" class="form-control" />
                     <span asp-validation-for="Group" class="text-danger"></span>
                 </div>
-                <div class="mb-3">
+                <div>
                     <label asp-for="Key" class="form-label"></label>
                     <input asp-for="Key" class="form-control" />
                     <span asp-validation-for="Key" class="text-danger"></span>
                 </div>
-                <div class="mb-3">
+                <div class="app-form-grid__full">
                     <label asp-for="Value" class="form-label"></label>
                     <input asp-for="Value" class="form-control" />
                     <span asp-validation-for="Value" class="text-danger"></span>
                 </div>
-                <button type="submit" class="btn btn-primary">Salvar Alterações</button>
-                <a asp-action="Index" class="btn btn-secondary ms-2">Cancelar</a>
-            </form>
-        </div>
-    </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-warning">Salvar alterações</button>
+                <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
+            </div>
+        </form>
+    </section>
 </div>
+
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
 }

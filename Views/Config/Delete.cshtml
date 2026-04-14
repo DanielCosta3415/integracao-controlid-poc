@@ -1,15 +1,40 @@
 ﻿@model Integracao.ControlID.PoC.ViewModels.Config.ConfigDeleteViewModel
 @{
-    ViewData["Title"] = "Excluir Configuração";
+    ViewData["Title"] = "Excluir configuração";
+    var header = new AppPageHeaderViewModel
+    {
+        Eyebrow = "Infraestrutura",
+        Title = "Excluir configuração",
+        Description = "Revise a configuração selecionada antes de confirmar a remoção dessa chave oficial da base local da PoC.",
+        BadgeText = "Zona de risco",
+        BadgeTone = "danger",
+        Actions = new[]
+        {
+            new PageHeaderActionViewModel { Label = "Voltar para configurações", Href = Url.Action("Index")!, ButtonClass = "btn btn-outline-secondary" }
+        }
+    };
 }
 
-<div class="container mt-5">
-    <div class="alert alert-warning">
-        <h4>Confirmação</h4>
-        <p>Deseja realmente excluir a configuração <strong>@Model.Group</strong> / <strong>@Model.Key</strong>?</p>
-        <form asp-action="Delete" asp-route-id="@Model.Id" method="post">
-            <button type="submit" class="btn btn-danger">Sim, excluir</button>
-            <a asp-action="Index" class="btn btn-secondary ms-2">Cancelar</a>
+<div class="container mt-5 app-stack">
+    <partial name="_AppPageHeader" model="header" />
+
+    <section class="detail-card detail-card--danger app-stack">
+        <div class="entity-overview">
+            <div class="entity-overview__item"><span>ID</span><strong>@Model.Id</strong></div>
+            <div class="entity-overview__item"><span>Grupo</span><strong>@Model.Group</strong></div>
+            <div class="entity-overview__item"><span>Chave</span><strong>@Model.Key</strong></div>
+        </div>
+        <div class="app-note">Essa ação remove a configuração da base gerenciada pela PoC. Use com cautela quando a chave estiver ligada a fluxos críticos do equipamento.</div>
+    </section>
+
+    <section class="app-surface-card app-stack">
+        <div class="alert alert-warning mb-0">
+            Deseja realmente excluir a configuração <strong>@Model.Group</strong> / <strong>@Model.Key</strong>?
+        </div>
+
+        <form asp-action="Delete" asp-route-id="@Model.Id" method="post" class="form-actions">
+            <button type="submit" class="btn btn-danger">Sim, excluir configuração</button>
+            <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
         </form>
-    </div>
+    </section>
 </div>

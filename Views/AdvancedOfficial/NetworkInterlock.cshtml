@@ -1,50 +1,107 @@
-@model Integracao.ControlID.PoC.ViewModels.AdvancedOfficial.NetworkInterlockViewModel
+﻿@model Integracao.ControlID.PoC.ViewModels.AdvancedOfficial.NetworkInterlockViewModel
 @{
-    ViewData["Title"] = "Intertravamento em Rede";
+    ViewData["Title"] = "Intertravamento em rede";
+    var header = new AppPageHeaderViewModel
+    {
+        Eyebrow = "API",
+        Title = "Intertravamento em rede",
+        Description = "Fluxo dedicado para `set_network_interlock.fcgi`, com leitura mais clara das chaves de bypass e do retorno técnico oficial.",
+        BadgeText = "Recurso avançado",
+        BadgeTone = "warning",
+        Actions = new[]
+        {
+            new PageHeaderActionViewModel { Label = "Voltar", Href = Url.Action("Index")!, ButtonClass = "btn btn-outline-secondary" }
+        }
+    };
+    var responsePanel = string.IsNullOrWhiteSpace(Model.ResponseJson)
+        ? null
+        : new RawResponsePanelViewModel
+        {
+            Title = "Resposta oficial",
+            Description = "JSON bruto retornado pelo endpoint `set_network_interlock.fcgi`.",
+            Content = Model.ResponseJson,
+            PanelId = "advanced-network-interlock-response",
+            BadgeText = string.IsNullOrWhiteSpace(Model.ResultStatusType) ? "Retorno técnico" : Model.ResultStatusType,
+            BadgeTone = string.IsNullOrWhiteSpace(Model.ResultStatusType) ? "neutral" : Model.ResultStatusType,
+            StartExpanded = true
+        };
 }
 
-<div class="container mt-5">
-    <div class="d-flex justify-content-between align-items-center gap-2 mb-3">
-        <div>
-            <h2 class="mb-1">Intertravamento em Rede</h2>
-            <p class="text-muted mb-0">Fluxo dedicado para `set_network_interlock.fcgi`.</p>
-        </div>
-        <a asp-action="Index" class="btn btn-outline-secondary">Voltar</a>
-    </div>
+<div class="container mt-5 app-stack">
+    <partial name="_AppPageHeader" model="header" />
 
     @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
     {
         <div class="alert alert-danger">@Model.ErrorMessage</div>
     }
+
     @if (!string.IsNullOrWhiteSpace(Model.ResultMessage))
     {
         <div class="alert alert-@(string.IsNullOrWhiteSpace(Model.ResultStatusType) ? "info" : Model.ResultStatusType)">@Model.ResultMessage</div>
     }
 
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <form asp-action="NetworkInterlock" method="post">
-                <div class="form-check mb-3">
-                    <input asp-for="InterlockEnabled" class="form-check-input" />
-                    <label asp-for="InterlockEnabled" class="form-check-label"></label>
-                </div>
-                <div class="form-check mb-3">
-                    <input asp-for="ApiBypassEnabled" class="form-check-input" />
-                    <label asp-for="ApiBypassEnabled" class="form-check-label"></label>
-                </div>
-                <div class="form-check mb-3">
-                    <input asp-for="RexBypassEnabled" class="form-check-input" />
-                    <label asp-for="RexBypassEnabled" class="form-check-label"></label>
-                </div>
-                <button type="submit" class="btn btn-primary">Aplicar</button>
-            </form>
-
-            @if (!string.IsNullOrWhiteSpace(Model.ResponseJson))
-            {
-                <hr />
-                <h5>Resposta Oficial</h5>
-                <pre class="small mb-0">@Model.ResponseJson</pre>
-            }
+    <section class="detail-card app-stack">
+        <div class="entity-overview">
+            <div class="entity-overview__item"><span>Intertravamento</span><strong>@(Model.InterlockEnabled ? "Ativo" : "Desativado")</strong></div>
+            <div class="entity-overview__item"><span>Bypass da API</span><strong>@(Model.ApiBypassEnabled ? "Ativo" : "Desativado")</strong></div>
+            <div class="entity-overview__item"><span>Bypass de REX</span><strong>@(Model.RexBypassEnabled ? "Ativo" : "Desativado")</strong></div>
         </div>
-    </div>
+    </section>
+
+    <section class="app-grid-two app-grid-two--main">
+        <section class="app-surface-card app-stack">
+            <div class="app-page-section__heading">
+                <div>
+                    <strong>Configurar intertravamento</strong>
+                    <p>Ajuste os parâmetros de intertravamento em rede e os bypasses antes de aplicar a alteração no equipamento.</p>
+                </div>
+            </div>
+
+            <form asp-action="NetworkInterlock" method="post" class="form-section">
+                <div class="app-toggle-list">
+                    <label class="form-check app-toggle-item">
+                        <input asp-for="InterlockEnabled" class="form-check-input" />
+                        <span>
+                            <strong>@Html.DisplayNameFor(model => model.InterlockEnabled)</strong>
+                            <small>Ativa a trava lógica entre dispositivos em rede.</small>
+                        </span>
+                    </label>
+                    <label class="form-check app-toggle-item">
+                        <input asp-for="ApiBypassEnabled" class="form-check-input" />
+                        <span>
+                            <strong>@Html.DisplayNameFor(model => model.ApiBypassEnabled)</strong>
+                            <small>Permite ignorar o intertravamento para comandos enviados pela API.</small>
+                        </span>
+                    </label>
+                    <label class="form-check app-toggle-item">
+                        <input asp-for="RexBypassEnabled" class="form-check-input" />
+                        <span>
+                            <strong>@Html.DisplayNameFor(model => model.RexBypassEnabled)</strong>
+                            <small>Permite ignorar o intertravamento para eventos de REX.</small>
+                        </span>
+                    </label>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-warning">Aplicar intertravamento</button>
+                </div>
+            </form>
+        </section>
+
+        <section class="app-surface-card app-stack">
+            <div class="app-page-section__heading">
+                <div>
+                    <strong>Boas práticas</strong>
+                    <p>Antes de habilitar bypasses, confirme com a equipe de infraestrutura se o comportamento desejado não viola a lógica de segurança do ambiente.</p>
+                </div>
+            </div>
+
+            <div class="app-note">Esse fluxo é sensível porque altera comportamento de portas e enclausuramento. Use a trilha técnica apenas em cenários controlados.</div>
+        </section>
+    </section>
+
+    @if (responsePanel != null)
+    {
+        <partial name="_RawResponsePanel" model="responsePanel" />
+    }
 </div>

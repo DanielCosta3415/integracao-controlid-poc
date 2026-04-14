@@ -1,33 +1,19 @@
 ﻿@model Integracao.ControlID.PoC.ViewModels.QRCodes.QRCodeEditViewModel
 @{
     ViewData["Title"] = "Editar QR Code";
+    var header = new AppPageHeaderViewModel
+    {
+        Eyebrow = "Pessoas",
+        Title = "Editar QR Code",
+        Description = "Atualize uma credencial QR oficial mantendo a edição alinhada à linguagem visual da PoC.",
+        BadgeText = "Edição",
+        BadgeTone = "warning",
+        Actions = new[] { new PageHeaderActionViewModel { Label = "Voltar para QR Codes", Href = Url.Action("Index")!, ButtonClass = "btn btn-outline-secondary" } }
+    };
 }
-
-<div class="container mt-5">
-    <h2>Editar QR Code</h2>
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <form asp-action="Edit" method="post" autocomplete="off">
-                <input type="hidden" asp-for="Id" />
-                <div class="mb-3">
-                    <label asp-for="UserId" class="form-label"></label>
-                    <input asp-for="UserId" class="form-control" />
-                    <span asp-validation-for="UserId" class="text-danger"></span>
-                </div>
-                <div class="mb-3">
-                    <label asp-for="Value" class="form-label"></label>
-                    <input asp-for="Value" class="form-control" />
-                    <span asp-validation-for="Value" class="text-danger"></span>
-                </div>
-                <p class="text-muted small">
-                    Esta edição usa o objeto oficial `qrcodes`, limitado aos campos confirmados na documentação atual.
-                </p>
-                <button type="submit" class="btn btn-primary">Salvar Alterações</button>
-                <a asp-action="Index" class="btn btn-secondary ms-2">Cancelar</a>
-            </form>
-        </div>
-    </div>
+<div class="container mt-5 app-stack">
+    <partial name="_AppPageHeader" model="header" />
+    <section class="detail-card app-stack"><div class="entity-overview"><div class="entity-overview__item"><span>ID</span><strong>@Model.Id</strong></div><div class="entity-overview__item"><span>Usuário</span><strong>@(Model.UserId == 0 ? "Não definido" : Model.UserId)</strong></div><div class="entity-overview__item"><span>Valor</span><strong>@(string.IsNullOrWhiteSpace(Model.Value) ? "Não definido" : Model.Value)</strong></div></div></section>
+    <section class="app-surface-card app-stack"><div class="app-page-section__heading"><div><strong>Atualizar QR Code</strong><p>Revise o vínculo do usuário e o valor do código antes de salvar a alteração.</p></div></div><form asp-action="Edit" method="post" autocomplete="off" class="form-section"><input type="hidden" asp-for="Id" /><div class="app-form-grid"><div><label asp-for="UserId" class="form-label"></label><input asp-for="UserId" class="form-control" /><span asp-validation-for="UserId" class="text-danger"></span></div><div><label asp-for="Value" class="form-label"></label><input asp-for="Value" class="form-control" /><span asp-validation-for="Value" class="text-danger"></span></div></div><div class="form-actions"><button type="submit" class="btn btn-warning">Salvar alterações</button><a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a></div></form></section>
 </div>
-@section Scripts {
-    <partial name="_ValidationScriptsPartial" />
-}
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

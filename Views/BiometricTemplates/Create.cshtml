@@ -1,55 +1,41 @@
 ﻿@model Integracao.ControlID.PoC.ViewModels.BiometricTemplates.BiometricTemplateEditViewModel
 @{
-    ViewData["Title"] = "Novo Template Biométrico";
+    ViewData["Title"] = "Novo template biométrico";
+    var header = new AppPageHeaderViewModel
+    {
+        Eyebrow = "Pessoas",
+        Title = "Novo template biométrico",
+        Description = "Cadastre um template biométrico oficial com os campos principais de usuário, template, tipo e janela de validade.",
+        BadgeText = "Criação",
+        BadgeTone = "info",
+        Actions = new[] { new PageHeaderActionViewModel { Label = "Voltar para templates", Href = Url.Action("Index")!, ButtonClass = "btn btn-outline-secondary" } }
+    };
 }
 
-<div class="container mt-5">
-    <h2>Novo Template Biométrico</h2>
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <form asp-action="Create" method="post" autocomplete="off">
-                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
-                <div class="mb-3">
-                    <label asp-for="UserId" class="form-label"></label>
-                    <input asp-for="UserId" class="form-control" />
-                    <span asp-validation-for="UserId" class="text-danger"></span>
-                </div>
-                <div class="mb-3">
-                    <label asp-for="Template" class="form-label"></label>
-                    <textarea asp-for="Template" class="form-control" rows="2"></textarea>
-                    <span asp-validation-for="Template" class="text-danger"></span>
-                </div>
-                <div class="mb-3">
-                    <label asp-for="Type" class="form-label"></label>
-                    <input asp-for="Type" class="form-control" />
-                    <span asp-validation-for="Type" class="text-danger"></span>
-                </div>
-                <div class="mb-3">
-                    <label asp-for="FingerPosition" class="form-label"></label>
-                    <input asp-for="FingerPosition" class="form-control" />
-                    <span asp-validation-for="FingerPosition" class="text-danger"></span>
-                </div>
-                <div class="mb-3">
-                    <label asp-for="FingerType" class="form-label"></label>
-                    <input asp-for="FingerType" class="form-control" />
-                    <span asp-validation-for="FingerType" class="text-danger"></span>
-                </div>
-                <div class="mb-3">
-                    <label asp-for="BeginTime" class="form-label"></label>
-                    <input asp-for="BeginTime" class="form-control" type="datetime-local" />
-                    <span asp-validation-for="BeginTime" class="text-danger"></span>
-                </div>
-                <div class="mb-3">
-                    <label asp-for="EndTime" class="form-label"></label>
-                    <input asp-for="EndTime" class="form-control" type="datetime-local" />
-                    <span asp-validation-for="EndTime" class="text-danger"></span>
-                </div>
-                <button type="submit" class="btn btn-success">Salvar</button>
-                <a asp-action="Index" class="btn btn-secondary ms-2">Cancelar</a>
-            </form>
+<div class="container mt-5 app-stack">
+    <partial name="_AppPageHeader" model="header" />
+    <section class="detail-card app-stack">
+        <div class="entity-overview">
+            <div class="entity-overview__item"><span>Usuário</span><strong>@(Model.UserId == 0 ? "Não definido" : Model.UserId)</strong></div>
+            <div class="entity-overview__item"><span>Tipo</span><strong>@Model.Type</strong></div>
+            <div class="entity-overview__item"><span>Posição</span><strong>@Model.FingerPosition</strong></div>
         </div>
-    </div>
+    </section>
+    <section class="app-surface-card app-stack">
+        <div class="app-page-section__heading"><div><strong>Dados biométricos</strong><p>Preencha o template e os metadados confirmados pelo fluxo oficial.</p></div></div>
+        <form asp-action="Create" method="post" autocomplete="off" class="form-section">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="app-form-grid">
+                <div><label asp-for="UserId" class="form-label"></label><input asp-for="UserId" class="form-control" /><span asp-validation-for="UserId" class="text-danger"></span></div>
+                <div><label asp-for="Type" class="form-label"></label><input asp-for="Type" class="form-control" /><span asp-validation-for="Type" class="text-danger"></span></div>
+                <div><label asp-for="FingerPosition" class="form-label"></label><input asp-for="FingerPosition" class="form-control" /><span asp-validation-for="FingerPosition" class="text-danger"></span></div>
+                <div><label asp-for="FingerType" class="form-label"></label><input asp-for="FingerType" class="form-control" /><span asp-validation-for="FingerType" class="text-danger"></span></div>
+                <div><label asp-for="BeginTime" class="form-label"></label><input asp-for="BeginTime" class="form-control" type="datetime-local" /><span asp-validation-for="BeginTime" class="text-danger"></span></div>
+                <div><label asp-for="EndTime" class="form-label"></label><input asp-for="EndTime" class="form-control" type="datetime-local" /><span asp-validation-for="EndTime" class="text-danger"></span></div>
+                <div class="app-form-grid__full"><label asp-for="Template" class="form-label"></label><textarea asp-for="Template" class="form-control" rows="4"></textarea><span asp-validation-for="Template" class="text-danger"></span></div>
+            </div>
+            <div class="form-actions"><button type="submit" class="btn btn-primary">Salvar template</button><a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a></div>
+        </form>
+    </section>
 </div>
-@section Scripts {
-    <partial name="_ValidationScriptsPartial" />
-}
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

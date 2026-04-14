@@ -1,15 +1,14 @@
 ﻿@model Integracao.ControlID.PoC.ViewModels.ChangeLogs.ChangeLogDeleteViewModel
 @{
-    ViewData["Title"] = "Excluir Log de Alteração";
+    ViewData["Title"] = "Excluir log de alteração";
+    var header = new AppPageHeaderViewModel
+    {
+        Eyebrow = "Observabilidade",
+        Title = "Excluir log de alteração",
+        Description = "Revise a operação registrada antes de remover esse log de alteração da base local da PoC.",
+        BadgeText = "Zona de risco",
+        BadgeTone = "danger",
+        Actions = new[] { new PageHeaderActionViewModel { Label = "Voltar para logs de alteração", Href = Url.Action("Index")!, ButtonClass = "btn btn-outline-secondary" } }
+    };
 }
-
-<div class="container mt-5">
-    <div class="alert alert-warning">
-        <h4>Confirmação</h4>
-        <p>Deseja realmente excluir o log de alteração da tabela <strong>@Model.TableName</strong> (operação <strong>@Model.OperationType</strong>)?</p>
-        <form asp-action="DeleteConfirmed" asp-route-id="@Model.Id" method="post">
-            <button type="submit" class="btn btn-danger">Sim, excluir</button>
-            <a asp-action="Index" class="btn btn-secondary ms-2">Cancelar</a>
-        </form>
-    </div>
-</div>
+<div class="container mt-5 app-stack"><partial name="_AppPageHeader" model="header" /><section class="detail-card detail-card--danger app-stack"><div class="entity-overview"><div class="entity-overview__item"><span>ID</span><strong>@Model.Id</strong></div><div class="entity-overview__item"><span>Tabela</span><strong>@Model.TableName</strong></div><div class="entity-overview__item"><span>Operação</span><strong>@Model.OperationType</strong></div></div></section><section class="app-surface-card app-stack"><div class="alert alert-warning mb-0">Deseja realmente excluir o log de alteração da tabela <strong>@Model.TableName</strong> (operação <strong>@Model.OperationType</strong>)?</div><form asp-action="DeleteConfirmed" asp-route-id="@Model.Id" method="post" class="form-actions"><button type="submit" class="btn btn-danger">Sim, excluir log</button><a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a></form></section></div>

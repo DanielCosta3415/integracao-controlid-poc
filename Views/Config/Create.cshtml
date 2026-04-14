@@ -1,34 +1,67 @@
 ﻿@model Integracao.ControlID.PoC.ViewModels.Config.ConfigEditViewModel
 @{
-    ViewData["Title"] = "Nova Configuração";
+    ViewData["Title"] = "Nova configuração";
+    var header = new AppPageHeaderViewModel
+    {
+        Eyebrow = "Infraestrutura",
+        Title = "Nova configuração",
+        Description = "Cadastre uma nova chave de configuração oficial informando grupo, chave e valor em uma trilha de edição mais clara para operação técnica.",
+        BadgeText = "Criação",
+        BadgeTone = "info",
+        Actions = new[]
+        {
+            new PageHeaderActionViewModel { Label = "Voltar para configurações", Href = Url.Action("Index")!, ButtonClass = "btn btn-outline-secondary" }
+        }
+    };
 }
 
-<div class="container mt-5">
-    <h2>Nova Configuração</h2>
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <form asp-action="Create" method="post" autocomplete="off">
-                <div class="mb-3">
+<div class="container mt-5 app-stack">
+    <partial name="_AppPageHeader" model="header" />
+
+    <section class="detail-card app-stack">
+        <div class="entity-overview">
+            <div class="entity-overview__item"><span>Grupo</span><strong>@(string.IsNullOrWhiteSpace(Model.Group) ? "Não definido" : Model.Group)</strong></div>
+            <div class="entity-overview__item"><span>Chave</span><strong>@(string.IsNullOrWhiteSpace(Model.Key) ? "Não definida" : Model.Key)</strong></div>
+            <div class="entity-overview__item"><span>Valor</span><strong>@(string.IsNullOrWhiteSpace(Model.Value) ? "Não informado" : Model.Value)</strong></div>
+        </div>
+        <div class="app-note">Use nomes de grupo e chave compatíveis com o contrato oficial já validado no equipamento para evitar cadastros inconsistentes.</div>
+    </section>
+
+    <section class="app-surface-card app-stack">
+        <div class="app-page-section__heading">
+            <div>
+                <strong>Dados da configuração</strong>
+                <p>Preencha os campos principais da configuração que será persistida pela PoC e enviada ao equipamento.</p>
+            </div>
+        </div>
+
+        <form asp-action="Create" method="post" autocomplete="off" class="form-section">
+            <div class="app-form-grid">
+                <div>
                     <label asp-for="Group" class="form-label"></label>
                     <input asp-for="Group" class="form-control" />
                     <span asp-validation-for="Group" class="text-danger"></span>
                 </div>
-                <div class="mb-3">
+                <div>
                     <label asp-for="Key" class="form-label"></label>
                     <input asp-for="Key" class="form-control" />
                     <span asp-validation-for="Key" class="text-danger"></span>
                 </div>
-                <div class="mb-3">
+                <div class="app-form-grid__full">
                     <label asp-for="Value" class="form-label"></label>
                     <input asp-for="Value" class="form-control" />
                     <span asp-validation-for="Value" class="text-danger"></span>
                 </div>
-                <button type="submit" class="btn btn-success">Salvar</button>
-                <a asp-action="Index" class="btn btn-secondary ms-2">Cancelar</a>
-            </form>
-        </div>
-    </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Salvar configuração</button>
+                <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
+            </div>
+        </form>
+    </section>
 </div>
+
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
 }

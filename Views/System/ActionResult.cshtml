@@ -1,11 +1,26 @@
 ﻿@model Integracao.ControlID.PoC.ViewModels.System.SystemActionResultViewModel
 @{
-    ViewData["Title"] = "Resultado da Ação";
+    ViewData["Title"] = "Resultado da ação";
+    var header = new AppPageHeaderViewModel
+    {
+        Eyebrow = "Infraestrutura",
+        Title = "Resultado da ação",
+        Description = "Retorno consolidado de uma ação administrativa executada no módulo de sistema.",
+        BadgeText = string.IsNullOrWhiteSpace(Model.StatusType) ? "Info" : Model.StatusType,
+        BadgeTone = string.IsNullOrWhiteSpace(Model.StatusType) ? "neutral" : Model.StatusType
+    };
 }
 
-<div class="container mt-5">
-    <div class="alert @(Model.StatusType == "success" ? "alert-success" : Model.StatusType == "warning" ? "alert-warning" : "alert-danger")">
-        <strong>@Model.Message</strong>
-    </div>
-    <a asp-action="Info" class="btn btn-secondary">Voltar para Informações do Sistema</a>
+<div class="container mt-5 app-stack">
+    <partial name="_AppPageHeader" model="header" />
+
+    <section class="app-surface-card app-stack">
+        <div class="alert @(Model.StatusType == "success" ? "alert-success" : Model.StatusType == "warning" ? "alert-warning" : "alert-danger")">
+            <strong>@Model.Message</strong>
+        </div>
+
+        <div class="detail-actions">
+            <a asp-action="Info" class="btn btn-outline-secondary">Voltar para informações do sistema</a>
+        </div>
+    </section>
 </div>

@@ -1,16 +1,36 @@
-@model Integracao.ControlID.PoC.ViewModels.RemoteActions.RemoteAuthorizationViewModel
+﻿@model Integracao.ControlID.PoC.ViewModels.RemoteActions.RemoteAuthorizationViewModel
 @{
-    ViewData["Title"] = "Autorização Remota";
+    ViewData["Title"] = "Autorização remota";
+    ViewData["Subtitle"] = "Autorização online oficial com usuário, portal, evento e ação final enviados ao equipamento.";
+    var header = new AppPageHeaderViewModel
+    {
+        Eyebrow = "Operação",
+        Title = "Autorização remota",
+        Description = "Use esta tela para autorizar um evento online com os parâmetros oficiais da Access API, mantendo visibilidade do payload e da resposta retornada.",
+        BadgeText = "Fluxo autenticado",
+        BadgeTone = "warning",
+        Actions = new[]
+        {
+            new PageHeaderActionViewModel { Label = "Voltar para ações remotas", Href = Url.Action("Index")!, ButtonClass = "btn btn-outline-secondary" },
+            new PageHeaderActionViewModel { Label = "Eventos oficiais", Href = Url.Action("Index", "OfficialEvents")!, ButtonClass = "btn btn-primary" }
+        }
+    };
+    var responsePanel = string.IsNullOrWhiteSpace(Model.ResponseJson)
+        ? null
+        : new RawResponsePanelViewModel
+        {
+            Title = "Resposta oficial",
+            Description = "Payload bruto retornado pelo endpoint `remote_user_authorization`.",
+            Content = Model.ResponseJson,
+            PanelId = "remote-authorization-response",
+            BadgeText = string.IsNullOrWhiteSpace(Model.ResultStatusType) ? "Retorno técnico" : Model.ResultStatusType,
+            BadgeTone = string.IsNullOrWhiteSpace(Model.ResultStatusType) ? "neutral" : Model.ResultStatusType,
+            StartExpanded = true
+        };
 }
 
-<div class="container mt-5">
-    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-        <div>
-            <h2 class="mb-1">Autorização Remota</h2>
-            <p class="text-muted mb-0">Envia uma autorização oficial para um evento online usando `remote_user_authorization`.</p>
-        </div>
-        <a asp-action="Index" class="btn btn-outline-secondary">Voltar para Ações Remotas</a>
-    </div>
+<div class="container mt-5 app-stack">
+    <partial name="_AppPageHeader" model="header" />
 
     @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
     {
@@ -24,37 +44,48 @@
         </div>
     }
 
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <form asp-action="Authorization" method="post" autocomplete="off">
-                <div class="row g-3">
-                    <div class="col-md-4">
+    <section class="detail-card app-stack">
+        <div class="entity-overview">
+            <div class="entity-overview__item"><span>Evento</span><strong>@Model.Event</strong></div>
+            <div class="entity-overview__item"><span>Portal</span><strong>@Model.PortalId</strong></div>
+            <div class="entity-overview__item"><span>Ação final</span><strong>@Model.ActionName</strong></div>
+            <div class="entity-overview__item"><span>Imagem do usuário</span><strong>@(Model.UserImage ? "Enviar indicador" : "Sem indicador")</strong></div>
+        </div>
+        <div class="app-note">Fluxo recomendado para cenários online: use um evento válido, defina o portal correto e informe a ação final com os parâmetros esperados pelo equipamento. O retorno técnico fica disponível no painel abaixo.</div>
+    </section>
+
+    <section class="app-grid-two app-grid-two--main">
+        <section class="app-surface-card app-stack">
+            <div class="app-page-section__heading">
+                <div>
+                    <strong>Payload de autorização</strong>
+                    <p>Preencha somente os dados necessários para o evento online. O formulário segue o contrato oficial do endpoint.</p>
+                </div>
+            </div>
+
+            <form asp-action="Authorization" method="post" autocomplete="off" class="form-section">
+                <div class="app-form-grid">
+                    <div>
                         <label asp-for="Event" class="form-label"></label>
                         <input asp-for="Event" class="form-control" />
                         <span asp-validation-for="Event" class="text-danger"></span>
                     </div>
-                    <div class="col-md-4">
+                    <div>
                         <label asp-for="PortalId" class="form-label"></label>
                         <input asp-for="PortalId" class="form-control" />
                         <span asp-validation-for="PortalId" class="text-danger"></span>
                     </div>
-                    <div class="col-md-4 d-flex align-items-end">
-                        <div class="form-check mb-2">
-                            <input asp-for="UserImage" class="form-check-input" />
-                            <label asp-for="UserImage" class="form-check-label"></label>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
+                    <div>
                         <label asp-for="UserId" class="form-label"></label>
                         <input asp-for="UserId" class="form-control" />
                         <span asp-validation-for="UserId" class="text-danger"></span>
                     </div>
-                    <div class="col-md-8">
+                    <div>
                         <label asp-for="UserName" class="form-label"></label>
                         <input asp-for="UserName" class="form-control" />
                         <span asp-validation-for="UserName" class="text-danger"></span>
                     </div>
-                    <div class="col-md-4">
+                    <div>
                         <label asp-for="ActionName" class="form-label"></label>
                         <input asp-for="ActionName" class="form-control" list="remote-auth-actions" />
                         <datalist id="remote-auth-actions">
@@ -65,27 +96,46 @@
                         </datalist>
                         <span asp-validation-for="ActionName" class="text-danger"></span>
                     </div>
-                    <div class="col-md-8">
+                    <div>
                         <label asp-for="ActionParameters" class="form-label"></label>
                         <input asp-for="ActionParameters" class="form-control" />
                         <span asp-validation-for="ActionParameters" class="text-danger"></span>
                     </div>
                 </div>
 
-                <div class="mt-4 d-flex flex-wrap gap-2">
-                    <button type="submit" class="btn btn-primary">Autorizar</button>
-                    <a asp-controller="OfficialEvents" asp-action="Index" class="btn btn-outline-primary">Ver Eventos Oficiais</a>
+                <div class="form-check">
+                    <input asp-for="UserImage" class="form-check-input" />
+                    <label asp-for="UserImage" class="form-check-label"></label>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Autorizar evento</button>
                 </div>
             </form>
+        </section>
 
-            @if (!string.IsNullOrWhiteSpace(Model.ResponseJson))
-            {
-                <hr />
-                <h5>Resposta Oficial</h5>
-                <pre class="small mb-0">@Model.ResponseJson</pre>
-            }
-        </div>
-    </div>
+        <section class="app-surface-card app-stack">
+            <div class="app-page-section__heading">
+                <div>
+                    <strong>Referência operacional</strong>
+                    <p>Atalhos rápidos para cruzar o resultado da autorização com o restante da trilha de eventos da PoC.</p>
+                </div>
+            </div>
+            <div class="app-stack-sm">
+                <div class="app-note">`door`, `catra`, `collector` e `sec_box` são exemplos práticos de ação final aceitos no fluxo remoto.</div>
+                <div class="app-note">Use `door=1` ou parâmetros equivalentes quando a autorização precisar disparar uma porta específica.</div>
+                <div class="quick-links">
+                    <a asp-controller="OfficialEvents" asp-action="Index" class="btn btn-outline-secondary">Eventos oficiais</a>
+                    <a asp-action="Index" class="btn btn-quiet">Voltar para o hub</a>
+                </div>
+            </div>
+        </section>
+    </section>
+
+    @if (responsePanel != null)
+    {
+        <partial name="_RawResponsePanel" model="responsePanel" />
+    }
 </div>
 
 @section Scripts {

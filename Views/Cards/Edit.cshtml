@@ -1,51 +1,83 @@
 ﻿@model Integracao.ControlID.PoC.ViewModels.Cards.CardEditViewModel
 @{
-    ViewData["Title"] = "Editar Cartão";
+    ViewData["Title"] = "Editar cartão";
+    var header = new AppPageHeaderViewModel
+    {
+        Eyebrow = "Pessoas",
+        Title = "Editar cartão",
+        Description = "Atualize a credencial selecionada revisando valor, tipo, status e período de validade com mais contexto visual.",
+        BadgeText = "Edição",
+        BadgeTone = "warning",
+        Actions = new[]
+        {
+            new PageHeaderActionViewModel { Label = "Voltar para cartões", Href = Url.Action("Index")!, ButtonClass = "btn btn-outline-secondary" }
+        }
+    };
 }
 
-<div class="container mt-5">
-    <h2>Editar Cartão</h2>
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <form asp-action="Edit" method="post" autocomplete="off">
-                <input type="hidden" asp-for="Id" />
-                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
-                <div class="mb-3">
+<div class="container mt-5 app-stack">
+    <partial name="_AppPageHeader" model="header" />
+
+    <section class="detail-card app-stack">
+        <div class="entity-overview">
+            <div class="entity-overview__item"><span>ID</span><strong>@(Model.Id?.ToString() ?? "Novo")</strong></div>
+            <div class="entity-overview__item"><span>Usuário</span><strong>@Model.UserId</strong></div>
+            <div class="entity-overview__item"><span>Valor</span><strong>@(string.IsNullOrWhiteSpace(Model.Value) ? "Não definido" : Model.Value)</strong></div>
+        </div>
+    </section>
+
+    <section class="app-surface-card app-stack">
+        <div class="app-page-section__heading">
+            <div>
+                <strong>Parâmetros da credencial</strong>
+                <p>Revise os dados do cartão antes de aplicar as alterações no objeto oficial correspondente.</p>
+            </div>
+        </div>
+
+        <form asp-action="Edit" method="post" autocomplete="off" class="form-section">
+            <input type="hidden" asp-for="Id" />
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="app-form-grid">
+                <div>
                     <label asp-for="UserId" class="form-label"></label>
                     <input asp-for="UserId" class="form-control" />
                     <span asp-validation-for="UserId" class="text-danger"></span>
                 </div>
-                <div class="mb-3">
+                <div>
                     <label asp-for="Value" class="form-label"></label>
                     <input asp-for="Value" class="form-control" />
                     <span asp-validation-for="Value" class="text-danger"></span>
                 </div>
-                <div class="mb-3">
+                <div>
                     <label asp-for="Type" class="form-label"></label>
                     <input asp-for="Type" class="form-control" />
                     <span asp-validation-for="Type" class="text-danger"></span>
                 </div>
-                <div class="mb-3">
-                    <label asp-for="BeginTime" class="form-label"></label>
-                    <input asp-for="BeginTime" class="form-control" type="datetime-local" />
-                    <span asp-validation-for="BeginTime" class="text-danger"></span>
-                </div>
-                <div class="mb-3">
-                    <label asp-for="EndTime" class="form-label"></label>
-                    <input asp-for="EndTime" class="form-control" type="datetime-local" />
-                    <span asp-validation-for="EndTime" class="text-danger"></span>
-                </div>
-                <div class="mb-3">
+                <div>
                     <label asp-for="Status" class="form-label"></label>
                     <input asp-for="Status" class="form-control" />
                     <span asp-validation-for="Status" class="text-danger"></span>
                 </div>
-                <button type="submit" class="btn btn-primary">Salvar Alterações</button>
-                <a asp-action="Index" class="btn btn-secondary ms-2">Cancelar</a>
-            </form>
-        </div>
-    </div>
+                <div>
+                    <label asp-for="BeginTime" class="form-label"></label>
+                    <input asp-for="BeginTime" class="form-control" type="datetime-local" />
+                    <span asp-validation-for="BeginTime" class="text-danger"></span>
+                </div>
+                <div>
+                    <label asp-for="EndTime" class="form-label"></label>
+                    <input asp-for="EndTime" class="form-control" type="datetime-local" />
+                    <span asp-validation-for="EndTime" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Salvar alterações</button>
+                <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
+            </div>
+        </form>
+    </section>
 </div>
+
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
 }

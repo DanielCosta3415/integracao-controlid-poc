@@ -1,57 +1,16 @@
-@model Integracao.ControlID.PoC.ViewModels.Hardware.DoorStateViewModel
+﻿@model Integracao.ControlID.PoC.ViewModels.Hardware.DoorStateViewModel
 @{
-    ViewData["Title"] = "Estado das Portas";
-}
-
-<div class="container mt-5">
-    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-        <div>
-            <h2 class="mb-1">Estado das Portas</h2>
-            <p class="text-muted mb-0">Consulta o endpoint oficial `door_state` com ou sem filtro por porta.</p>
-        </div>
-        <a asp-action="Status" class="btn btn-outline-secondary">Voltar para Hardware</a>
-    </div>
-
-    @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+    ViewData["Title"] = "Estado das portas";
+    var header = new AppPageHeaderViewModel
     {
-        <div class="alert alert-danger">@Model.ErrorMessage</div>
-    }
-
-    <div class="card shadow-sm mb-4">
-        <div class="card-body">
-            <form asp-action="DoorState" method="get" autocomplete="off" class="row g-3 align-items-end">
-                <div class="col-md-4">
-                    <label asp-for="DoorNumber" class="form-label"></label>
-                    <input asp-for="DoorNumber" class="form-control" />
-                    <span asp-validation-for="DoorNumber" class="text-danger"></span>
-                </div>
-                <div class="col-md-8 d-flex flex-wrap gap-2">
-                    <button type="submit" class="btn btn-primary">Consultar</button>
-                    <a asp-action="DoorState" class="btn btn-outline-secondary">Consultar Todas</a>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    @if (!string.IsNullOrWhiteSpace(Model.Summary) || !string.IsNullOrWhiteSpace(Model.ResponseJson))
-    {
-        <div class="card shadow-sm">
-            <div class="card-body">
-                @if (!string.IsNullOrWhiteSpace(Model.Summary))
-                {
-                    <div class="alert alert-info">@Model.Summary</div>
-                }
-
-                @if (!string.IsNullOrWhiteSpace(Model.ResponseJson))
-                {
-                    <h5>Resposta Oficial</h5>
-                    <pre class="small mb-0">@Model.ResponseJson</pre>
-                }
-            </div>
-        </div>
-    }
-</div>
-
-@section Scripts {
-    <partial name="_ValidationScriptsPartial" />
+        Eyebrow = "Operação",
+        Title = "Estado das portas",
+        Description = "Consulte o endpoint oficial `door_state` com ou sem filtro por porta, preservando o retorno técnico em um painel separado.",
+        BadgeText = "Leitura operacional",
+        BadgeTone = "info",
+        Actions = new[] { new PageHeaderActionViewModel { Label = "Voltar para hardware", Href = Url.Action("Status")!, ButtonClass = "btn btn-outline-secondary" } }
+    };
+    var responsePanel = string.IsNullOrWhiteSpace(Model.ResponseJson) ? null : new RawResponsePanelViewModel { Title = "Resposta oficial", Description = "JSON bruto retornado por `door_state`.", Content = Model.ResponseJson, PanelId = "hardware-door-state-response", BadgeText = "door_state", BadgeTone = "neutral" };
 }
+<div class="container mt-5 app-stack"><partial name="_AppPageHeader" model="header" />@if (!string.IsNullOrWhiteSpace(Model.ErrorMessage)){<div class="alert alert-danger">@Model.ErrorMessage</div>}<section class="app-grid-two app-grid-two--main"><section class="app-surface-card app-stack"><div class="app-page-section__heading"><div><strong>Parâmetros da consulta</strong><p>Informe uma porta específica ou consulte todas as portas disponíveis no equipamento.</p></div></div><form asp-action="DoorState" method="get" autocomplete="off" class="form-section"><div class="app-form-grid"><div><label asp-for="DoorNumber" class="form-label"></label><input asp-for="DoorNumber" class="form-control" /><span asp-validation-for="DoorNumber" class="text-danger"></span></div></div><div class="form-actions"><button type="submit" class="btn btn-primary">Consultar porta</button><a asp-action="DoorState" class="btn btn-outline-secondary">Consultar todas</a></div></form></section><section class="app-surface-card app-stack"><div class="app-page-section__heading"><div><strong>Resumo da leitura</strong><p>O resultado consolidado aparece aqui assim que a consulta é executada.</p></div></div>@if (!string.IsNullOrWhiteSpace(Model.Summary)){<div class="alert alert-info mb-0">@Model.Summary</div>}else{<div class="app-empty">Nenhuma leitura realizada ainda. Execute a consulta para ver o resumo operacional.</div>}</section></section>@if (responsePanel != null){<partial name="_RawResponsePanel" model="responsePanel" />}</div>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

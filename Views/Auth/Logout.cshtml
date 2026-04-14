@@ -1,12 +1,28 @@
 ﻿@model Integracao.ControlID.PoC.ViewModels.Auth.LogoutViewModel
 @{
     ViewData["Title"] = "Logout";
+    var header = new AppPageHeaderViewModel
+    {
+        Eyebrow = "Operação",
+        Title = "Logout concluído",
+        Description = "A sessão do equipamento foi encerrada e a PoC já está pronta para iniciar uma nova autenticação oficial quando necessário.",
+        BadgeText = "Sessão encerrada",
+        BadgeTone = "success",
+        Actions = new[]
+        {
+            new PageHeaderActionViewModel { Label = "Fazer login novamente", Href = Url.Action("Login", "Auth")!, ButtonClass = "btn btn-primary" },
+            new PageHeaderActionViewModel { Label = "Voltar ao painel", Href = Url.Action("Index", "Home")!, ButtonClass = "btn btn-outline-secondary" }
+        }
+    };
 }
 
-<div class="container mt-5">
-    <div class="alert alert-success text-center">
-        <h4>Logout realizado com sucesso.</h4>
-        <p>@Model?.Message</p>
-        <a href="@Url.Action("Login", "Auth")" class="btn btn-primary mt-3">Fazer Login novamente</a>
-    </div>
+<div class="container mt-5 app-stack">
+    <partial name="_AppPageHeader" model="header" />
+
+    <section class="app-surface-card app-stack text-center">
+        <div class="app-empty app-empty--center">
+            <strong>Logout realizado com sucesso.</strong>
+            <p>@(string.IsNullOrWhiteSpace(Model?.Message) ? "O contexto autenticado foi removido e você pode iniciar uma nova sessão quando quiser." : Model.Message)</p>
+        </div>
+    </section>
 </div>

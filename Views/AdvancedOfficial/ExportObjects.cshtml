@@ -1,45 +1,93 @@
-@model Integracao.ControlID.PoC.ViewModels.AdvancedOfficial.ExportObjectsViewModel
+﻿@model Integracao.ControlID.PoC.ViewModels.AdvancedOfficial.ExportObjectsViewModel
 @{
-    ViewData["Title"] = "Exportar Objetos";
+    ViewData["Title"] = "Exportar objetos";
+    var header = new AppPageHeaderViewModel
+    {
+        Eyebrow = "API",
+        Title = "Exportar objetos",
+        Description = "Fluxo dedicado para `export_objects.fcgi`, com entrada simplificada e resposta técnica recolhível para análise operacional.",
+        BadgeText = "Recurso avançado",
+        BadgeTone = "info",
+        Actions = new[]
+        {
+            new PageHeaderActionViewModel { Label = "Voltar", Href = Url.Action("Index")!, ButtonClass = "btn btn-outline-secondary" }
+        }
+    };
+    var responsePanel = string.IsNullOrWhiteSpace(Model.ResponseJson)
+        ? null
+        : new RawResponsePanelViewModel
+        {
+            Title = "Resposta oficial",
+            Description = "JSON bruto retornado pelo endpoint `export_objects.fcgi`.",
+            Content = Model.ResponseJson,
+            PanelId = "advanced-export-objects-response",
+            BadgeText = string.IsNullOrWhiteSpace(Model.ResultStatusType) ? "Retorno técnico" : Model.ResultStatusType,
+            BadgeTone = string.IsNullOrWhiteSpace(Model.ResultStatusType) ? "neutral" : Model.ResultStatusType,
+            StartExpanded = true
+        };
 }
 
-<div class="container mt-5">
-    <div class="d-flex justify-content-between align-items-center gap-2 mb-3">
-        <div>
-            <h2 class="mb-1">Exportar Objetos</h2>
-            <p class="text-muted mb-0">Fluxo dedicado para `export_objects.fcgi`.</p>
-        </div>
-        <a asp-action="Index" class="btn btn-outline-secondary">Voltar</a>
-    </div>
+<div class="container mt-5 app-stack">
+    <partial name="_AppPageHeader" model="header" />
 
     @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
     {
         <div class="alert alert-danger">@Model.ErrorMessage</div>
     }
+
     @if (!string.IsNullOrWhiteSpace(Model.ResultMessage))
     {
         <div class="alert alert-@(string.IsNullOrWhiteSpace(Model.ResultStatusType) ? "info" : Model.ResultStatusType)">@Model.ResultMessage</div>
     }
 
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <form asp-action="ExportObjects" method="post" autocomplete="off">
-                <div class="mb-3">
-                    <label asp-for="ObjectName" class="form-label"></label>
-                    <input asp-for="ObjectName" class="form-control" placeholder="users, cards, logs..." />
-                    <span asp-validation-for="ObjectName" class="text-danger"></span>
-                </div>
-                <button type="submit" class="btn btn-primary">Exportar</button>
-            </form>
-
-            @if (!string.IsNullOrWhiteSpace(Model.ResponseJson))
-            {
-                <hr />
-                <h5>Resposta Oficial</h5>
-                <pre class="small mb-0">@Model.ResponseJson</pre>
-            }
+    <section class="detail-card app-stack">
+        <div class="entity-overview">
+            <div class="entity-overview__item"><span>Endpoint</span><strong>export_objects.fcgi</strong></div>
+            <div class="entity-overview__item"><span>Objeto</span><strong>@(string.IsNullOrWhiteSpace(Model.ObjectName) ? "Não informado" : Model.ObjectName)</strong></div>
         </div>
-    </div>
+        <div class="app-note">Use nomes de objeto válidos como `users`, `cards`, `logs` ou outros objetos oficiais já documentados no catálogo da API.</div>
+    </section>
+
+    <section class="app-grid-two app-grid-two--main">
+        <section class="app-surface-card app-stack">
+            <div class="app-page-section__heading">
+                <div>
+                    <strong>Parâmetros da exportação</strong>
+                    <p>Informe qual objeto oficial deve ser exportado para receber o retorno bruto do equipamento.</p>
+                </div>
+            </div>
+
+            <form asp-action="ExportObjects" method="post" autocomplete="off" class="form-section">
+                <div class="app-form-grid">
+                    <div>
+                        <label asp-for="ObjectName" class="form-label"></label>
+                        <input asp-for="ObjectName" class="form-control" placeholder="users, cards, logs..." />
+                        <span asp-validation-for="ObjectName" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Exportar objeto</button>
+                </div>
+            </form>
+        </section>
+
+        <section class="app-surface-card app-stack">
+            <div class="app-page-section__heading">
+                <div>
+                    <strong>Orientação operacional</strong>
+                    <p>Esse fluxo é útil para inspeção técnica, auditoria pontual e troubleshooting de objetos específicos sem depender do explorador genérico.</p>
+                </div>
+            </div>
+
+            <div class="app-note">Sempre valide o nome do objeto antes de disparar a exportação. Quando o retorno ficar grande, use o painel técnico abaixo para copiar e analisar o JSON bruto.</div>
+        </section>
+    </section>
+
+    @if (responsePanel != null)
+    {
+        <partial name="_RawResponsePanel" model="responsePanel" />
+    }
 </div>
 
 @section Scripts {

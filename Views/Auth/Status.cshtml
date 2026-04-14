@@ -1,34 +1,49 @@
-@model Integracao.ControlID.PoC.ViewModels.Auth.AuthStatusViewModel
+﻿@model Integracao.ControlID.PoC.ViewModels.Auth.AuthStatusViewModel
 @{
-    ViewData["Title"] = "Status da Autenticação";
+    ViewData["Title"] = "Status da autenticação";
+    var header = new AppPageHeaderViewModel
+    {
+        Eyebrow = "Operação",
+        Title = "Status da autenticação",
+        Description = "Confira se existe sessão oficial em contexto antes de seguir para endpoints que exigem autenticação ativa no equipamento.",
+        BadgeText = Model.IsAuthenticated ? "Autenticado" : "Não autenticado",
+        BadgeTone = Model.IsAuthenticated ? "success" : "warning",
+        Actions = new[]
+        {
+            new PageHeaderActionViewModel { Label = "Entrar", Href = Url.Action("Login")!, ButtonClass = "btn btn-primary" },
+            new PageHeaderActionViewModel { Label = "Sair", Href = Url.Action("Logout")!, ButtonClass = "btn btn-outline-danger" }
+        }
+    };
 }
 
-<div class="container mt-5">
-    <h2>Status da Autenticação</h2>
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <dl class="row">
-                <dt class="col-sm-3">Dispositivo</dt>
-                <dd class="col-sm-9">@(!string.IsNullOrWhiteSpace(Model.DeviceAddress) ? Model.DeviceAddress : "-")</dd>
+<div class="container mt-5 app-stack">
+    <partial name="_AppPageHeader" model="header" />
 
-                <dt class="col-sm-3">Sessão</dt>
-                <dd class="col-sm-9"><code>@(!string.IsNullOrWhiteSpace(Model.SessionString) ? Model.SessionString : "-")</code></dd>
-
-                <dt class="col-sm-3">Autenticado</dt>
-                <dd class="col-sm-9">
-                    @if (Model.IsAuthenticated)
-                    {
-                        <span class="badge bg-success">Sim</span>
-                    }
-                    else
-                    {
-                        <span class="badge bg-secondary">Não</span>
-                    }
-                </dd>
-            </dl>
-
-            <a asp-action="Login" class="btn btn-primary">Entrar</a>
-            <a asp-action="Logout" class="btn btn-outline-danger">Sair</a>
+    <section class="detail-card app-stack">
+        <div class="entity-overview">
+            <div class="entity-overview__item"><span>Dispositivo</span><strong>@(!string.IsNullOrWhiteSpace(Model.DeviceAddress) ? Model.DeviceAddress : "Não definido")</strong></div>
+            <div class="entity-overview__item"><span>Sessão</span><strong>@(!string.IsNullOrWhiteSpace(Model.SessionString) ? "Disponível" : "Ausente")</strong></div>
+            <div class="entity-overview__item"><span>Autenticação</span><strong>@(Model.IsAuthenticated ? "Válida" : "Pendente")</strong></div>
         </div>
-    </div>
+    </section>
+
+    <section class="app-surface-card app-stack">
+        <div class="app-page-section__heading">
+            <div>
+                <strong>Contexto oficial</strong>
+                <p>Resumo direto do que a PoC conhece sobre o dispositivo e a sessão oficial salva localmente.</p>
+            </div>
+        </div>
+
+        <dl class="row">
+            <dt class="col-sm-3">Dispositivo</dt>
+            <dd class="col-sm-9">@(!string.IsNullOrWhiteSpace(Model.DeviceAddress) ? Model.DeviceAddress : "-")</dd>
+
+            <dt class="col-sm-3">Sessão</dt>
+            <dd class="col-sm-9"><code>@(!string.IsNullOrWhiteSpace(Model.SessionString) ? Model.SessionString : "-")</code></dd>
+
+            <dt class="col-sm-3">Autenticado</dt>
+            <dd class="col-sm-9">@(Model.IsAuthenticated ? "Sim" : "Não")</dd>
+        </dl>
+    </section>
 </div>

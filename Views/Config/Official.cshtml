@@ -1,73 +1,79 @@
-@model Integracao.ControlID.PoC.ViewModels.Config.ConfigOfficialViewModel
+﻿@model Integracao.ControlID.PoC.ViewModels.Config.ConfigOfficialViewModel
 @{
-    ViewData["Title"] = "Configuração Oficial";
+    ViewData["Title"] = "Configuração oficial";
+    var header = new AppPageHeaderViewModel
+    {
+        Eyebrow = "Infraestrutura",
+        Title = "Configuração oficial JSON",
+        Description = "Acesse diretamente os endpoints `get_configuration` e `set_configuration` com payloads JSON completos, sem sair do contexto visual da PoC.",
+        BadgeText = "Explorador técnico",
+        BadgeTone = "warning",
+        Actions = new[]
+        {
+            new PageHeaderActionViewModel { Label = "Voltar para configurações", Href = Url.Action("Index")!, ButtonClass = "btn btn-outline-secondary" }
+        }
+    };
 }
 
-<div class="container mt-5">
-    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-        <div>
-            <h2 class="mb-1">Configuração Oficial JSON</h2>
-            <p class="text-muted mb-0">Acessa diretamente os endpoints oficiais `get_configuration` e `set_configuration`.</p>
-        </div>
-        <a asp-action="Index" class="btn btn-outline-secondary">Voltar para Configurações</a>
-    </div>
+<div class="container mt-5 app-stack">
+    <partial name="_AppPageHeader" model="header" />
 
     @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
     {
         <div class="alert alert-danger">@Model.ErrorMessage</div>
     }
 
-    <div class="row g-4">
-        <div class="col-lg-6">
-            <div class="card shadow-sm h-100">
-                <div class="card-body">
-                    <h5 class="card-title">Consultar Configuração</h5>
-                    <p class="text-muted small">Informe o JSON de leitura exatamente como a API oficial espera.</p>
-                    <form asp-action="GetOfficial" method="post" autocomplete="off">
-                        <div class="mb-3">
-                            <label asp-for="GetPayload" class="form-label"></label>
-                            <textarea asp-for="GetPayload" class="form-control" rows="12"></textarea>
-                            <span asp-validation-for="GetPayload" class="text-danger"></span>
-                        </div>
-                        <button type="submit" class="btn btn-primary">Consultar</button>
-                    </form>
-
-                    @if (!string.IsNullOrWhiteSpace(Model.GetResponseJson))
-                    {
-                        <div class="mt-4">
-                            <h6>Resposta</h6>
-                            <pre class="small mb-0">@Model.GetResponseJson</pre>
-                        </div>
-                    }
+    <section class="app-grid-two app-grid-two--main">
+        <section class="app-surface-card app-stack">
+            <div class="app-page-section__heading">
+                <div>
+                    <strong>Consultar configuração</strong>
+                    <p>Informe o JSON de leitura exatamente como a API oficial espera.</p>
                 </div>
             </div>
-        </div>
 
-        <div class="col-lg-6">
-            <div class="card shadow-sm h-100">
-                <div class="card-body">
-                    <h5 class="card-title">Alterar Configuração</h5>
-                    <p class="text-muted small">Envie o JSON completo da alteração que será aplicada no equipamento.</p>
-                    <form asp-action="SetOfficial" method="post" autocomplete="off">
-                        <div class="mb-3">
-                            <label asp-for="SetPayload" class="form-label"></label>
-                            <textarea asp-for="SetPayload" class="form-control" rows="12"></textarea>
-                            <span asp-validation-for="SetPayload" class="text-danger"></span>
-                        </div>
-                        <button type="submit" class="btn btn-warning">Aplicar Alteração</button>
-                    </form>
+            <form asp-action="GetOfficial" method="post" autocomplete="off" class="form-section">
+                <div>
+                    <label asp-for="GetPayload" class="form-label"></label>
+                    <textarea asp-for="GetPayload" class="form-control" rows="14"></textarea>
+                    <span asp-validation-for="GetPayload" class="text-danger"></span>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Consultar</button>
+                </div>
+            </form>
 
-                    @if (!string.IsNullOrWhiteSpace(Model.SetResponseJson))
-                    {
-                        <div class="mt-4">
-                            <h6>Resposta</h6>
-                            <pre class="small mb-0">@Model.SetResponseJson</pre>
-                        </div>
-                    }
+            @if (!string.IsNullOrWhiteSpace(Model.GetResponseJson))
+            {
+                <partial name="_RawResponsePanel" model='new RawResponsePanelViewModel { Title = "Resposta de leitura", Description = "JSON bruto retornado por `get_configuration`.", Content = Model.GetResponseJson, PanelId = "config-official-get", BadgeText = "get_configuration", BadgeTone = "neutral" }' />
+            }
+        </section>
+
+        <section class="app-surface-card app-stack">
+            <div class="app-page-section__heading">
+                <div>
+                    <strong>Alterar configuração</strong>
+                    <p>Envie o JSON completo da alteração que será aplicada no equipamento.</p>
                 </div>
             </div>
-        </div>
-    </div>
+
+            <form asp-action="SetOfficial" method="post" autocomplete="off" class="form-section">
+                <div>
+                    <label asp-for="SetPayload" class="form-label"></label>
+                    <textarea asp-for="SetPayload" class="form-control" rows="14"></textarea>
+                    <span asp-validation-for="SetPayload" class="text-danger"></span>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-warning">Aplicar alteração</button>
+                </div>
+            </form>
+
+            @if (!string.IsNullOrWhiteSpace(Model.SetResponseJson))
+            {
+                <partial name="_RawResponsePanel" model='new RawResponsePanelViewModel { Title = "Resposta de alteração", Description = "JSON bruto retornado por `set_configuration`.", Content = Model.SetResponseJson, PanelId = "config-official-set", BadgeText = "set_configuration", BadgeTone = "warning" }' />
+            }
+        </section>
+    </section>
 </div>
 
 @section Scripts {

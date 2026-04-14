@@ -1,51 +1,15 @@
 ﻿@model Integracao.ControlID.PoC.ViewModels.Devices.DeviceEditViewModel
 @{
-    ViewData["Title"] = "Editar Dispositivo";
+    ViewData["Title"] = "Editar dispositivo";
+    var header = new AppPageHeaderViewModel
+    {
+        Eyebrow = "Infraestrutura",
+        Title = "Editar dispositivo",
+        Description = "Atualize os dados principais do dispositivo controlado pela PoC, incluindo rede, firmware e status operacional.",
+        BadgeText = "Edição",
+        BadgeTone = "warning",
+        Actions = new[] { new PageHeaderActionViewModel { Label = "Voltar para dispositivos", Href = Url.Action("Index")!, ButtonClass = "btn btn-outline-secondary" } }
+    };
 }
-
-<div class="container mt-5">
-    <h2>Editar Dispositivo</h2>
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <form asp-action="Edit" method="post" autocomplete="off">
-                <input type="hidden" asp-for="Id" />
-                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
-                <div class="mb-3">
-                    <label asp-for="Name" class="form-label"></label>
-                    <input asp-for="Name" class="form-control" />
-                    <span asp-validation-for="Name" class="text-danger"></span>
-                </div>
-                <div class="mb-3">
-                    <label asp-for="Ip" class="form-label"></label>
-                    <input asp-for="Ip" class="form-control" />
-                    <span asp-validation-for="Ip" class="text-danger"></span>
-                </div>
-                <div class="mb-3">
-                    <label asp-for="SerialNumber" class="form-label"></label>
-                    <input asp-for="SerialNumber" class="form-control" />
-                    <span asp-validation-for="SerialNumber" class="text-danger"></span>
-                </div>
-                <div class="mb-3">
-                    <label asp-for="Firmware" class="form-label"></label>
-                    <input asp-for="Firmware" class="form-control" />
-                    <span asp-validation-for="Firmware" class="text-danger"></span>
-                </div>
-                <div class="mb-3">
-                    <label asp-for="Status" class="form-label"></label>
-                    <input asp-for="Status" class="form-control" />
-                    <span asp-validation-for="Status" class="text-danger"></span>
-                </div>
-                <div class="mb-3">
-                    <label asp-for="Description" class="form-label"></label>
-                    <input asp-for="Description" class="form-control" />
-                    <span asp-validation-for="Description" class="text-danger"></span>
-                </div>
-                <button type="submit" class="btn btn-primary">Salvar Alterações</button>
-                <a asp-action="Index" class="btn btn-secondary ms-2">Cancelar</a>
-            </form>
-        </div>
-    </div>
-</div>
-@section Scripts {
-    <partial name="_ValidationScriptsPartial" />
-}
+<div class="container mt-5 app-stack"><partial name="_AppPageHeader" model="header" /><section class="detail-card app-stack"><div class="entity-overview"><div class="entity-overview__item"><span>ID</span><strong>@Model.Id</strong></div><div class="entity-overview__item"><span>Nome</span><strong>@(string.IsNullOrWhiteSpace(Model.Name) ? "Não definido" : Model.Name)</strong></div><div class="entity-overview__item"><span>IP</span><strong>@(string.IsNullOrWhiteSpace(Model.Ip) ? "Não definido" : Model.Ip)</strong></div></div></section><section class="app-surface-card app-stack"><div class="app-page-section__heading"><div><strong>Dados do dispositivo</strong><p>Revise identificação, IP, firmware, status e descrição do equipamento antes de salvar.</p></div></div><form asp-action="Edit" method="post" autocomplete="off" class="form-section"><input type="hidden" asp-for="Id" /><div asp-validation-summary="ModelOnly" class="text-danger"></div><div class="app-form-grid"><div><label asp-for="Name" class="form-label"></label><input asp-for="Name" class="form-control" /><span asp-validation-for="Name" class="text-danger"></span></div><div><label asp-for="Ip" class="form-label"></label><input asp-for="Ip" class="form-control" /><span asp-validation-for="Ip" class="text-danger"></span></div><div><label asp-for="SerialNumber" class="form-label"></label><input asp-for="SerialNumber" class="form-control" /><span asp-validation-for="SerialNumber" class="text-danger"></span></div><div><label asp-for="Firmware" class="form-label"></label><input asp-for="Firmware" class="form-control" /><span asp-validation-for="Firmware" class="text-danger"></span></div><div><label asp-for="Status" class="form-label"></label><input asp-for="Status" class="form-control" /><span asp-validation-for="Status" class="text-danger"></span></div><div><label asp-for="Description" class="form-label"></label><input asp-for="Description" class="form-control" /><span asp-validation-for="Description" class="text-danger"></span></div></div><div class="form-actions"><button type="submit" class="btn btn-warning">Salvar alterações</button><a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a></div></form></section></div>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

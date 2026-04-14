@@ -1,15 +1,35 @@
 ﻿@model Integracao.ControlID.PoC.ViewModels.AccessRules.AccessRuleDeleteViewModel
 @{
-    ViewData["Title"] = "Excluir Regra de Acesso";
+    ViewData["Title"] = "Excluir regra de acesso";
+    var header = new AppPageHeaderViewModel
+    {
+        Eyebrow = "Pessoas",
+        Title = "Excluir regra de acesso",
+        Description = "Confirme a remoção da regra selecionada com uma zona de risco clara e sem ambiguidade operacional.",
+        BadgeText = "Ação destrutiva",
+        BadgeTone = "danger",
+        Actions = new[]
+        {
+            new PageHeaderActionViewModel { Label = "Voltar para regras", Href = Url.Action("Index")!, ButtonClass = "btn btn-outline-secondary" }
+        }
+    };
 }
 
-<div class="container mt-5">
-    <div class="alert alert-warning">
-        <h4>Confirmação</h4>
-        <p>Deseja realmente excluir a regra <strong>@Model.Name</strong>?</p>
-        <form asp-action="Delete" asp-route-id="@Model.Id" method="post">
-            <button type="submit" class="btn btn-danger">Sim, excluir</button>
-            <a asp-action="Index" class="btn btn-secondary ms-2">Cancelar</a>
-        </form>
-    </div>
+<div class="container mt-5 app-stack">
+    <partial name="_AppPageHeader" model="header" />
+
+    <section class="detail-card app-stack danger-zone">
+        <div class="entity-overview">
+            <div class="entity-overview__item"><span>ID</span><strong>@Model.Id</strong></div>
+            <div class="entity-overview__item"><span>Regra</span><strong>@Model.Name</strong></div>
+        </div>
+        <div class="app-note">Esta operação remove a regra do contexto da PoC e do fluxo oficial correspondente. Confirme apenas se não houver dependência ativa desse registro.</div>
+
+        <div class="detail-actions">
+            <form asp-action="Delete" asp-route-id="@Model.Id" method="post" class="app-inline-form">
+                <button type="submit" class="btn btn-danger">Sim, excluir</button>
+            </form>
+            <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
+        </div>
+    </section>
 </div>

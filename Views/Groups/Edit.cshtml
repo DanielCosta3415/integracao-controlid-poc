@@ -1,28 +1,57 @@
 ﻿@model Integracao.ControlID.PoC.ViewModels.Groups.GroupEditViewModel
 @{
-    ViewData["Title"] = "Editar Grupo";
+    ViewData["Title"] = "Editar grupo";
+    var header = new AppPageHeaderViewModel
+    {
+        Eyebrow = "Pessoas",
+        Title = "Editar grupo",
+        Description = "Atualize o nome de um grupo oficial mantendo a edição alinhada ao restante da experiência de gestão da PoC.",
+        BadgeText = "Edição",
+        BadgeTone = "warning",
+        Actions = new[]
+        {
+            new PageHeaderActionViewModel { Label = "Voltar para grupos", Href = Url.Action("Index")!, ButtonClass = "btn btn-outline-secondary" }
+        }
+    };
 }
 
-<div class="container mt-5">
-    <h2>Editar Grupo</h2>
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <form asp-action="Edit" method="post" autocomplete="off">
-                <input type="hidden" asp-for="Id" />
-                <div class="mb-3">
+<div class="container mt-5 app-stack">
+    <partial name="_AppPageHeader" model="header" />
+
+    <section class="detail-card app-stack">
+        <div class="entity-overview">
+            <div class="entity-overview__item"><span>ID</span><strong>@Model.Id</strong></div>
+            <div class="entity-overview__item"><span>Nome atual</span><strong>@(string.IsNullOrWhiteSpace(Model.Name) ? "Não definido" : Model.Name)</strong></div>
+        </div>
+        <div class="app-note">Esta edição trabalha apenas com os campos confirmados para o objeto oficial `groups`.</div>
+    </section>
+
+    <section class="app-surface-card app-stack">
+        <div class="app-page-section__heading">
+            <div>
+                <strong>Atualizar grupo</strong>
+                <p>Altere o nome exibido para o grupo e mantenha a nomenclatura consistente com as regras e credenciais já associadas.</p>
+            </div>
+        </div>
+
+        <form asp-action="Edit" method="post" autocomplete="off" class="form-section">
+            <input type="hidden" asp-for="Id" />
+            <div class="app-form-grid">
+                <div>
                     <label asp-for="Name" class="form-label"></label>
                     <input asp-for="Name" class="form-control" />
                     <span asp-validation-for="Name" class="text-danger"></span>
                 </div>
-                <p class="text-muted small">
-                    Esta edição trabalha apenas com os campos confirmados para o objeto oficial `groups`.
-                </p>
-                <button type="submit" class="btn btn-primary">Salvar Alterações</button>
-                <a asp-action="Index" class="btn btn-secondary ms-2">Cancelar</a>
-            </form>
-        </div>
-    </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-warning">Salvar alterações</button>
+                <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
+            </div>
+        </form>
+    </section>
 </div>
+
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
 }

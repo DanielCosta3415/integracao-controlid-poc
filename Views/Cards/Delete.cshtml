@@ -1,16 +1,37 @@
 ﻿@model Integracao.ControlID.PoC.ViewModels.Cards.CardDeleteViewModel
 @{
-    ViewData["Title"] = "Excluir Cartão";
+    ViewData["Title"] = "Excluir cartão";
+    var header = new AppPageHeaderViewModel
+    {
+        Eyebrow = "Pessoas",
+        Title = "Excluir cartão",
+        Description = "Confirme a remoção da credencial com uma zona de risco clara e contexto suficiente para evitar exclusões acidentais.",
+        BadgeText = "Ação destrutiva",
+        BadgeTone = "danger",
+        Actions = new[]
+        {
+            new PageHeaderActionViewModel { Label = "Voltar para cartões", Href = Url.Action("Index")!, ButtonClass = "btn btn-outline-secondary" }
+        }
+    };
 }
 
-<div class="container mt-5">
-    <div class="alert alert-warning">
-        <h4>Confirmação</h4>
-        <p>Deseja realmente excluir o cartão <strong>@Model.Value</strong> do usuário <strong>@Model.UserId</strong>?</p>
-        <form asp-action="Delete" asp-route-id="@Model.Id" method="post">
-            @Html.AntiForgeryToken()
-            <button type="submit" class="btn btn-danger">Sim, excluir</button>
-            <a asp-action="Index" class="btn btn-secondary ms-2">Cancelar</a>
-        </form>
-    </div>
+<div class="container mt-5 app-stack">
+    <partial name="_AppPageHeader" model="header" />
+
+    <section class="detail-card app-stack danger-zone">
+        <div class="entity-overview">
+            <div class="entity-overview__item"><span>ID</span><strong>@Model.Id</strong></div>
+            <div class="entity-overview__item"><span>Usuário</span><strong>@Model.UserId</strong></div>
+            <div class="entity-overview__item"><span>Cartão</span><strong>@Model.Value</strong></div>
+        </div>
+        <div class="app-note">A exclusão remove a credencial do usuário selecionado. Confirme somente se não houver dependência ativa desse cartão em testes ou operação real.</div>
+
+        <div class="detail-actions">
+            <form asp-action="Delete" asp-route-id="@Model.Id" method="post" class="app-inline-form">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn btn-danger">Sim, excluir</button>
+            </form>
+            <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
+        </div>
+    </section>
 </div>

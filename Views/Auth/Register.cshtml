@@ -1,58 +1,78 @@
 ﻿@model Integracao.ControlID.PoC.ViewModels.Auth.RegisterViewModel
 @{
     ViewData["Title"] = "Registro";
+    var header = new AppPageHeaderViewModel
+    {
+        Eyebrow = "Operação",
+        Title = "Registrar novo usuário local",
+        Description = "Crie um usuário local da PoC com uma trilha de cadastro mais organizada, sem misturar esse fluxo com a autenticação oficial do equipamento.",
+        BadgeText = "Conta local",
+        BadgeTone = "info",
+        Actions = new[]
+        {
+            new PageHeaderActionViewModel { Label = "Ir para login", Href = Url.Action("Login")!, ButtonClass = "btn btn-outline-secondary" }
+        }
+    };
 }
 
-<div class="container mt-5">
+<div class="container mt-5 app-stack">
+    <partial name="_AppPageHeader" model="header" />
+
     <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card shadow-sm">
-                <div class="card-header bg-secondary text-white text-center">
-                    <h3>Registrar Novo Usuário</h3>
+        <div class="col-xl-8 col-lg-10">
+            <section class="app-surface-card app-stack">
+                <div class="app-page-section__heading">
+                    <div>
+                        <strong>Dados do usuário local</strong>
+                        <p>Preencha os dados cadastrais e a credencial de acesso ao contexto local da PoC.</p>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <form asp-action="Register" method="post" autocomplete="off">
-                        <div class="mb-3">
+
+                <form asp-action="Register" method="post" autocomplete="off" class="form-section">
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                    <div class="app-form-grid">
+                        <div>
                             <label asp-for="Name" class="form-label"></label>
                             <input asp-for="Name" class="form-control" />
                             <span asp-validation-for="Name" class="text-danger"></span>
                         </div>
-                        <div class="mb-3">
+                        <div>
                             <label asp-for="Username" class="form-label"></label>
                             <input asp-for="Username" class="form-control" />
                             <span asp-validation-for="Username" class="text-danger"></span>
                         </div>
-                        <div class="mb-3">
+                        <div>
                             <label asp-for="Email" class="form-label"></label>
                             <input asp-for="Email" class="form-control" />
                             <span asp-validation-for="Email" class="text-danger"></span>
                         </div>
-                        <div class="mb-3">
+                        <div>
                             <label asp-for="Phone" class="form-label"></label>
                             <input asp-for="Phone" class="form-control" />
                             <span asp-validation-for="Phone" class="text-danger"></span>
                         </div>
-                        <div class="mb-3">
+                        <div>
                             <label asp-for="Password" class="form-label"></label>
                             <input asp-for="Password" class="form-control" type="password" />
                             <span asp-validation-for="Password" class="text-danger"></span>
                         </div>
-                        <div class="mb-3">
+                        <div>
                             <label asp-for="ConfirmPassword" class="form-label"></label>
                             <input asp-for="ConfirmPassword" class="form-control" type="password" />
                             <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
                         </div>
-                        <button type="submit" class="btn btn-primary w-100">Registrar</button>
-                    </form>
-                    <hr />
-                    <div class="text-center">
-                        <a asp-action="Login">Já possui conta? Faça login</a>
                     </div>
-                </div>
-            </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Registrar usuário</button>
+                        <a asp-action="Login" class="btn btn-outline-secondary">Já possui conta</a>
+                    </div>
+                </form>
+            </section>
         </div>
     </div>
 </div>
+
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
 }

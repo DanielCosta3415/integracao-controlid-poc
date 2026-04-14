@@ -1,27 +1,56 @@
 ﻿@model Integracao.ControlID.PoC.ViewModels.Groups.GroupEditViewModel
 @{
-    ViewData["Title"] = "Novo Grupo";
+    ViewData["Title"] = "Novo grupo";
+    var header = new AppPageHeaderViewModel
+    {
+        Eyebrow = "Pessoas",
+        Title = "Novo grupo",
+        Description = "Crie um grupo oficial usando apenas os campos confirmados do objeto `groups`, em uma tela mais clara para gestão de credenciais.",
+        BadgeText = "Criação",
+        BadgeTone = "info",
+        Actions = new[]
+        {
+            new PageHeaderActionViewModel { Label = "Voltar para grupos", Href = Url.Action("Index")!, ButtonClass = "btn btn-outline-secondary" }
+        }
+    };
 }
 
-<div class="container mt-5">
-    <h2>Novo Grupo</h2>
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <form asp-action="Create" method="post" autocomplete="off">
-                <div class="mb-3">
+<div class="container mt-5 app-stack">
+    <partial name="_AppPageHeader" model="header" />
+
+    <section class="detail-card app-stack">
+        <div class="entity-overview">
+            <div class="entity-overview__item"><span>Nome</span><strong>@(string.IsNullOrWhiteSpace(Model.Name) ? "Não definido" : Model.Name)</strong></div>
+            <div class="entity-overview__item"><span>Objeto oficial</span><strong>groups</strong></div>
+        </div>
+        <div class="app-note">A camada oficial trabalha com os campos `id` e `name`. Use nomes claros para facilitar políticas de acesso e troubleshooting.</div>
+    </section>
+
+    <section class="app-surface-card app-stack">
+        <div class="app-page-section__heading">
+            <div>
+                <strong>Dados do grupo</strong>
+                <p>Informe o nome do grupo que será criado e disponibilizado para vínculo com regras e credenciais.</p>
+            </div>
+        </div>
+
+        <form asp-action="Create" method="post" autocomplete="off" class="form-section">
+            <div class="app-form-grid">
+                <div>
                     <label asp-for="Name" class="form-label"></label>
                     <input asp-for="Name" class="form-control" />
                     <span asp-validation-for="Name" class="text-danger"></span>
                 </div>
-                <p class="text-muted small">
-                    A camada oficial atual usa o objeto `groups`, composto pelos campos documentados `id` e `name`.
-                </p>
-                <button type="submit" class="btn btn-success">Salvar</button>
-                <a asp-action="Index" class="btn btn-secondary ms-2">Cancelar</a>
-            </form>
-        </div>
-    </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Salvar grupo</button>
+                <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
+            </div>
+        </form>
+    </section>
 </div>
+
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
 }

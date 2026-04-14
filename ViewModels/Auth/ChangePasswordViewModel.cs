@@ -2,11 +2,12 @@
 
 namespace Integracao.ControlID.PoC.ViewModels.Auth
 {
-    /// <summary>
-    /// ViewModel para troca de senha do usuário local.
-    /// </summary>
     public class ChangePasswordViewModel
     {
+        [Required(ErrorMessage = "Usuário obrigatório.")]
+        [Display(Name = "Usuário local")]
+        public string Username { get; set; } = string.Empty;
+
         [Required(ErrorMessage = "Senha atual obrigatória.")]
         [DataType(DataType.Password)]
         [Display(Name = "Senha atual")]

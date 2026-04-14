@@ -1,34 +1,15 @@
 ﻿@model Integracao.ControlID.PoC.ViewModels.RemoteActions.RemoteActionExecuteViewModel
 @{
-    ViewData["Title"] = "Executar Ação Remota";
+    ViewData["Title"] = "Executar ação remota";
+    var header = new AppPageHeaderViewModel
+    {
+        Eyebrow = "Operação",
+        Title = "Executar ação remota",
+        Description = "Dispare comandos remotos com uma trilha de entrada mais clara para ação, porta e mensagem contextual.",
+        BadgeText = "Comando",
+        BadgeTone = "warning",
+        Actions = new[] { new PageHeaderActionViewModel { Label = "Voltar para ações remotas", Href = Url.Action("Index")!, ButtonClass = "btn btn-outline-secondary" } }
+    };
 }
-
-<div class="container mt-5">
-    <h2>Executar Ação Remota</h2>
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <form asp-action="Execute" method="post" autocomplete="off">
-                <div class="mb-3">
-                    <label asp-for="Action" class="form-label"></label>
-                    <input asp-for="Action" class="form-control" />
-                    <span asp-validation-for="Action" class="text-danger"></span>
-                </div>
-                <div class="mb-3">
-                    <label asp-for="Door" class="form-label"></label>
-                    <input asp-for="Door" class="form-control" />
-                    <span asp-validation-for="Door" class="text-danger"></span>
-                </div>
-                <div class="mb-3">
-                    <label asp-for="Message" class="form-label"></label>
-                    <input asp-for="Message" class="form-control" />
-                    <span asp-validation-for="Message" class="text-danger"></span>
-                </div>
-                <button type="submit" class="btn btn-primary">Executar</button>
-                <a asp-action="Index" class="btn btn-secondary ms-2">Cancelar</a>
-            </form>
-        </div>
-    </div>
-</div>
-@section Scripts {
-    <partial name="_ValidationScriptsPartial" />
-}
+<div class="container mt-5 app-stack"><partial name="_AppPageHeader" model="header" /><section class="detail-card app-stack"><div class="entity-overview"><div class="entity-overview__item"><span>Ação</span><strong>@(string.IsNullOrWhiteSpace(Model.Action) ? "Não definida" : Model.Action)</strong></div><div class="entity-overview__item"><span>Porta</span><strong>@(Model.Door.HasValue ? Model.Door.Value.ToString() : "Não definida")</strong></div><div class="entity-overview__item"><span>Mensagem</span><strong>@(string.IsNullOrWhiteSpace(Model.Message) ? "Sem mensagem" : Model.Message)</strong></div></div></section><section class="app-surface-card app-stack"><div class="app-page-section__heading"><div><strong>Parâmetros do comando</strong><p>Informe a ação remota e os parâmetros adicionais exigidos pelo fluxo que será executado.</p></div></div><form asp-action="Execute" method="post" autocomplete="off" class="form-section"><div class="app-form-grid"><div><label asp-for="Action" class="form-label"></label><input asp-for="Action" class="form-control" /><span asp-validation-for="Action" class="text-danger"></span></div><div><label asp-for="Door" class="form-label"></label><input asp-for="Door" class="form-control" /><span asp-validation-for="Door" class="text-danger"></span></div><div class="app-form-grid__full"><label asp-for="Message" class="form-label"></label><input asp-for="Message" class="form-control" /><span asp-validation-for="Message" class="text-danger"></span></div></div><div class="form-actions"><button type="submit" class="btn btn-warning">Executar comando</button><a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a></div></form></section></div>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

@@ -1,4 +1,4 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace Integracao.ControlID.PoC.ViewModels.RemoteActions
 {
@@ -9,7 +9,7 @@ namespace Integracao.ControlID.PoC.ViewModels.RemoteActions
         public string Type { get; set; } = "face";
 
         [Required(ErrorMessage = "Informe o ID do usuário.")]
-        [Display(Name = "ID do Usuário")]
+        [Display(Name = "ID do usuário")]
         public long UserId { get; set; }
 
         [Display(Name = "Salvar no equipamento")]

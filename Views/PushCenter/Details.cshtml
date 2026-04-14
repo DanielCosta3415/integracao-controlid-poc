@@ -1,31 +1,16 @@
-@model Integracao.ControlID.PoC.ViewModels.Push.PushEventViewModel
+﻿@model Integracao.ControlID.PoC.ViewModels.Push.PushEventViewModel
 @{
-    ViewData["Title"] = "Detalhes do Comando Push";
+    ViewData["Title"] = "Detalhes do comando push";
+    var header = new AppPageHeaderViewModel
+    {
+        Eyebrow = "Observabilidade",
+        Title = "Detalhes do comando push",
+        Description = "Consulte o payload, o JSON bruto e o status do comando push persistido pela PoC.",
+        BadgeText = Model.Status,
+        BadgeTone = "neutral",
+        Actions = new[] { new PageHeaderActionViewModel { Label = "Voltar para central push", Href = Url.Action("Index")!, ButtonClass = "btn btn-outline-secondary" } }
+    };
+    var rawPanel = new RawResponsePanelViewModel { Title = "JSON bruto", Description = "Carga oficial armazenada para este comando push.", Content = string.IsNullOrWhiteSpace(Model.RawJson) ? "Sem JSON bruto disponível." : Model.RawJson, PanelId = "push-center-details-raw", BadgeText = "Raw", BadgeTone = "neutral" };
+    var payloadPanel = new RawResponsePanelViewModel { Title = "Payload interpretado", Description = "Payload consolidado do comando recebido.", Content = string.IsNullOrWhiteSpace(Model.Payload) ? "Sem payload disponível." : Model.Payload, PanelId = "push-center-details-payload", BadgeText = "Payload", BadgeTone = "info" };
 }
-
-<div class="container mt-5">
-    <h2>Detalhes do Comando Push</h2>
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <dl class="row">
-                <dt class="col-sm-3">ID</dt>
-                <dd class="col-sm-9">@Model.EventId</dd>
-                <dt class="col-sm-3">Recebido em</dt>
-                <dd class="col-sm-9">@Model.ReceivedAt.ToString("dd/MM/yyyy HH:mm:ss")</dd>
-                <dt class="col-sm-3">Tipo</dt>
-                <dd class="col-sm-9">@Model.CommandType</dd>
-                <dt class="col-sm-3">Status</dt>
-                <dd class="col-sm-9">@Model.Status</dd>
-                <dt class="col-sm-3">Dispositivo</dt>
-                <dd class="col-sm-9">@Model.DeviceId</dd>
-                <dt class="col-sm-3">Usuário</dt>
-                <dd class="col-sm-9">@Model.UserId</dd>
-                <dt class="col-sm-3">Payload</dt>
-                <dd class="col-sm-9"><pre>@Model.Payload</pre></dd>
-                <dt class="col-sm-3">JSON bruto</dt>
-                <dd class="col-sm-9"><pre>@Model.RawJson</pre></dd>
-            </dl>
-            <a asp-action="Index" class="btn btn-secondary">Voltar</a>
-        </div>
-    </div>
-</div>
+<div class="container mt-5 app-stack"><partial name="_AppPageHeader" model="header" /><section class="detail-card app-stack"><div class="entity-overview"><div class="entity-overview__item"><span>ID</span><strong>@Model.EventId</strong></div><div class="entity-overview__item"><span>Tipo</span><strong>@Model.CommandType</strong></div><div class="entity-overview__item"><span>Dispositivo</span><strong>@Model.DeviceId</strong></div><div class="entity-overview__item"><span>Usuário</span><strong>@Model.UserId</strong></div></div></section><section class="app-surface-card app-stack"><div class="app-page-section__heading"><div><strong>Metadados do comando</strong><p>Resumo operacional do evento push recebido e persistido localmente.</p></div></div><dl class="row"><dt class="col-sm-3">ID</dt><dd class="col-sm-9">@Model.EventId</dd><dt class="col-sm-3">Recebido em</dt><dd class="col-sm-9">@Model.ReceivedAt.ToString("dd/MM/yyyy HH:mm:ss")</dd><dt class="col-sm-3">Tipo</dt><dd class="col-sm-9">@Model.CommandType</dd><dt class="col-sm-3">Status</dt><dd class="col-sm-9">@Model.Status</dd><dt class="col-sm-3">Dispositivo</dt><dd class="col-sm-9">@Model.DeviceId</dd><dt class="col-sm-3">Usuário</dt><dd class="col-sm-9">@Model.UserId</dd></dl></section><partial name="_RawResponsePanel" model="payloadPanel" /><partial name="_RawResponsePanel" model="rawPanel" /></div>

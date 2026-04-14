@@ -1,4 +1,4 @@
-using Integracao.ControlID.PoC.Models.ControlIDApi;
+﻿using Integracao.ControlID.PoC.Models.ControlIDApi;
 using Integracao.ControlID.PoC.Services.ControlIDApi;
 using Integracao.ControlID.PoC.ViewModels.OfficialApi;
 using Microsoft.AspNetCore.Http;
@@ -122,3 +122,4 @@ namespace Integracao.ControlID.PoC.Controllers
         }
     }
 }
+

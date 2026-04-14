@@ -1,31 +1,15 @@
 ﻿@model Integracao.ControlID.PoC.ViewModels.Media.PhotoUploadViewModel
 @{
-    ViewData["Title"] = "Upload de Foto";
+    ViewData["Title"] = "Upload de foto";
+    var header = new AppPageHeaderViewModel
+    {
+        Eyebrow = "Pessoas",
+        Title = "Upload de foto de usuário",
+        Description = "Envie uma nova foto facial para o usuário usando o endpoint oficial `user_set_image.fcgi`.",
+        BadgeText = "Mídia",
+        BadgeTone = "info",
+        Actions = new[] { new PageHeaderActionViewModel { Label = "Voltar para fotos", Href = Url.Action("Index")!, ButtonClass = "btn btn-outline-secondary" } }
+    };
 }
-
-<div class="container mt-5">
-    <h2>Upload de Foto de Usuário</h2>
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <form asp-action="Upload" method="post" enctype="multipart/form-data" autocomplete="off">
-                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
-                <div class="mb-3">
-                    <label asp-for="UserId" class="form-label"></label>
-                    <input asp-for="UserId" class="form-control" />
-                    <span asp-validation-for="UserId" class="text-danger"></span>
-                </div>
-                <div class="mb-3">
-                    <label asp-for="PhotoFile" class="form-label"></label>
-                    <input asp-for="PhotoFile" class="form-control" type="file" accept="image/*" />
-                    <span asp-validation-for="PhotoFile" class="text-danger"></span>
-                </div>
-                <div class="form-text mb-3">Esta tela usa o endpoint oficial <code>user_set_image.fcgi</code>.</div>
-                <button type="submit" class="btn btn-success">Enviar</button>
-                <a asp-action="Index" class="btn btn-secondary ms-2">Cancelar</a>
-            </form>
-        </div>
-    </div>
-</div>
-@section Scripts {
-    <partial name="_ValidationScriptsPartial" />
-}
+<div class="container mt-5 app-stack"><partial name="_AppPageHeader" model="header" /><section class="detail-card app-stack"><div class="entity-overview"><div class="entity-overview__item"><span>Usuário</span><strong>@(Model.UserId == 0 ? "Não definido" : Model.UserId)</strong></div><div class="entity-overview__item"><span>Fluxo</span><strong>user_set_image.fcgi</strong></div></div></section><section class="app-surface-card app-stack"><div class="app-page-section__heading"><div><strong>Arquivo da foto</strong><p>Selecione a imagem e o usuário de destino antes de enviar a foto facial ao equipamento.</p></div></div><form asp-action="Upload" method="post" enctype="multipart/form-data" autocomplete="off" class="form-section"><div asp-validation-summary="ModelOnly" class="text-danger"></div><div class="app-form-grid"><div><label asp-for="UserId" class="form-label"></label><input asp-for="UserId" class="form-control" /><span asp-validation-for="UserId" class="text-danger"></span></div><div><label asp-for="PhotoFile" class="form-label"></label><input asp-for="PhotoFile" class="form-control" type="file" accept="image/*" /><span asp-validation-for="PhotoFile" class="text-danger"></span></div></div><div class="form-actions"><button type="submit" class="btn btn-primary">Enviar foto</button><a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a></div></form></section></div>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

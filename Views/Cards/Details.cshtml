@@ -1,32 +1,58 @@
 ﻿@model Integracao.ControlID.PoC.ViewModels.Cards.CardViewModel
 @{
-    ViewData["Title"] = "Detalhes do Cartão";
+    ViewData["Title"] = "Detalhes do cartão";
+    var header = new AppPageHeaderViewModel
+    {
+        Eyebrow = "Pessoas",
+        Title = "Detalhes do cartão",
+        Description = "Inspecione a credencial selecionada antes de editar a validade, o status ou o vínculo com o usuário.",
+        BadgeText = "Detalhe",
+        BadgeTone = "neutral",
+        Actions = new[]
+        {
+            new PageHeaderActionViewModel { Label = "Editar", Href = Url.Action("Edit", new { id = Model.Id })!, ButtonClass = "btn btn-primary" },
+            new PageHeaderActionViewModel { Label = "Voltar para cartões", Href = Url.Action("Index")!, ButtonClass = "btn btn-outline-secondary" }
+        }
+    };
 }
 
-<div class="container mt-5">
-    <h2>Detalhes do Cartão</h2>
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <dl class="row">
-                <dt class="col-sm-3">ID</dt>
-                <dd class="col-sm-9">@Model.Id</dd>
-                <dt class="col-sm-3">Usuário</dt>
-                <dd class="col-sm-9">@Model.UserId</dd>
-                <dt class="col-sm-3">Valor</dt>
-                <dd class="col-sm-9">@Model.Value</dd>
-                <dt class="col-sm-3">Tipo</dt>
-                <dd class="col-sm-9">@Model.Type</dd>
-                <dt class="col-sm-3">Status</dt>
-                <dd class="col-sm-9">@Model.Status</dd>
-                <dt class="col-sm-3">Validade Início</dt>
-                <dd class="col-sm-9">@Model.BeginTime?.ToString("dd/MM/yyyy HH:mm") ?? "-"</dd>
-                <dt class="col-sm-3">Validade Fim</dt>
-                <dd class="col-sm-9">@Model.EndTime?.ToString("dd/MM/yyyy HH:mm") ?? "-"</dd>
-                <dt class="col-sm-3">Criado em</dt>
-                <dd class="col-sm-9">@Model.CreatedAt?.ToString("dd/MM/yyyy HH:mm") ?? "-"</dd>
-            </dl>
-            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Editar</a>
-            <a asp-action="Index" class="btn btn-secondary ms-2">Voltar</a>
+<div class="container mt-5 app-stack">
+    <partial name="_AppPageHeader" model="header" />
+
+    <section class="detail-card app-stack">
+        <div class="entity-overview">
+            <div class="entity-overview__item"><span>ID</span><strong>@Model.Id</strong></div>
+            <div class="entity-overview__item"><span>Usuário</span><strong>@Model.UserId</strong></div>
+            <div class="entity-overview__item"><span>Status</span><strong>@Model.Status</strong></div>
+            <div class="entity-overview__item"><span>Tipo</span><strong>@Model.Type</strong></div>
         </div>
-    </div>
+    </section>
+
+    <section class="app-surface-card app-stack">
+        <div class="app-page-section__heading">
+            <div>
+                <strong>Dados da credencial</strong>
+                <p>Visualização completa dos campos retornados para o cartão selecionado.</p>
+            </div>
+        </div>
+
+        <dl class="row">
+            <dt class="col-sm-3">ID</dt>
+            <dd class="col-sm-9">@Model.Id</dd>
+            <dt class="col-sm-3">Usuário</dt>
+            <dd class="col-sm-9">@Model.UserId</dd>
+            <dt class="col-sm-3">Valor</dt>
+            <dd class="col-sm-9">@Model.Value</dd>
+            <dt class="col-sm-3">Tipo</dt>
+            <dd class="col-sm-9">@Model.Type</dd>
+            <dt class="col-sm-3">Status</dt>
+            <dd class="col-sm-9">@Model.Status</dd>
+            <dt class="col-sm-3">Validade início</dt>
+            <dd class="col-sm-9">@(Model.BeginTime?.ToString("dd/MM/yyyy HH:mm") ?? "-")</dd>
+            <dt class="col-sm-3">Validade fim</dt>
+            <dd class="col-sm-9">@(Model.EndTime?.ToString("dd/MM/yyyy HH:mm") ?? "-")</dd>
+            <dt class="col-sm-3">Criado em</dt>
+            <dd class="col-sm-9">@(Model.CreatedAt?.ToString("dd/MM/yyyy HH:mm") ?? "-")</dd>
+        </dl>
+    </section>
 </div>

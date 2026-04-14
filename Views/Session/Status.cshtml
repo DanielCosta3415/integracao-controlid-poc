@@ -1,18 +1,46 @@
-@model Integracao.ControlID.PoC.ViewModels.Session.SessionStatusViewModel
+﻿@model Integracao.ControlID.PoC.ViewModels.Session.SessionStatusViewModel
 @{
     ViewData["Title"] = "Status da Sessão";
+    var header = new AppPageHeaderViewModel
+    {
+        Eyebrow = "Operação",
+        Title = "Status da sessão",
+        Description = "Valide rapidamente o contexto local persistido pela PoC antes de seguir para endpoints que exigem sessão ativa no equipamento.",
+        BadgeText = string.IsNullOrWhiteSpace(Model.SessionString) ? "Sessão ausente" : "Sessão em contexto",
+        BadgeTone = string.IsNullOrWhiteSpace(Model.SessionString) ? "warning" : "success",
+        Actions = new[]
+        {
+            new PageHeaderActionViewModel { Label = "Ver sessões persistidas", Href = Url.Action("Index")!, ButtonClass = "btn btn-outline-secondary" },
+            new PageHeaderActionViewModel { Label = "Tela de autenticação", Href = Url.Action("Login", "Auth")!, ButtonClass = "btn btn-primary" }
+        }
+    };
 }
 
-<div class="container mt-5">
-    <h2>Status da Sessão</h2>
+<div class="container mt-5 app-stack">
+    <partial name="_AppPageHeader" model="header" />
 
     @if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
     {
         <div class="alert alert-@(Model.StatusType ?? "info")">@Model.StatusMessage</div>
     }
 
-    <div class="card shadow-sm">
-        <div class="card-body">
+    <section class="detail-card app-stack">
+        <div class="entity-overview">
+            <div class="entity-overview__item"><span>Dispositivo</span><strong>@(!string.IsNullOrWhiteSpace(Model.DeviceAddress) ? Model.DeviceAddress : "Não definido")</strong></div>
+            <div class="entity-overview__item"><span>Sessão</span><strong>@(!string.IsNullOrWhiteSpace(Model.SessionString) ? "Disponível" : "Vazia")</strong></div>
+        </div>
+        <div class="app-note">Use esta tela para validar o contexto local antes de chamar autenticação oficial, endpoints protegidos ou limpeza manual da sessão persistida no navegador.</div>
+    </section>
+
+    <section class="app-grid-two app-grid-two--main">
+        <section class="app-surface-card app-stack">
+            <div class="app-page-section__heading">
+                <div>
+                    <strong>Contexto atual</strong>
+                    <p>Resumo do endereço do equipamento em uso e do valor local da sessão, exatamente como a PoC irá reutilizar nos fluxos oficiais.</p>
+                </div>
+            </div>
+
             <dl class="row">
                 <dt class="col-sm-3">Dispositivo</dt>
                 <dd class="col-sm-9">@(!string.IsNullOrWhiteSpace(Model.DeviceAddress) ? Model.DeviceAddress : "-")</dd>
@@ -20,15 +48,26 @@
                 <dt class="col-sm-3">Sessão</dt>
                 <dd class="col-sm-9"><code>@(!string.IsNullOrWhiteSpace(Model.SessionString) ? Model.SessionString : "-")</code></dd>
             </dl>
+        </section>
 
-            <form asp-action="Validate" method="post" class="d-inline">
-                @Html.AntiForgeryToken()
-                <button type="submit" class="btn btn-primary">Validar Sessão</button>
-            </form>
-            <form asp-action="Clear" method="post" class="d-inline ms-2">
-                @Html.AntiForgeryToken()
-                <button type="submit" class="btn btn-outline-danger">Limpar Sessão Local</button>
-            </form>
-        </div>
-    </div>
+        <section class="app-surface-card app-stack">
+            <div class="app-page-section__heading">
+                <div>
+                    <strong>Ações rápidas</strong>
+                    <p>Valide a sessão junto ao equipamento ou limpe apenas o contexto local armazenado pela PoC.</p>
+                </div>
+            </div>
+
+            <div class="detail-actions">
+                <form asp-action="Validate" method="post" class="app-inline-form">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-primary">Validar sessão</button>
+                </form>
+                <form asp-action="Clear" method="post" class="app-inline-form">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-outline-danger">Limpar sessão local</button>
+                </form>
+            </div>
+        </section>
+    </section>
 </div>

@@ -1,20 +1,44 @@
 ﻿@model Integracao.ControlID.PoC.ViewModels.Groups.GroupViewModel
 @{
-    ViewData["Title"] = "Detalhes do Grupo";
+    ViewData["Title"] = "Detalhes do grupo";
+    var header = new AppPageHeaderViewModel
+    {
+        Eyebrow = "Pessoas",
+        Title = "Detalhes do grupo",
+        Description = "Consulte rapidamente os dados principais do grupo oficial antes de editar ou remover esse registro.",
+        BadgeText = "Consulta",
+        BadgeTone = "neutral",
+        Actions = new[]
+        {
+            new PageHeaderActionViewModel { Label = "Editar grupo", Href = Url.Action("Edit", new { id = Model.Id })!, ButtonClass = "btn btn-primary" },
+            new PageHeaderActionViewModel { Label = "Voltar para grupos", Href = Url.Action("Index")!, ButtonClass = "btn btn-outline-secondary" }
+        }
+    };
 }
 
-<div class="container mt-5">
-    <h2>Detalhes do Grupo</h2>
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <dl class="row">
-                <dt class="col-sm-3">ID</dt>
-                <dd class="col-sm-9">@Model.Id</dd>
-                <dt class="col-sm-3">Nome</dt>
-                <dd class="col-sm-9">@Model.Name</dd>
-            </dl>
-            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Editar</a>
-            <a asp-action="Index" class="btn btn-secondary ms-2">Voltar</a>
+<div class="container mt-5 app-stack">
+    <partial name="_AppPageHeader" model="header" />
+
+    <section class="detail-card app-stack">
+        <div class="entity-overview">
+            <div class="entity-overview__item"><span>ID</span><strong>@Model.Id</strong></div>
+            <div class="entity-overview__item"><span>Nome</span><strong>@Model.Name</strong></div>
         </div>
-    </div>
+    </section>
+
+    <section class="app-surface-card app-stack">
+        <div class="app-page-section__heading">
+            <div>
+                <strong>Resumo do grupo</strong>
+                <p>Visualização consolidada dos campos oficiais hoje usados pelo objeto `groups` na PoC.</p>
+            </div>
+        </div>
+
+        <dl class="row">
+            <dt class="col-sm-3">ID</dt>
+            <dd class="col-sm-9">@Model.Id</dd>
+            <dt class="col-sm-3">Nome</dt>
+            <dd class="col-sm-9">@Model.Name</dd>
+        </dl>
+    </section>
 </div>
