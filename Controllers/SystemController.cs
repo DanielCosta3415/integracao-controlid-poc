@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using Integracao.ControlID.PoC.Models.ControlIDApi;
 using Integracao.ControlID.PoC.Services.ControlIDApi;
+using Integracao.ControlID.PoC.Services.Files;
 using Integracao.ControlID.PoC.ViewModels.System;
 using Integracao.ControlID.PoC.Helpers;
 using Microsoft.AspNetCore.Mvc;
@@ -13,11 +14,16 @@ namespace Integracao.ControlID.PoC.Controllers
     public class SystemController : Controller
     {
         private readonly OfficialControlIdApiService _apiService;
+        private readonly UploadedFileBase64Encoder _fileEncoder;
         private readonly ILogger<SystemController> _logger;
 
-        public SystemController(OfficialControlIdApiService apiService, ILogger<SystemController> logger)
+        public SystemController(
+            OfficialControlIdApiService apiService,
+            UploadedFileBase64Encoder fileEncoder,
+            ILogger<SystemController> logger)
         {
             _apiService = apiService;
+            _fileEncoder = fileEncoder;
             _logger = logger;
         }
 
@@ -372,11 +378,8 @@ namespace Integracao.ControlID.PoC.Controllers
 
             try
             {
-                await using var stream = model.CertificateFile.OpenReadStream();
-                using var memoryStream = new MemoryStream();
-                await stream.CopyToAsync(memoryStream);
-
-                var result = await _apiService.InvokeAsync("ssl-certificate-change", Convert.ToBase64String(memoryStream.ToArray()));
+                var base64Certificate = await _fileEncoder.EncodeAsync(model.CertificateFile, "Selecione um certificado SSL para enviar.");
+                var result = await _apiService.InvokeAsync("ssl-certificate-change", base64Certificate);
                 if (!result.Success)
                     throw new InvalidOperationException(BuildErrorMessage(result, "Erro ao enviar certificado SSL"));
 
@@ -461,16 +464,13 @@ namespace Integracao.ControlID.PoC.Controllers
 
             try
             {
-                await using var stream = model.VpnFile.OpenReadStream();
-                using var memoryStream = new MemoryStream();
-                await stream.CopyToAsync(memoryStream);
-
                 var fileName = model.VpnFile.FileName ?? string.Empty;
                 var fileType = fileName.EndsWith(".zip", StringComparison.OrdinalIgnoreCase) ? "zip" : "config";
+                var base64VpnFile = await _fileEncoder.EncodeAsync(model.VpnFile, "Selecione um arquivo OpenVPN para enviar.");
 
                 var result = await _apiService.InvokeAsync(
                     "set-vpn-file",
-                    Convert.ToBase64String(memoryStream.ToArray()),
+                    base64VpnFile,
                     $"file_type={fileType}");
 
                 if (!result.Success)

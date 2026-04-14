@@ -29,51 +29,8 @@
         }
     };
 
-    var accessAudioAvailable =
-        (Model.AccessAudioHasNotIdentified ? 1 : 0) +
-        (Model.AccessAudioHasAuthorized ? 1 : 0) +
-        (Model.AccessAudioHasNotAuthorized ? 1 : 0) +
-        (Model.AccessAudioHasUseMask ? 1 : 0);
-
-    var responseTitle = Model.ActiveSection switch
-    {
-        "upgrades" => "Resposta dos upgrades",
-        "facial" => "Resposta das configurações faciais",
-        "qr" => "Resposta do QR Code e TOTP",
-        "power" => "Resposta de energia e screenshot",
-        "streaming" => "Resposta do streaming",
-        "sip" => "Resposta do intercom SIP",
-        "sip-audio" => "Resposta do toque personalizado do SIP",
-        "access-audio" => "Resposta dos áudios de eventos",
-        "signals" => "Resposta dos sinais configuráveis",
-        _ => "Última resposta oficial"
-    };
-
-    var responseDescription = Model.ActiveSection switch
-    {
-        "upgrades" => "Retorno bruto das rotinas de upgrade de licença.",
-        "facial" => "Retorno bruto do conjunto de reconhecimento facial e métodos de identificação.",
-        "qr" => "Retorno bruto das definições de QR Code, legado e TOTP.",
-        "power" => "Retorno bruto do ajuste de energia, display, áudio e screenshot.",
-        "streaming" => "Retorno bruto das definições de RTSP, ONVIF e marca d'água.",
-        "sip" => "Retorno bruto da configuração do intercom e dos comandos de chamada.",
-        "sip-audio" => "Retorno bruto das operações de envio, verificação ou download do toque SIP.",
-        "access-audio" => "Retorno bruto das operações de áudio por evento do iDFace.",
-        "signals" => "Retorno bruto das saídas customizadas e do refresh de LEDs.",
-        _ => "JSON bruto da última operação executada nesta superfície."
-    };
-
-    var responsePanel = string.IsNullOrWhiteSpace(Model.ResponseJson)
-        ? null
-        : new RawResponsePanelViewModel
-        {
-            Title = responseTitle,
-            Description = responseDescription,
-            Content = Model.ResponseJson,
-            PanelId = "product-specific-response-json",
-            BadgeText = string.IsNullOrWhiteSpace(Model.ResultStatusType) ? "Retorno técnico" : Model.ResultStatusType,
-            BadgeTone = string.IsNullOrWhiteSpace(Model.ResultStatusType) ? "neutral" : Model.ResultStatusType
-        };
+    var accessAudioAvailable = ProductSpecificPresentationHelper.CountConfiguredAccessAudioEvents(Model);
+    var responsePanel = ProductSpecificPresentationHelper.BuildResponsePanel(Model);
 }
 
 <div class="container mt-5 app-stack product-specific-shell">

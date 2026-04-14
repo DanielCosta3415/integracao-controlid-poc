@@ -2,6 +2,7 @@
 using System.Text.Json;
 using Integracao.ControlID.PoC.Models.ControlIDApi;
 using Integracao.ControlID.PoC.Services.ControlIDApi;
+using Integracao.ControlID.PoC.Services.Files;
 using Integracao.ControlID.PoC.ViewModels.Hardware;
 using Integracao.ControlID.PoC.Helpers;
 using Microsoft.AspNetCore.Mvc;
@@ -11,11 +12,16 @@ namespace Integracao.ControlID.PoC.Controllers
     public class HardwareController : Controller
     {
         private readonly OfficialControlIdApiService _apiService;
+        private readonly UploadedFileBase64Encoder _fileEncoder;
         private readonly ILogger<HardwareController> _logger;
 
-        public HardwareController(OfficialControlIdApiService apiService, ILogger<HardwareController> logger)
+        public HardwareController(
+            OfficialControlIdApiService apiService,
+            UploadedFileBase64Encoder fileEncoder,
+            ILogger<HardwareController> logger)
         {
             _apiService = apiService;
+            _fileEncoder = fileEncoder;
             _logger = logger;
         }
 
@@ -306,11 +312,8 @@ namespace Integracao.ControlID.PoC.Controllers
 
             try
             {
-                await using var stream = model.BiometryFile.OpenReadStream();
-                using var memoryStream = new MemoryStream();
-                await stream.CopyToAsync(memoryStream);
-
-                var result = await _apiService.InvokeAsync("validate-biometry", Convert.ToBase64String(memoryStream.ToArray()));
+                var base64Biometry = await _fileEncoder.EncodeAsync(model.BiometryFile, "Selecione um arquivo de biometria para validação.");
+                var result = await _apiService.InvokeAsync("validate-biometry", base64Biometry);
                 if (!result.Success)
                     throw new InvalidOperationException(BuildErrorMessage(result, "Erro ao validar biometria"));
 

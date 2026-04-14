@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Integracao.ControlID.PoC.Services.ControlIDApi
 {
-    public class OfficialControlIdApiService
+    public class OfficialControlIdApiService : IOfficialControlIdApiService
     {
         private const string SessionDeviceAddressKey = "ControlID_DeviceAddress";
         private const string SessionSessionStringKey = "ControlID_SessionString";
