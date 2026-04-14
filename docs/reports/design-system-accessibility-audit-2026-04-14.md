@@ -25,6 +25,18 @@ Escopo: todas as superfícies atuais da PoC, com ênfase em shell global, busca 
    - Alguns textos auxiliares e estados discretos do topo continuavam mais apagados do que o restante do design system.
    - O objetivo desta passada foi reforçar consistência sem inflar ainda mais o shell.
 
+6. Proporção visual irregular nos domínios e no mapa funcional.
+   - Os domínios `Pessoas e credenciais` e `API e exploração técnica` exibiam cards grandes demais para a largura disponível, com CTAs dominando o bloco e sensação de vazamento visual.
+   - A taxonomia principal versus apoio ainda estava fraca, especialmente quando módulos especializados apareciam com o mesmo peso dos módulos recomendados.
+
+7. Densidade excessiva nas superfícies técnicas de catálogo.
+   - `Catálogo oficial da API` e `Recursos oficiais avançados` ainda repetiam o padrão de cards com CTA inflado, pouca diferenciação entre bloco principal e apoio e excesso de elementos competindo no mesmo nível visual.
+   - No catálogo, o volume de endpoints pedia uma leitura mais editorial e menos parecida com uma parede homogênea de cards.
+
+8. Estouro visual de endpoints e rótulos técnicos longos.
+   - Parte das rotas técnicas ainda ficava espremida no topo dos cards, causando sensação de vazamento para fora do bloco em telas mais densas.
+   - Havia também resquícios de linguagem híbrida entre português e termos internos de engenharia, como `workspace` e `troubleshooting`, em superfícies já modernizadas.
+
 ## Correções aplicadas
 
 1. Busca global e navegação superior.
@@ -43,6 +55,18 @@ Escopo: todas as superfícies atuais da PoC, com ênfase em shell global, busca 
 4. Acessibilidade.
    - Campos, botões, links de ação e tabelas continuam recebendo reforço progressivo de `aria-label`, `caption` e rótulos contextuais no shell compartilhado.
    - O painel de conexão agora normaliza melhor base ativa e nome do equipamento antes da renderização pública.
+
+5. Recalibração dos hubs por domínio.
+   - Os templates de `Workspace/Domain`, `Workspace/Index` e os atalhos da home passaram a usar uma hierarquia visual mais clara, com grids limitados, CTAs compactos, chips menores e diferenciação melhor entre entradas principais e apoio.
+   - O catálogo de navegação também foi reorganizado para refletir melhor a semântica dos domínios, movendo `Logo do equipamento` para infraestrutura e reduzindo o peso inicial de superfícies especializadas em `API e exploração técnica`.
+
+6. Reestruturação das superfícies técnicas densas.
+   - `OfficialApi/Index` deixou de usar um muro homogêneo de cards e passou a apresentar o catálogo em grupos por categoria, com resumo superior, cards técnicos mais compactos e ações secundárias menos invasivas.
+   - `AdvancedOfficial/Index` foi separado em fluxos avançados prioritários e exploradores correlatos, com CTAs menores, dicas de uso e grids mais adequados para texto técnico em português.
+
+7. Tratamento de rotas longas e microcopy residual.
+   - O identificador técnico do endpoint foi rebaixado para um bloco próprio, separado dos chips e do título, para impedir competição visual e vazamento de rota longa.
+   - Textos residuais com anglicismos operacionais foram substituídos por termos em português mais diretos, como `diagnóstico`, `área técnica` e `abrir recurso`.
 
 ## Revisão interna
 

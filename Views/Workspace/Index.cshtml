@@ -1,11 +1,12 @@
+Ôªø@using Integracao.ControlID.PoC.Helpers
 @model WorkspaceExplorerViewModel
 @{
     var header = new AppPageHeaderViewModel
     {
-        Eyebrow = "Arquitetura da informaÁ„o",
+        Eyebrow = "Arquitetura da informa√ß√£o",
         Title = "Mapa funcional da PoC",
-        Description = "Õndice global para localizar todos os domÌnios, mÛdulos e experiÍncias tÈcnicas implementadas sem depender da home ou de uma lista lateral longa.",
-        BadgeText = $"{Model.Modules.Count} entradas visÌveis",
+        Description = "√çndice global para localizar todos os dom√≠nios, m√≥dulos e experi√™ncias t√©cnicas implementadas sem depender da home ou de uma lista lateral longa.",
+        BadgeText = $"{Model.Modules.Count} entradas vis√≠veis",
         BadgeTone = "danger"
     };
 }
@@ -16,9 +17,9 @@
     <section class="app-surface-card app-stack">
         <form asp-action="Index" method="get" class="directory-filter-bar">
             <div class="directory-filter-bar__field">
-                <label class="form-label" for="domainId">DomÌnio</label>
+                <label class="form-label" for="domainId">Dom√≠nio</label>
                 <select id="domainId" name="domainId" class="form-select">
-                    <option value="">Todos os domÌnios</option>
+                    <option value="">Todos os dom√≠nios</option>
                     @foreach (var domain in Model.Domains)
                     {
                         <option value="@domain.Id" selected="@(Model.SelectedDomainId == domain.Id)">@domain.Title</option>
@@ -27,7 +28,7 @@
             </div>
             <div class="directory-filter-bar__field directory-filter-bar__field--search">
                 <label class="form-label" for="q">Busca livre</label>
-                <input id="q" name="q" class="form-control" value="@Model.SearchTerm" placeholder="Ex.: usu·rios, VPN, push, callbacks, QR, hardware..." />
+                <input id="q" name="q" class="form-control" value="@Model.SearchTerm" placeholder="Ex.: usu√°rios, VPN, push, callbacks, QR, hardware..." />
             </div>
             <div class="directory-filter-bar__actions">
                 <button type="submit" class="btn btn-primary">Aplicar filtro</button>
@@ -47,10 +48,10 @@
                 <div class="app-stack-sm">
                     <h3>@domain.Title</h3>
                     <p>@domain.Description</p>
-                    <small>@domain.Modules.Count mÛdulos mapeados neste domÌnio.</small>
+                    <small>@domain.Modules.Count m√≥dulos mapeados neste dom√≠nio.</small>
                 </div>
-                <div class="quick-links">
-                    <a class="btn btn-outline-secondary" href="@Url.Action("Domain", new { id = domain.Id })">Abrir domÌnio</a>
+                <div class="quick-links quick-links--catalog">
+                    <a class="btn btn-outline-secondary btn-sm module-directory-card__cta" href="@Url.Action("Domain", new { id = domain.Id })">Abrir dom√≠nio</a>
                     <a class="btn btn-quiet" href="@Url.Action("Index", new { domainId = domain.Id })">Filtrar aqui</a>
                 </div>
             </article>
@@ -60,26 +61,28 @@
     <section class="app-surface-card app-stack">
         <div class="app-page-section__heading">
             <div>
-                <strong>MÛdulos e experiÍncias disponÌveis</strong>
-                <p>Os mÛdulos principais ficam no primeiro nÌvel do shell. As experiÍncias especializadas continuam acessÌveis aqui para n„o poluir a navegaÁ„o principal.</p>
+                <strong>M√≥dulos e experi√™ncias dispon√≠veis</strong>
+                <p>Os m√≥dulos principais ficam no primeiro n√≠vel do shell. As experi√™ncias especializadas continuam acess√≠veis aqui para n√£o poluir a navega√ß√£o principal.</p>
             </div>
-            <span class="app-chip app-chip--neutral">Todas as superfÌcies mapeadas</span>
+            <span class="app-chip app-chip--neutral">Todas as superf√≠cies mapeadas</span>
         </div>
 
         <div class="module-directory-grid">
             @foreach (var module in Model.Modules)
             {
                 var domain = Model.Domains.First(item => item.Id == module.DomainId);
-                <article class="module-directory-card">
+                var experienceLabel = NavigationPresentationHelper.GetExperienceLabel(module.ExperienceType);
+                var actionLabel = NavigationPresentationHelper.GetActionLabel(module, isSecondary: module.Visibility != "primary");
+                <article class="module-directory-card module-directory-card--catalog">
                     <div class="module-directory-card__meta">
                         <span class="app-chip app-chip--@domain.AccentTone">@domain.ShortTitle</span>
-                        <span class="app-chip @(module.Visibility == "primary" ? "app-chip--success" : "app-chip--neutral")">@(module.Visibility == "primary" ? "Primeiro nÌvel" : "Especializado")</span>
+                        <span class="app-chip @(module.Visibility == "primary" ? "app-chip--success" : "app-chip--neutral")">@(module.Visibility == "primary" ? "Primeiro n√≠vel" : "Especializado")</span>
                     </div>
-                    <div class="app-stack-sm">
+                    <div class="module-directory-card__body">
                         <h3>@module.Label</h3>
                         <p>@module.Description</p>
                         <ul class="app-pill-list">
-                            <li><span class="app-chip app-chip--neutral">@module.ExperienceType</span></li>
+                            <li><span class="app-chip app-chip--neutral">@experienceLabel</span></li>
                             <li><span class="app-chip app-chip--neutral">@module.Complexity</span></li>
                             @if (!string.IsNullOrWhiteSpace(module.Prerequisite))
                             {
@@ -87,9 +90,13 @@
                             }
                         </ul>
                     </div>
-                    <div class="quick-links">
-                        <a class="btn btn-primary" href="@Url.Action(module.Action, module.Controller)">Abrir mÛdulo</a>
-                        <a class="btn btn-quiet" href="@Url.Action("Domain", new { id = domain.Id })">Ver domÌnio</a>
+                    <div class="module-directory-card__footer">
+                        <a class="btn btn-primary btn-sm module-card__cta"
+                           href="@Url.Action(module.Action, module.Controller)"
+                           aria-label="@($"{actionLabel} {module.Label}")">
+                            @actionLabel
+                        </a>
+                        <a class="btn btn-quiet" href="@Url.Action("Domain", new { id = domain.Id })">Ver dom√≠nio</a>
                     </div>
                 </article>
             }

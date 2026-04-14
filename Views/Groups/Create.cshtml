@@ -23,7 +23,7 @@
             <div class="entity-overview__item"><span>Nome</span><strong>@(string.IsNullOrWhiteSpace(Model.Name) ? "Não definido" : Model.Name)</strong></div>
             <div class="entity-overview__item"><span>Objeto oficial</span><strong>groups</strong></div>
         </div>
-        <div class="app-note">A camada oficial trabalha com os campos `id` e `name`. Use nomes claros para facilitar políticas de acesso e troubleshooting.</div>
+        <div class="app-note">A camada oficial trabalha com os campos `id` e `name`. Use nomes claros para facilitar políticas de acesso e diagnóstico.</div>
     </section>
 
     <section class="app-surface-card app-stack">
@@ -54,3 +54,4 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
 }
+

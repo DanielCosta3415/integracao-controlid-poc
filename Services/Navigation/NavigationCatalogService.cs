@@ -127,8 +127,7 @@ namespace Integracao.ControlID.PoC.Services.Navigation
                         Module("people", "QR Codes", "QR", "Credenciais QR e TOTP com visão clara de validade e distribuição.", "QRCodes", "Index", "qr qrcode totp", "workspace", "primary", "Operação", 4),
                         Module("people", "Grupos", "GR", "Agrupamento lógico de usuários para simplificar permissões e filtros.", "Groups", "Index", "grupos access groups", "workspace", "primary", "Operação", 5),
                         Module("people", "Regras de acesso", "RA", "Políticas, horários e vínculos de autorização por domínio operacional.", "AccessRules", "Index", "regras access rules timezones", "workspace", "primary", "Operação", 6),
-                        Module("people", "Fotos faciais", "FT", "Uploads, previews e sincronização de imagens associadas aos usuários.", "Media", "Index", "media fotos face image", "workspace", "primary", "Especializado", 7),
-                        Module("people", "Logo do equipamento", "LG", "Gerenciamento dos slots de logo e branding embarcado no dispositivo.", "Logo", "Index", "logo branding equipment", "workspace", "primary", "Especializado", 8)
+                        Module("people", "Fotos faciais", "FT", "Uploads, previews e sincronização de imagens associadas aos usuários.", "Media", "Index", "media fotos face image", "workspace", "secondary", "Especializado", 20, "Indicado quando houver sincronização de imagens")
                     ]
                 },
                 new NavigationDomainViewModel
@@ -145,7 +144,8 @@ namespace Integracao.ControlID.PoC.Services.Navigation
                         Module("infrastructure", "Dispositivos", "DV", "Inventário local dos equipamentos reconhecidos pela PoC.", "Devices", "Index", "devices inventario hardware local", "workspace", "primary", "Essencial", 1),
                         Module("infrastructure", "Configurações", "CF", "Painel principal de configuração com visão consolidada do estado oficial e local.", "Config", "Index", "config configuracoes json diagnostics", "workspace", "primary", "Essencial", 2),
                         Module("infrastructure", "Diagnósticos", "DG", "Ferramentas de diagnóstico da configuração para QA e troubleshooting.", "Config", "Diagnostics", "diagnosticos config checks", "console", "secondary", "Apoio", 20),
-                        Module("infrastructure", "Configuração oficial", "OF", "Editor e leitura de payloads oficiais de configuração do equipamento.", "Config", "Official", "configuracao oficial payload", "explorer", "secondary", "Especializado", 21)
+                        Module("infrastructure", "Configuração oficial", "OF", "Editor e leitura de payloads oficiais de configuração do equipamento.", "Config", "Official", "configuracao oficial payload", "explorer", "secondary", "Especializado", 21),
+                        Module("infrastructure", "Logo do equipamento", "LG", "Gerenciamento dos slots de logo e branding embarcado no dispositivo.", "Logo", "Index", "logo branding equipment", "workspace", "secondary", "Especializado", 22)
                     ]
                 },
                 new NavigationDomainViewModel
@@ -162,8 +162,8 @@ namespace Integracao.ControlID.PoC.Services.Navigation
                         Module("api", "Catálogo oficial", "CA", "Inventário navegável dos endpoints documentados com acesso direto aos invocáveis.", "OfficialApi", "Index", "api catalogo endpoints official", "explorer", "primary", "Essencial", 1, isTechnical: true),
                         Module("api", "Objetos oficiais", "OB", "Workspace técnico de CRUD oficial com exemplos para todos os objetos documentados.", "OfficialObjects", "Index", "objects load create modify destroy", "explorer", "primary", "Essencial", 2, isTechnical: true),
                         Module("api", "Recursos avançados", "AV", "Exportação, câmera, intertravamento e chamadas menos frequentes da API.", "AdvancedOfficial", "Index", "advanced interlock export camera", "explorer", "primary", "Especializado", 3, isTechnical: true),
-                        Module("api", "Recursos de produto", "PR", "Particularidades por equipamento, SIP, áudio, upgrade e capacidades específicas.", "ProductSpecific", "Index", "product specific sip audio upgrade", "explorer", "primary", "Especializado", 4, isTechnical: true),
-                        Module("api", "Tópicos documentados", "TD", "Mapa funcional da documentação viva transformado em fluxos operacionais e técnicos.", "DocumentedFeatures", "Index", "documentacao docs topics", "explorer", "primary", "Especializado", 5, isTechnical: true),
+                        Module("api", "Recursos de produto", "PR", "Particularidades por equipamento, SIP, áudio, upgrade e capacidades específicas.", "ProductSpecific", "Index", "product specific sip audio upgrade", "explorer", "secondary", "Especializado", 20, "Indicado para validações por linha de equipamento", true),
+                        Module("api", "Tópicos documentados", "TD", "Mapa funcional da documentação viva transformado em fluxos operacionais e técnicos.", "DocumentedFeatures", "Index", "documentacao docs topics", "explorer", "secondary", "Apoio", 21, "Aprofundamento técnico e temas menos frequentes", true),
                         Module("api", "Mapa funcional", "MF", "Índice global dos módulos e domínios da PoC com navegação orientada por experiência.", "Workspace", "Index", "mapa funcional explorer modulos", "dashboard", "secondary", "Apoio", 20, isTechnical: true)
                     ]
                 },

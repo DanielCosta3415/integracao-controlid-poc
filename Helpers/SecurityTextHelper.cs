@@ -25,6 +25,7 @@ namespace Integracao.ControlID.PoC.Helpers
             ("\u00C3\u00A7", "ç"),
             ("\u00C3\u0081", "Á"),
             ("\u00C3\u0089", "É"),
+            ("\u00C3\u2030", "É"),
             ("\u00C3\u0093", "Ó"),
             ("\u00C3\u009A", "Ú"),
             ("\u00C3\u0087", "Ç"),
@@ -80,6 +81,19 @@ namespace Integracao.ControlID.PoC.Helpers
             foreach (var (source, target) in CommonEncodingArtifacts)
             {
                 normalized = normalized.Replace(source, target, StringComparison.Ordinal);
+            }
+
+            if (normalized.Contains('Ã') || normalized.Contains('Â'))
+            {
+                try
+                {
+                    normalized = Encoding.UTF8.GetString(Encoding.Latin1.GetBytes(normalized));
+                }
+                catch
+                {
+                    // Mantemos o melhor esforço por substituição direta quando
+                    // a recodificação não for segura para o texto recebido.
+                }
             }
 
             return normalized;

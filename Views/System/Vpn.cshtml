@@ -140,9 +140,14 @@
                     <input asp-for="Login" type="hidden" />
                     <input asp-for="Password" type="hidden" />
 
-                    <div>
+                    <div class="app-upload-field">
                         <label asp-for="VpnFile" class="form-label"></label>
                         <input asp-for="VpnFile" class="form-control" type="file" accept=".conf,.zip" />
+                        <p class="app-upload-field__hint">Envie o arquivo oficial da VPN já preparado para o dispositivo, mantendo login e senha sincronizados nos campos atuais.</p>
+                        <div class="app-upload-field__meta">
+                            <span class="product-specific-token">Formatos: CONF e ZIP</span>
+                            <span class="product-specific-token">Fluxo: upload de VPN</span>
+                        </div>
                         <span asp-validation-for="VpnFile" class="text-danger"></span>
                     </div>
 

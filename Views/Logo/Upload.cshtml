@@ -3,7 +3,7 @@
     ViewData["Title"] = "Enviar novo logo";
     var header = new AppPageHeaderViewModel
     {
-        Eyebrow = "Pessoas",
+        Eyebrow = "Infraestrutura",
         Title = "Enviar novo logo",
         Description = "Envie um arquivo PNG para um dos slots oficiais de logo do equipamento, mantendo a operação bem contextualizada na PoC.",
         BadgeText = "Mídia institucional",
@@ -11,5 +11,49 @@
         Actions = new[] { new PageHeaderActionViewModel { Label = "Voltar para logos", Href = Url.Action("Index")!, ButtonClass = "btn btn-outline-secondary" } }
     };
 }
-<div class="container mt-5 app-stack"><partial name="_AppPageHeader" model="header" /><section class="detail-card app-stack"><div class="entity-overview"><div class="entity-overview__item"><span>Slot</span><strong>@Model.Id</strong></div><div class="entity-overview__item"><span>Formato aceito</span><strong>PNG</strong></div><div class="entity-overview__item"><span>Faixa oficial</span><strong>1 a 8</strong></div></div></section><section class="app-surface-card app-stack"><div class="app-page-section__heading"><div><strong>Arquivo do logo</strong><p>A API oficial de logo usa slots de 1 a 8 e aceita apenas arquivos PNG.</p></div></div><form asp-action="Upload" method="post" enctype="multipart/form-data" autocomplete="off" class="form-section"><div asp-validation-summary="ModelOnly" class="text-danger"></div><div class="app-form-grid"><div><label asp-for="Id" class="form-label"></label><input asp-for="Id" class="form-control" min="1" max="8" /><span asp-validation-for="Id" class="text-danger"></span></div><div><label asp-for="LogoFile" class="form-label"></label><input asp-for="LogoFile" class="form-control" type="file" accept=".png,image/png" /><span asp-validation-for="LogoFile" class="text-danger"></span></div></div><div class="form-actions"><button type="submit" class="btn btn-primary">Enviar logo</button><a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a></div></form></section></div>
+<div class="container mt-5 app-stack">
+    <partial name="_AppPageHeader" model="header" />
+
+    <section class="detail-card app-stack">
+        <div class="entity-overview">
+            <div class="entity-overview__item"><span>Slot</span><strong>@Model.Id</strong></div>
+            <div class="entity-overview__item"><span>Formato aceito</span><strong>PNG</strong></div>
+            <div class="entity-overview__item"><span>Faixa oficial</span><strong>1 a 8</strong></div>
+        </div>
+    </section>
+
+    <section class="app-surface-card app-stack">
+        <div class="app-page-section__heading">
+            <div>
+                <strong>Arquivo do logo</strong>
+                <p>A API oficial de logo usa slots de 1 a 8 e aceita apenas arquivos PNG.</p>
+            </div>
+        </div>
+
+        <form asp-action="Upload" method="post" enctype="multipart/form-data" autocomplete="off" class="form-section">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="app-form-grid">
+                <div>
+                    <label asp-for="Id" class="form-label"></label>
+                    <input asp-for="Id" class="form-control" min="1" max="8" />
+                    <span asp-validation-for="Id" class="text-danger"></span>
+                </div>
+                <div class="app-upload-field">
+                    <label asp-for="LogoFile" class="form-label"></label>
+                    <input asp-for="LogoFile" class="form-control" type="file" accept=".png,image/png" />
+                    <p class="app-upload-field__hint">Selecione um arquivo PNG já finalizado para o slot oficial do equipamento.</p>
+                    <div class="app-upload-field__meta">
+                        <span class="product-specific-token">Formato: PNG</span>
+                        <span class="product-specific-token">Destino: logo do equipamento</span>
+                    </div>
+                    <span asp-validation-for="LogoFile" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Enviar logo</button>
+                <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
+            </div>
+        </form>
+    </section>
+</div>
 @section Scripts { <partial name="_ValidationScriptsPartial" /> }

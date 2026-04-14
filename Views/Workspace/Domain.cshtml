@@ -1,13 +1,14 @@
+Ôªø@using Integracao.ControlID.PoC.Helpers
 @model DomainLandingViewModel
 @{
     ViewData["Title"] = Model.Domain.Title;
     ViewData["Subtitle"] = Model.Domain.Description;
     var header = new AppPageHeaderViewModel
     {
-        Eyebrow = "DomÌnio operacional",
+        Eyebrow = "Dom√≠nio operacional",
         Title = Model.Domain.Title,
         Description = Model.Domain.Summary,
-        BadgeText = $"{Model.Domain.Modules.Count} superfÌcies registradas",
+        BadgeText = $"{Model.Domain.Modules.Count} superf√≠cies registradas",
         BadgeTone = Model.Domain.AccentTone,
         Actions = new[]
         {
@@ -31,33 +32,44 @@
                 <strong>@Model.PrimaryModules.Count</strong>
             </div>
             <div class="app-mini-stat">
-                <span>Especializadas</span>
+                <span>Apoio</span>
                 <strong>@Model.SecondaryModules.Count</strong>
             </div>
         </div>
     </section>
 
-    <section class="app-surface-card app-stack">
+    <section class="app-surface-card app-stack domain-section domain-section--primary">
         <div class="app-page-section__heading">
             <div>
-                <strong>MÛdulos de primeiro nÌvel</strong>
-                <p>Estas s„o as entradas que devem ficar mais f·ceis de encontrar para o usu·rio durante a operaÁ„o da PoC.</p>
+                    <strong>M√≥dulos principais</strong>
+                    <p>Estas entradas merecem o acesso mais r√°pido durante a opera√ß√£o di√°ria da PoC.</p>
             </div>
+            <span class="app-chip app-chip--neutral">@Model.PrimaryModules.Count recomendados</span>
         </div>
 
         <div class="module-grid">
             @foreach (var module in Model.PrimaryModules)
             {
-                <article class="module-card">
+                var experienceLabel = NavigationPresentationHelper.GetExperienceLabel(module.ExperienceType);
+                var actionLabel = NavigationPresentationHelper.GetActionLabel(module);
+                var helperText = NavigationPresentationHelper.GetModuleHint(module);
+                <article class="module-card module-card--primary">
                     <div class="module-card__meta">
                         <span class="app-chip app-chip--@Model.Domain.AccentTone">@module.Complexity</span>
-                        <span class="app-chip app-chip--success">@module.ExperienceType</span>
+                        <span class="app-chip app-chip--success">@experienceLabel</span>
                     </div>
-                    <div class="app-stack">
+                    <div class="module-card__body">
                         <h3>@module.Label</h3>
                         <p>@module.Description</p>
+                        <small class="module-card__hint">@helperText</small>
                     </div>
-                    <a class="btn btn-primary" href="@Url.Action(module.Action, module.Controller)">Abrir mÛdulo</a>
+                    <div class="module-card__footer">
+                        <a class="btn btn-primary btn-sm module-card__cta"
+                           href="@Url.Action(module.Action, module.Controller)"
+                           aria-label="@($"{actionLabel} {module.Label}")">
+                            @actionLabel
+                        </a>
+                    </div>
                 </article>
             }
         </div>
@@ -65,31 +77,38 @@
 
     @if (Model.SecondaryModules.Any())
     {
-        <section class="app-surface-card app-stack">
+        <section class="app-surface-card app-stack domain-section domain-section--secondary">
             <div class="app-page-section__heading">
                 <div>
-                    <strong>Telas especializadas e apoio</strong>
-                    <p>Estas superfÌcies continuam visÌveis para QA, troubleshooting e operaÁ„o avanÁada, sem ocupar o primeiro nÌvel da navegaÁ„o principal.</p>
+                    <strong>√Åreas especializadas e de apoio</strong>
+                    <p>Estas superf√≠cies continuam dispon√≠veis para qualidade, diagn√≥stico e opera√ß√£o avan√ßada, sem ocupar o primeiro n√≠vel da navega√ß√£o principal.</p>
                 </div>
+                <span class="app-chip app-chip--neutral">@Model.SecondaryModules.Count superf√≠cies de apoio</span>
             </div>
 
             <div class="module-directory-grid">
                 @foreach (var module in Model.SecondaryModules)
                 {
-                    <article class="module-directory-card">
+                    var experienceLabel = NavigationPresentationHelper.GetExperienceLabel(module.ExperienceType);
+                    var actionLabel = NavigationPresentationHelper.GetActionLabel(module, isSecondary: true);
+                    var helperText = NavigationPresentationHelper.GetModuleHint(module);
+                    <article class="module-directory-card module-directory-card--secondary">
                         <div class="module-directory-card__meta">
                             <span class="app-chip app-chip--neutral">@module.Complexity</span>
-                            <span class="app-chip app-chip--neutral">@module.ExperienceType</span>
+                            <span class="app-chip app-chip--neutral">@experienceLabel</span>
                         </div>
-                        <div class="app-stack-sm">
+                        <div class="module-directory-card__body">
                             <h3>@module.Label</h3>
                             <p>@module.Description</p>
-                            @if (!string.IsNullOrWhiteSpace(module.Prerequisite))
-                            {
-                                <span class="app-chip app-chip--warning">@module.Prerequisite</span>
-                            }
+                            <small class="module-card__hint">@helperText</small>
                         </div>
-                        <a class="btn btn-outline-secondary" href="@Url.Action(module.Action, module.Controller)">Abrir tela</a>
+                        <div class="module-directory-card__footer">
+                            <a class="btn btn-outline-secondary btn-sm module-directory-card__cta"
+                               href="@Url.Action(module.Action, module.Controller)"
+                               aria-label="@($"{actionLabel} {module.Label}")">
+                                @actionLabel
+                            </a>
+                        </div>
                     </article>
                 }
             </div>

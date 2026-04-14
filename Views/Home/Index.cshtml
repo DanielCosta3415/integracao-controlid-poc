@@ -1,4 +1,5 @@
-﻿@model HomeDashboardViewModel
+﻿@using Integracao.ControlID.PoC.Helpers
+@model HomeDashboardViewModel
 @{
     Layout = "_Layout";
     ViewData["Title"] = "Painel de operações";
@@ -68,7 +69,7 @@
         <article class="status-strip-card">
             <span>Eventos persistidos</span>
             <strong>@Model.RecentEventCount</strong>
-            <small>Leitura local consolidada para auditoria e troubleshooting.</small>
+            <small>Leitura local consolidada para auditoria e diagnóstico.</small>
         </article>
     </section>
 
@@ -114,8 +115,8 @@
                         <p>@domain.Description</p>
                         <small>@domain.Modules.Count módulos e superfícies registradas.</small>
                     </div>
-                    <div class="quick-links">
-                        <a class="btn btn-primary" href="@Url.Action("Domain", "Workspace", new { id = domain.Id })">Abrir domínio</a>
+                    <div class="quick-links quick-links--catalog">
+                        <a class="btn btn-primary btn-sm module-directory-card__cta" href="@Url.Action("Domain", "Workspace", new { id = domain.Id })">Abrir domínio</a>
                         <a class="btn btn-quiet" href="@Url.Action("Index", "Workspace", new { domainId = domain.Id })">Filtrar no mapa</a>
                     </div>
                 </article>
@@ -202,18 +203,29 @@
         <div class="module-grid">
             @foreach (var module in Model.FeaturedModules)
             {
-                <article class="module-card">
+                var experienceLabel = NavigationPresentationHelper.GetExperienceLabel(module.ExperienceType);
+                var actionLabel = NavigationPresentationHelper.GetActionLabel(module);
+                <article class="module-card module-card--primary">
                     <div class="module-card__meta">
                         <span class="app-chip app-chip--neutral">@module.Complexity</span>
-                        <span class="app-chip @(module.IsTechnical ? "app-chip--warning" : "app-chip--danger")">@module.ExperienceType</span>
+                        <span class="app-chip @(module.IsTechnical ? "app-chip--warning" : "app-chip--danger")">@experienceLabel</span>
                     </div>
-                    <div class="app-stack">
+                    <div class="module-card__body">
                         <h3>@module.Label</h3>
                         <p>@module.Description</p>
                     </div>
-                    <a class="btn btn-quiet" href="@Url.Action(module.Action, module.Controller)">Abrir módulo</a>
+                    <div class="module-card__footer">
+                        <a class="btn btn-quiet module-card__cta"
+                           href="@Url.Action(module.Action, module.Controller)"
+                           aria-label="@($"{actionLabel} {module.Label}")">
+                            @actionLabel
+                        </a>
+                    </div>
                 </article>
             }
         </div>
     </section>
 </div>
+
+
+

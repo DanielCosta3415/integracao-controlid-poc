@@ -142,9 +142,14 @@
                 <input asp-for="DnsPrimary" type="hidden" />
                 <input asp-for="DnsSecondary" type="hidden" />
 
-                <div>
+                <div class="app-upload-field">
                     <label asp-for="CertificateFile" class="form-label"></label>
                     <input asp-for="CertificateFile" class="form-control" type="file" accept=".pem,.crt,.cer" />
+                    <p class="app-upload-field__hint">Envie um certificado PEM, CRT ou CER pronto para uso no servidor web do equipamento.</p>
+                    <div class="app-upload-field__meta">
+                        <span class="product-specific-token">Formatos: PEM, CRT, CER</span>
+                        <span class="product-specific-token">Fluxo: upload de certificado</span>
+                    </div>
                     <span asp-validation-for="CertificateFile" class="text-danger"></span>
                 </div>
 

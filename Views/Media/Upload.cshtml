@@ -11,5 +11,48 @@
         Actions = new[] { new PageHeaderActionViewModel { Label = "Voltar para fotos", Href = Url.Action("Index")!, ButtonClass = "btn btn-outline-secondary" } }
     };
 }
-<div class="container mt-5 app-stack"><partial name="_AppPageHeader" model="header" /><section class="detail-card app-stack"><div class="entity-overview"><div class="entity-overview__item"><span>Usuário</span><strong>@(Model.UserId == 0 ? "Não definido" : Model.UserId)</strong></div><div class="entity-overview__item"><span>Fluxo</span><strong>user_set_image.fcgi</strong></div></div></section><section class="app-surface-card app-stack"><div class="app-page-section__heading"><div><strong>Arquivo da foto</strong><p>Selecione a imagem e o usuário de destino antes de enviar a foto facial ao equipamento.</p></div></div><form asp-action="Upload" method="post" enctype="multipart/form-data" autocomplete="off" class="form-section"><div asp-validation-summary="ModelOnly" class="text-danger"></div><div class="app-form-grid"><div><label asp-for="UserId" class="form-label"></label><input asp-for="UserId" class="form-control" /><span asp-validation-for="UserId" class="text-danger"></span></div><div><label asp-for="PhotoFile" class="form-label"></label><input asp-for="PhotoFile" class="form-control" type="file" accept="image/*" /><span asp-validation-for="PhotoFile" class="text-danger"></span></div></div><div class="form-actions"><button type="submit" class="btn btn-primary">Enviar foto</button><a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a></div></form></section></div>
+<div class="container mt-5 app-stack">
+    <partial name="_AppPageHeader" model="header" />
+
+    <section class="detail-card app-stack">
+        <div class="entity-overview">
+            <div class="entity-overview__item"><span>Usuário</span><strong>@(Model.UserId == 0 ? "Não definido" : Model.UserId)</strong></div>
+            <div class="entity-overview__item"><span>Fluxo</span><strong>user_set_image.fcgi</strong></div>
+        </div>
+    </section>
+
+    <section class="app-surface-card app-stack">
+        <div class="app-page-section__heading">
+            <div>
+                <strong>Arquivo da foto</strong>
+                <p>Selecione a imagem e o usuário de destino antes de enviar a foto facial ao equipamento.</p>
+            </div>
+        </div>
+
+        <form asp-action="Upload" method="post" enctype="multipart/form-data" autocomplete="off" class="form-section">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="app-form-grid">
+                <div>
+                    <label asp-for="UserId" class="form-label"></label>
+                    <input asp-for="UserId" class="form-control" />
+                    <span asp-validation-for="UserId" class="text-danger"></span>
+                </div>
+                <div class="app-upload-field">
+                    <label asp-for="PhotoFile" class="form-label"></label>
+                    <input asp-for="PhotoFile" class="form-control" type="file" accept="image/*" />
+                    <p class="app-upload-field__hint">Use uma imagem nítida, com o rosto centralizado, para reduzir rejeições no cadastro facial.</p>
+                    <div class="app-upload-field__meta">
+                        <span class="product-specific-token">Formatos: JPG e PNG</span>
+                        <span class="product-specific-token">Fluxo: user_set_image</span>
+                    </div>
+                    <span asp-validation-for="PhotoFile" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Enviar foto</button>
+                <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
+            </div>
+        </form>
+    </section>
+</div>
 @section Scripts { <partial name="_ValidationScriptsPartial" /> }

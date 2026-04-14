@@ -1,13 +1,21 @@
-﻿@model Integracao.ControlID.PoC.ViewModels.OfficialApi.OfficialApiIndexViewModel
+﻿@using System.Linq
+@model Integracao.ControlID.PoC.ViewModels.OfficialApi.OfficialApiIndexViewModel
 @{
     ViewData["Title"] = "Catálogo oficial da API";
     ViewData["Subtitle"] = "Inventário navegável da documentação viva da Control iD com acesso direto aos endpoints invocáveis.";
+    var groupedEndpoints = Model.Endpoints
+        .GroupBy(endpoint => endpoint.Category)
+        .OrderBy(group => group.Key)
+        .ToList();
+    var invokableCount = Model.Endpoints.Count(endpoint => endpoint.Invokable);
+    var callbackCount = Model.Endpoints.Count(endpoint => endpoint.Direction == "server-callback");
+    var sessionRequiredCount = Model.Endpoints.Count(endpoint => endpoint.RequiresSession);
     var header = new AppPageHeaderViewModel
     {
         Eyebrow = "API e recursos avançados",
         Title = "Catálogo oficial da API Control iD",
-        Description = "Navegue pelas rotas oficiais por categoria, diferencie callbacks de chamadas para o equipamento e abra os endpoints invocáveis diretamente pela PoC.",
-        BadgeText = $"{Model.Endpoints.Count()} entradas filtradas",
+        Description = "Navegue pelas rotas oficiais por categoria, diferencie callbacks de requisições ao equipamento e abra os endpoints invocáveis diretamente pela PoC.",
+        BadgeText = $"{Model.Endpoints.Count()} endpoints filtrados",
         BadgeTone = "danger",
         Actions = new[]
         {
@@ -19,11 +27,34 @@
 <div class="container mt-5 app-stack">
     <partial name="_AppPageHeader" model="header" />
 
+    <section class="catalog-stat-grid" aria-label="Resumo do catálogo oficial da API">
+        <article class="catalog-stat-card">
+            <span>Endpoints visíveis</span>
+            <strong>@Model.Endpoints.Count()</strong>
+            <small>Resultados ativos após a combinação dos filtros do explorador.</small>
+        </article>
+        <article class="catalog-stat-card">
+            <span>Endpoints invocáveis</span>
+            <strong>@invokableCount</strong>
+            <small>Chamadas que a PoC consegue abrir diretamente contra o equipamento.</small>
+        </article>
+        <article class="catalog-stat-card">
+            <span>Callbacks mapeados</span>
+            <strong>@callbackCount</strong>
+            <small>Rotas do equipamento para o servidor, visíveis para contexto técnico.</small>
+        </article>
+        <article class="catalog-stat-card">
+            <span>Sessão obrigatória</span>
+            <strong>@sessionRequiredCount</strong>
+            <small>Entradas que dependem de autenticação oficial antes da invocação.</small>
+        </article>
+    </section>
+
     <section class="app-surface-card app-stack">
         <div class="app-toolbar">
             <div>
-                <strong>Filtros do explorador técnico</strong>
-                <p>Combine domínio funcional, método HTTP, direção da chamada e exigência de sessão para reduzir o ruído do catálogo.</p>
+                <strong>Filtros do catálogo técnico</strong>
+                <p>Combine categoria, método HTTP, direção da comunicação e exigência de sessão para reduzir o ruído antes de percorrer os endpoints.</p>
             </div>
         </div>
 
@@ -73,34 +104,84 @@
         </form>
     </section>
 
-    @if (Model.Endpoints.Any())
+    @if (groupedEndpoints.Any())
     {
-        <section class="module-grid">
-            @foreach (var endpoint in Model.Endpoints)
-            {
-                <article class="module-card">
-                    <div class="module-card__meta">
-                        <span class="app-chip app-chip--neutral">@endpoint.Category</span>
-                        <span class="app-chip @(endpoint.Direction == "server-callback" ? "app-chip--warning" : "app-chip--danger")">@endpoint.Method @endpoint.Path</span>
+        @foreach (var categoryGroup in groupedEndpoints)
+        {
+            <section class="app-surface-card app-stack official-api-section">
+                <div class="official-api-section__header">
+                    <div>
+                        <strong>@categoryGroup.Key</strong>
+                        <p>Endpoints agrupados nesta categoria para facilitar a leitura técnica sem transformar o catálogo em uma parede uniforme de cards.</p>
                     </div>
-                    <div class="app-stack">
-                        <h3>@endpoint.Title</h3>
-                        <p>@endpoint.Summary</p>
-                        <div class="quick-links">
-                            <span class="app-chip app-chip--neutral">@(endpoint.Direction == "server-callback" ? "Callback do equipamento" : "Chamada ao equipamento")</span>
-                            <span class="app-chip app-chip--neutral">Corpo: @endpoint.BodyKind</span>
-                            <span class="app-chip @(endpoint.RequiresSession ? "app-chip--warning" : "app-chip--success")">@(endpoint.RequiresSession ? "Sessão obrigatória" : "Sem sessão")</span>
-                        </div>
-                    </div>
-                    <div class="quick-links">
-                        <a asp-action="Invoke" asp-route-id="@endpoint.Id" data-endpoint-id="@endpoint.Id" class="btn @(endpoint.Invokable ? "btn-primary" : "btn-outline-secondary")">
-                            @(endpoint.Invokable ? "Abrir endpoint" : "Ver callback")
-                        </a>
-                        <a href="@endpoint.DocumentationUrl" class="btn btn-quiet" target="_blank" rel="noopener noreferrer">Documentação</a>
-                    </div>
-                </article>
-            }
-        </section>
+                    <span class="app-chip app-chip--neutral">@categoryGroup.Count() endpoints nesta categoria</span>
+                </div>
+
+                <div class="official-api-list">
+                    @foreach (var endpoint in categoryGroup)
+                    {
+                        var directionLabel = endpoint.Direction == "server-callback" ? "Fluxo de callback" : "Requisição ao equipamento";
+                        var sessionLabel = endpoint.RequiresSession ? "Exige sessão" : "Acesso sem sessão";
+                        var actionLabel = endpoint.Invokable ? "Abrir invocação" : "Detalhar callback";
+                        var bodyKindLabel = (endpoint.BodyKind ?? string.Empty).Trim().ToLowerInvariant() switch
+                        {
+                            "none" => "Sem corpo estruturado",
+                            "json" => "JSON",
+                            "multipart" => "Multipart/form-data",
+                            "query" => "Parâmetros de consulta",
+                            _ => string.IsNullOrWhiteSpace(endpoint.BodyKind) ? "Corpo não informado" : endpoint.BodyKind
+                        };
+                        var contentTypeLabel = string.IsNullOrWhiteSpace(endpoint.ContentType) ? "Conteúdo não informado" : endpoint.ContentType;
+                        var helperText = endpoint.Invokable
+                            ? "Use esta entrada quando precisar revisar o contrato e acionar a chamada oficial pela PoC."
+                            : "Use esta entrada como referência técnica da superfície que o equipamento expõe para o servidor.";
+
+                        <article class="official-api-entry">
+                            <div class="official-api-entry__top official-api-entry__headline">
+                                <div class="app-stack-sm">
+                                    <div class="module-card__meta">
+                                        <span class="app-chip @(endpoint.Direction == "server-callback" ? "app-chip--warning" : "app-chip--danger")">@directionLabel</span>
+                                        <span class="app-chip @(endpoint.RequiresSession ? "app-chip--warning" : "app-chip--success")">@sessionLabel</span>
+                                    </div>
+                                    <h3>@endpoint.Title</h3>
+                                </div>
+                                <span class="official-api-entry__bodykind">@bodyKindLabel</span>
+                            </div>
+                            <div class="official-api-entry__route" aria-label="@($"Rota técnica {endpoint.Method} {endpoint.Path}")">
+                                <span class="official-api-entry__method">@endpoint.Method</span>
+                                <code>@endpoint.Path</code>
+                            </div>
+                            <div class="official-api-entry__body">
+                                <p>@endpoint.Summary</p>
+                                <div class="official-api-entry__details" aria-label="Metadados técnicos do endpoint">
+                                    <span class="official-api-entry__detail"><strong>Corpo:</strong> @bodyKindLabel</span>
+                                    <span class="official-api-entry__detail"><strong>Conteúdo:</strong> @contentTypeLabel</span>
+                                </div>
+                                <small class="module-card__hint">@helperText</small>
+                            </div>
+                            <div class="official-api-entry__footer">
+                                <div class="official-api-entry__actions">
+                                    <a asp-action="Invoke"
+                                       asp-route-id="@endpoint.Id"
+                                       data-endpoint-id="@endpoint.Id"
+                                       class="btn @(endpoint.Invokable ? "btn-primary" : "btn-outline-secondary") btn-sm module-directory-card__cta"
+                                       aria-label="@($"{actionLabel} {endpoint.Title}")">
+                                        @actionLabel
+                                    </a>
+                                    <a href="@endpoint.DocumentationUrl"
+                                       class="btn btn-quiet btn-sm module-directory-card__cta"
+                                       target="_blank"
+                                       rel="noopener noreferrer"
+                                       aria-label="@($"Abrir documentação oficial de {endpoint.Title}")">
+                                        Documentação
+                                    </a>
+                                </div>
+                            </div>
+                        </article>
+                    }
+                </div>
+            </section>
+        }
     }
     else
     {

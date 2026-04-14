@@ -5,7 +5,7 @@
     {
         Eyebrow = "API",
         Title = "Cadastro facial avançado",
-        Description = "Fluxos dedicados para `user_get_image_list`, `user_set_image_list` e `user_test_image`, agora organizados como um workspace técnico completo.",
+        Description = "Fluxos dedicados para `user_get_image_list`, `user_set_image_list` e `user_test_image`, agora organizados como uma área técnica completa.",
         BadgeText = "Recurso avançado",
         BadgeTone = "info",
         Actions = new[]
@@ -108,9 +108,14 @@
 
             <form asp-action="TestImage" method="post" enctype="multipart/form-data" autocomplete="off" class="form-section">
                 <div class="app-form-grid">
-                    <div>
+                    <div class="app-upload-field app-upload-field--wide">
                         <label asp-for="TestFile" class="form-label"></label>
                         <input asp-for="TestFile" class="form-control" type="file" accept=".jpg,.jpeg,.png,image/jpeg,image/png" />
+                        <p class="app-upload-field__hint">Selecione uma única imagem para validar o arquivo antes de enviar um lote completo ao equipamento.</p>
+                        <div class="app-upload-field__meta">
+                            <span class="product-specific-token">Formatos: JPG e PNG</span>
+                            <span class="product-specific-token">Fluxo: user_test_image</span>
+                        </div>
                     </div>
                 </div>
 
@@ -135,16 +140,21 @@
         </div>
 
         <form asp-action="SetImageList" method="post" enctype="multipart/form-data" autocomplete="off" class="form-section">
-            <div class="app-form-grid">
-                <div class="app-form-grid__full">
-                    <label asp-for="UserIdsCsv" class="form-label"></label>
-                    <input asp-for="UserIdsCsv" class="form-control" />
+                <div class="app-form-grid">
+                    <div class="app-form-grid__full">
+                        <label asp-for="UserIdsCsv" class="form-label"></label>
+                        <input asp-for="UserIdsCsv" class="form-control" />
+                    </div>
+                    <div class="app-upload-field app-upload-field--wide">
+                        <label asp-for="BatchFiles" class="form-label"></label>
+                        <input asp-for="BatchFiles" class="form-control" type="file" multiple accept=".jpg,.jpeg,.png,image/jpeg,image/png" />
+                        <p class="app-upload-field__hint">Envie exatamente a mesma quantidade de arquivos e IDs, preservando a ordem dos dois conjuntos.</p>
+                        <div class="app-upload-field__meta">
+                            <span class="product-specific-token">Múltiplos arquivos</span>
+                            <span class="product-specific-token">Fluxo: user_set_image_list</span>
+                        </div>
+                    </div>
                 </div>
-                <div class="app-form-grid__full">
-                    <label asp-for="BatchFiles" class="form-label"></label>
-                    <input asp-for="BatchFiles" class="form-control" type="file" multiple accept=".jpg,.jpeg,.png,image/jpeg,image/png" />
-                </div>
-            </div>
 
             <label class="form-check app-toggle-item">
                 <input asp-for="MatchDuplicates" class="form-check-input" />

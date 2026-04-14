@@ -1,6 +1,20 @@
 ﻿@{
     ViewData["Title"] = "Recursos oficiais avançados";
     ViewData["Subtitle"] = "Hub para fluxos oficiais especializados que ampliam a cobertura da PoC além dos módulos mais frequentes.";
+    var primaryResources = new[]
+    {
+        new { Tone = "danger", Category = "Objetos e exportação", Key = "export_objects.fcgi", Title = "Exportar objetos", Description = "Abra o fluxo oficial para exportação estruturada dos objetos persistidos no equipamento.", Hint = "Indicado quando você precisar consolidar massa de dados persistida antes de auditoria ou migração.", Href = Url.Action("ExportObjects")!, ActionLabel = "Abrir fluxo" },
+        new { Tone = "warning", Category = "Infraestrutura", Key = "set_network_interlock.fcgi", Title = "Intertravamento em rede", Description = "Configure interdependência entre dispositivos em cenários de portas e fluxos críticos.", Hint = "Use este recurso quando a operação exigir coordenação entre equipamentos no mesmo fluxo físico.", Href = Url.Action("NetworkInterlock")!, ActionLabel = "Abrir fluxo" },
+        new { Tone = "neutral", Category = "Câmera", Key = "save_screenshot.fcgi", Title = "Captura da câmera", Description = "Salve screenshots do equipamento para inspeção visual, apoio remoto e auditoria rápida.", Hint = "Útil para suporte remoto, validação de interface embarcada e comprovação operacional.", Href = Url.Action("CameraCapture")!, ActionLabel = "Abrir fluxo" },
+        new { Tone = "danger", Category = "Reconhecimento facial", Key = "Fluxo em lote", Title = "Cadastro facial em lote", Description = "Concentre os endpoints de imagem facial em um fluxo único para consulta, envio e teste.", Hint = "Recomendado quando a trilha envolver cadastro, consulta e teste facial na mesma sessão.", Href = Url.Action("FacialEnroll")!, ActionLabel = "Abrir fluxo" },
+        new { Tone = "warning", Category = "Sinalização", Key = "remote_led_control.fcgi", Title = "LED remoto", Description = "Envie comandos remotos para o conjunto de LEDs do equipamento em cenários de operação especial.", Hint = "Aplique quando a validação exigir feedback visual embarcado no próprio equipamento.", Href = Url.Action("RemoteLedControl")!, ActionLabel = "Abrir fluxo" }
+    };
+    var relatedResources = new[]
+    {
+        new { Tone = "neutral", Category = "CRUD oficial", Key = "Objetos documentados", Title = "Objetos oficiais", Description = "Abra a superfície dedicada para load, create, create-or-modify, modify e destroy de qualquer objeto oficial.", Hint = "Use esta entrada quando a trilha exigir CRUD completo em vez de um fluxo especializado.", Href = Url.Action("Index", "OfficialObjects")!, ActionLabel = "Abrir explorador" },
+        new { Tone = "neutral", Category = "Particularidades de produto", Key = "SIP, áudio e upgrade", Title = "Recursos de produto", Description = "Explore upgrade, SIP, streaming, áudios customizados, configurações faciais e sinais especiais.", Hint = "Ideal para validações que mudam conforme a linha do equipamento ou suas capacidades específicas.", Href = Url.Action("Index", "ProductSpecific")!, ActionLabel = "Abrir explorador" },
+        new { Tone = "neutral", Category = "Documentação viva", Key = "Mapeamento funcional", Title = "Tópicos documentados", Description = "Consulte o hub de tópicos especiais como modo ponto, online, iDCloud, alarmes e visitantes.", Hint = "Apoio técnico para temas menos frequentes, diagnóstico e cobertura adicional da Access API.", Href = Url.Action("Index", "DocumentedFeatures")!, ActionLabel = "Abrir apoio" }
+    };
     var header = new AppPageHeaderViewModel
     {
         Eyebrow = "API e recursos avançados",
@@ -18,101 +32,90 @@
 <div class="container mt-5 app-stack">
     <partial name="_AppPageHeader" model="header" />
 
-    <section class="module-grid">
-        <article class="module-card">
-            <div class="module-card__meta">
-                <span class="app-chip app-chip--danger">Objetos e exportação</span>
-                <span class="app-chip app-chip--neutral">export_objects.fcgi</span>
-            </div>
-            <div class="app-stack-sm">
-                <h3>Exportar objetos</h3>
-                <p>Abra o fluxo oficial para exportação estruturada dos objetos persistidos no equipamento.</p>
-            </div>
-            <a asp-action="ExportObjects" class="btn btn-primary">Abrir</a>
+    <section class="catalog-stat-grid" aria-label="Resumo de cobertura avançada da API">
+        <article class="catalog-stat-card">
+            <span>Fluxos especializados</span>
+            <strong>@primaryResources.Length</strong>
+            <small>Recursos oficiais avançados que concentram operações menos frequentes em uma trilha guiada.</small>
         </article>
-
-        <article class="module-card">
-            <div class="module-card__meta">
-                <span class="app-chip app-chip--danger">Infraestrutura</span>
-                <span class="app-chip app-chip--neutral">set_network_interlock.fcgi</span>
-            </div>
-            <div class="app-stack-sm">
-                <h3>Intertravamento em rede</h3>
-                <p>Configure interdependência entre dispositivos em cenários de portas e fluxos críticos.</p>
-            </div>
-            <a asp-action="NetworkInterlock" class="btn btn-primary">Abrir</a>
+        <article class="catalog-stat-card">
+            <span>Entradas correlatas</span>
+            <strong>@relatedResources.Length</strong>
+            <small>Exploradores e hubs de apoio úteis quando a investigação técnica exige contexto adicional.</small>
         </article>
-
-        <article class="module-card">
-            <div class="module-card__meta">
-                <span class="app-chip app-chip--danger">Câmera</span>
-                <span class="app-chip app-chip--neutral">save_screenshot.fcgi</span>
-            </div>
-            <div class="app-stack-sm">
-                <h3>Captura da câmera</h3>
-                <p>Salve screenshots do equipamento para inspeção visual, apoio remoto e auditoria rápida.</p>
-            </div>
-            <a asp-action="CameraCapture" class="btn btn-primary">Abrir</a>
-        </article>
-
-        <article class="module-card">
-            <div class="module-card__meta">
-                <span class="app-chip app-chip--danger">Reconhecimento facial</span>
-                <span class="app-chip app-chip--neutral">Batch image flow</span>
-            </div>
-            <div class="app-stack-sm">
-                <h3>Cadastro facial em lote</h3>
-                <p>Concentre os endpoints de imagem facial em um fluxo único para consulta, envio e teste.</p>
-            </div>
-            <a asp-action="FacialEnroll" class="btn btn-primary">Abrir</a>
-        </article>
-
-        <article class="module-card">
-            <div class="module-card__meta">
-                <span class="app-chip app-chip--danger">Documentação viva</span>
-                <span class="app-chip app-chip--neutral">Mapeamento</span>
-            </div>
-            <div class="app-stack-sm">
-                <h3>Tópicos documentados</h3>
-                <p>Consulte o hub de tópicos especiais como modo ponto, online, iDCloud, alarmes e visitantes.</p>
-            </div>
-            <a asp-controller="DocumentedFeatures" asp-action="Index" class="btn btn-primary">Abrir</a>
-        </article>
-
-        <article class="module-card">
-            <div class="module-card__meta">
-                <span class="app-chip app-chip--danger">CRUD oficial</span>
-                <span class="app-chip app-chip--neutral">List of Objects</span>
-            </div>
-            <div class="app-stack-sm">
-                <h3>Objetos oficiais</h3>
-                <p>Abra a superfície dedicada para load, create, create-or-modify, modify e destroy de qualquer objeto oficial.</p>
-            </div>
-            <a asp-controller="OfficialObjects" asp-action="Index" class="btn btn-primary">Abrir</a>
-        </article>
-
-        <article class="module-card">
-            <div class="module-card__meta">
-                <span class="app-chip app-chip--danger">Particularidades de produto</span>
-                <span class="app-chip app-chip--neutral">SIP, áudio e upgrade</span>
-            </div>
-            <div class="app-stack-sm">
-                <h3>Recursos de produto</h3>
-                <p>Explore upgrade, SIP, streaming, áudios customizados, configurações faciais e sinais especiais.</p>
-            </div>
-            <a asp-controller="ProductSpecific" asp-action="Index" class="btn btn-primary">Abrir</a>
-        </article>
-
-        <article class="module-card">
-            <div class="module-card__meta">
-                <span class="app-chip app-chip--danger">Sinalização</span>
-                <span class="app-chip app-chip--neutral">remote_led_control.fcgi</span>
-            </div>
-            <div class="app-stack-sm">
-                <h3>LED remoto</h3>
-                <p>Envie comandos remotos para o conjunto de LEDs do equipamento em cenários de operação especial.</p>
-            </div>
-            <a asp-action="RemoteLedControl" class="btn btn-primary">Abrir</a>
+        <article class="catalog-stat-card">
+            <span>Faixas cobertas</span>
+            <strong>Imagem, rede e objetos</strong>
+            <small>Os fluxos desta página cobrem exportação, câmera, reconhecimento facial, infraestrutura e sinalização.</small>
         </article>
     </section>
+
+    <section class="app-surface-card app-stack official-api-section">
+        <div class="official-api-section__header">
+            <div>
+                <strong>Fluxos avançados</strong>
+                <p>Entradas especializadas para quando a trilha técnica exigir cobertura além do catálogo principal e dos módulos mais frequentes.</p>
+            </div>
+            <span class="app-chip app-chip--danger">@primaryResources.Length fluxos prioritários</span>
+        </div>
+
+        <div class="module-grid module-grid--technical">
+            @foreach (var resource in primaryResources)
+            {
+                <article class="module-card module-card--technical">
+                    <div class="module-card__meta">
+                        <span class="app-chip app-chip--@resource.Tone">@resource.Category</span>
+                        <span class="app-chip app-chip--neutral">@resource.Key</span>
+                    </div>
+                    <div class="module-card__body">
+                        <h3>@resource.Title</h3>
+                        <p>@resource.Description</p>
+                        <small class="module-card__hint">@resource.Hint</small>
+                    </div>
+                    <div class="module-card__footer">
+                        <a class="btn btn-primary btn-sm module-card__cta"
+                           href="@resource.Href"
+                           aria-label="@($"{resource.ActionLabel} {resource.Title}")">
+                            @resource.ActionLabel
+                        </a>
+                    </div>
+                </article>
+            }
+        </div>
+    </section>
+
+    <section class="app-surface-card app-stack official-api-section">
+        <div class="official-api-section__header">
+            <div>
+                <strong>Exploradores e apoio correlato</strong>
+                <p>Atalhos para superfícies irmãs que complementam a investigação quando o fluxo avançado pede CRUD completo, tópicos especiais ou capacidades específicas por equipamento.</p>
+            </div>
+            <span class="app-chip app-chip--neutral">@relatedResources.Length superfícies de apoio</span>
+        </div>
+
+        <div class="module-grid module-grid--technical module-grid--supporting">
+            @foreach (var resource in relatedResources)
+            {
+                <article class="module-card module-card--support">
+                    <div class="module-card__meta">
+                        <span class="app-chip app-chip--neutral">@resource.Category</span>
+                        <span class="app-chip app-chip--neutral">@resource.Key</span>
+                    </div>
+                    <div class="module-card__body">
+                        <h3>@resource.Title</h3>
+                        <p>@resource.Description</p>
+                        <small class="module-card__hint">@resource.Hint</small>
+                    </div>
+                    <div class="module-card__footer">
+                        <a class="btn btn-outline-secondary btn-sm module-directory-card__cta"
+                           href="@resource.Href"
+                           aria-label="@($"{resource.ActionLabel} {resource.Title}")">
+                            @resource.ActionLabel
+                        </a>
+                    </div>
+                </article>
+            }
+        </div>
+    </section>
 </div>
+
