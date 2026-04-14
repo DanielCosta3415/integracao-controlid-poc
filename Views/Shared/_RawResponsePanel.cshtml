@@ -2,6 +2,9 @@
 @{
     var panelId = string.IsNullOrWhiteSpace(Model.PanelId) ? $"raw-panel-{Guid.NewGuid():N}" : Model.PanelId;
     var summaryId = $"{panelId}-summary";
+    var title = SecurityTextHelper.NormalizeForDisplay(Model.Title, "Resposta técnica");
+    var description = SecurityTextHelper.NormalizeForDisplay(Model.Description, string.Empty);
+    var badgeText = SecurityTextHelper.NormalizeForDisplay(Model.BadgeText, string.Empty);
 }
 
 <details class="raw-panel" @(Model.StartExpanded ? "open" : null)>
@@ -10,21 +13,21 @@
              aria-label="Alternar painel de resposta bruta"
              aria-controls="@panelId">
         <div class="raw-panel__summary-copy">
-            <strong>@Model.Title</strong>
-            @if (!string.IsNullOrWhiteSpace(Model.Description))
+            <strong>@title</strong>
+            @if (!string.IsNullOrWhiteSpace(description))
             {
-                <span>@Model.Description</span>
+                <span>@description</span>
             }
         </div>
         <div class="raw-panel__summary-actions">
-            @if (!string.IsNullOrWhiteSpace(Model.BadgeText))
+            @if (!string.IsNullOrWhiteSpace(badgeText))
             {
-                <span class="app-chip app-chip--@Model.BadgeTone">@Model.BadgeText</span>
+                <span class="app-chip app-chip--@Model.BadgeTone">@badgeText</span>
             }
             <button type="button"
                     class="btn btn-quiet btn-sm"
                     data-copy-target="@panelId"
-                    aria-label="Copiar o conteudo bruto exibido neste painel">
+                    aria-label="Copiar o conteúdo bruto exibido neste painel">
                 Copiar
             </button>
         </div>

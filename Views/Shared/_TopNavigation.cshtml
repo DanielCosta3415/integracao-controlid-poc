@@ -25,16 +25,20 @@
         var detailsClass = $"app-nav-domain{(isActiveDomain ? " is-current-domain" : string.Empty)}";
         var panelId = $"domain-panel-{domain.Id}";
         var summaryId = $"domain-summary-{domain.Id}";
+        var domainTitle = SecurityTextHelper.NormalizeForDisplay(domain.Title, "Domínio");
+        var domainShortTitle = SecurityTextHelper.NormalizeForDisplay(domain.ShortTitle, domainTitle);
+        var domainDescription = SecurityTextHelper.NormalizeForDisplay(domain.Description, string.Empty);
+        var domainSummary = SecurityTextHelper.NormalizeForDisplay(domain.Summary, string.Empty);
 
         <details class="@detailsClass" data-topnav-menu>
             <summary class="app-nav-domain__summary"
                      id="@summaryId"
                      data-topnav-summary
-                     aria-label="Abrir menu do domínio @domain.Title"
+                     aria-label="Abrir menu do domínio @domainTitle"
                      aria-controls="@panelId"
                      aria-expanded="false">
                 <span class="app-nav-domain__summary-copy">
-                    <strong>@domain.ShortTitle</strong>
+                    <strong>@domainShortTitle</strong>
                     <small>@primaryModules.Count módulos principais</small>
                 </span>
                 <span class="app-nav-domain__summary-icon" aria-hidden="true">@domain.Icon</span>
@@ -48,14 +52,14 @@
                  aria-hidden="true">
                 <div class="app-nav-domain__panel-head">
                     <div class="app-stack-sm">
-                        <span class="app-chip app-chip--@domain.AccentTone">@domain.Title</span>
-                        <strong>@domain.Description</strong>
-                        <p>@domain.Summary</p>
+                        <span class="app-chip app-chip--@domain.AccentTone">@domainTitle</span>
+                        <strong>@domainDescription</strong>
+                        <p>@domainSummary</p>
                     </div>
                     <div class="quick-links">
                         <a class="btn btn-outline-secondary btn-sm"
                            href="@Url.Action("Domain", "Workspace", new { id = domain.Id })"
-                           aria-label="Abrir a visão completa do domínio @domain.Title">
+                           aria-label="Abrir a visão completa do domínio @domainTitle">
                             Abrir domínio
                         </a>
                     </div>
@@ -68,30 +72,32 @@
                             || string.Equals(ViewContext.RouteData.Values["controller"]?.ToString(), item.Controller, StringComparison.OrdinalIgnoreCase)
                                && string.Equals(ViewContext.RouteData.Values["action"]?.ToString(), item.Action, StringComparison.OrdinalIgnoreCase);
                         var href = Url.Action(item.Action, item.Controller) ?? "#";
+                        var moduleLabel = SecurityTextHelper.NormalizeForDisplay(item.Label, "Módulo");
+                        var moduleDescription = SecurityTextHelper.NormalizeForDisplay(item.Description, string.Empty);
 
                         <article class="app-nav-module @(isActive ? "is-active" : null)">
                             <a class="app-nav-module__link"
                                href="@href"
                                data-module-link
                                data-module-key="@item.Key"
-                               data-module-group="@domain.Title"
-                               data-module-label="@item.Label"
+                               data-module-group="@domainTitle"
+                               data-module-label="@moduleLabel"
                                data-module-tags="@item.Tags"
                                data-module-short="@item.ShortLabel"
-                               aria-label="Abrir @item.Label no domínio @domain.Title"
+                               aria-label="Abrir @moduleLabel no domínio @domainTitle"
                                aria-current="@(isActive ? "page" : null)">
                                 <span class="app-nav-module__icon">@item.ShortLabel</span>
                                 <span class="app-nav-module__copy">
-                                    <strong>@item.Label</strong>
-                                    <small>@item.Description</small>
+                                    <strong>@moduleLabel</strong>
+                                    <small>@moduleDescription</small>
                                 </span>
                             </a>
                             <button type="button"
                                     class="app-nav-module__favorite"
                                     data-favorite-toggle
                                     data-module-key="@item.Key"
-                                    data-module-label="@item.Label"
-                                    aria-label="Fixar @item.Label nos favoritos"
+                                    data-module-label="@moduleLabel"
+                                    aria-label="Fixar @moduleLabel nos favoritos"
                                     title="Fixar nos favoritos">
                                 ☆
                             </button>
@@ -105,7 +111,7 @@
                         <span class="app-chip app-chip--neutral">+@secondaryCount telas especializadas</span>
                         <a class="btn btn-quiet btn-sm"
                            href="@Url.Action("Domain", "Workspace", new { id = domain.Id })"
-                           aria-label="Ver todas as telas do domínio @domain.Title">
+                           aria-label="Ver todas as telas do domínio @domainTitle">
                             Ver tudo neste domínio
                         </a>
                     </div>

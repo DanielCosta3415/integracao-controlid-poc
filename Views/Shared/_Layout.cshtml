@@ -5,8 +5,8 @@
     Layout = null;
     var controller = ViewContext.RouteData.Values["controller"]?.ToString() ?? "Home";
     var action = ViewContext.RouteData.Values["action"]?.ToString() ?? "Index";
-    var title = ViewData["Title"] as string ?? "Painel";
-    var subtitle = ViewData["Subtitle"] as string ?? string.Empty;
+    var title = SecurityTextHelper.NormalizeForDisplay(ViewData["Title"] as string, "Painel");
+    var subtitle = SecurityTextHelper.NormalizeForDisplay(ViewData["Subtitle"] as string, string.Empty);
     var shellContext = PageShellService.BuildShellContext(Context, controller, action, title, subtitle);
     var domains = NavigationCatalog.GetDomains();
 }

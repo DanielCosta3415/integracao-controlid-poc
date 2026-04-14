@@ -1,4 +1,10 @@
-﻿@model ConnectionPanelViewModel
+﻿@using Integracao.ControlID.PoC.Helpers
+@model ConnectionPanelViewModel
+
+@{
+    var baseAddress = SecurityTextHelper.NormalizeForDisplay(Model.BaseAddress, "Base não informada");
+    var deviceName = SecurityTextHelper.NormalizeForDisplay(Model.DeviceName, "n/d");
+}
 
 <section class="connection-rail" id="connectionPanel" aria-label="Contexto de conexão do equipamento" aria-describedby="connectionPanelHelp connectionPanelState">
     <div class="connection-rail__status">
@@ -15,11 +21,11 @@
             <div class="connection-rail__summary" id="connectionPanelState" role="status" aria-live="polite">
                 <div class="connection-pill connection-pill--wide">
                     <span>Base ativa</span>
-                    <strong>@Model.BaseAddress</strong>
+                    <strong>@baseAddress</strong>
                 </div>
                 <div class="connection-pill">
                     <span>Equipamento</span>
-                    <strong>@(string.IsNullOrWhiteSpace(Model.DeviceName) ? "n/d" : Model.DeviceName)</strong>
+                    <strong>@deviceName</strong>
                 </div>
                 <div class="connection-pill">
                     <span>Sessão</span>

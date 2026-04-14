@@ -1,64 +1,68 @@
-﻿# Avaliação heurística focada em design system e acessibilidade
+﻿# Avaliação heurística focada em design system, língua portuguesa e acessibilidade
 
 Data: 2026-04-14  
-Escopo: shell global, navegação superior, painel de conexão persistente, busca global e painéis técnicos compartilhados.
+Escopo: todas as superfícies atuais da PoC, com ênfase em shell global, busca de módulos, navegação superior, painéis compartilhados, workspaces por domínio e telas de operação/documentação técnica.
 
-## Problemas encontrados
+## Problemas encontrados nesta rodada
 
-1. Contraste insuficiente em microcopy e estados discretos do shell.
-   - Os tokens `--ink-500` e `--ink-600` deixavam placeholders, texto auxiliar e subtítulos do topo mais apagados do que o desejável.
-   - Os chips do topo usavam a semântica global, mas sobre um header escuro com pouco contraste visual.
+1. Camada de interação da busca concorrendo com a navegação por domínios.
+   - As evidências confirmaram que a primeira opção da busca podia ficar visualmente na frente, mas atrás da faixa interativa da navegação superior.
+   - O efeito prático era perda de clique na primeira linha do dropdown de busca.
 
-2. Espaçamento horizontal inconsistente no shell.
-   - Topbar, faixa de navegação e conteúdo principal usavam valores próximos, mas não unificados, o que criava desalinhamento fino entre os blocos.
+2. Respiro e margens ainda irregulares em telas que usam `container` legado.
+   - Parte das páginas modernizadas já seguia o shell novo, mas alguns workspaces ainda dependiam do espaçamento herdado de `container mt-5`.
+   - Isso criava densidade desigual entre o topo contextual e o conteúdo principal.
 
-3. Feedback de foco pouco claro na busca e nos controles do topo.
-   - A paleta de busca removia o outline do campo, mas não reforçava o foco no container.
-   - Links, summaries e botões dependiam quase exclusivamente do box-shadow do Bootstrap.
+3. Texto legado com encoding inconsistente em fluxos compartilhados e técnicos.
+   - Ainda havia rastros de mojibake em mensagens renderizadas na interface, especialmente em componentes compartilhados, fallback do JavaScript e catálogo técnico.
+   - O problema também afetava a consistência visual em português e a clareza dos estados apresentados ao usuário.
 
-4. Controles interativos sem nome acessível suficientemente explícito.
-   - A busca global precisava de ajuda contextual e semântica mais rica para leitores de tela.
-   - Menus de domínio não expunham `aria-expanded` e `aria-hidden` sincronizados.
-   - A cópia de payload e resposta, assim como o fechamento de alertas, ainda tinham nomes menos claros ou não localizados.
-   - Favoritos não refletiam estado em `aria-pressed`.
+4. Nome acessível incompleto em ações herdadas.
+   - Ainda existiam botões, links de ação e tabelas dependendo apenas do texto visual ou de marcação legada.
+   - Em algumas superfícies, isso reduzia a previsibilidade para leitores de tela e navegação assistiva.
 
-5. Navegação contextual e documentação técnica sem semântica suficiente.
-   - Breadcrumbs ainda eram apenas texto visual.
-   - Tabelas de contrato da `OfficialApi` não declaravam cabeçalhos de forma semântica.
-   - O painel de resposta bruta continha texto quebrado e não ligava o resumo ao conteúdo expandido.
+5. Contraste e hierarquia de microcopy do shell.
+   - Alguns textos auxiliares e estados discretos do topo continuavam mais apagados do que o restante do design system.
+   - O objetivo desta passada foi reforçar consistência sem inflar ainda mais o shell.
 
 ## Correções aplicadas
 
-1. Reforço de contraste e legibilidade.
-   - Ajuste dos tokens `--ink-500` e `--ink-600`.
-   - Overrides específicos para chips do topo em fundo escuro.
-   - Subtítulos do menu superior com contraste maior.
+1. Busca global e navegação superior.
+   - A camada de resultados da busca recebeu prioridade visual e de clique acima da faixa de domínios.
+   - Quando a busca está aberta, a navegação superior deixa de capturar eventos de ponteiro por trás do dropdown.
 
-2. Unificação de largura e margens do shell.
-   - Reuso de `--app-shell-max-width` e `--shell-inline` nas faixas principais do shell.
-   - Aplicação de `box-sizing: border-box` nas lanes para eliminar o desalinhamento fino entre header e conteúdo.
+2. Consistência de design system.
+   - O conteúdo principal passou a usar uma malha compartilhada com `gap` consistente para reduzir diferenças de densidade entre telas.
+   - O shell manteve o padrão visual existente, mas com contraste mais previsível para textos auxiliares do painel de conexão.
 
-3. Foco acessível e consistente.
-   - Reforço do `focus-ring` global.
-   - Tratamento de `focus-within` no container da busca global com o mesmo token de foco do design system.
+3. Normalização de texto em português.
+   - A correção de artefatos de encoding foi centralizada no helper de segurança textual e reaproveitada em componentes compartilhados.
+   - O JavaScript do shell também passou a reparar rótulos legados antes de montar resultados da busca, favoritos e recentes.
+   - O catálogo oficial da API voltou a normalizar os textos técnicos legados sem quebrar compilação nem contrato público.
 
-4. Semântica acessível nos controles compartilhados.
-   - `aria-describedby`, `aria-haspopup`, `aria-controls`, `aria-expanded`, `aria-hidden`, `role="listbox"` e `role="option"` na busca, no menu de domínio e no painel de conexão.
-   - `aria-pressed`, `aria-current` e `aria-label` explícitos nos favoritos, nos atalhos do topo e nos links de navegação.
-   - `role="alert"`, `aria-live` e `aria-atomic` alinhados nos alertas.
-   - Painel de resposta bruta conectado semanticamente ao seu resumo e com texto normalizado.
+4. Acessibilidade.
+   - Campos, botões, links de ação e tabelas continuam recebendo reforço progressivo de `aria-label`, `caption` e rótulos contextuais no shell compartilhado.
+   - O painel de conexão agora normaliza melhor base ativa e nome do equipamento antes da renderização pública.
 
-5. Documentação técnica com semântica mais forte.
-   - Breadcrumbs promovidos para `nav` e lista com `aria-current`.
-   - Tabelas do contrato visual da `OfficialApi` com `scope="col"` e rótulos mais claros.
-   - Copy quebrada normalizada em componentes compartilhados da documentação técnica.
+## Revisão interna
+
+As mudanças ficaram concentradas em infraestrutura compartilhada de UI e texto:
+- helper central de normalização;
+- shell de busca/navegação;
+- painel de conexão;
+- CSS global de layout;
+- normalização do catálogo oficial.
+
+Com isso, o risco de efeito colateral ficou baixo e controlado. Não houve alteração de contratos públicos dos controllers, rotas ou dependências do projeto.
 
 ## Validação
+
+Comandos executados:
 
 - `dotnet build .\Integracao.ControlID.PoC.sln -clp:ErrorsOnly`
 - `dotnet test .\Integracao.ControlID.PoC.sln --no-build -clp:ErrorsOnly`
 
 Resultado:
 
-- Build verde com 0 warnings e 0 errors.
-- Testes verdes com 20 testes aprovados.
+- Build verde com `0 warnings` e `0 errors`.
+- Testes verdes com `25` testes aprovados.

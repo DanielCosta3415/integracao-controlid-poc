@@ -8,36 +8,39 @@ namespace Integracao.ControlID.PoC.Helpers
     public static class SecurityTextHelper
     {
         private const int MaxPublicMessageLength = 240;
+
         private static readonly (string Source, string Target)[] CommonEncodingArtifacts =
         [
-            ("Ã¡", "á"),
-            ("Ã¢", "â"),
-            ("Ã£", "ã"),
-            ("Ã ", "à"),
-            ("Ã©", "é"),
-            ("Ãª", "ê"),
-            ("Ã­", "í"),
-            ("Ã³", "ó"),
-            ("Ã´", "ô"),
-            ("Ãµ", "õ"),
-            ("Ãº", "ú"),
-            ("Ã§", "ç"),
-            ("Ã", "Á"),
-            ("Ã‰", "É"),
-            ("Ã“", "Ó"),
-            ("Ãš", "Ú"),
-            ("Ã‡", "Ç"),
-            ("Ã­", "í"),
-            ("Ãœ", "Ü"),
-            ("â€œ", "\""),
-            ("â€", "\""),
-            ("â€˜", "'"),
-            ("â€™", "'"),
-            ("â€“", "–"),
-            ("â€”", "—"),
-            ("Âº", "º"),
-            ("Âª", "ª"),
-            ("Â", string.Empty)
+            ("\u00C3\u00A1", "á"),
+            ("\u00C3\u00A2", "â"),
+            ("\u00C3\u00A3", "ã"),
+            ("\u00C3\u00A0", "à"),
+            ("\u00C3\u00A9", "é"),
+            ("\u00C3\u00AA", "ê"),
+            ("\u00C3\u00AD", "í"),
+            ("\u00C3\u00B3", "ó"),
+            ("\u00C3\u00B4", "ô"),
+            ("\u00C3\u00B5", "õ"),
+            ("\u00C3\u00BA", "ú"),
+            ("\u00C3\u00A7", "ç"),
+            ("\u00C3\u0081", "Á"),
+            ("\u00C3\u0089", "É"),
+            ("\u00C3\u0093", "Ó"),
+            ("\u00C3\u009A", "Ú"),
+            ("\u00C3\u0087", "Ç"),
+            ("\u00C3\u0095", "Õ"),
+            ("\u00C3\u0082", "Â"),
+            ("\u00C3\u008A", "Ê"),
+            ("\u00E2\u20AC\u0153", "\""),
+            ("\u00E2\u20AC\u009D", "\""),
+            ("\u00E2\u20AC\u02DC", "'"),
+            ("\u00E2\u20AC\u2122", "'"),
+            ("\u00E2\u20AC\u201C", "–"),
+            ("\u00E2\u20AC\u201D", "—"),
+            ("\u00C2\u00BA", "º"),
+            ("\u00C2\u00AA", "ª"),
+            ("\u00C2", string.Empty),
+            ("\uFFFD", string.Empty)
         ];
 
         public static string NormalizeForDisplay(string? value, string fallback = "Informação indisponível.")
@@ -70,9 +73,9 @@ namespace Integracao.ControlID.PoC.Helpers
 
         private static string RepairCommonEncodingArtifacts(string value)
         {
-            // DOCUMENTAÇÃO: a PoC ainda possui textos antigos que foram salvos com
-            // encoding incorreto. Corrigir aqui evita que a falha continue
-            // escapando para a interface antes da normalização completa do legado.
+            // DOCUMENTAÇÃO: algumas telas ainda podem receber texto salvo com
+            // encoding legado. Centralizar a correção evita regressões visuais
+            // enquanto o restante do acervo é saneado gradualmente.
             var normalized = value;
             foreach (var (source, target) in CommonEncodingArtifacts)
             {

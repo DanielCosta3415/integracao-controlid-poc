@@ -1,4 +1,4 @@
-(() => {
+﻿(() => {
   if (window.__controlIdUiBootstrapped) {
     return;
   }
@@ -65,10 +65,10 @@
       return;
     }
 
-    const label = (link.dataset.moduleLabel || link.textContent || "").trim();
-    const group = (link.dataset.moduleGroup || "Modulos").trim();
-    const tags = (link.dataset.moduleTags || "").trim();
-    const shortLabel = (link.dataset.moduleShort || link.querySelector(".app-nav-link__icon")?.textContent || "PO").trim();
+    const label = normalizeUiText(link.dataset.moduleLabel || link.textContent || "");
+    const group = normalizeUiText(link.dataset.moduleGroup || "Módulos");
+    const tags = normalizeUiText(link.dataset.moduleTags || "");
+    const shortLabel = normalizeUiText(link.dataset.moduleShort || link.querySelector(".app-nav-link__icon")?.textContent || "PO");
 
     linkMap.set(key, {
       key,
@@ -101,8 +101,13 @@
 
     searchResults.hidden = !isVisible;
     searchResults.setAttribute("aria-hidden", String(!isVisible));
+    body.classList.toggle("app-search-open", isVisible);
     if (searchInput) {
       searchInput.setAttribute("aria-expanded", String(isVisible));
+    }
+
+    if (isVisible && typeof closeTopMenus === "function") {
+      closeTopMenus();
     }
   };
 
@@ -128,6 +133,92 @@
     return fragment;
   };
 
+  function repairEncodingArtifacts(value) {
+    const input = value || "";
+    return input
+      .replace(/\u00C3\u00A1/g, "á")
+      .replace(/\u00C3\u00A2/g, "â")
+      .replace(/\u00C3\u00A3/g, "ã")
+      .replace(/\u00C3\u00A0/g, "à")
+      .replace(/\u00C3\u00A9/g, "é")
+      .replace(/\u00C3\u00AA/g, "ê")
+      .replace(/\u00C3\u00AD/g, "í")
+      .replace(/\u00C3\u00B3/g, "ó")
+      .replace(/\u00C3\u00B4/g, "ô")
+      .replace(/\u00C3\u00B5/g, "õ")
+      .replace(/\u00C3\u00BA/g, "ú")
+      .replace(/\u00C3\u00A7/g, "ç")
+      .replace(/\u00C2\u00BA/g, "º")
+      .replace(/\u00C2\u00AA/g, "ª")
+      .replace(/\u00C2/g, "")
+      .replace(/\uFFFD/g, "");
+  }
+
+  function normalizeUiText(value) {
+    return repairEncodingArtifacts(value).replace(/\s+/g, " ").trim();
+  }
+
+  const getContextLabel = (element) => {
+    const scope = element.closest("section, article, form, .app-surface-card, .detail-card, .hero-panel") || document;
+    const heading = scope.querySelector(".app-page-section__heading strong, .app-page-header__title, h1, h2, h3, legend");
+    return normalizeUiText(heading?.textContent || "");
+  };
+
+  const applyInteractionAriaFallbacks = () => {
+    try {
+      document.querySelectorAll("button, a.btn, input:not([type='hidden']), select, textarea").forEach((element) => {
+        if (element.hasAttribute("aria-label") || element.hasAttribute("aria-labelledby")) {
+          return;
+        }
+
+        let label = "";
+        if ("labels" in element && element.labels?.length) {
+          label = normalizeUiText(Array.from(element.labels).map((item) => item.textContent || "").join(" "));
+        }
+
+        if (!label && element instanceof HTMLInputElement && ["submit", "button"].includes(element.type)) {
+          label = normalizeUiText(element.value);
+        }
+
+        if (!label) {
+          label = normalizeUiText(element.getAttribute("title") || element.getAttribute("placeholder") || element.textContent || "");
+        }
+
+        if (!label) {
+          const context = getContextLabel(element);
+          const tagName = element.tagName.toLowerCase();
+          label = context ? `${tagName} em ${context}` : "";
+        }
+
+        if (label) {
+          element.setAttribute("aria-label", label);
+        }
+      });
+    } catch {
+      // A11Y: o reforço de rótulos precisa falhar em silêncio para não
+      // interromper a navegação caso algum nó legado fuja do contrato esperado.
+    }
+  };
+
+  const applyTableAccessibilityFallbacks = () => {
+    try {
+      document.querySelectorAll(".app-content table").forEach((table, index) => {
+        const label = normalizeUiText(table.getAttribute("aria-label") || getContextLabel(table) || `Tabela operacional ${index + 1}`);
+        table.setAttribute("aria-label", label);
+
+        if (!table.querySelector("caption")) {
+          const caption = document.createElement("caption");
+          caption.className = "visually-hidden";
+          caption.textContent = label;
+          table.prepend(caption);
+        }
+      });
+    } catch {
+      // A11Y: o fallback semântico das tabelas é progressivo; não deve quebrar
+      // a tela caso uma estrutura específica já tenha markup customizado.
+    }
+  };
+
   const renderCollection = (container, keys, emptyMessage) => {
     if (!container) {
       return;
@@ -150,6 +241,7 @@
       anchor.className = "collection-link";
       anchor.href = item.href;
       anchor.dataset.moduleKey = item.key;
+      anchor.setAttribute("aria-label", `${item.label} no grupo ${item.group}`);
       anchor.appendChild(createSafeModuleFragment(item, true));
       fragment.appendChild(anchor);
     });
@@ -161,7 +253,7 @@
     favoriteButtons.forEach((button) => {
       const key = button.dataset.moduleKey || "";
       const active = favoriteSet.has(key);
-      const label = button.dataset.moduleLabel || "modulo";
+      const label = button.dataset.moduleLabel || "módulo";
       button.classList.toggle("is-favorite", active);
       button.textContent = active ? "\u2605" : "\u2606";
       button.title = active ? "Remover dos favoritos" : "Fixar nos favoritos";
@@ -180,9 +272,9 @@
   };
 
   const renderCollections = () => {
-    renderCollection(favoriteContainer, Array.from(favoriteSet), "Fixe os modulos mais usados para acesso rapido.");
-    renderCollection(recentContainer, recentKeys, "Os ultimos modulos visitados aparecerao aqui.");
-    renderCollection(homeRecentContainer, recentKeys, "Os fluxos visitados recentemente aparecerao aqui depois da sua navegacao.");
+    renderCollection(favoriteContainer, Array.from(favoriteSet), "Fixe os módulos mais usados para acesso rápido.");
+    renderCollection(recentContainer, recentKeys, "Os últimos módulos visitados aparecerão aqui.");
+    renderCollection(homeRecentContainer, recentKeys, "Os fluxos visitados recentemente aparecerão aqui depois da sua navegação.");
     renderFavoriteButtons();
   };
 
@@ -223,7 +315,7 @@
     if (!items.length) {
       const empty = document.createElement("div");
       empty.className = "command-empty";
-      empty.textContent = "Nenhum modulo encontrado para a busca informada.";
+      empty.textContent = "Nenhum módulo encontrado para a busca informada.";
       fragment.appendChild(empty);
     } else {
       items.forEach((item) => {
@@ -318,7 +410,7 @@
     }
 
     // PERFORMANCE: mantemos o comportamento de fechamento do alerta sem carregar
-    // o bootstrap.bundle inteiro quando a aplicacao so precisa desta interacao.
+    // o bootstrap.bundle inteiro quando a aplicação só precisa desta interação.
     alertElement.classList.remove("show");
     window.setTimeout(() => {
       alertElement.remove();
@@ -391,6 +483,8 @@
   });
 
   document.querySelectorAll(".app-content pre:not(.app-code-panel)").forEach((pre) => pre.classList.add("app-code-panel"));
+  applyTableAccessibilityFallbacks();
+  applyInteractionAriaFallbacks();
 
   const topMenus = Array.from(document.querySelectorAll("[data-topnav-menu]"));
   if (!topMenus.length) {
@@ -398,13 +492,13 @@
   }
 
   const updateTopMenuLayoutState = () => {
-    // UX: reservamos espaco real para o megamenu aberto no header para que o
-    // painel nao pareca uma camada solta cobrindo a pagina inteira.
+    // UX: reservamos espaço real para o megamenu aberto no header para que o
+    // painel não pareça uma camada solta cobrindo a página inteira.
     body.classList.toggle("app-has-open-topnav", topMenus.some((menu) => menu.open));
   };
 
-  // O menu superior usa <details> nativo; aqui mantemos a camada acessivel e
-  // o comportamento exclusivo sem recalcular a arvore de navegacao inteira.
+  // O menu superior usa <details> nativo; aqui mantemos a camada acessível e
+  // o comportamento exclusivo sem recalcular a árvore de navegação inteira.
   const syncMenuState = (menu) => {
     const summary = menu.querySelector("[data-topnav-summary]");
     const panel = menu.querySelector("[data-topnav-panel]");
@@ -455,3 +549,5 @@
     }
   });
 })();
+
+

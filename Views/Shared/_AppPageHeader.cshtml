@@ -1,22 +1,28 @@
 ﻿@model Integracao.ControlID.PoC.ViewModels.Shared.AppPageHeaderViewModel
+@{
+    var eyebrow = SecurityTextHelper.NormalizeForDisplay(Model.Eyebrow, string.Empty);
+    var title = SecurityTextHelper.NormalizeForDisplay(Model.Title, "Painel");
+    var description = SecurityTextHelper.NormalizeForDisplay(Model.Description, string.Empty);
+    var badgeText = SecurityTextHelper.NormalizeForDisplay(Model.BadgeText, string.Empty);
+}
 
 <div class="app-page-header">
     <div class="app-page-header__content">
-        @if (!string.IsNullOrWhiteSpace(Model.Eyebrow))
+        @if (!string.IsNullOrWhiteSpace(eyebrow))
         {
-            <div class="app-page-header__eyebrow">@Model.Eyebrow</div>
+            <div class="app-page-header__eyebrow">@eyebrow</div>
         }
         <div class="app-page-header__main">
             <div>
-                <h1 class="app-page-header__title">@Model.Title</h1>
-                @if (!string.IsNullOrWhiteSpace(Model.Description))
+                <h1 class="app-page-header__title">@title</h1>
+                @if (!string.IsNullOrWhiteSpace(description))
                 {
-                    <p class="app-page-header__description">@Model.Description</p>
+                    <p class="app-page-header__description">@description</p>
                 }
             </div>
-            @if (!string.IsNullOrWhiteSpace(Model.BadgeText))
+            @if (!string.IsNullOrWhiteSpace(badgeText))
             {
-                <span class="app-chip app-chip--@Model.BadgeTone">@Model.BadgeText</span>
+                <span class="app-chip app-chip--@Model.BadgeTone">@badgeText</span>
             }
         </div>
     </div>
@@ -26,7 +32,8 @@
         <div class="app-page-header__actions">
             @foreach (var action in Model.Actions)
             {
-                var ariaLabel = action.AriaLabel ?? $"{action.Label} na página {Model.Title}";
+                var label = SecurityTextHelper.NormalizeForDisplay(action.Label, "Abrir ação");
+                var ariaLabel = SecurityTextHelper.NormalizeForDisplay(action.AriaLabel, $"{label} na página {title}");
                 if (action.NewTab)
                 {
                     <a href="@action.Href"
@@ -34,12 +41,12 @@
                        target="_blank"
                        rel="noopener noreferrer"
                        aria-label="@ariaLabel">
-                        @action.Label
+                        @label
                     </a>
                 }
                 else
                 {
-                    <a href="@action.Href" class="@action.ButtonClass" aria-label="@ariaLabel">@action.Label</a>
+                    <a href="@action.Href" class="@action.ButtonClass" aria-label="@ariaLabel">@label</a>
                 }
             }
         </div>

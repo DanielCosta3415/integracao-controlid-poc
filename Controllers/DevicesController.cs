@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Text.Json;
 using Integracao.ControlID.PoC.Models.ControlIDApi;
 using Integracao.ControlID.PoC.Services.ControlIDApi;
@@ -25,7 +25,7 @@ namespace Integracao.ControlID.PoC.Controllers
 
             if (!_officialApi.TryGetConnection(out _, out _))
             {
-                model.ErrorMessage = "Ã‰ necessÃ¡rio conectar-se e autenticar com um equipamento Control iD.";
+                model.ErrorMessage = "É necessário conectar-se e autenticar com um equipamento Control iD.";
                 return View(model);
             }
 
@@ -85,7 +85,7 @@ namespace Integracao.ControlID.PoC.Controllers
 
             if (!_officialApi.TryGetConnection(out _, out _))
             {
-                ModelState.AddModelError(string.Empty, "Ã‰ necessÃ¡rio conectar-se e autenticar com um equipamento Control iD.");
+                ModelState.AddModelError(string.Empty, "É necessário conectar-se e autenticar com um equipamento Control iD.");
                 return View(model);
             }
 
@@ -127,7 +127,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Erro ao buscar dispositivo {DeviceId} para ediÃ§Ã£o.", id.Value);
+                _logger.LogError(ex, "Erro ao buscar dispositivo {DeviceId} para edição.", id.Value);
             }
 
             return NotFound();
@@ -145,7 +145,7 @@ namespace Integracao.ControlID.PoC.Controllers
 
             if (!_officialApi.TryGetConnection(out _, out _))
             {
-                ModelState.AddModelError(string.Empty, "Ã‰ necessÃ¡rio conectar-se e autenticar com um equipamento Control iD.");
+                ModelState.AddModelError(string.Empty, "É necessário conectar-se e autenticar com um equipamento Control iD.");
                 return View(model);
             }
 
@@ -194,7 +194,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Erro ao buscar dispositivo {DeviceId} para exclusÃ£o.", id.Value);
+                _logger.LogError(ex, "Erro ao buscar dispositivo {DeviceId} para exclusão.", id.Value);
             }
 
             return NotFound();
@@ -206,7 +206,7 @@ namespace Integracao.ControlID.PoC.Controllers
         {
             if (!_officialApi.TryGetConnection(out _, out _))
             {
-                TempData["StatusMessage"] = "Ã‰ necessÃ¡rio conectar-se e autenticar com um equipamento Control iD.";
+                TempData["StatusMessage"] = "É necessário conectar-se e autenticar com um equipamento Control iD.";
                 TempData["StatusType"] = "danger";
                 return RedirectToAction(nameof(Index));
             }
@@ -221,7 +221,7 @@ namespace Integracao.ControlID.PoC.Controllers
 
                 EnsureSuccess(result, "Erro ao excluir dispositivo");
 
-                TempData["StatusMessage"] = "Dispositivo excluÃ­do com sucesso!";
+                TempData["StatusMessage"] = "Dispositivo excluído com sucesso!";
                 TempData["StatusType"] = "success";
             }
             catch (Exception ex)

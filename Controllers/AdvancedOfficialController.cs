@@ -1,4 +1,4 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using Integracao.ControlID.PoC.Models.ControlIDApi;
 using Integracao.ControlID.PoC.Services.ControlIDApi;
 using Integracao.ControlID.PoC.ViewModels.AdvancedOfficial;
@@ -50,7 +50,7 @@ namespace Integracao.ControlID.PoC.Controllers
                     return File(bytes, GetContentType(result.ResponseContentType, "application/octet-stream"), $"{model.ObjectName}-export.bin");
                 }
 
-                model.ResultMessage = "ExportaÃ§Ã£o concluÃ­da.";
+                model.ResultMessage = "Exportação concluída.";
                 model.ResultStatusType = "success";
                 model.ResponseJson = result.ResponseBody;
             }
@@ -127,7 +127,7 @@ namespace Integracao.ControlID.PoC.Controllers
                 });
 
                 if (!result.Success)
-                    throw new InvalidOperationException(BuildErrorMessage(result, "Erro ao capturar imagem da cÃ¢mera"));
+                    throw new InvalidOperationException(BuildErrorMessage(result, "Erro ao capturar imagem da câmera"));
 
                 model.ResultMessage = "Imagem capturada com sucesso.";
                 model.ResultStatusType = "success";
@@ -146,7 +146,7 @@ namespace Integracao.ControlID.PoC.Controllers
             catch (Exception ex)
             {
                 model.ErrorMessage = SecurityTextHelper.BuildSafeUserMessage("A operação não pôde ser concluída", ex);
-                _logger.LogError(ex, "Erro ao capturar imagem da cÃ¢mera.");
+                _logger.LogError(ex, "Erro ao capturar imagem da câmera.");
             }
 
             return View(model);
@@ -204,7 +204,7 @@ namespace Integracao.ControlID.PoC.Controllers
                     throw new InvalidOperationException("Selecione ao menos um arquivo para o cadastro em lote.");
 
                 if (userIds.Count != model.BatchFiles.Count)
-                    throw new InvalidOperationException("A quantidade de IDs deve ser igual Ã  quantidade de arquivos enviados no lote.");
+                    throw new InvalidOperationException("A quantidade de IDs deve ser igual à quantidade de arquivos enviados no lote.");
 
                 var userImages = new List<object>();
                 for (var index = 0; index < model.BatchFiles.Count; index++)
@@ -330,7 +330,7 @@ namespace Integracao.ControlID.PoC.Controllers
             if (_apiService.TryGetConnection(out _, out _))
                 return true;
 
-            var message = "Ã‰ necessÃ¡rio conectar-se e autenticar com um equipamento Control iD.";
+            var message = "É necessário conectar-se e autenticar com um equipamento Control iD.";
             switch (model)
             {
                 case ExportObjectsViewModel exportModel:
@@ -363,7 +363,7 @@ namespace Integracao.ControlID.PoC.Controllers
                 .ToList();
 
             if (values.Count == 0)
-                throw new InvalidOperationException("Informe ao menos um ID de usuÃ¡rio vÃ¡lido.");
+                throw new InvalidOperationException("Informe ao menos um ID de usuário válido.");
 
             return values;
         }

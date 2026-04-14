@@ -568,6 +568,7 @@ hr {
 
 .app-command-palette {
   position: relative;
+  z-index: 6;
 }
 
 .app-command-palette__input-wrap {
@@ -618,7 +619,8 @@ hr {
   box-shadow: var(--shadow-soft);
   max-height: min(22rem, 55vh);
   overflow-y: auto;
-  z-index: 90;
+  z-index: 180;
+  pointer-events: auto;
 }
 
 .command-result,
@@ -2403,7 +2405,7 @@ body.app-has-open-topnav .app-header {
 .app-topbar {
   position: relative;
   top: auto;
-  z-index: 2;
+  z-index: 5;
   width: min(var(--app-shell-max-width), 100%);
   box-sizing: border-box;
   margin: 0 auto;
@@ -2415,9 +2417,12 @@ body.app-has-open-topnav .app-header {
   background: transparent;
   border-bottom: none;
   box-shadow: none;
+  isolation: isolate;
 }
 
 .app-topbar__center {
+  position: relative;
+  z-index: 2;
   max-width: 640px;
   width: 100%;
   margin: 0 auto;
@@ -2466,7 +2471,7 @@ body.app-has-open-topnav .app-header {
 
 .app-nav-shell {
   position: relative;
-  z-index: 2;
+  z-index: 1;
   padding: 0 var(--shell-inline) 0.9rem;
   border-top: 1px solid rgba(255, 255, 255, 0.04);
   overflow: visible;
@@ -2751,10 +2756,23 @@ body.app-has-open-topnav .app-header {
 .app-content > .container-fluid {
   width: 100%;
   margin: 0;
+  display: grid;
+  gap: 1.15rem;
 }
 
 .app-footer {
   padding: 0.25rem 0 0;
+}
+
+body.app-search-open .app-nav-shell,
+body.app-search-open .app-nav,
+body.app-search-open .app-nav-domain__panel {
+  pointer-events: none;
+}
+
+body.app-search-open .app-command-palette,
+body.app-search-open .app-command-palette__results {
+  pointer-events: auto;
 }
 
 .connection-rail {

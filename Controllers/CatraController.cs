@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Text.Json;
 using Integracao.ControlID.PoC.Models.ControlIDApi;
 using Integracao.ControlID.PoC.Services.ControlIDApi;
@@ -28,7 +28,7 @@ namespace Integracao.ControlID.PoC.Controllers
 
             if (!_officialApi.TryGetConnection(out _, out _))
             {
-                model.ErrorMessage = "Ã‰ necessÃ¡rio conectar-se e autenticar com um equipamento Control iD.";
+                model.ErrorMessage = "É necessário conectar-se e autenticar com um equipamento Control iD.";
                 return View(model);
             }
 
@@ -89,7 +89,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Erro ao buscar evento de catraca {EventId} para exclusÃ£o.", id.Value);
+                _logger.LogError(ex, "Erro ao buscar evento de catraca {EventId} para exclusão.", id.Value);
             }
 
             return NotFound();
@@ -101,7 +101,7 @@ namespace Integracao.ControlID.PoC.Controllers
         {
             if (!_officialApi.TryGetConnection(out _, out _))
             {
-                TempData["StatusMessage"] = "Ã‰ necessÃ¡rio conectar-se e autenticar com um equipamento Control iD.";
+                TempData["StatusMessage"] = "É necessário conectar-se e autenticar com um equipamento Control iD.";
                 TempData["StatusType"] = "danger";
                 return RedirectToAction(nameof(Index));
             }
@@ -116,7 +116,7 @@ namespace Integracao.ControlID.PoC.Controllers
 
                 EnsureSuccess(result, "Erro ao excluir evento da catraca");
 
-                TempData["StatusMessage"] = "Evento da catraca excluÃ­do com sucesso.";
+                TempData["StatusMessage"] = "Evento da catraca excluído com sucesso.";
                 TempData["StatusType"] = "success";
             }
             catch (Exception ex)
@@ -135,7 +135,7 @@ namespace Integracao.ControlID.PoC.Controllers
         {
             if (!_officialApi.TryGetConnection(out _, out _))
             {
-                TempData["StatusMessage"] = "Ã‰ necessÃ¡rio conectar-se e autenticar com um equipamento Control iD.";
+                TempData["StatusMessage"] = "É necessário conectar-se e autenticar com um equipamento Control iD.";
                 TempData["StatusType"] = "danger";
                 return RedirectToAction(nameof(Index));
             }
@@ -215,8 +215,8 @@ namespace Integracao.ControlID.PoC.Controllers
                 "allow" => ("catra", $"allow={NormalizeDirection(model.AllowDirection)}"),
                 "relay" when model.Relay is 1 or 2 => ("catra", $"relay={model.Relay.Value}"),
                 "collector" => ("open_collector", string.Empty),
-                "relay" => throw new InvalidOperationException("Informe um relÃ© vÃ¡lido da catraca: 1 ou 2."),
-                _ => throw new InvalidOperationException("Tipo de comando de catraca invÃ¡lido.")
+                "relay" => throw new InvalidOperationException("Informe um relé válido da catraca: 1 ou 2."),
+                _ => throw new InvalidOperationException("Tipo de comando de catraca inválido.")
             };
         }
 
@@ -226,7 +226,7 @@ namespace Integracao.ControlID.PoC.Controllers
             return normalized switch
             {
                 "anticlockwise" or "clockwise" or "both" => normalized,
-                _ => throw new InvalidOperationException("DireÃ§Ã£o invÃ¡lida para a catraca. Use clockwise, anticlockwise ou both.")
+                _ => throw new InvalidOperationException("Direção inválida para a catraca. Use clockwise, anticlockwise ou both.")
             };
         }
 
