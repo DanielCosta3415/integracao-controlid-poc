@@ -1,4 +1,4 @@
-# Smoke test localhost da PoC Control iD
+﻿# Smoke test local da PoC Control iD
 
 Data: 2026-04-14 04:02:32 -03:00
 
@@ -19,7 +19,7 @@ Data: 2026-04-14 04:02:32 -03:00
 - [PASS] /Session/Status: GET 200
 - [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
 - [PASS] http://localhost:5000/Session/Validate: POST 200
-- [SKIP] http://localhost:5000/Session/Clear: SessÃ£o nÃ£o Ã© limpa durante o smoke para preservar o contexto dos demais fluxos.
+- [SKIP] http://localhost:5000/Session/Clear: Sessão não é limpa durante o smoke test para preservar o contexto dos demais fluxos.
 
 ## Callbacks
 
@@ -49,13 +49,13 @@ Data: 2026-04-14 04:02:32 -03:00
 - [PASS] /push?device_id=smoke-device: GET 200
 - [PASS] /result?device_id=smoke-device&status=completed: POST 200
 
-## EdgeCases
+## Casos de borda
 
-- [PASS] Home/ConnectToDevice vazio: Input vazio tratado sem quebra.
-- [PASS] Home/TestDeviceConnectivity falha de rede: Falha de rede tratada sem 500.
-- [PASS] OfficialApi/Invoke sem endereÃ§o: ValidaÃ§Ã£o tratou endereÃ§o vazio sem quebra.
+- [PASS] Home/ConnectToDevice vazio: Entrada vazia tratada sem falhas.
+- [PASS] Home/TestDeviceConnectivity falha de rede: Falha de rede tratada sem erro 500.
+- [PASS] OfficialApi/Invoke sem endereço: A validação tratou o endereço vazio sem falhas.
 
-## Forms
+## Formulários
 
 - [PASS] /Users/Create: GET 200
 - [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
@@ -154,11 +154,11 @@ Data: 2026-04-14 04:02:32 -03:00
 - [PASS] /System/Network: GET 200
 - [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
 - [PASS] http://localhost:5000/System/Network: POST 200
-- [SKIP] /System/Network: FormulÃ¡rio com upload binÃ¡rio foi coberto pela trilha do catÃ¡logo oficial.
+- [SKIP] /System/Network: Formulário com upload binário foi coberto pela trilha do catálogo oficial.
 - [PASS] /System/Vpn: GET 200
 - [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
 - [PASS] http://localhost:5000/System/Vpn: POST 200
-- [SKIP] /System/Vpn: FormulÃ¡rio com upload binÃ¡rio foi coberto pela trilha do catÃ¡logo oficial.
+- [SKIP] /System/Vpn: Formulário com upload binário foi coberto pela trilha do catálogo oficial.
 - [PASS] /AdvancedOfficial/ExportObjects: GET 200
 - [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
 - [PASS] http://localhost:5000/AdvancedOfficial/ExportObjects: POST 200
@@ -171,8 +171,8 @@ Data: 2026-04-14 04:02:32 -03:00
 - [PASS] /AdvancedOfficial/FacialEnroll: GET 200
 - [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
 - [PASS] http://localhost:5000/AdvancedOfficial/GetImageList: POST 200
-- [SKIP] /AdvancedOfficial/FacialEnroll: FormulÃ¡rio com upload binÃ¡rio foi coberto pela trilha do catÃ¡logo oficial.
-- [SKIP] /AdvancedOfficial/FacialEnroll: FormulÃ¡rio com upload binÃ¡rio foi coberto pela trilha do catÃ¡logo oficial.
+- [SKIP] /AdvancedOfficial/FacialEnroll: Formulário com upload binário foi coberto pela trilha do catálogo oficial.
+- [SKIP] /AdvancedOfficial/FacialEnroll: Formulário com upload binário foi coberto pela trilha do catálogo oficial.
 - [PASS] /AdvancedOfficial/RemoteLedControl: GET 200
 - [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
 - [PASS] http://localhost:5000/AdvancedOfficial/RemoteLedControl: POST 200
@@ -207,11 +207,11 @@ Data: 2026-04-14 04:02:32 -03:00
 - [PASS] http://localhost:5000/ProductSpecific/RefreshSipStatus: POST 200
 - [PASS] http://localhost:5000/ProductSpecific/MakeSipCall: POST 200
 - [PASS] http://localhost:5000/ProductSpecific/FinalizeSipCall: POST 200
-- [SKIP] /ProductSpecific: FormulÃ¡rio com upload binÃ¡rio foi coberto pela trilha do catÃ¡logo oficial.
+- [SKIP] /ProductSpecific: Formulário com upload binário foi coberto pela trilha do catálogo oficial.
 - [PASS] http://localhost:5000/ProductSpecific/CheckSipAudio: POST 200
 - [PASS] http://localhost:5000/ProductSpecific/DownloadSipAudio: POST 200
 - [PASS] http://localhost:5000/ProductSpecific/AccessAudioSettings: POST 200
-- [SKIP] /ProductSpecific: FormulÃ¡rio com upload binÃ¡rio foi coberto pela trilha do catÃ¡logo oficial.
+- [SKIP] /ProductSpecific: Formulário com upload binário foi coberto pela trilha do catálogo oficial.
 - [PASS] http://localhost:5000/ProductSpecific/CheckAccessAudio: POST 200
 - [PASS] http://localhost:5000/ProductSpecific/DownloadAccessAudio: POST 200
 - [PASS] http://localhost:5000/ProductSpecific/Signals: POST 200
@@ -233,104 +233,104 @@ Data: 2026-04-14 04:02:32 -03:00
 ## OfficialApi
 
 - [PASS] /OfficialApi: GET 200
-- [PASS] alarm-status: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] buzzer-buzz: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] cancel-remote-enroll: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] cb-card-create: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] cb-device-alive: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] cb-face-create: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] cb-monitor-card: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] cb-monitor-catra-event: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] cb-monitor-operation-mode: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] cb-monitor-password: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] cb-monitor-pin: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] cb-monitor-template: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] cb-monitor-usb-drive: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] cb-new-biometric-image: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] cb-new-biometric-template: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] cb-new-card: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] cb-new-qrcode: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] cb-new-uhf-tag: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] cb-new-user-identified: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] cb-new-user-id-password: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] cb-password-create: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] cb-pin-create: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] cb-template-create: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] cb-user-image: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] change-idcloud-code: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] change-login: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] connection-test: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] create-objects: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] create-or-modify-objects: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] delete-admins: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] destroy-objects: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] door-state: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] execute-actions: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] export-afd: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] export-audit-logs: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] export-objects: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] finalize-sip-call: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] get-audio-access-message: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] get-catra-info: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] get-configuration: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] get-pjsip-audio-message: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] get-sip-status: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] get-vpn-file: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] get-vpn-information: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] get-vpn-status: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] gpio-state: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] has-audio-access-messages: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] hash-password: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] has-pjsip-audio-message: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] has-vpn-file: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] load-objects: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] login: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] logo-change: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] logo-destroy: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] logo-get: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] logout: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] make-sip-call: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] message-to-screen: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] modify-objects: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] nslookup-test: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] ping-test: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] push-poll: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] push-result: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] reboot: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] reboot-recovery: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] remote-enroll: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] remote-led-control: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] remote-user-authorization: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] remove-custom-video: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] report-generate: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] reread-leds: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] reset-to-factory: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] save-screenshot: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] send-video: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] session-is-valid: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] set-audio-access-message: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] set-configuration: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] set-custom-video: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] set-network-interlock: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] set-pjsip-audio-message: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] set-system-network: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] set-system-time: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] set-vpn-file: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] set-vpn-information: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] ssl-certificate-change: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] system-information: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] upgrade-idface-pro: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] upgrade-idflex-enterprise: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] user-destroy-image: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] user-get-image: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] user-get-image-list: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] user-list-images: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] user-set-image: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] user-set-image-list: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] user-test-image: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
-- [PASS] validate-biometry: InvocaÃ§Ã£o concluÃ­da sem quebra HTTP.
+- [PASS] alarm-status: Invocação concluída sem falha HTTP.
+- [PASS] buzzer-buzz: Invocação concluída sem falha HTTP.
+- [PASS] cancel-remote-enroll: Invocação concluída sem falha HTTP.
+- [PASS] cb-card-create: Invocação concluída sem falha HTTP.
+- [PASS] cb-device-alive: Invocação concluída sem falha HTTP.
+- [PASS] cb-face-create: Invocação concluída sem falha HTTP.
+- [PASS] cb-monitor-card: Invocação concluída sem falha HTTP.
+- [PASS] cb-monitor-catra-event: Invocação concluída sem falha HTTP.
+- [PASS] cb-monitor-operation-mode: Invocação concluída sem falha HTTP.
+- [PASS] cb-monitor-password: Invocação concluída sem falha HTTP.
+- [PASS] cb-monitor-pin: Invocação concluída sem falha HTTP.
+- [PASS] cb-monitor-template: Invocação concluída sem falha HTTP.
+- [PASS] cb-monitor-usb-drive: Invocação concluída sem falha HTTP.
+- [PASS] cb-new-biometric-image: Invocação concluída sem falha HTTP.
+- [PASS] cb-new-biometric-template: Invocação concluída sem falha HTTP.
+- [PASS] cb-new-card: Invocação concluída sem falha HTTP.
+- [PASS] cb-new-qrcode: Invocação concluída sem falha HTTP.
+- [PASS] cb-new-uhf-tag: Invocação concluída sem falha HTTP.
+- [PASS] cb-new-user-identified: Invocação concluída sem falha HTTP.
+- [PASS] cb-new-user-id-password: Invocação concluída sem falha HTTP.
+- [PASS] cb-password-create: Invocação concluída sem falha HTTP.
+- [PASS] cb-pin-create: Invocação concluída sem falha HTTP.
+- [PASS] cb-template-create: Invocação concluída sem falha HTTP.
+- [PASS] cb-user-image: Invocação concluída sem falha HTTP.
+- [PASS] change-idcloud-code: Invocação concluída sem falha HTTP.
+- [PASS] change-login: Invocação concluída sem falha HTTP.
+- [PASS] connection-test: Invocação concluída sem falha HTTP.
+- [PASS] create-objects: Invocação concluída sem falha HTTP.
+- [PASS] create-or-modify-objects: Invocação concluída sem falha HTTP.
+- [PASS] delete-admins: Invocação concluída sem falha HTTP.
+- [PASS] destroy-objects: Invocação concluída sem falha HTTP.
+- [PASS] door-state: Invocação concluída sem falha HTTP.
+- [PASS] execute-actions: Invocação concluída sem falha HTTP.
+- [PASS] export-afd: Invocação concluída sem falha HTTP.
+- [PASS] export-audit-logs: Invocação concluída sem falha HTTP.
+- [PASS] export-objects: Invocação concluída sem falha HTTP.
+- [PASS] finalize-sip-call: Invocação concluída sem falha HTTP.
+- [PASS] get-audio-access-message: Invocação concluída sem falha HTTP.
+- [PASS] get-catra-info: Invocação concluída sem falha HTTP.
+- [PASS] get-configuration: Invocação concluída sem falha HTTP.
+- [PASS] get-pjsip-audio-message: Invocação concluída sem falha HTTP.
+- [PASS] get-sip-status: Invocação concluída sem falha HTTP.
+- [PASS] get-vpn-file: Invocação concluída sem falha HTTP.
+- [PASS] get-vpn-information: Invocação concluída sem falha HTTP.
+- [PASS] get-vpn-status: Invocação concluída sem falha HTTP.
+- [PASS] gpio-state: Invocação concluída sem falha HTTP.
+- [PASS] has-audio-access-messages: Invocação concluída sem falha HTTP.
+- [PASS] hash-password: Invocação concluída sem falha HTTP.
+- [PASS] has-pjsip-audio-message: Invocação concluída sem falha HTTP.
+- [PASS] has-vpn-file: Invocação concluída sem falha HTTP.
+- [PASS] load-objects: Invocação concluída sem falha HTTP.
+- [PASS] login: Invocação concluída sem falha HTTP.
+- [PASS] logo-change: Invocação concluída sem falha HTTP.
+- [PASS] logo-destroy: Invocação concluída sem falha HTTP.
+- [PASS] logo-get: Invocação concluída sem falha HTTP.
+- [PASS] logout: Invocação concluída sem falha HTTP.
+- [PASS] make-sip-call: Invocação concluída sem falha HTTP.
+- [PASS] message-to-screen: Invocação concluída sem falha HTTP.
+- [PASS] modify-objects: Invocação concluída sem falha HTTP.
+- [PASS] nslookup-test: Invocação concluída sem falha HTTP.
+- [PASS] ping-test: Invocação concluída sem falha HTTP.
+- [PASS] push-poll: Invocação concluída sem falha HTTP.
+- [PASS] push-result: Invocação concluída sem falha HTTP.
+- [PASS] reboot: Invocação concluída sem falha HTTP.
+- [PASS] reboot-recovery: Invocação concluída sem falha HTTP.
+- [PASS] remote-enroll: Invocação concluída sem falha HTTP.
+- [PASS] remote-led-control: Invocação concluída sem falha HTTP.
+- [PASS] remote-user-authorization: Invocação concluída sem falha HTTP.
+- [PASS] remove-custom-video: Invocação concluída sem falha HTTP.
+- [PASS] report-generate: Invocação concluída sem falha HTTP.
+- [PASS] reread-leds: Invocação concluída sem falha HTTP.
+- [PASS] reset-to-factory: Invocação concluída sem falha HTTP.
+- [PASS] save-screenshot: Invocação concluída sem falha HTTP.
+- [PASS] send-video: Invocação concluída sem falha HTTP.
+- [PASS] session-is-valid: Invocação concluída sem falha HTTP.
+- [PASS] set-audio-access-message: Invocação concluída sem falha HTTP.
+- [PASS] set-configuration: Invocação concluída sem falha HTTP.
+- [PASS] set-custom-video: Invocação concluída sem falha HTTP.
+- [PASS] set-network-interlock: Invocação concluída sem falha HTTP.
+- [PASS] set-pjsip-audio-message: Invocação concluída sem falha HTTP.
+- [PASS] set-system-network: Invocação concluída sem falha HTTP.
+- [PASS] set-system-time: Invocação concluída sem falha HTTP.
+- [PASS] set-vpn-file: Invocação concluída sem falha HTTP.
+- [PASS] set-vpn-information: Invocação concluída sem falha HTTP.
+- [PASS] ssl-certificate-change: Invocação concluída sem falha HTTP.
+- [PASS] system-information: Invocação concluída sem falha HTTP.
+- [PASS] upgrade-idface-pro: Invocação concluída sem falha HTTP.
+- [PASS] upgrade-idflex-enterprise: Invocação concluída sem falha HTTP.
+- [PASS] user-destroy-image: Invocação concluída sem falha HTTP.
+- [PASS] user-get-image: Invocação concluída sem falha HTTP.
+- [PASS] user-get-image-list: Invocação concluída sem falha HTTP.
+- [PASS] user-list-images: Invocação concluída sem falha HTTP.
+- [PASS] user-set-image: Invocação concluída sem falha HTTP.
+- [PASS] user-set-image-list: Invocação concluída sem falha HTTP.
+- [PASS] user-test-image: Invocação concluída sem falha HTTP.
+- [PASS] validate-biometry: Invocação concluída sem falha HTTP.
 
-## Pages
+## Páginas
 
 - [PASS] /Auth/Status: GET 200
 - [PASS] /Users: GET 200
@@ -416,4 +416,5 @@ Data: 2026-04-14 04:02:32 -03:00
 - [PASS] /RemoteActions/Details?action=open_door: GET 200
 - [PASS] /OfficialEvents: GET 200
 - [PASS] /PushCenter: GET 200
+
 

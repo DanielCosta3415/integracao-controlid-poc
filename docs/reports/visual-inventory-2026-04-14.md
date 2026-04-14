@@ -1,10 +1,11 @@
-﻿# Inventário Visual UX/UI - 14/04/2026
+﻿# Inventário visual de UX/UI - 14/04/2026
 
 ## Resumo
+
 - Coberta por uplift global: 0
-- Infra parcial compartilhada: 12
+- Infraestrutura parcial compartilhada: 12
 - Modernizada: 111
-- Orfa sem rota ativa: 0
+- Órfã sem rota ativa: 0
 
 ## Matriz por família
 
@@ -159,18 +160,18 @@
 - `Session/Status.cshtml`: Modernizada
 
 ### Shared
-- `Shared/_AccessDenied.cshtml`: Infra parcial compartilhada
-- `Shared/_AppPageHeader.cshtml`: Infra parcial compartilhada
-- `Shared/_ConnectionPanel.cshtml`: Infra parcial compartilhada
-- `Shared/_Layout.cshtml`: Infra parcial compartilhada
-- `Shared/_NavBar.cshtml`: Infra parcial compartilhada
-- `Shared/_NotFound.cshtml`: Infra parcial compartilhada
-- `Shared/_RawResponsePanel.cshtml`: Infra parcial compartilhada
-- `Shared/_ServerError.cshtml`: Infra parcial compartilhada
-- `Shared/_StatusMessage.cshtml`: Infra parcial compartilhada
-- `Shared/_TopNavigation.cshtml`: Infra parcial compartilhada
-- `Shared/_ValidationScriptsPartial.cshtml`: Infra parcial compartilhada
-- `Shared/Error.cshtml`: Infra parcial compartilhada
+- `Shared/_AccessDenied.cshtml`: Infraestrutura parcial compartilhada
+- `Shared/_AppPageHeader.cshtml`: Infraestrutura parcial compartilhada
+- `Shared/_ConnectionPanel.cshtml`: Infraestrutura parcial compartilhada
+- `Shared/_Layout.cshtml`: Infraestrutura parcial compartilhada
+- `Shared/_NavBar.cshtml`: Infraestrutura parcial compartilhada
+- `Shared/_NotFound.cshtml`: Infraestrutura parcial compartilhada
+- `Shared/_RawResponsePanel.cshtml`: Infraestrutura parcial compartilhada
+- `Shared/_ServerError.cshtml`: Infraestrutura parcial compartilhada
+- `Shared/_StatusMessage.cshtml`: Infraestrutura parcial compartilhada
+- `Shared/_TopNavigation.cshtml`: Infraestrutura parcial compartilhada
+- `Shared/_ValidationScriptsPartial.cshtml`: Infraestrutura parcial compartilhada
+- `Shared/Error.cshtml`: Infraestrutura parcial compartilhada
 
 ### System
 - `System/ActionResult.cshtml`: Modernizada
@@ -192,9 +193,8 @@
 - `Workspace/Index.cshtml`: Modernizada
 
 ## Observações
-- `Modernizada`: já usa cabeçalho, superfície e/ou painel técnico alinhados ao design system novo.
+
+- `Modernizada`: já usa cabeçalho, superfície e/ou painel técnico alinhados ao novo design system.
 - `Coberta por uplift global`: ainda usa markup antigo, mas recebe a camada visual compartilhada do CSS global.
-- `Orfa sem rota ativa`: view existente no repositório, mas não exposta por uma action ativa encontrada nesta rodada.
-- A classificação é útil para governança visual; não substitui revisão manual futura em cada estado dinâmico.
-
-
+- `Órfã sem rota ativa`: view existente no repositório, mas não exposta por uma action ativa encontrada nesta rodada.
+- A classificação é útil para governança visual, mas não substitui revisão manual futura em cada estado dinâmico.

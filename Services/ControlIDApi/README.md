@@ -1,16 +1,16 @@
 ﻿# Services/ControlIDApi
 
-Camada oficial de integracao da PoC com a Access API da Control iD.
+Camada oficial de integração da PoC com a Access API da Control iD.
 
-Servicos principais:
+Serviços principais:
 
-- `OfficialApiCatalogService`: catalogo local dos endpoints oficiais usados pela PoC.
-- `OfficialApiInvokerService`: invocacao HTTP oficial com sanitizacao, timeout configuravel e logs estruturados.
-- `OfficialControlIdApiService`: orquestracao de chamadas usando o contexto atual da sessao da PoC.
-- `OfficialApiContractDocumentationService`: composicao da documentacao visual de contrato mostrada no modulo `OfficialApi`.
+- `OfficialApiCatalogService`: catálogo local dos endpoints oficiais usados pela PoC.
+- `OfficialApiInvokerService`: invocação HTTP oficial com sanitização, timeout configurável e logs estruturados.
+- `OfficialControlIdApiService`: orquestração de chamadas usando o contexto atual da sessão da PoC.
+- `OfficialApiContractDocumentationService`: composição da documentação visual de contrato exibida no módulo `OfficialApi`.
 
 Pontos operacionais importantes:
 
 - o timeout das chamadas oficiais usa `ControlIDApi__ConnectionTimeoutSeconds`;
-- erros de validacao, timeout e falha inesperada sao registrados em log;
-- a camada visual de `OfficialApi` usa esses servicos para documentar endpoint, query, body e exemplos.
+- erros de validação, timeout e falhas inesperadas são registrados em log;
+- a camada visual de `OfficialApi` usa esses serviços para documentar endpoint, query, body e exemplos.

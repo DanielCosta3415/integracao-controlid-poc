@@ -1,4 +1,4 @@
-# Smoke test localhost da PoC Control iD
+﻿# Smoke test local da PoC Control iD
 
 Data: 2026-04-14 03:55:55 -03:00
 
@@ -19,7 +19,7 @@ Data: 2026-04-14 03:55:55 -03:00
 - [PASS] /Session/Status: GET 200
 - [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
 - [PASS] http://localhost:5000/Session/Validate: POST 200
-- [SKIP] http://localhost:5000/Session/Clear: SessÃ£o nÃ£o Ã© limpa durante o smoke para preservar o contexto dos demais fluxos.
+- [SKIP] http://localhost:5000/Session/Clear: Sessão não é limpa durante o smoke test para preservar o contexto dos demais fluxos.
 
 ## Callbacks
 
@@ -49,7 +49,7 @@ Data: 2026-04-14 03:55:55 -03:00
 - [PASS] /push?device_id=smoke-device: GET 200
 - [PASS] /result?device_id=smoke-device&status=completed: POST 200
 
-## Forms
+## Formulários
 
 - [PASS] /Users/Create: GET 200
 - [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
@@ -116,11 +116,11 @@ Data: 2026-04-14 03:55:55 -03:00
 - [PASS] /System/Network: GET 200
 - [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
 - [PASS] http://localhost:5000/System/Network: POST 200
-- [SKIP] /System/Network: FormulÃ¡rio com upload binÃ¡rio foi coberto pela trilha do catÃ¡logo oficial.
+- [SKIP] /System/Network: Formulário com upload binário foi coberto pela trilha do catálogo oficial.
 - [PASS] /System/Vpn: GET 200
 - [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
 - [PASS] http://localhost:5000/System/Vpn: POST 200
-- [SKIP] /System/Vpn: FormulÃ¡rio com upload binÃ¡rio foi coberto pela trilha do catÃ¡logo oficial.
+- [SKIP] /System/Vpn: Formulário com upload binário foi coberto pela trilha do catálogo oficial.
 - [PASS] /AdvancedOfficial/ExportObjects: GET 200
 - [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
 - [PASS] http://localhost:5000/AdvancedOfficial/ExportObjects: POST 200
@@ -133,8 +133,8 @@ Data: 2026-04-14 03:55:55 -03:00
 - [PASS] /AdvancedOfficial/FacialEnroll: GET 200
 - [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
 - [PASS] http://localhost:5000/AdvancedOfficial/GetImageList: POST 200
-- [SKIP] /AdvancedOfficial/FacialEnroll: FormulÃ¡rio com upload binÃ¡rio foi coberto pela trilha do catÃ¡logo oficial.
-- [SKIP] /AdvancedOfficial/FacialEnroll: FormulÃ¡rio com upload binÃ¡rio foi coberto pela trilha do catÃ¡logo oficial.
+- [SKIP] /AdvancedOfficial/FacialEnroll: Formulário com upload binário foi coberto pela trilha do catálogo oficial.
+- [SKIP] /AdvancedOfficial/FacialEnroll: Formulário com upload binário foi coberto pela trilha do catálogo oficial.
 - [PASS] /AdvancedOfficial/RemoteLedControl: GET 200
 - [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
 - [PASS] http://localhost:5000/AdvancedOfficial/RemoteLedControl: POST 200
@@ -169,11 +169,11 @@ Data: 2026-04-14 03:55:55 -03:00
 - [PASS] http://localhost:5000/ProductSpecific/RefreshSipStatus: POST 200
 - [PASS] http://localhost:5000/ProductSpecific/MakeSipCall: POST 200
 - [PASS] http://localhost:5000/ProductSpecific/FinalizeSipCall: POST 200
-- [SKIP] /ProductSpecific: FormulÃ¡rio com upload binÃ¡rio foi coberto pela trilha do catÃ¡logo oficial.
+- [SKIP] /ProductSpecific: Formulário com upload binário foi coberto pela trilha do catálogo oficial.
 - [PASS] http://localhost:5000/ProductSpecific/CheckSipAudio: POST 200
 - [PASS] http://localhost:5000/ProductSpecific/DownloadSipAudio: POST 200
 - [PASS] http://localhost:5000/ProductSpecific/AccessAudioSettings: POST 200
-- [SKIP] /ProductSpecific: FormulÃ¡rio com upload binÃ¡rio foi coberto pela trilha do catÃ¡logo oficial.
+- [SKIP] /ProductSpecific: Formulário com upload binário foi coberto pela trilha do catálogo oficial.
 - [PASS] http://localhost:5000/ProductSpecific/CheckAccessAudio: POST 200
 - [PASS] http://localhost:5000/ProductSpecific/DownloadAccessAudio: POST 200
 - [PASS] http://localhost:5000/ProductSpecific/Signals: POST 200
@@ -292,7 +292,7 @@ Data: 2026-04-14 03:55:55 -03:00
 - [FAIL] : O servidor remoto retornou um erro: (404) Não Localizado.
 - [FAIL] : O servidor remoto retornou um erro: (404) Não Localizado.
 
-## Pages
+## Páginas
 
 - [PASS] /Auth/Status: GET 200
 - [PASS] /Users: GET 200
@@ -378,4 +378,5 @@ Data: 2026-04-14 03:55:55 -03:00
 - [PASS] /RemoteActions/Details?action=open_door: GET 200
 - [PASS] /OfficialEvents: GET 200
 - [PASS] /PushCenter: GET 200
+
 

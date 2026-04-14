@@ -1,10 +1,10 @@
-﻿# Auditoria de Cobertura da API Control iD
+﻿# Auditoria de cobertura da API Control iD
 
 Data da auditoria: 2026-04-13
 
-## Referencias oficiais
+## Referências oficiais
 
-- Indice atual da documentacao da API de acesso: https://www.controlid.com.br/docs/access-api-en/
+- Índice atual da documentação da API de acesso: https://www.controlid.com.br/docs/access-api-en/
 - Import/Export data (`export_objects.fcgi`): https://www.controlid.com.br/docs/access-api-en/system/synchronization/
 - Camera image capture (`save_screenshot.fcgi`): https://www.controlid.com.br/docs/access-api-en/facial-recognition/camera-capture/
 - Facial photo enrollment (`user_get_image_list.fcgi`, `user_set_image_list.fcgi`, `user_test_image.fcgi`): https://www.controlid.com.br/docs/access-api-en/facial-recognition/facial-enroll/
@@ -24,37 +24,37 @@ Data da auditoria: 2026-04-13
 
 ## Resumo executivo
 
-- Catalogo oficial da PoC: 96 entradas.
-- Endpoints invocaveis no catalogo: 73.
-- Callbacks/rotas servidor no catalogo: 23.
-- Endpoints oficiais consumidos diretamente por controllers/telas dedicadas: 67.
+- Catálogo oficial da PoC: 96 entradas.
+- Endpoints invocáveis no catálogo: 73.
+- Callbacks e rotas de servidor no catálogo: 23.
+- Endpoints oficiais consumidos diretamente por controllers e telas dedicadas: 67.
 
 ## Status geral
 
 ### Cobertura forte
 
-- Sessao: login, logout, validacao de sessao e troca de credenciais do equipamento.
-- Objetos: `load_objects`, `create_objects`, `modify_objects` e `destroy_objects`, com fluxos dedicados para usuarios, grupos, cartoes, QR codes, regras de acesso, templates biometricos, dispositivos, configuracoes, logs e eventos de catraca.
-- Acoes: autorizacao remota, execucao de acoes remotas, buzzer, mensagem em tela e cadastro remoto.
-- Fotos, logo e video: `user_get_image`, `user_list_images`, `user_get_image_list`, `user_set_image`, `user_set_image_list`, `user_test_image`, `user_destroy_image`, `logo.fcgi`, `logo_change.fcgi`, `logo_destroy.fcgi`, `send_video.fcgi`, `set_custom_video.fcgi`, `remove_custom_video.fcgi` e `save_screenshot.fcgi`.
+- Sessão: login, logout, validação de sessão e troca de credenciais do equipamento.
+- Objetos: `load_objects`, `create_objects`, `modify_objects` e `destroy_objects`, com fluxos dedicados para usuários, grupos, cartões, QR codes, regras de acesso, templates biométricos, dispositivos, configurações, logs e eventos de catraca.
+- Ações: autorização remota, execução de ações remotas, buzzer, mensagem em tela e cadastro remoto.
+- Fotos, logo e vídeo: `user_get_image`, `user_list_images`, `user_get_image_list`, `user_set_image`, `user_set_image_list`, `user_test_image`, `user_destroy_image`, `logo.fcgi`, `logo_change.fcgi`, `logo_destroy.fcgi`, `send_video.fcgi`, `set_custom_video.fcgi`, `remove_custom_video.fcgi` e `save_screenshot.fcgi`.
 - Sistema e hardware: `system_information`, `hash-password`, `set_system_time`, `set_system_network`, OpenVPN, `gpio_state`, `reread_leds_settings`, `is_valid_biometry`, `remote_led_control.fcgi` e `set_network_interlock.fcgi`.
-- Modos online, monitor e push: callbacks oficiais, monitor persistido, compatibilidade do webhook legado e central push oficial.
-- Exportacao e relatorios: `export_objects.fcgi`, `report_generate.fcgi`, `export_afd.fcgi` e `export_audit_logs.fcgi`.
-- Recursos especificos de produto: upgrades de licenca, streaming RTSP/ONVIF, configuracao facial/documentada, QR Code/TOTP, energia e screenshot do iDFace Max, SIP intercom, toques SIP, mensagens de audio do iDFace e sinais customizados do iDFace Max.
-- Lista oficial de objetos: agora existe um modulo dedicado para toda a pagina `List of Objects`, cobrindo os objetos documentados com `load_objects`, `create_objects`, `create_or_modify_objects`, `modify_objects` e `destroy_objects`.
+- Modos online, monitor e push: callbacks oficiais, monitor persistido, compatibilidade com webhook legado e central push oficial.
+- Exportação e relatórios: `export_objects.fcgi`, `report_generate.fcgi`, `export_afd.fcgi` e `export_audit_logs.fcgi`.
+- Recursos específicos de produto: upgrades de licença, streaming RTSP/ONVIF, configuração facial/documentada, QR Code/TOTP, energia e screenshot do iDFace Max, SIP intercom, toques SIP, mensagens de áudio do iDFace e sinais customizados do iDFace Max.
+- Lista oficial de objetos: agora existe um módulo dedicado para toda a página `List of Objects`, cobrindo os objetos documentados com `load_objects`, `create_objects`, `create_or_modify_objects`, `modify_objects` e `destroy_objects`.
 
 ### Lacunas objetivas encontradas
 
-- Nenhuma lacuna objetiva permaneceu aberta na revisao viva realizada nesta passada.
-- O bloco novo desta rodada fechou explicitamente `create_or_modify_objects.fcgi`, a cobertura dedicada da pagina `List of Objects` e os topicos documentados de QR Code/TOTP e energia/screenshot.
+- Nenhuma lacuna objetiva permaneceu aberta na revisão viva realizada nesta passada.
+- O bloco novo desta rodada fechou explicitamente `create_or_modify_objects.fcgi`, a cobertura dedicada da página `List of Objects` e os tópicos documentados de QR Code/TOTP e energia/screenshot.
 
-## Observacoes importantes
+## Observações importantes
 
-- Nem toda diferenca do indice oficial representa um endpoint inedito. Varios topicos atuais da documentacao descrevem uso de `set_configuration.fcgi` ou `get_configuration.fcgi`, e a PoC cobre esses dois endpoints tanto de forma generica quanto com formularios dedicados para os grupos relevantes, incluindo attendance, online, visitors, hardening, SNMP, iDCloud, alarmes, QR/TOTP, energia, streaming, facial e sinais customizados.
-- A PoC implementa rotas locais adicionais de compatibilidade para callbacks como `new_rex_log.fcgi` e `fingerprint_create.fcgi`, mesmo quando eles nao aparecem como entradas explicitas na tela de invocacao manual.
-- A completude auditada aqui vale contra o conjunto de paginas oficiais revisadas nesta data e contra o smoke local com stub. Validacao em hardware/firmware real continua sendo a camada final para afirmacao de completude operacional absoluta.
-- O smoke test de localhost passou a executar 340 verificacoes com 310 PASS, 0 FAIL e 30 SKIP, cobrindo catalogo oficial, callbacks e telas dedicadas da PoC.
+- Nem toda diferença em relação ao índice oficial representa um endpoint inédito. Vários tópicos atuais da documentação descrevem o uso de `set_configuration.fcgi` ou `get_configuration.fcgi`, e a PoC cobre esses dois endpoints tanto de forma genérica quanto com formulários dedicados para os grupos relevantes, incluindo attendance, online, visitors, hardening, SNMP, iDCloud, alarmes, QR/TOTP, energia, streaming, facial e sinais customizados.
+- A PoC implementa rotas locais adicionais de compatibilidade para callbacks como `new_rex_log.fcgi` e `fingerprint_create.fcgi`, mesmo quando eles não aparecem como entradas explícitas na tela de invocação manual.
+- A completude auditada aqui vale para o conjunto de páginas oficiais revisadas nesta data e para o smoke local com stub. A validação em hardware ou firmware real continua sendo a camada final para afirmar completude operacional absoluta.
+- O smoke test local passou a executar 340 verificações com 310 PASS, 0 FAIL e 30 SKIP, cobrindo catálogo oficial, callbacks e telas dedicadas da PoC.
 
-## Conclusao
+## Conclusão
 
-No estado auditado e atualizado em 2026-04-13, a PoC passou a cobrir o conjunto de endpoints objetivos e dos topicos documentados revisados nesta rodada, incluindo a lista oficial de objetos, `create_or_modify_objects.fcgi`, QR Code/TOTP e energia/screenshot do iDFace Max. A ressalva honesta permanece a mesma: completude absoluta em sentido operacional depende de validacao em hardware/firmware real e de nova revisao quando a documentacao oficial viva mudar.
+No estado auditado e atualizado em 2026-04-13, a PoC passou a cobrir o conjunto de endpoints objetivos e dos tópicos documentados revisados nesta rodada, incluindo a lista oficial de objetos, `create_or_modify_objects.fcgi`, QR Code/TOTP e energia/screenshot do iDFace Max. A ressalva honesta permanece a mesma: completude absoluta, em sentido operacional, depende de validação em hardware ou firmware real e de nova revisão quando a documentação oficial viva mudar.

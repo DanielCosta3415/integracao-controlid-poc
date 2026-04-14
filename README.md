@@ -1,28 +1,28 @@
 ﻿# Integracao.ControlID.PoC
 
-PoC web em ASP.NET Core 8 para exploracao operacional e tecnica da Access API da Control iD. O projeto combina:
+PoC web em ASP.NET Core 8 para exploração operacional e técnica da Access API da Control iD. O projeto reúne:
 
-- console operacional para conexao, autenticacao, hardware, cadastro e auditoria;
-- catalogo oficial de endpoints com documentacao visual de contrato;
-- persistencia local em SQLite para eventos, push, usuarios e artefatos da PoC;
-- trilha de QA visual, smoke tests e hardening de seguranca ja aplicada.
+- um console operacional para conexão, autenticação, hardware, cadastros e auditoria;
+- um catálogo oficial de endpoints com documentação visual de contrato;
+- persistência local em SQLite para eventos, push, usuários e artefatos da PoC;
+- uma trilha de QA visual, smoke tests e hardening de segurança já aplicada.
 
 ## Stack e arquitetura
 
-- ASP.NET Core MVC + Razor Pages
+- ASP.NET Core MVC + Razor
 - Entity Framework Core + SQLite
 - Serilog para logs em console e arquivo
-- xUnit para testes unitarios
-- smoke test local em PowerShell com stub de equipamento
+- xUnit para testes unitários
+- Smoke test local em PowerShell com stub de equipamento
 
 Pastas principais:
 
 - `Controllers/`: fluxos MVC e endpoints auxiliares
-- `Services/`: integracoes oficiais, seguranca, navegacao e fabricas
+- `Services/`: integrações oficiais, segurança, navegação e fábricas
 - `Views/`: UI Razor da PoC
-- `tests/`: testes unitarios
-- `tools/`: utilitarios locais, incluindo smoke test e stub do equipamento
-- `docs/reports/`: relatorios tecnicos gerados durante as validacoes
+- `tests/`: testes unitários
+- `tools/`: utilitários locais, incluindo smoke test e stub do equipamento
+- `docs/reports/`: relatórios técnicos gerados durante as validações
 
 ## Requisitos
 
@@ -30,31 +30,31 @@ Pastas principais:
 - Windows PowerShell 5+ ou PowerShell 7+
 - Visual Studio 2022/2026 ou terminal com `dotnet`
 
-## Setup rapido
+## Configuração rápida
 
-1. Restaurar dependencias:
+1. Restaure as dependências:
 
 ```powershell
 dotnet restore .\Integracao.ControlID.PoC.sln
 ```
 
-2. Ajustar configuracoes locais, se necessario, por variaveis de ambiente ou `appsettings.Development.json`.
+2. Ajuste as configurações locais, se necessário, por variáveis de ambiente ou por `appsettings.Development.json`.
 
-3. Compilar a solucao:
+3. Compile a solução:
 
 ```powershell
 dotnet build .\Integracao.ControlID.PoC.sln
 ```
 
-4. Executar a PoC:
+4. Execute a PoC:
 
 ```powershell
 dotnet run --project .\Integracao.ControlID.PoC.csproj
 ```
 
-## Variaveis de ambiente uteis
+## Variáveis de ambiente úteis
 
-A configuracao segue o padrao nativo do ASP.NET Core (`Secao__Chave`). Exemplos:
+A configuração segue o padrão nativo do ASP.NET Core (`Secao__Chave`). Exemplos:
 
 - `ASPNETCORE_ENVIRONMENT=Development`
 - `ConnectionStrings__DefaultConnection=Data Source=integracao_controlid.db`
@@ -70,21 +70,21 @@ A configuracao segue o padrao nativo do ASP.NET Core (`Secao__Chave`). Exemplos:
 - `Logging__LogLevel__Default=Information`
 - `Serilog__MinimumLevel__Default=Information`
 
-Observacoes:
+Observações:
 
 - nunca versione credenciais reais;
-- prefira User Secrets ou variaveis de ambiente para valores sensiveis;
-- `ControlIDApi__ConnectionTimeoutSeconds` agora controla o timeout real das chamadas oficiais.
+- prefira User Secrets ou variáveis de ambiente para valores sensíveis;
+- `ControlIDApi__ConnectionTimeoutSeconds` controla o timeout real das chamadas oficiais.
 
 ## Banco local e dados da PoC
 
-- O banco SQLite padrao fica em `integracao_controlid.db`.
-- As migracoes sao aplicadas automaticamente no startup.
-- A PoC tambem cria tabelas auxiliares de monitoramento local para callbacks e push.
+- O banco SQLite padrão fica em `integracao_controlid.db`.
+- As migrações são aplicadas automaticamente no startup.
+- A PoC também cria tabelas auxiliares de monitoramento local para callbacks e push.
 
 ## Testes automatizados
 
-### Testes unitarios
+### Testes unitários
 
 ```powershell
 dotnet test .\Integracao.ControlID.PoC.sln
@@ -92,70 +92,70 @@ dotnet test .\Integracao.ControlID.PoC.sln
 
 ### Smoke test funcional local
 
-O smoke test sobe o stub local, exercita happy paths e edge cases criticos e gera um relatorio em `docs/reports/`.
+O smoke test sobe o stub local, percorre os happy paths e os edge cases críticos e gera um relatório em `docs/reports/`.
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\tools\smoke-localhost.ps1
 ```
 
-Relatorio atual de referencia:
+Relatório atual de referência:
 
 - `docs/reports/localhost-smoke-test-2026-04-14.md`
 
 ## Observabilidade e monitoramento
 
-A PoC ja sai preparada para monitoramento basico local:
+A PoC já sai preparada para monitoramento básico local:
 
-- log de requests HTTP no middleware `RequestLoggingMiddleware`;
-- log estruturado de invocacao oficial da Access API, incluindo endpoint, target, status e duracao;
-- log de callback ingress com aceite, bloqueio e falha de persistencia;
+- log de requisições HTTP no middleware `RequestLoggingMiddleware`;
+- log estruturado de invocação oficial da Access API, incluindo endpoint, target, status e duração;
+- log de entrada de callbacks com aceite, bloqueio e falha de persistência;
 - log de fila push para enfileiramento, entrega e recebimento de resultados.
 
-Saidas de log:
+Saídas de log:
 
-- console da aplicacao;
+- console da aplicação;
 - arquivo rolling em `Logs/app_log.txt`.
 
 Checklist recomendado para debug operacional:
 
-1. verificar se o equipamento configurado esta acessivel;
-2. validar se a sessao foi aberta antes de endpoints autenticados;
-3. acompanhar `Logs/app_log.txt` durante callbacks, push e chamadas oficiais;
-4. abrir `OfficialApi` para confirmar contrato visual, payload e query;
-5. rodar o smoke test local antes de publicar mudancas sensiveis.
+1. Verifique se o equipamento configurado está acessível.
+2. Valide se a sessão foi aberta antes de chamar endpoints autenticados.
+3. Acompanhe `Logs/app_log.txt` durante callbacks, push e chamadas oficiais.
+4. Abra `OfficialApi` para confirmar contrato visual, payload e query.
+5. Rode o smoke test local antes de publicar mudanças sensíveis.
 
 ## Fluxos principais
 
 - `Home`: painel executivo-operacional da PoC
-- `Workspace`: mapa funcional por dominio
-- `OfficialApi`: catalogo de endpoints oficiais e invocacao assistida
-- `OfficialObjects`: CRUD tecnico de objetos oficiais
+- `Workspace`: mapa funcional por domínio
+- `OfficialApi`: catálogo de endpoints oficiais e invocação assistida
+- `OfficialObjects`: CRUD técnico de objetos oficiais
 - `OfficialEvents` e `PushCenter`: observabilidade, callbacks e fila push
 
-## Documentacao complementar
+## Documentação complementar
 
-- `Services/ControlIDApi/README.md`: resumo da camada oficial de integracao
-- `docs/reports/heuristic-ui-audit-2026-04-14.md`: auditoria heuristica de UX/UI
+- `Services/ControlIDApi/README.md`: resumo da camada oficial de integração
+- `docs/reports/heuristic-ui-audit-2026-04-14.md`: auditoria heurística de UX/UI
 - `docs/reports/design-system-accessibility-audit-2026-04-14.md`: auditoria de design system e acessibilidade
-- `docs/reports/visual-inventory-2026-04-14.md`: inventario visual consolidado
-- `docs/changelog-2026-04-14.md`: resumo tecnico do que mudou e por que mudou
+- `docs/reports/visual-inventory-2026-04-14.md`: inventário visual consolidado
+- `docs/changelog-2026-04-14.md`: resumo técnico do que mudou e por que mudou
 
-## Troubleshooting rapido
+## Troubleshooting rápido
 
-### A PoC nao conecta no equipamento
+### A PoC não conecta ao equipamento
 
-- confira esquema, IP e porta no painel de conexao;
+- confira esquema, IP e porta no painel de conexão;
 - valide `ControlIDApi__ConnectionTimeoutSeconds`;
 - veja os logs do `OfficialApiInvokerService` para timeout, status HTTP e target.
 
-### Callbacks nao aparecem
+### Callbacks não aparecem
 
 - confira `CallbackSecurity__RequireSharedKey` e `CallbackSecurity__SharedKey`;
-- valide IP remoto permitido quando houver restricao;
+- valide o IP remoto permitido quando houver restrição;
 - acompanhe os logs de `CallbackIngressService`.
 
-### Push nao entrega comandos
+### Push não entrega comandos
 
-- confira se o dispositivo esta consultando `GET /push`;
-- valide se os resultados estao chegando em `POST /result`;
+- confira se o dispositivo está consultando `GET /push`;
+- valide se os resultados estão chegando em `POST /result`;
 - acompanhe os logs de `PushCenterController`.
