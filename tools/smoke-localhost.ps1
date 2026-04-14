@@ -1,4 +1,4 @@
-[CmdletBinding()]
+﻿[CmdletBinding()]
 param(
     [string]$AppUrl = "http://localhost:5000",
     [string]$StubUrl = "http://127.0.0.1:6600",
@@ -78,7 +78,7 @@ function Wait-HttpEndpoint {
         }
     }
 
-    throw "Endpoint não respondeu a tempo: $Url"
+    throw "Endpoint nao respondeu a tempo: $Url"
 }
 
 function Parse-Attributes {
@@ -311,7 +311,7 @@ function Submit-FormsFromPage {
 
         $hasFile = $form.Fields | Where-Object { $_.Type -eq "file" } | Select-Object -First 1
         if ($hasFile) {
-            Add-Result $Phase $Path "SKIP" "Formulário com upload binário foi coberto pela trilha do catálogo oficial."
+            Add-Result $Phase $Path "SKIP" "Formulario com upload binario foi coberto pela trilha do catalogo oficial."
             continue
         }
 
@@ -323,7 +323,7 @@ function Submit-FormsFromPage {
         $targetUrl = Resolve-ActionUrl -PageUrl $pageUrl -Action $form.Action
 
         if ($targetUrl -like "$AppUrl/Session/Clear*") {
-            Add-Result $Phase $targetUrl "SKIP" "Sessão não é limpa durante o smoke para preservar o contexto dos demais fluxos."
+            Add-Result $Phase $targetUrl "SKIP" "Sessao nao e limpa durante o smoke para preservar o contexto dos demais fluxos."
             continue
         }
 
@@ -359,7 +359,7 @@ function Invoke-OfficialCatalog {
         $form = Select-PreferredForm -Forms $forms -FieldName "EndpointId" -ActionPattern "/OfficialApi/Invoke"
 
         if (-not $form) {
-            Add-Result "OfficialApi" $invokeUrl "SKIP" "Callback local sem formulário de invocação manual."
+            Add-Result "OfficialApi" $invokeUrl "SKIP" "Callback local sem formulario de invocacao manual."
             continue
         }
 
@@ -421,7 +421,7 @@ function Invoke-OfficialCatalog {
 
         try {
             $postResponse = Invoke-WebRequest -Uri $targetUrl -WebSession $webSession -Method Post -Body $payload -UseBasicParsing
-            Add-Result "OfficialApi" $endpointId "PASS" "Invocação concluída sem quebra HTTP."
+            Add-Result "OfficialApi" $endpointId "PASS" "Invocacao concluida sem quebra HTTP."
         }
         catch {
             Add-Result "OfficialApi" $endpointId "FAIL" $_.Exception.Message
@@ -430,8 +430,8 @@ function Invoke-OfficialCatalog {
 }
 
 function Invoke-EdgeCases {
-    # SECURITY/UX: exercita falhas críticas do fluxo real com o mesmo contrato público,
-    # para garantir que inputs vazios e falhas de rede não gerem 500 nem corrompam a sessão global.
+    # SECURITY/UX: exercita falhas criticas do fluxo real com o mesmo contrato publico,
+    # para garantir que inputs vazios e falhas de rede nao gerem 500 nem corrompam a sessao global.
     $homeUrl = [Uri]::new([Uri]$AppUrl, "/").AbsoluteUri
     $homePage = Invoke-WebRequest -Uri $homeUrl -WebSession $webSession -Method Get -UseBasicParsing
     $homeForms = Get-HtmlForms $homePage.Content
@@ -491,10 +491,10 @@ function Invoke-EdgeCases {
         try {
             $response = Invoke-WebRequest -Uri $targetUrl -WebSession $webSession -Method Post -Body $payload -UseBasicParsing
             $status = if ($response.Content -match 'Revise os dados informados' -or $response.Content -match 'Endereço do equipamento') { "PASS" } else { "FAIL" }
-            Add-Result "EdgeCases" "OfficialApi/Invoke sem endereço" $status "Validação tratou endereço vazio sem quebra."
+            Add-Result "EdgeCases" "OfficialApi/Invoke sem endereco" $status "Validacao tratou endereco vazio sem quebra."
         }
         catch {
-            Add-Result "EdgeCases" "OfficialApi/Invoke sem endereço" "FAIL" $_.Exception.Message
+            Add-Result "EdgeCases" "OfficialApi/Invoke sem endereco" "FAIL" $_.Exception.Message
         }
     }
 }
@@ -579,7 +579,9 @@ function Write-Report {
         $lines.Add("")
     }
 
-    [IO.File]::WriteAllLines($reportFullPath, $lines)
+    # Mantemos BOM explicito para que PowerShell 5 e visualizadores do Windows
+    # leiam o relatorio em UTF-8 sem corromper acentuacao nas evidencias de QA.
+    [IO.File]::WriteAllLines($reportFullPath, $lines, [Text.UTF8Encoding]::new($true))
     return @{
         Total = $total
         Passed = $passed
@@ -675,7 +677,7 @@ try {
     Invoke-EdgeCases
 
     $summary = Write-Report
-    Write-Host "Smoke concluído. PASS=$($summary.Passed) FAIL=$($summary.Failed) SKIP=$($summary.Skipped)"
+    Write-Host "Smoke concluido. PASS=$($summary.Passed) FAIL=$($summary.Failed) SKIP=$($summary.Skipped)"
 
     if ($summary.Failed -gt 0) {
         exit 1
