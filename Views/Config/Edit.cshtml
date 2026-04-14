@@ -1,0 +1,35 @@
+﻿@model Integracao.ControlID.PoC.ViewModels.Config.ConfigEditViewModel
+@{
+    ViewData["Title"] = "Editar Configuração";
+}
+
+<div class="container mt-5">
+    <h2>Editar Configuração</h2>
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <form asp-action="Edit" method="post" autocomplete="off">
+                <input type="hidden" asp-for="Id" />
+                <div class="mb-3">
+                    <label asp-for="Group" class="form-label"></label>
+                    <input asp-for="Group" class="form-control" />
+                    <span asp-validation-for="Group" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Key" class="form-label"></label>
+                    <input asp-for="Key" class="form-control" />
+                    <span asp-validation-for="Key" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Value" class="form-label"></label>
+                    <input asp-for="Value" class="form-control" />
+                    <span asp-validation-for="Value" class="text-danger"></span>
+                </div>
+                <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+                <a asp-action="Index" class="btn btn-secondary ms-2">Cancelar</a>
+            </form>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,11 @@
+﻿@model Integracao.ControlID.PoC.ViewModels.System.SystemActionResultViewModel
+@{
+    ViewData["Title"] = "Resultado da Ação";
+}
+
+<div class="container mt-5">
+    <div class="alert @(Model.StatusType == "success" ? "alert-success" : Model.StatusType == "warning" ? "alert-warning" : "alert-danger")">
+        <strong>@Model.Message</strong>
+    </div>
+    <a asp-action="Info" class="btn btn-secondary">Voltar para Informações do Sistema</a>
+</div>

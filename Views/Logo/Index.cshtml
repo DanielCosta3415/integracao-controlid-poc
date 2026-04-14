@@ -1,0 +1,101 @@
+﻿@model Integracao.ControlID.PoC.ViewModels.Logo.LogoListViewModel
+@{
+    ViewData["Title"] = "Logo do equipamento";
+    ViewData["Subtitle"] = "Gestão dos slots de logo do dispositivo com upload, preview e download.";
+    var header = new AppPageHeaderViewModel
+    {
+        Eyebrow = "Pessoas e credenciais",
+        Title = "Logo do equipamento",
+        Description = "Atualize a marca exibida no dispositivo e acompanhe o conteúdo atual de cada slot disponível.",
+        BadgeText = $"{(Model.Logos?.Count() ?? 0)} slots",
+        BadgeTone = "neutral",
+        Actions = new[]
+        {
+            new PageHeaderActionViewModel { Label = "Enviar ou atualizar logo", Href = Url.Action("Upload")!, ButtonClass = "btn btn-primary" }
+        }
+    };
+}
+
+<div class="container mt-5 app-stack">
+    <partial name="_AppPageHeader" model="header" />
+
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger">@Model.ErrorMessage</div>
+    }
+
+    <section class="app-surface-card app-page-section">
+        <div class="app-page-section__heading">
+            <div>
+                <strong>Slots do equipamento</strong>
+                <p>Confira quais slots já possuem imagem e abra ações de preview, download ou substituição.</p>
+            </div>
+        </div>
+
+        <table class="table table-borderless table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>Slot</th>
+                    <th>Arquivo</th>
+                    <th>Formato</th>
+                    <th>Content-Type</th>
+                    <th>Status</th>
+                    <th>Preview</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Logos != null && Model.Logos.Any())
+                {
+                    foreach (var logo in Model.Logos)
+                    {
+                        <tr>
+                            <td>@logo.Id</td>
+                            <td>
+                                <div class="app-table-cell-stack">
+                                    <strong>@logo.FileName</strong>
+                                    <small>@logo.Format</small>
+                                </div>
+                            </td>
+                            <td>@logo.Format</td>
+                            <td>@logo.ContentType</td>
+                            <td><span class="app-chip @(logo.HasImage ? "app-chip--success" : "app-chip--warning")">@(logo.HasImage ? "Carregado" : "Vazio")</span></td>
+                            <td>
+                                @if (logo.HasImage && !string.IsNullOrEmpty(logo.Base64Image))
+                                {
+                                    <span class="app-media-preview app-media-preview--sm">
+                                        <img src="data:image/@logo.Format;base64,@logo.Base64Image" alt="Logo do slot @logo.Id" />
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="app-note">Sem preview</span>
+                                }
+                            </td>
+                            <td>
+                                @if (logo.HasImage)
+                                {
+                                    <a asp-action="Details" asp-route-id="@logo.Id" class="btn btn-sm btn-info">Detalhes</a>
+                                    <a asp-action="Download" asp-route-id="@logo.Id" class="btn btn-sm btn-outline-primary">Baixar</a>
+                                    <a asp-action="Delete" asp-route-id="@logo.Id" class="btn btn-sm btn-danger">Excluir</a>
+                                }
+                                else
+                                {
+                                    <a asp-action="Upload" class="btn btn-sm btn-primary">Enviar</a>
+                                }
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="7">
+                            <div class="app-empty app-empty--center">Nenhum logo encontrado.</div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </section>
+</div>

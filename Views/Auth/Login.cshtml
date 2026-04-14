@@ -1,0 +1,67 @@
+﻿@model Integracao.ControlID.PoC.ViewModels.Auth.LoginViewModel
+@{
+    ViewData["Title"] = "Autenticação";
+    ViewData["Subtitle"] = "Inicie uma sessão oficial do equipamento para habilitar operações autenticadas da API Control iD.";
+    var deviceAddress = Context.Session.GetString("ControlID_DeviceAddress") ?? string.Empty;
+    var deviceName = Context.Session.GetString("ControlID_DeviceName") ?? string.Empty;
+}
+
+<div class="container mt-5">
+    <div class="auth-shell">
+        <section class="auth-panel auth-panel--accent">
+            <span class="app-chip app-chip--danger">Acesso oficial</span>
+            <h1 class="mt-3">Autentique o equipamento conectado antes de operar rotas sensíveis.</h1>
+            <p class="mt-3">
+                Esta tela inicia a sessão oficial do dispositivo Control iD. Depois do login, a PoC libera fluxos que dependem de sessão autenticada, como objetos, configuração e ações administrativas.
+            </p>
+            <ul>
+                <li>Use as credenciais configuradas no equipamento.</li>
+                <li>Após autenticar, valide a sessão pela página de status.</li>
+                <li>Se ainda não houver dispositivo conectado, volte ao painel e informe um IP ou domínio primeiro.</li>
+            </ul>
+
+            <div class="auth-panel__device">
+                <span class="app-chip @(string.IsNullOrWhiteSpace(deviceAddress) ? "app-chip--warning" : "app-chip--success")">@(string.IsNullOrWhiteSpace(deviceAddress) ? "Sem equipamento" : "Equipamento pronto")</span>
+                <strong class="mt-3">@(string.IsNullOrWhiteSpace(deviceName) ? "Nenhum dispositivo selecionado" : deviceName)</strong>
+                <small>@(string.IsNullOrWhiteSpace(deviceAddress) ? "Abra o painel inicial e conecte um dispositivo para prosseguir." : deviceAddress)</small>
+            </div>
+        </section>
+
+        <section class="auth-panel app-stack">
+            <div>
+                <span class="app-chip app-chip--neutral">Login do dispositivo</span>
+                <h2 class="mt-3">Acessar o sistema</h2>
+                <p class="mt-2 text-muted">As credenciais informadas serão enviadas para o endpoint oficial de login da Control iD.</p>
+            </div>
+
+            <form asp-action="Login" method="post" autocomplete="off" class="form-section">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <div>
+                    <label asp-for="Username" class="form-label"></label>
+                    <input asp-for="Username" class="form-control" autofocus />
+                    <span asp-validation-for="Username" class="text-danger"></span>
+                </div>
+                <div>
+                    <label asp-for="Password" class="form-label"></label>
+                    <input asp-for="Password" class="form-control" type="password" />
+                    <span asp-validation-for="Password" class="text-danger"></span>
+                </div>
+                <div class="form-check">
+                    <input asp-for="RememberMe" class="form-check-input" />
+                    <label asp-for="RememberMe" class="form-check-label"></label>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary w-100">Entrar no equipamento</button>
+                </div>
+            </form>
+
+            <div class="app-empty">
+                Ainda não tem um usuário local? <a asp-action="Register">Abra o fluxo de registro</a> ou volte ao painel para trocar o equipamento conectado.
+            </div>
+        </section>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

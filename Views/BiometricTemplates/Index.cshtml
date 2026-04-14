@@ -1,0 +1,86 @@
+﻿@model Integracao.ControlID.PoC.ViewModels.BiometricTemplates.BiometricTemplateListViewModel
+@{
+    ViewData["Title"] = "Templates biométricos";
+    ViewData["Subtitle"] = "Credenciais biométricas com posição do dedo, tipo e vigência operacional.";
+    var header = new AppPageHeaderViewModel
+    {
+        Eyebrow = "Pessoas e credenciais",
+        Title = "Templates biométricos",
+        Description = "Consulte o inventário oficial de biometrias cadastradas e abra rapidamente os fluxos de detalhe, edição e exclusão.",
+        BadgeText = $"{(Model.Templates?.Count() ?? 0)} templates",
+        BadgeTone = "neutral",
+        Actions = new[]
+        {
+            new PageHeaderActionViewModel { Label = "Novo template", Href = Url.Action("Create")!, ButtonClass = "btn btn-primary" }
+        }
+    };
+}
+
+<div class="container mt-5 app-stack">
+    <partial name="_AppPageHeader" model="header" />
+
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger">@Model.ErrorMessage</div>
+    }
+
+    <section class="app-surface-card app-page-section">
+        <div class="app-page-section__heading">
+            <div>
+                <strong>Base biométrica oficial</strong>
+                <p>Visualize rapidamente usuário, tipo, dedo e validade de cada template sincronizado na PoC.</p>
+            </div>
+            <span class="app-chip app-chip--neutral">Biometria oficial</span>
+        </div>
+
+        <table class="table table-borderless table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Usuário</th>
+                    <th>Tipo</th>
+                    <th>Posição</th>
+                    <th>Dedo</th>
+                    <th>Vigência</th>
+                    <th>Criado em</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Templates != null && Model.Templates.Any())
+                {
+                    foreach (var t in Model.Templates)
+                    {
+                        <tr>
+                            <td>@t.Id</td>
+                            <td>@t.UserId</td>
+                            <td><span class="app-chip app-chip--neutral">@t.Type</span></td>
+                            <td>@t.FingerPosition</td>
+                            <td>@t.FingerType</td>
+                            <td>
+                                <div class="app-table-cell-stack">
+                                    <strong>@(t.BeginTime?.ToString("dd/MM/yyyy HH:mm") ?? "-")</strong>
+                                    <small>até @(t.EndTime?.ToString("dd/MM/yyyy HH:mm") ?? "-")</small>
+                                </div>
+                            </td>
+                            <td>@(t.CreatedAt?.ToString("dd/MM/yyyy HH:mm") ?? "-")</td>
+                            <td>
+                                <a asp-action="Details" asp-route-id="@t.Id" class="btn btn-sm btn-info">Detalhes</a>
+                                <a asp-action="Edit" asp-route-id="@t.Id" class="btn btn-sm btn-primary">Editar</a>
+                                <a asp-action="Delete" asp-route-id="@t.Id" class="btn btn-sm btn-danger" onclick="return confirm('Deseja excluir este template?');">Excluir</a>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="8">
+                            <div class="app-empty app-empty--center">Nenhum template biométrico encontrado.</div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </section>
+</div>

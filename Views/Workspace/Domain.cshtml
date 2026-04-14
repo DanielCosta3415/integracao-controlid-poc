@@ -1,0 +1,98 @@
+@model DomainLandingViewModel
+@{
+    ViewData["Title"] = Model.Domain.Title;
+    ViewData["Subtitle"] = Model.Domain.Description;
+    var header = new AppPageHeaderViewModel
+    {
+        Eyebrow = "Domínio operacional",
+        Title = Model.Domain.Title,
+        Description = Model.Domain.Summary,
+        BadgeText = $"{Model.Domain.Modules.Count} superfícies registradas",
+        BadgeTone = Model.Domain.AccentTone,
+        Actions = new[]
+        {
+            new PageHeaderActionViewModel { Label = "Mapa funcional", Href = Url.Action("Index", "Workspace")!, ButtonClass = "btn btn-outline-secondary" }
+        }
+    };
+}
+
+<div class="container mt-5 app-stack">
+    <partial name="_AppPageHeader" model="header" />
+
+    <section class="domain-hero domain-hero--@Model.Domain.AccentTone">
+        <div class="domain-hero__copy">
+            <span class="app-chip app-chip--neutral">@Model.Domain.ShortTitle</span>
+            <h2>@Model.Domain.Description</h2>
+            <p>@Model.Domain.Summary</p>
+        </div>
+        <div class="domain-hero__stats">
+            <div class="app-mini-stat">
+                <span>Principais</span>
+                <strong>@Model.PrimaryModules.Count</strong>
+            </div>
+            <div class="app-mini-stat">
+                <span>Especializadas</span>
+                <strong>@Model.SecondaryModules.Count</strong>
+            </div>
+        </div>
+    </section>
+
+    <section class="app-surface-card app-stack">
+        <div class="app-page-section__heading">
+            <div>
+                <strong>Módulos de primeiro nível</strong>
+                <p>Estas são as entradas que devem ficar mais fáceis de encontrar para o usuário durante a operação da PoC.</p>
+            </div>
+        </div>
+
+        <div class="module-grid">
+            @foreach (var module in Model.PrimaryModules)
+            {
+                <article class="module-card">
+                    <div class="module-card__meta">
+                        <span class="app-chip app-chip--@Model.Domain.AccentTone">@module.Complexity</span>
+                        <span class="app-chip app-chip--success">@module.ExperienceType</span>
+                    </div>
+                    <div class="app-stack">
+                        <h3>@module.Label</h3>
+                        <p>@module.Description</p>
+                    </div>
+                    <a class="btn btn-primary" href="@Url.Action(module.Action, module.Controller)">Abrir módulo</a>
+                </article>
+            }
+        </div>
+    </section>
+
+    @if (Model.SecondaryModules.Any())
+    {
+        <section class="app-surface-card app-stack">
+            <div class="app-page-section__heading">
+                <div>
+                    <strong>Telas especializadas e apoio</strong>
+                    <p>Estas superfícies continuam visíveis para QA, troubleshooting e operação avançada, sem ocupar o primeiro nível da navegação principal.</p>
+                </div>
+            </div>
+
+            <div class="module-directory-grid">
+                @foreach (var module in Model.SecondaryModules)
+                {
+                    <article class="module-directory-card">
+                        <div class="module-directory-card__meta">
+                            <span class="app-chip app-chip--neutral">@module.Complexity</span>
+                            <span class="app-chip app-chip--neutral">@module.ExperienceType</span>
+                        </div>
+                        <div class="app-stack-sm">
+                            <h3>@module.Label</h3>
+                            <p>@module.Description</p>
+                            @if (!string.IsNullOrWhiteSpace(module.Prerequisite))
+                            {
+                                <span class="app-chip app-chip--warning">@module.Prerequisite</span>
+                            }
+                        </div>
+                        <a class="btn btn-outline-secondary" href="@Url.Action(module.Action, module.Controller)">Abrir tela</a>
+                    </article>
+                }
+            </div>
+        </section>
+    }
+</div>

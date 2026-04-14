@@ -1,0 +1,110 @@
+﻿@model Integracao.ControlID.PoC.ViewModels.Media.PhotoListViewModel
+@{
+    ViewData["Title"] = "Fotos de usuários";
+    ViewData["Subtitle"] = "Banco visual dos usuários com atalhos para upload, download e modo propaganda.";
+    var header = new AppPageHeaderViewModel
+    {
+        Eyebrow = "Pessoas e credenciais",
+        Title = "Fotos de usuários",
+        Description = "Gerencie fotos faciais dos usuários e acesse o modo propaganda do equipamento sem sair do fluxo principal.",
+        BadgeText = $"{(Model.Photos?.Count() ?? 0)} imagens",
+        BadgeTone = "neutral",
+        Actions = new[]
+        {
+            new PageHeaderActionViewModel { Label = "Vídeo de propaganda", Href = Url.Action("AdMode")!, ButtonClass = "btn btn-outline-secondary" },
+            new PageHeaderActionViewModel { Label = "Nova foto", Href = Url.Action("Upload")!, ButtonClass = "btn btn-primary" }
+        }
+    };
+}
+
+<div class="container mt-5 app-stack">
+    <partial name="_AppPageHeader" model="header" />
+
+    @if (TempData["StatusMessage"] is string statusMessage)
+    {
+        <div class="alert alert-@(TempData["StatusType"] ?? "info")">@statusMessage</div>
+    }
+
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger">@Model.ErrorMessage</div>
+    }
+
+    <section class="app-surface-card app-page-section">
+        <div class="app-page-section__heading">
+            <div>
+                <strong>Galeria operacional</strong>
+                <p>Visualize rapidamente o que já está carregado, baixe os arquivos existentes ou abra o detalhe completo.</p>
+            </div>
+            <span class="app-chip app-chip--neutral">Pré-visualização imediata</span>
+        </div>
+
+        <table class="table table-borderless table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Usuário</th>
+                    <th>Arquivo</th>
+                    <th>Formato</th>
+                    <th>Content-Type</th>
+                    <th>Status</th>
+                    <th>Preview</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Photos != null && Model.Photos.Any())
+                {
+                    foreach (var photo in Model.Photos)
+                    {
+                        <tr>
+                            <td>@photo.Id</td>
+                            <td>@photo.UserId</td>
+                            <td>
+                                <div class="app-table-cell-stack">
+                                    <strong>@photo.FileName</strong>
+                                    <small>@photo.Format</small>
+                                </div>
+                            </td>
+                            <td>@photo.Format</td>
+                            <td>@photo.ContentType</td>
+                            <td><span class="app-chip @(photo.HasImage ? "app-chip--success" : "app-chip--warning")">@(photo.HasImage ? "Carregada" : "Indisponível")</span></td>
+                            <td>
+                                @if (photo.HasImage && !string.IsNullOrEmpty(photo.Base64Image))
+                                {
+                                    <span class="app-media-preview app-media-preview--sm">
+                                        <img src="data:image/@photo.Format;base64,@photo.Base64Image" alt="Foto do usuário @photo.UserId" />
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="app-note">Sem preview</span>
+                                }
+                            </td>
+                            <td>
+                                @if (photo.HasImage)
+                                {
+                                    <a asp-action="Details" asp-route-id="@photo.UserId" class="btn btn-sm btn-info">Detalhes</a>
+                                    <a asp-action="Download" asp-route-id="@photo.UserId" class="btn btn-sm btn-outline-primary">Baixar</a>
+                                    <a asp-action="Delete" asp-route-id="@photo.UserId" class="btn btn-sm btn-danger">Excluir</a>
+                                }
+                                else
+                                {
+                                    <span class="app-chip app-chip--neutral">Sem ações</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="8">
+                            <div class="app-empty app-empty--center">Nenhuma foto encontrada.</div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </section>
+</div>

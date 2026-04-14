@@ -1,0 +1,24 @@
+﻿@model Integracao.ControlID.PoC.ViewModels.AccessRules.AccessRuleViewModel
+@{
+    ViewData["Title"] = "Detalhes da Regra de Acesso";
+}
+
+<div class="container mt-5">
+    <h2>Detalhes da Regra de Acesso</h2>
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <dl class="row">
+                <dt class="col-sm-3">ID</dt>
+                <dd class="col-sm-9">@Model.Id</dd>
+                <dt class="col-sm-3">Nome</dt>
+                <dd class="col-sm-9">@Model.Name</dd>
+                <dt class="col-sm-3">Tipo</dt>
+                <dd class="col-sm-9">@Model.Type</dd>
+                <dt class="col-sm-3">Prioridade</dt>
+                <dd class="col-sm-9">@Model.Priority</dd>
+            </dl>
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Editar</a>
+            <a asp-action="Index" class="btn btn-secondary ms-2">Voltar</a>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,93 @@
+﻿@model Integracao.ControlID.PoC.ViewModels.Cards.CardListViewModel
+@{
+    ViewData["Title"] = "Cartões RFID";
+    ViewData["Subtitle"] = "Credenciais físicas vinculadas a usuários com status e janela de validade.";
+    var header = new AppPageHeaderViewModel
+    {
+        Eyebrow = "Pessoas e credenciais",
+        Title = "Cartões RFID",
+        Description = "Consulte e mantenha as credenciais físicas cadastradas, com leitura rápida de status e período de uso.",
+        BadgeText = $"{(Model.Cards?.Count() ?? 0)} cartões",
+        BadgeTone = "neutral",
+        Actions = new[]
+        {
+            new PageHeaderActionViewModel { Label = "Novo cartão", Href = Url.Action("Create")!, ButtonClass = "btn btn-primary" }
+        }
+    };
+}
+
+<div class="container mt-5 app-stack">
+    <partial name="_AppPageHeader" model="header" />
+
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger">@Model.ErrorMessage</div>
+    }
+
+    <section class="app-surface-card app-page-section">
+        <div class="app-page-section__heading">
+            <div>
+                <strong>Credenciais por cartão</strong>
+                <p>Acompanhe o status de cada cartão, o usuário vinculado e o período de validade configurado.</p>
+            </div>
+            <span class="app-chip app-chip--neutral">Base oficial</span>
+        </div>
+
+        <table class="table table-borderless table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Usuário</th>
+                    <th>Valor</th>
+                    <th>Tipo</th>
+                    <th>Status</th>
+                    <th>Validade</th>
+                    <th>Criado em</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Cards != null && Model.Cards.Any())
+                {
+                    foreach (var card in Model.Cards)
+                    {
+                        <tr>
+                            <td>@card.Id</td>
+                            <td>@card.UserId</td>
+                            <td>
+                                <div class="app-table-cell-stack">
+                                    <strong>@card.Value</strong>
+                                    <small>Credencial física sincronizada</small>
+                                </div>
+                            </td>
+                            <td><span class="app-chip app-chip--neutral">@card.Type</span></td>
+                            <td>
+                                <span class="app-chip @(string.Equals(card.Status, "active", StringComparison.OrdinalIgnoreCase) || string.Equals(card.Status, "1", StringComparison.OrdinalIgnoreCase) ? "app-chip--success" : "app-chip--warning")">@card.Status</span>
+                            </td>
+                            <td>
+                                <div class="app-table-cell-stack">
+                                    <strong>@(card.BeginTime?.ToString("dd/MM/yyyy HH:mm") ?? "-")</strong>
+                                    <small>até @(card.EndTime?.ToString("dd/MM/yyyy HH:mm") ?? "-")</small>
+                                </div>
+                            </td>
+                            <td>@(card.CreatedAt?.ToString("dd/MM/yyyy HH:mm") ?? "-")</td>
+                            <td>
+                                <a asp-action="Details" asp-route-id="@card.Id" class="btn btn-sm btn-info">Detalhes</a>
+                                <a asp-action="Edit" asp-route-id="@card.Id" class="btn btn-sm btn-primary">Editar</a>
+                                <a asp-action="Delete" asp-route-id="@card.Id" class="btn btn-sm btn-danger" onclick="return confirm('Deseja excluir este cartão?');">Excluir</a>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="8">
+                            <div class="app-empty app-empty--center">Nenhum cartão encontrado.</div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </section>
+</div>

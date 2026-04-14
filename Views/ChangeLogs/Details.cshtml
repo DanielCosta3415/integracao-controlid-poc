@@ -1,0 +1,31 @@
+﻿@model Integracao.ControlID.PoC.ViewModels.ChangeLogs.ChangeLogViewModel
+@{
+    ViewData["Title"] = "Detalhes do log de alteração";
+    ViewData["Subtitle"] = "Inspeção de uma alteração persistida na trilha de auditoria local.";
+    var header = new AppPageHeaderViewModel
+    {
+        Eyebrow = "Dispositivo e infraestrutura",
+        Title = "Detalhes do log de alteração",
+        Description = "Veja a natureza da mudança registrada, a tabela afetada e o identificador do registro alterado.",
+        BadgeText = $"Mudança #{Model.Id}",
+        BadgeTone = "neutral",
+        Actions = new[]
+        {
+            new PageHeaderActionViewModel { Label = "Voltar aos logs", Href = Url.Action("Index")!, ButtonClass = "btn btn-outline-secondary" }
+        }
+    };
+}
+
+<div class="container mt-5 app-stack">
+    <partial name="_AppPageHeader" model="header" />
+
+    <section class="app-surface-card app-detail-shell">
+        <dl class="app-detail-list">
+            <div class="app-detail-list__row"><dt>ID</dt><dd>@Model.Id</dd></div>
+            <div class="app-detail-list__row"><dt>Tipo de operação</dt><dd><span class="app-chip app-chip--neutral">@Model.OperationType</span></dd></div>
+            <div class="app-detail-list__row"><dt>Tabela</dt><dd>@Model.TableName</dd></div>
+            <div class="app-detail-list__row"><dt>ID do registro</dt><dd>@Model.TableId</dd></div>
+            <div class="app-detail-list__row"><dt>Data e hora</dt><dd>@(Model.Timestamp?.ToString("dd/MM/yyyy HH:mm") ?? "-")</dd></div>
+        </dl>
+    </section>
+</div>

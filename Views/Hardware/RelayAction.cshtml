@@ -1,0 +1,27 @@
+﻿@model Integracao.ControlID.PoC.ViewModels.Hardware.RelayActionViewModel
+@{
+    ViewData["Title"] = "Acionar Relé";
+}
+
+<div class="container mt-5">
+    <h2>Abrir Saída Remota</h2>
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <form asp-action="RelayAction" method="post" autocomplete="off">
+                <div class="mb-3">
+                    <label asp-for="DoorNumber" class="form-label"></label>
+                    <input asp-for="DoorNumber" class="form-control" min="1" />
+                    <span asp-validation-for="DoorNumber" class="text-danger"></span>
+                </div>
+                <p class="text-muted small">
+                    Esta operação usa o endpoint oficial `execute_actions` com a ação `door`, disparando uma abertura temporizada da saída configurada no equipamento.
+                </p>
+                <button type="submit" class="btn btn-primary">Acionar</button>
+                <a asp-action="Status" class="btn btn-secondary ms-2">Cancelar</a>
+            </form>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

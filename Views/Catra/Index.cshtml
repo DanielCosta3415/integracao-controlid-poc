@@ -1,0 +1,134 @@
+﻿@model Integracao.ControlID.PoC.ViewModels.Catra.CatraEventListViewModel
+@{
+    ViewData["Title"] = "Eventos e comandos de catraca";
+    ViewData["Subtitle"] = "Painel de giro, resumo oficial e execução de comandos suportados para a catraca.";
+    var header = new AppPageHeaderViewModel
+    {
+        Eyebrow = "Operação",
+        Title = "Eventos e comandos de catraca",
+        Description = "Acompanhe o resumo oficial de giros, execute comandos de liberação e consulte a trilha de eventos recebidos pela PoC.",
+        BadgeText = $"{(Model.CatraEvents?.Count() ?? 0)} eventos",
+        BadgeTone = "danger"
+    };
+}
+
+<div class="container mt-5 app-stack">
+    <partial name="_AppPageHeader" model="header" />
+
+    @if (Model.TotalTurns.HasValue || Model.LeftTurns.HasValue || Model.RightTurns.HasValue || Model.EntranceTurns.HasValue || Model.ExitTurns.HasValue)
+    {
+        <section class="app-surface-card app-page-section">
+            <div class="app-page-section__heading">
+                <div>
+                    <strong>Resumo oficial de giro</strong>
+                    <p>Leitura consolidada retornada pelo equipamento para apoio operacional imediato.</p>
+                </div>
+            </div>
+            <div class="app-mini-grid">
+                <div class="app-mini-stat"><span>Total</span><strong>@Model.TotalTurns</strong></div>
+                <div class="app-mini-stat"><span>Entrada</span><strong>@Model.EntranceTurns</strong></div>
+                <div class="app-mini-stat"><span>Saída</span><strong>@Model.ExitTurns</strong></div>
+                <div class="app-mini-stat"><span>Esquerda</span><strong>@Model.LeftTurns</strong></div>
+                <div class="app-mini-stat"><span>Direita</span><strong>@Model.RightTurns</strong></div>
+            </div>
+        </section>
+    }
+
+    <section class="app-surface-card app-page-section">
+        <div class="app-page-section__heading">
+            <div>
+                <strong>Comando operacional</strong>
+                <p>Libere giro, acione relé ou abra coletor usando os comandos oficiais suportados nesta PoC.</p>
+            </div>
+        </div>
+
+        <form asp-action="Open" method="post" class="app-form-grid">
+            <div>
+                <label for="ActionType" class="form-label">Comando</label>
+                <select id="ActionType" name="ActionType" class="form-select" required>
+                    <option value="allow" selected="@(Model.OpenCommand.ActionType == "allow" ? "selected" : null)">Liberar giro</option>
+                    <option value="relay" selected="@(Model.OpenCommand.ActionType == "relay" ? "selected" : null)">Acionar relé</option>
+                    <option value="collector" selected="@(Model.OpenCommand.ActionType == "collector" ? "selected" : null)">Abrir coletor</option>
+                </select>
+            </div>
+            <div>
+                <label for="AllowDirection" class="form-label">Sentido</label>
+                <select id="AllowDirection" name="AllowDirection" class="form-select">
+                    <option value="clockwise" selected="@(Model.OpenCommand.AllowDirection == "clockwise" ? "selected" : null)">Clockwise</option>
+                    <option value="anticlockwise" selected="@(Model.OpenCommand.AllowDirection == "anticlockwise" ? "selected" : null)">Anticlockwise</option>
+                    <option value="both" selected="@(Model.OpenCommand.AllowDirection == "both" ? "selected" : null)">Ambos</option>
+                </select>
+            </div>
+            <div>
+                <label for="Relay" class="form-label">Relé</label>
+                <select id="Relay" name="Relay" class="form-select">
+                    <option value="">Selecione...</option>
+                    <option value="1" selected="@(Model.OpenCommand.Relay == 1 ? "selected" : null)">Relé 1</option>
+                    <option value="2" selected="@(Model.OpenCommand.Relay == 2 ? "selected" : null)">Relé 2</option>
+                </select>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Executar comando</button>
+            </div>
+        </form>
+        <div class="app-note">Comandos suportados: <code>catra</code> com liberação por sentido, <code>catra</code> por relé e <code>open_collector</code>.</div>
+    </section>
+
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger">@Model.ErrorMessage</div>
+    }
+
+    <section class="app-surface-card app-page-section">
+        <div class="app-page-section__heading">
+            <div>
+                <strong>Eventos registrados</strong>
+                <p>Histórico de giros e eventos persistidos localmente para consulta rápida.</p>
+            </div>
+        </div>
+
+        <table class="table table-borderless table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Direção</th>
+                    <th>Quando</th>
+                    <th>Usuário</th>
+                    <th>Dispositivo</th>
+                    <th>Info</th>
+                    <th>Criado em</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.CatraEvents != null && Model.CatraEvents.Any())
+                {
+                    foreach (var evt in Model.CatraEvents)
+                    {
+                        <tr>
+                            <td>@evt.Id</td>
+                            <td><span class="app-chip app-chip--neutral">@(evt.Direction == 0 ? "Entrada" : evt.Direction == 1 ? "Saída" : evt.Direction.ToString())</span></td>
+                            <td>@(evt.Time?.ToString("dd/MM/yyyy HH:mm") ?? "-")</td>
+                            <td>@evt.UserId</td>
+                            <td>@evt.DeviceId</td>
+                            <td>@(string.IsNullOrWhiteSpace(evt.Info) ? "-" : evt.Info)</td>
+                            <td>@(evt.CreatedAt?.ToString("dd/MM/yyyy HH:mm") ?? "-")</td>
+                            <td>
+                                <a asp-action="Details" asp-route-id="@evt.Id" class="btn btn-sm btn-info">Detalhes</a>
+                                <a asp-action="Delete" asp-route-id="@evt.Id" class="btn btn-sm btn-danger">Excluir</a>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="8">
+                            <div class="app-empty app-empty--center">Nenhum evento de catraca encontrado.</div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </section>
+</div>

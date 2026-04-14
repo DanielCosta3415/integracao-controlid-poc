@@ -1,0 +1,88 @@
+﻿@model Integracao.ControlID.PoC.ViewModels.Users.UserListViewModel
+@{
+    ViewData["Title"] = "Usuários";
+    ViewData["Subtitle"] = "Gestão de usuários, validade e credenciais sincronizadas com a base oficial do equipamento.";
+    var header = new AppPageHeaderViewModel
+    {
+        Eyebrow = "Pessoas e credenciais",
+        Title = "Gerenciamento de usuários",
+        Description = "Consulte, crie e edite usuários com uma superfície de operação mais legível para volume e auditoria.",
+        BadgeText = $"{(Model.Users?.Count() ?? 0)} registros",
+        BadgeTone = "danger",
+        Actions = new[]
+        {
+            new PageHeaderActionViewModel { Label = "Novo usuário", Href = Url.Action("Create")!, ButtonClass = "btn btn-primary" },
+            new PageHeaderActionViewModel { Label = "Fotos faciais", Href = Url.Action("Index", "Media")!, ButtonClass = "btn btn-outline-secondary" }
+        }
+    };
+}
+
+<div class="container mt-5">
+    <partial name="_AppPageHeader" model="header" />
+
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger">@Model.ErrorMessage</div>
+    }
+
+    <section class="app-surface-card">
+        <div class="app-toolbar">
+            <div>
+                <strong>Base local e oficial de usuários</strong>
+                <p>Esta grade resume a base atual carregada pela PoC, com acesso rápido às ações mais comuns.</p>
+            </div>
+            <span class="app-chip app-chip--neutral">Campos principais visíveis</span>
+        </div>
+
+        <table class="table table-borderless table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Matrícula</th>
+                    <th>Nome</th>
+                    <th>E-mail</th>
+                    <th>Status</th>
+                    <th>Início</th>
+                    <th>Fim</th>
+                    <th>Criado em</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Users != null && Model.Users.Any())
+                {
+                    foreach (var user in Model.Users)
+                    {
+                        <tr>
+                            <td>@user.Id</td>
+                            <td>@user.Registration</td>
+                            <td>
+                                <strong>@user.Name</strong>
+                            </td>
+                            <td>@user.Email</td>
+                            <td>
+                                <span class="app-chip @(string.Equals(user.Status, "active", StringComparison.OrdinalIgnoreCase) || string.Equals(user.Status, "1", StringComparison.OrdinalIgnoreCase) ? "app-chip--success" : "app-chip--warning")">@user.Status</span>
+                            </td>
+                            <td>@(user.BeginTime?.ToString("dd/MM/yyyy HH:mm") ?? "-")</td>
+                            <td>@(user.EndTime?.ToString("dd/MM/yyyy HH:mm") ?? "-")</td>
+                            <td>@(user.CreatedAt?.ToString("dd/MM/yyyy HH:mm") ?? "-")</td>
+                            <td>
+                                <a asp-action="Details" asp-route-id="@user.Id" class="btn btn-sm btn-info">Detalhes</a>
+                                <a asp-action="Edit" asp-route-id="@user.Id" class="btn btn-sm btn-primary">Editar</a>
+                                <a asp-action="Delete" asp-route-id="@user.Id" class="btn btn-sm btn-danger" onclick="return confirm('Deseja excluir este usuário?');">Excluir</a>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="9">
+                            <div class="app-empty">Nenhum usuário encontrado. Use o botão “Novo usuário” para iniciar o cadastro.</div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </section>
+</div>

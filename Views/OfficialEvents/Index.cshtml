@@ -1,0 +1,80 @@
+﻿@model Integracao.ControlID.PoC.ViewModels.Monitor.MonitorWebhookListViewModel
+@{
+    ViewData["Title"] = "Eventos oficiais";
+    ViewData["Subtitle"] = "Callbacks online e notificações de monitor persistidos pela PoC para leitura operacional.";
+    var header = new AppPageHeaderViewModel
+    {
+        Eyebrow = "Eventos, logs e push",
+        Title = "Eventos oficiais da API",
+        Description = "Acompanhe o que o equipamento enviou para a PoC, com foco em payload, origem e timestamp de recebimento.",
+        BadgeText = $"{Model.Events.Count()} eventos",
+        BadgeTone = "danger",
+        Actions = new[]
+        {
+            new PageHeaderActionViewModel { Label = "Limpar eventos", Href = Url.Action("Index")!, ButtonClass = "btn btn-outline-danger" }
+        }
+    };
+}
+
+<div class="container mt-5 app-stack">
+    <partial name="_AppPageHeader" model="header" />
+
+    <form asp-action="Clear" method="post" class="app-inline-form">
+        <button type="submit" class="btn btn-outline-danger">Limpar eventos persistidos</button>
+    </form>
+
+    @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+    {
+        <div class="alert alert-info">@Model.ErrorMessage</div>
+    }
+
+    <section class="app-surface-card">
+        <div class="app-toolbar">
+            <div>
+                <strong>Monitor e callbacks online</strong>
+                <p>Os registros abaixo representam a trilha oficial recebida pela aplicação a partir do equipamento.</p>
+            </div>
+        </div>
+
+        <table class="table table-borderless table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Recebido em</th>
+                    <th>Tipo</th>
+                    <th>Dispositivo</th>
+                    <th>Usuário</th>
+                    <th>Payload</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Events.Any())
+                {
+                    foreach (var evt in Model.Events)
+                    {
+                        <tr>
+                            <td>@evt.EventId</td>
+                            <td>@evt.ReceivedAt.ToString("dd/MM/yyyy HH:mm:ss")</td>
+                            <td><span class="app-chip app-chip--danger">@evt.EventType</span></td>
+                            <td>@evt.DeviceId</td>
+                            <td>@evt.UserId</td>
+                            <td>@(evt.Payload?.Length > 52 ? evt.Payload.Substring(0, 52) + "..." : evt.Payload)</td>
+                            <td>
+                                <a asp-action="Details" asp-route-id="@evt.EventId" class="btn btn-sm btn-info">Detalhes</a>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="7">
+                            <div class="app-empty">Nenhum evento oficial recebido até o momento.</div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </section>
+</div>

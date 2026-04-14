@@ -1,0 +1,15 @@
+﻿@model Integracao.ControlID.PoC.Models.Database.SessionLocal
+@{
+    ViewData["Title"] = "Encerrar Sessão";
+}
+
+<div class="container mt-5">
+    <div class="alert alert-warning">
+        <h4>Confirmação</h4>
+        <p>Deseja realmente encerrar a sessão do usuário <strong>@Model.Username</strong> no equipamento <strong>@Model.DeviceName</strong>?</p>
+        <form asp-action="DeleteConfirmed" asp-route-id="@Model.Id" method="post">
+            <button type="submit" class="btn btn-danger">Sim, encerrar</button>
+            <a asp-action="Index" class="btn btn-secondary ms-2">Cancelar</a>
+        </form>
+    </div>
+</div>

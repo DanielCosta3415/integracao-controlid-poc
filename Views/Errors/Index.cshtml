@@ -1,0 +1,79 @@
+﻿@model Integracao.ControlID.PoC.ViewModels.Errors.ErrorListViewModel
+@{
+    ViewData["Title"] = "Erros registrados";
+    ViewData["Subtitle"] = "Central de incidentes capturados pela PoC para inspeção e troubleshooting.";
+    var header = new AppPageHeaderViewModel
+    {
+        Eyebrow = "Eventos, logs e push",
+        Title = "Erros registrados",
+        Description = "Revise rapidamente os incidentes persistidos pela aplicação, abra o detalhe técnico e acompanhe contexto e request id.",
+        BadgeText = $"{(Model.Errors?.Count() ?? 0)} incidentes",
+        BadgeTone = "warning"
+    };
+}
+
+<div class="container mt-5 app-stack">
+    <partial name="_AppPageHeader" model="header" />
+
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger">@Model.ErrorMessage</div>
+    }
+
+    <section class="app-surface-card app-page-section">
+        <div class="app-page-section__heading">
+            <div>
+                <strong>Fila de incidentes</strong>
+                <p>Use esta visão para localizar rapidamente falhas por rota, status HTTP e momento da ocorrência.</p>
+            </div>
+        </div>
+
+        <table class="table table-borderless table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Mensagem</th>
+                    <th>Path</th>
+                    <th>Status</th>
+                    <th>Quando</th>
+                    <th>Usuário</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Errors != null && Model.Errors.Any())
+                {
+                    int id = 1;
+                    foreach (var error in Model.Errors)
+                    {
+                        <tr>
+                            <td>@id</td>
+                            <td>
+                                <div class="app-table-cell-stack">
+                                    <strong>@error.Message</strong>
+                                    <small>Request ID: @error.RequestId</small>
+                                </div>
+                            </td>
+                            <td>@error.Path</td>
+                            <td><span class="app-chip app-chip--warning">@error.StatusCode</span></td>
+                            <td>@(error.OccurredAt?.ToString("dd/MM/yyyy HH:mm") ?? "-")</td>
+                            <td>@(string.IsNullOrWhiteSpace(error.User) ? "-" : error.User)</td>
+                            <td>
+                                <a asp-action="Details" asp-route-id="@id" class="btn btn-sm btn-info">Detalhes</a>
+                            </td>
+                        </tr>
+                        id++;
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="7">
+                            <div class="app-empty app-empty--center">Nenhum erro registrado.</div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </section>
+</div>

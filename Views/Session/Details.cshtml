@@ -1,0 +1,39 @@
+﻿@model Integracao.ControlID.PoC.Models.Database.SessionLocal
+@{
+    ViewData["Title"] = "Detalhes da sessão";
+    ViewData["Subtitle"] = "Inspeção do contexto de uma sessão persistida pela PoC.";
+    var header = new AppPageHeaderViewModel
+    {
+        Eyebrow = "Operação",
+        Title = "Detalhes da sessão",
+        Description = "Veja o equipamento, o usuário associado, expiração e status antes de decidir encerrar a sessão.",
+        BadgeText = Model.IsActive ? "Sessão ativa" : "Sessão inativa",
+        BadgeTone = Model.IsActive ? "success" : "warning",
+        Actions = new[]
+        {
+            new PageHeaderActionViewModel { Label = "Voltar às sessões", Href = Url.Action("Index")!, ButtonClass = "btn btn-outline-secondary" }
+        }
+    };
+}
+
+<div class="container mt-5 app-stack">
+    <partial name="_AppPageHeader" model="header" />
+
+    <section class="app-surface-card app-detail-shell">
+        <dl class="app-detail-list">
+            <div class="app-detail-list__row"><dt>ID</dt><dd>@Model.Id</dd></div>
+            <div class="app-detail-list__row"><dt>Dispositivo</dt><dd>@Model.DeviceAddress</dd></div>
+            <div class="app-detail-list__row"><dt>Usuário</dt><dd>@Model.Username</dd></div>
+            <div class="app-detail-list__row"><dt>Nome do equipamento</dt><dd>@(string.IsNullOrWhiteSpace(Model.DeviceName) ? "-" : Model.DeviceName)</dd></div>
+            <div class="app-detail-list__row"><dt>Número de série</dt><dd>@(string.IsNullOrWhiteSpace(Model.DeviceSerial) ? "-" : Model.DeviceSerial)</dd></div>
+            <div class="app-detail-list__row"><dt>Criada em</dt><dd>@Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</dd></div>
+            <div class="app-detail-list__row"><dt>Expira em</dt><dd>@(Model.ExpiresAt?.ToString("dd/MM/yyyy HH:mm") ?? "-")</dd></div>
+            <div class="app-detail-list__row"><dt>Status</dt><dd><span class="app-chip @(Model.IsActive ? "app-chip--success" : "app-chip--warning")">@(Model.IsActive ? "Ativa" : "Inativa")</span></dd></div>
+        </dl>
+
+        <form asp-action="Delete" asp-route-id="@Model.Id" method="post" class="app-action-row">
+            <button type="submit" class="btn btn-danger" onclick="return confirm('Deseja realmente encerrar esta sessão?');">Encerrar sessão</button>
+            <a asp-action="Index" class="btn btn-outline-secondary">Voltar</a>
+        </form>
+    </section>
+</div>

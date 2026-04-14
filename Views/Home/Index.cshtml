@@ -1,0 +1,219 @@
+﻿@model HomeDashboardViewModel
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Painel de operações";
+    ViewData["Subtitle"] = "Conexão, contexto do equipamento, navegação por domínio e acesso rápido às trilhas mais importantes da PoC Control iD.";
+}
+
+<div class="container mt-5 app-stack">
+    <section class="hero-panel hero-panel--compact">
+        <div class="hero-panel__content">
+            <span class="app-chip app-chip--danger">Control iD Access API</span>
+            <h1>Uma PoC extensa precisa de uma navegação orientada por contexto, não de uma lista plana.</h1>
+            <p>
+                O shell agora concentra o contexto do equipamento, a conexão persistente e a descoberta por domínio. Use este painel para visualizar o estado operacional da PoC e entrar rapidamente na área certa.
+            </p>
+            <div class="hero-panel__actions">
+                <a class="btn btn-primary" href="@Url.Action("Index", "Workspace")">Abrir mapa funcional</a>
+                <a class="btn btn-outline-secondary" href="@Url.Action("Index", "OfficialApi")">Explorar API oficial</a>
+                <a class="btn btn-quiet" href="@Url.Action("Index", "OfficialEvents")">Ver eventos</a>
+            </div>
+        </div>
+
+        <div class="hero-panel__side hero-panel__side--metrics">
+            <div class="metric-card">
+                <span class="metric-card__label">Equipamento</span>
+                <span class="metric-card__value">@(Model.IsDeviceConnected ? "ON" : "OFF")</span>
+                <span class="metric-card__hint">@(Model.IsDeviceConnected ? Model.DeviceAddress : "Conecte um IP + porta para liberar o contexto.")</span>
+            </div>
+            <div class="metric-card">
+                <span class="metric-card__label">Sessão oficial</span>
+                <span class="metric-card__value">@(Model.IsSessionActive ? "ATIVA" : "PENDENTE")</span>
+                <span class="metric-card__hint">Login oficial disponível no domínio de operação.</span>
+            </div>
+            <div class="metric-card">
+                <span class="metric-card__label">Endpoints invocáveis</span>
+                <span class="metric-card__value">@Model.InvokableEndpointCount</span>
+                <span class="metric-card__hint">Chamadas diretas ao equipamento mapeadas no catálogo oficial.</span>
+            </div>
+            <div class="metric-card">
+                <span class="metric-card__label">Fila push pendente</span>
+                <span class="metric-card__value">@Model.PendingPushCount</span>
+                <span class="metric-card__hint">Comandos aguardando coleta pelo equipamento.</span>
+            </div>
+        </div>
+    </section>
+
+    @if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
+    {
+        <div class="alert alert-@Model.StatusType">@Model.StatusMessage</div>
+    }
+
+    <section class="status-strip-grid">
+        <article class="status-strip-card">
+            <span>Equipamento ativo</span>
+            <strong>@(string.IsNullOrWhiteSpace(Model.DeviceName) ? "Nenhum equipamento em contexto" : Model.DeviceName)</strong>
+            <small>@(string.IsNullOrWhiteSpace(Model.DeviceSerial) ? "Serial indisponível" : $"Serial: {Model.DeviceSerial}")</small>
+        </article>
+        <article class="status-strip-card">
+            <span>Firmware</span>
+            <strong>@(string.IsNullOrWhiteSpace(Model.DeviceFirmware) ? "n/d" : Model.DeviceFirmware)</strong>
+            <small>Informação persistida a partir do último handshake oficial.</small>
+        </article>
+        <article class="status-strip-card">
+            <span>Callbacks e monitor</span>
+            <strong>@Model.CallbackEndpointCount rotas</strong>
+            <small>Superfície servida pela PoC para eventos e observabilidade.</small>
+        </article>
+        <article class="status-strip-card">
+            <span>Eventos persistidos</span>
+            <strong>@Model.RecentEventCount</strong>
+            <small>Leitura local consolidada para auditoria e troubleshooting.</small>
+        </article>
+    </section>
+
+    <section class="app-stack">
+        <div class="app-page-section__heading">
+            <div>
+                <strong>Fluxos prioritários</strong>
+                <p>Seis caminhos recomendados para abrir a PoC na área certa sem navegar por toda a árvore de módulos.</p>
+            </div>
+        </div>
+
+        <div class="app-grid-two app-grid-two--triplets">
+            @foreach (var flow in Model.QuickFlows)
+            {
+                <article class="detail-card app-stack">
+                    <span class="app-chip app-chip--neutral">Fluxo recomendado</span>
+                    <h3>@flow.Title</h3>
+                    <p>@flow.Description</p>
+                    <a class="btn btn-outline-secondary" href="@flow.Href">@flow.ButtonLabel</a>
+                </article>
+            }
+        </div>
+    </section>
+
+    <section class="app-stack">
+        <div class="app-page-section__heading">
+            <div>
+                <strong>Mapa dos domínios</strong>
+                <p>Escolha um domínio para entrar em um hub visual com os módulos principais e as telas especializadas relacionadas.</p>
+            </div>
+        </div>
+
+        <div class="domain-grid">
+            @foreach (var domain in Model.Domains)
+            {
+                <article class="domain-card">
+                    <div class="domain-card__top">
+                        <span class="app-chip app-chip--@domain.AccentTone">@domain.ShortTitle</span>
+                        <span class="domain-card__icon">@domain.Icon</span>
+                    </div>
+                    <div class="app-stack-sm">
+                        <h3>@domain.Title</h3>
+                        <p>@domain.Description</p>
+                        <small>@domain.Modules.Count módulos e superfícies registradas.</small>
+                    </div>
+                    <div class="quick-links">
+                        <a class="btn btn-primary" href="@Url.Action("Domain", "Workspace", new { id = domain.Id })">Abrir domínio</a>
+                        <a class="btn btn-quiet" href="@Url.Action("Index", "Workspace", new { domainId = domain.Id })">Filtrar no mapa</a>
+                    </div>
+                </article>
+            }
+        </div>
+    </section>
+
+    <div class="home-grid home-grid--balanced">
+        <section class="activity-card app-stack">
+            <div>
+                <span class="app-chip @(Model.IsSessionActive ? "app-chip--success" : "app-chip--warning")">@(Model.IsSessionActive ? "Sessão ativa" : "Sessão inativa")</span>
+                <h3 class="mt-3">Última atividade operacional</h3>
+                <p>Um resumo rápido do que a PoC recebeu recentemente para você não precisar abrir vários módulos antes de entender o contexto atual.</p>
+            </div>
+
+            @if (Model.RecentActivities.Any())
+            {
+                <div class="activity-list">
+                    @foreach (var activity in Model.RecentActivities)
+                    {
+                        <a class="activity-item" href="@activity.Href">
+                            <span class="activity-item__pill activity-item__pill--@activity.Tone"></span>
+                            <div>
+                                <strong>@activity.Title</strong>
+                                <span>@activity.Description</span>
+                                <small>@activity.Meta</small>
+                            </div>
+                        </a>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="app-empty">
+                    Ainda não existem eventos ou comandos suficientes para alimentar a timeline local. Assim que monitor, push ou callbacks forem usados, este bloco passa a refletir a atividade recente.
+                </div>
+            }
+        </section>
+
+        <section class="connection-card app-stack">
+            <div>
+                <span class="app-chip app-chip--neutral">Conexão persistente no topo</span>
+                <h3 class="mt-3">Onde inserir IP e porta do equipamento?</h3>
+                <p>
+                    O campo de conexão agora fica permanente no topo da interface, com protocolo, host, porta, teste de comunicação e resumo do equipamento ativo. Você não precisa mais voltar para a home para trocar o contexto da PoC.
+                </p>
+            </div>
+
+            <div class="entity-overview">
+                <div class="entity-overview__item">
+                    <span>Protocolo</span>
+                    <strong>@Model.ConnectionPanel.Scheme</strong>
+                </div>
+                <div class="entity-overview__item">
+                    <span>Host</span>
+                    <strong>@(string.IsNullOrWhiteSpace(Model.ConnectionPanel.Host) ? "n/d" : Model.ConnectionPanel.Host)</strong>
+                </div>
+                <div class="entity-overview__item">
+                    <span>Porta</span>
+                    <strong>@(Model.ConnectionPanel.Port?.ToString() ?? "padrão")</strong>
+                </div>
+                <div class="entity-overview__item">
+                    <span>Base ativa</span>
+                    <strong>@(string.IsNullOrWhiteSpace(Model.ConnectionPanel.BaseAddress) ? "Nenhuma" : Model.ConnectionPanel.BaseAddress)</strong>
+                </div>
+            </div>
+
+            <div class="quick-links">
+                <a class="btn btn-outline-secondary" href="@Url.Action("Domain", "Workspace", new { id = "operations" })">Ir para operação</a>
+                <a class="btn btn-outline-secondary" href="@Url.Action("Status", "Auth")">Abrir autenticação</a>
+                <a class="btn btn-outline-secondary" href="@Url.Action("Info", "System")">Abrir sistema</a>
+            </div>
+        </section>
+    </div>
+
+    <section class="app-stack">
+        <div class="app-page-section__heading">
+            <div>
+                <strong>Módulos de primeiro nível</strong>
+                <p>Acesso rápido para as superfícies mais usadas sem sacrificar a organização por domínio.</p>
+            </div>
+        </div>
+
+        <div class="module-grid">
+            @foreach (var module in Model.FeaturedModules)
+            {
+                <article class="module-card">
+                    <div class="module-card__meta">
+                        <span class="app-chip app-chip--neutral">@module.Complexity</span>
+                        <span class="app-chip @(module.IsTechnical ? "app-chip--warning" : "app-chip--danger")">@module.ExperienceType</span>
+                    </div>
+                    <div class="app-stack">
+                        <h3>@module.Label</h3>
+                        <p>@module.Description</p>
+                    </div>
+                    <a class="btn btn-quiet" href="@Url.Action(module.Action, module.Controller)">Abrir módulo</a>
+                </article>
+            }
+        </div>
+    </section>
+</div>

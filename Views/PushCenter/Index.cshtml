@@ -1,0 +1,134 @@
+﻿@model Integracao.ControlID.PoC.ViewModels.Push.PushEventListViewModel
+@{
+    ViewData["Title"] = "Central push";
+    ViewData["Subtitle"] = "Fila persistida para GET /push, retorno por POST /result e orquestração operacional dos comandos.";
+    var header = new AppPageHeaderViewModel
+    {
+        Eyebrow = "Eventos, logs e push",
+        Title = "Central push oficial",
+        Description = "Enfileire comandos, acompanhe o status de entrega e inspecione a trilha persistida do canal push.",
+        BadgeText = $"{Model.Events.Count()} itens na fila",
+        BadgeTone = "danger",
+        Actions = new[]
+        {
+            new PageHeaderActionViewModel { Label = "Limpar fila", Href = Url.Action("Index")!, ButtonClass = "btn btn-outline-danger" }
+        }
+    };
+}
+
+<div class="container mt-5 app-stack">
+    <partial name="_AppPageHeader" model="header" />
+
+    <div class="home-grid">
+        <section class="detail-card app-stack">
+            <div>
+                <span class="app-chip app-chip--neutral">Enfileirar comando</span>
+                <h3 class="mt-3">Novo comando push</h3>
+                <p class="mt-2">Cadastre um comando persistido para ser consumido pela rota oficial GET /push.</p>
+            </div>
+
+            <form asp-action="Queue" method="post" class="form-section">
+                <div>
+                    <label asp-for="QueueCommand.DeviceId" class="form-label"></label>
+                    <input asp-for="QueueCommand.DeviceId" class="form-control" />
+                    <span asp-validation-for="QueueCommand.DeviceId" class="text-danger"></span>
+                </div>
+                <div>
+                    <label asp-for="QueueCommand.CommandType" class="form-label"></label>
+                    <input asp-for="QueueCommand.CommandType" class="form-control" />
+                    <span asp-validation-for="QueueCommand.CommandType" class="text-danger"></span>
+                </div>
+                <div>
+                    <label asp-for="QueueCommand.UserId" class="form-label"></label>
+                    <input asp-for="QueueCommand.UserId" class="form-control" />
+                    <span asp-validation-for="QueueCommand.UserId" class="text-danger"></span>
+                </div>
+                <div>
+                    <label asp-for="QueueCommand.Payload" class="form-label"></label>
+                    <textarea asp-for="QueueCommand.Payload" rows="10" class="form-control"></textarea>
+                    <span asp-validation-for="QueueCommand.Payload" class="text-danger"></span>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Enfileirar comando</button>
+                </div>
+            </form>
+        </section>
+
+        <section class="detail-card app-stack">
+            @if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
+            {
+                <div class="alert alert-@(Model.StatusType ?? "info")">@Model.StatusMessage</div>
+            }
+
+            @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+            {
+                <div class="alert alert-danger">@Model.ErrorMessage</div>
+            }
+
+            <div class="entity-overview">
+                <div class="entity-overview__item"><span>Total na fila</span><strong>@Model.Events.Count()</strong></div>
+                <div class="entity-overview__item"><span>Pendentes</span><strong>@Model.Events.Count(evt => string.Equals(evt.Status, "pending", StringComparison.OrdinalIgnoreCase))</strong></div>
+                <div class="entity-overview__item"><span>Concluídos</span><strong>@Model.Events.Count(evt => string.Equals(evt.Status, "done", StringComparison.OrdinalIgnoreCase))</strong></div>
+                <div class="entity-overview__item"><span>Com erro</span><strong>@Model.Events.Count(evt => string.Equals(evt.Status, "error", StringComparison.OrdinalIgnoreCase))</strong></div>
+            </div>
+
+            <form asp-action="Clear" method="post" class="app-inline-form">
+                <button type="submit" class="btn btn-outline-danger">Limpar fila persistida</button>
+            </form>
+        </section>
+    </div>
+
+    <section class="app-surface-card">
+        <div class="app-toolbar">
+            <div>
+                <strong>Histórico da fila push</strong>
+                <p>Monitore o ciclo completo dos comandos entre criação, coleta e retorno pelo equipamento.</p>
+            </div>
+        </div>
+
+        <table class="table table-borderless table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Recebido em</th>
+                    <th>Tipo</th>
+                    <th>Status</th>
+                    <th>Dispositivo</th>
+                    <th>Usuário</th>
+                    <th>Payload</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Events.Any())
+                {
+                    foreach (var evt in Model.Events)
+                    {
+                        <tr>
+                            <td>@evt.EventId</td>
+                            <td>@evt.ReceivedAt.ToString("dd/MM/yyyy HH:mm:ss")</td>
+                            <td>@evt.CommandType</td>
+                            <td><span class="app-chip @(string.Equals(evt.Status, "pending", StringComparison.OrdinalIgnoreCase) ? "app-chip--warning" : string.Equals(evt.Status, "done", StringComparison.OrdinalIgnoreCase) ? "app-chip--success" : "app-chip--danger")">@evt.Status</span></td>
+                            <td>@evt.DeviceId</td>
+                            <td>@evt.UserId</td>
+                            <td>@(evt.Payload?.Length > 52 ? evt.Payload.Substring(0, 52) + "..." : evt.Payload)</td>
+                            <td><a asp-action="Details" asp-route-id="@evt.EventId" class="btn btn-sm btn-info">Detalhes</a></td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="8">
+                            <div class="app-empty">Nenhum comando push persistido. Use o formulário acima para criar o primeiro.</div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </section>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

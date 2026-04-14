@@ -1,0 +1,105 @@
+﻿@model Integracao.ControlID.PoC.ViewModels.OfficialApi.OfficialApiInvokeViewModel
+@{
+    var endpoint = Model.Endpoint!;
+    ViewData["Title"] = endpoint.Title;
+    ViewData["Subtitle"] = $"{endpoint.Method} {endpoint.Path}";
+    var header = new AppPageHeaderViewModel
+    {
+        Eyebrow = endpoint.Category,
+        Title = endpoint.Title,
+        Description = endpoint.Summary,
+        BadgeText = endpoint.Direction == "server-callback" ? "Callback" : endpoint.Method,
+        BadgeTone = endpoint.Direction == "server-callback" ? "warning" : "danger",
+        Actions = new[]
+        {
+            new PageHeaderActionViewModel { Label = "Voltar ao catálogo", Href = Url.Action("Index")!, ButtonClass = "btn btn-outline-secondary" },
+            new PageHeaderActionViewModel { Label = "Documentação oficial", Href = endpoint.DocumentationUrl, ButtonClass = "btn btn-primary", NewTab = true }
+        }
+    };
+    var responsePanel = Model.Result == null ? null : new RawResponsePanelViewModel
+    {
+        Title = "Resposta do endpoint",
+        Description = "Conteúdo bruto retornado pela invocação técnica realizada pela PoC.",
+        Content = Model.Result.ResponseBody,
+        PanelId = "official-endpoint-response",
+        BadgeText = Model.Result.Success ? "Sucesso" : "Erro",
+        BadgeTone = Model.Result.Success ? "success" : "danger",
+        StartExpanded = true
+    };
+}
+
+<div class="container mt-5 app-stack">
+    <partial name="_AppPageHeader" model="header" />
+
+    <div class="home-grid">
+        <section class="detail-card app-stack">
+            <div class="entity-overview">
+                <div class="entity-overview__item"><span>Categoria</span><strong>@endpoint.Category</strong></div>
+                <div class="entity-overview__item"><span>Direção</span><strong>@(endpoint.Direction == "server-callback" ? "Servidor recebe callback" : "PoC chama o equipamento")</strong></div>
+                <div class="entity-overview__item"><span>Corpo</span><strong>@endpoint.BodyKind</strong></div>
+                <div class="entity-overview__item"><span>Sessão</span><strong>@(endpoint.RequiresSession ? "Obrigatória" : "Não obrigatória")</strong></div>
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(endpoint.Notes))
+            {
+                <div class="alert alert-info">@endpoint.Notes</div>
+            }
+        </section>
+
+        <section class="detail-card app-stack">
+            @if (!endpoint.Invokable)
+            {
+                <div class="alert alert-warning">
+                    Este endpoint já está implementado como rota de callback da aplicação e não deve ser disparado manualmente contra o equipamento por esta tela.
+                </div>
+            }
+            else
+            {
+                <form asp-action="Invoke" method="post" class="form-section">
+                    <input type="hidden" asp-for="EndpointId" />
+                    <div>
+                        <label asp-for="DeviceAddress" class="form-label">Endereço do equipamento</label>
+                        <input asp-for="DeviceAddress" class="form-control" placeholder="https://ip-ou-host" />
+                    </div>
+                    <div>
+                        <label asp-for="SessionString" class="form-label">Sessão</label>
+                        <input asp-for="SessionString" class="form-control" placeholder="Sessão atual do equipamento" />
+                    </div>
+                    <div>
+                        <label asp-for="AdditionalQuery" class="form-label">Query adicional</label>
+                        <input asp-for="AdditionalQuery" class="form-control" placeholder="id=1&user_id=123" />
+                    </div>
+                    <div>
+                        <label asp-for="RequestBody" class="form-label">Corpo da requisição</label>
+                        <textarea asp-for="RequestBody" class="form-control" rows="16"></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Invocar endpoint</button>
+                    </div>
+                </form>
+            }
+
+            @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+            {
+                <div class="alert alert-danger">@Model.ErrorMessage</div>
+            }
+        </section>
+    </div>
+
+    @if (Model.Result != null)
+    {
+        <section class="detail-card app-stack">
+            <div class="entity-overview">
+                <div class="entity-overview__item"><span>URL</span><strong>@Model.Result.RequestUrl</strong></div>
+                <div class="entity-overview__item"><span>Status</span><strong>@Model.Result.StatusCode</strong></div>
+                <div class="entity-overview__item"><span>Content-Type</span><strong>@Model.Result.ResponseContentType</strong></div>
+                <div class="entity-overview__item"><span>Formato</span><strong>@(Model.Result.ResponseBodyIsBase64 ? "base64" : "texto")</strong></div>
+            </div>
+        </section>
+
+        @if (responsePanel != null)
+        {
+            <partial name="_RawResponsePanel" model="responsePanel" />
+        }
+    }
+</div>

@@ -1,0 +1,52 @@
+﻿@model Integracao.ControlID.PoC.ViewModels.Monitor.WebhookEventViewModel
+@{
+    ViewData["Title"] = "Detalhes do evento webhook";
+    ViewData["Subtitle"] = "Inspeção técnica da carga recebida pela trilha legada de webhook.";
+    var header = new AppPageHeaderViewModel
+    {
+        Eyebrow = "Eventos, logs e push",
+        Title = "Detalhes do evento webhook",
+        Description = "Revise o tipo do evento, o payload recebido e o JSON bruto persistido para auditoria técnica.",
+        BadgeText = Model.EventType,
+        BadgeTone = "info",
+        Actions = new[]
+        {
+            new PageHeaderActionViewModel { Label = "Voltar aos webhooks", Href = Url.Action("Webhook")!, ButtonClass = "btn btn-outline-secondary" }
+        }
+    };
+    var payloadPanel = new RawResponsePanelViewModel
+    {
+        PanelId = "webhook-payload-panel",
+        Title = "Payload recebido",
+        Description = "Carga resumida do webhook legado.",
+        Content = string.IsNullOrWhiteSpace(Model.Payload) ? "Sem payload disponível." : Model.Payload,
+        BadgeText = Model.EventType,
+        BadgeTone = "info"
+    };
+    var jsonPanel = new RawResponsePanelViewModel
+    {
+        PanelId = "webhook-raw-json-panel",
+        Title = "JSON completo",
+        Description = "Corpo bruto persistido pela aplicação.",
+        Content = string.IsNullOrWhiteSpace(Model.RawJson) ? "Sem JSON disponível." : Model.RawJson,
+        BadgeText = $"Evento {Model.EventId}",
+        BadgeTone = "neutral"
+    };
+}
+
+<div class="container mt-5 app-stack">
+    <partial name="_AppPageHeader" model="header" />
+
+    <section class="app-surface-card app-detail-shell">
+        <dl class="app-detail-list">
+            <div class="app-detail-list__row"><dt>ID do evento</dt><dd>@Model.EventId</dd></div>
+            <div class="app-detail-list__row"><dt>Recebido em</dt><dd>@Model.ReceivedAt.ToString("dd/MM/yyyy HH:mm")</dd></div>
+            <div class="app-detail-list__row"><dt>Tipo do evento</dt><dd><span class="app-chip app-chip--neutral">@Model.EventType</span></dd></div>
+            <div class="app-detail-list__row"><dt>Dispositivo</dt><dd>@Model.DeviceId</dd></div>
+            <div class="app-detail-list__row"><dt>Usuário</dt><dd>@Model.UserId</dd></div>
+        </dl>
+    </section>
+
+    <partial name="_RawResponsePanel" model="payloadPanel" />
+    <partial name="_RawResponsePanel" model="jsonPanel" />
+</div>

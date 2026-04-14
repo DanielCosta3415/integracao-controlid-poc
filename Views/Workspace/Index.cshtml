@@ -1,0 +1,98 @@
+@model WorkspaceExplorerViewModel
+@{
+    var header = new AppPageHeaderViewModel
+    {
+        Eyebrow = "Arquitetura da informação",
+        Title = "Mapa funcional da PoC",
+        Description = "Índice global para localizar todos os domínios, módulos e experiências técnicas implementadas sem depender da home ou de uma lista lateral longa.",
+        BadgeText = $"{Model.Modules.Count} entradas visíveis",
+        BadgeTone = "danger"
+    };
+}
+
+<div class="container mt-5 app-stack">
+    <partial name="_AppPageHeader" model="header" />
+
+    <section class="app-surface-card app-stack">
+        <form asp-action="Index" method="get" class="directory-filter-bar">
+            <div class="directory-filter-bar__field">
+                <label class="form-label" for="domainId">Domínio</label>
+                <select id="domainId" name="domainId" class="form-select">
+                    <option value="">Todos os domínios</option>
+                    @foreach (var domain in Model.Domains)
+                    {
+                        <option value="@domain.Id" selected="@(Model.SelectedDomainId == domain.Id)">@domain.Title</option>
+                    }
+                </select>
+            </div>
+            <div class="directory-filter-bar__field directory-filter-bar__field--search">
+                <label class="form-label" for="q">Busca livre</label>
+                <input id="q" name="q" class="form-control" value="@Model.SearchTerm" placeholder="Ex.: usuários, VPN, push, callbacks, QR, hardware..." />
+            </div>
+            <div class="directory-filter-bar__actions">
+                <button type="submit" class="btn btn-primary">Aplicar filtro</button>
+                <a class="btn btn-quiet" href="@Url.Action("Index")">Limpar</a>
+            </div>
+        </form>
+    </section>
+
+    <section class="domain-grid">
+        @foreach (var domain in Model.Domains)
+        {
+            <article class="domain-card @(Model.SelectedDomainId == domain.Id ? "is-selected" : null)">
+                <div class="domain-card__top">
+                    <span class="app-chip app-chip--@domain.AccentTone">@domain.ShortTitle</span>
+                    <span class="domain-card__icon">@domain.Icon</span>
+                </div>
+                <div class="app-stack-sm">
+                    <h3>@domain.Title</h3>
+                    <p>@domain.Description</p>
+                    <small>@domain.Modules.Count módulos mapeados neste domínio.</small>
+                </div>
+                <div class="quick-links">
+                    <a class="btn btn-outline-secondary" href="@Url.Action("Domain", new { id = domain.Id })">Abrir domínio</a>
+                    <a class="btn btn-quiet" href="@Url.Action("Index", new { domainId = domain.Id })">Filtrar aqui</a>
+                </div>
+            </article>
+        }
+    </section>
+
+    <section class="app-surface-card app-stack">
+        <div class="app-page-section__heading">
+            <div>
+                <strong>Módulos e experiências disponíveis</strong>
+                <p>Os módulos principais ficam no primeiro nível do shell. As experiências especializadas continuam acessíveis aqui para não poluir a navegação principal.</p>
+            </div>
+            <span class="app-chip app-chip--neutral">Todas as superfícies mapeadas</span>
+        </div>
+
+        <div class="module-directory-grid">
+            @foreach (var module in Model.Modules)
+            {
+                var domain = Model.Domains.First(item => item.Id == module.DomainId);
+                <article class="module-directory-card">
+                    <div class="module-directory-card__meta">
+                        <span class="app-chip app-chip--@domain.AccentTone">@domain.ShortTitle</span>
+                        <span class="app-chip @(module.Visibility == "primary" ? "app-chip--success" : "app-chip--neutral")">@(module.Visibility == "primary" ? "Primeiro nível" : "Especializado")</span>
+                    </div>
+                    <div class="app-stack-sm">
+                        <h3>@module.Label</h3>
+                        <p>@module.Description</p>
+                        <ul class="app-pill-list">
+                            <li><span class="app-chip app-chip--neutral">@module.ExperienceType</span></li>
+                            <li><span class="app-chip app-chip--neutral">@module.Complexity</span></li>
+                            @if (!string.IsNullOrWhiteSpace(module.Prerequisite))
+                            {
+                                <li><span class="app-chip app-chip--warning">@module.Prerequisite</span></li>
+                            }
+                        </ul>
+                    </div>
+                    <div class="quick-links">
+                        <a class="btn btn-primary" href="@Url.Action(module.Action, module.Controller)">Abrir módulo</a>
+                        <a class="btn btn-quiet" href="@Url.Action("Domain", new { id = domain.Id })">Ver domínio</a>
+                    </div>
+                </article>
+            }
+        </div>
+    </section>
+</div>

@@ -1,0 +1,126 @@
+﻿@using Integracao.ControlID.PoC.Services.Navigation
+@inject NavigationCatalogService NavigationCatalog
+@inject PageShellService PageShellService
+@{
+    Layout = null;
+    var controller = ViewContext.RouteData.Values["controller"]?.ToString() ?? "Home";
+    var action = ViewContext.RouteData.Values["action"]?.ToString() ?? "Index";
+    var title = ViewData["Title"] as string ?? "Painel";
+    var subtitle = ViewData["Subtitle"] as string ?? string.Empty;
+    var shellContext = PageShellService.BuildShellContext(Context, controller, action, title, subtitle);
+    var domains = NavigationCatalog.GetDomains();
+}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@title - Control iD PoC</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body class="app-body" data-controller="@controller" data-action="@action">
+    <div class="app-shell">
+        <header class="app-header">
+            <div class="app-topbar">
+                <div class="app-topbar__left">
+                    <a class="app-brand" href="@Url.Action("Index", "Home")">
+                        <span class="app-brand__mark" aria-hidden="true">
+                            <span class="app-brand__ring"></span>
+                            <span class="app-brand__core"></span>
+                        </span>
+                        <span class="app-brand__copy">
+                            <strong>Control <em>iD</em></strong>
+                            <small>Console operacional da Access API</small>
+                        </span>
+                    </a>
+                </div>
+
+                <div class="app-topbar__center">
+                    <div class="app-command-palette">
+                        <label class="app-command-palette__input-wrap" for="moduleSearchInput">
+                            <span class="app-command-palette__icon" aria-hidden="true">/</span>
+                            <input id="moduleSearchInput" type="search" placeholder="Buscar domínio, módulo, API ou auditoria..." aria-label="Buscar módulos" />
+                        </label>
+                        <div class="app-command-palette__results" id="moduleSearchResults" hidden></div>
+                    </div>
+                </div>
+
+                <div class="app-topbar__right">
+                    <a class="app-topbar__link" href="@Url.Action("Index", "Workspace")">Mapa funcional</a>
+                    <a class="app-topbar__link" href="@Url.Action("Index", "OfficialApi")">API oficial</a>
+                    <a class="app-topbar__link" href="#connectionPanel">Conexão</a>
+                    <span class="app-chip @(shellContext.ConnectionPanel.IsSessionActive ? "app-chip--success" : "app-chip--warning")">@(shellContext.ConnectionPanel.IsSessionActive ? "Sessão ativa" : "Sessão inativa")</span>
+                    <span class="app-chip @(shellContext.ConnectionPanel.IsDeviceConnected ? "app-chip--success" : "app-chip--neutral")">@(shellContext.ConnectionPanel.IsDeviceConnected ? "Equipamento pronto" : "Sem equipamento")</span>
+                </div>
+            </div>
+
+            <div class="app-nav-shell">
+                <partial name="_TopNavigation" model="shellContext" />
+            </div>
+        </header>
+
+        <div class="app-main">
+            <div class="app-context-rail">
+                <partial name="_ConnectionPanel" model="shellContext.ConnectionPanel" />
+            </div>
+
+            <div class="app-page-context">
+                <div class="app-breadcrumbs">
+                    <a href="@Url.Action("Index", "Home")">PoC</a>
+                    @if (shellContext.CurrentDomain != null)
+                    {
+                        <span>/</span>
+                        <a href="@Url.Action("Domain", "Workspace", new { id = shellContext.CurrentDomain.Id })">@shellContext.CurrentDomain.ShortTitle</a>
+                    }
+                    @if (shellContext.CurrentModule != null)
+                    {
+                        <span>/</span>
+                        <span>@shellContext.CurrentModule.Label</span>
+                    }
+                    else if (controller != "Home")
+                    {
+                        <span>/</span>
+                        <span>@title</span>
+                    }
+                </div>
+                <div class="app-page-context__meta">
+                    @if (shellContext.CurrentDomain != null)
+                    {
+                        <span class="app-chip app-chip--neutral">@shellContext.CurrentDomain.ShortTitle</span>
+                    }
+                    <strong>@(shellContext.CurrentModule?.Label ?? title)</strong>
+                    @if (!string.IsNullOrWhiteSpace(subtitle))
+                    {
+                        <small>@subtitle</small>
+                    }
+                </div>
+            </div>
+
+            <main class="app-content">
+                @RenderBody()
+            </main>
+
+            <footer class="app-footer">
+                <span>Control iD PoC</span>
+                <span>Console administrativo para exploração integral da Access API com navegação orientada por domínio.</span>
+            </footer>
+        </div>
+    </div>
+
+    <div class="visually-hidden" aria-hidden="true">
+        <a href="@Url.Action("Index", "Workspace")" data-search-entry data-module-key="Workspace:Index" data-module-label="Mapa funcional" data-module-group="Exploração global" data-module-tags="mapa funcional modulos dominios explorer" data-module-short="MF"></a>
+        @foreach (var domain in domains)
+        {
+            <a href="@Url.Action("Domain", "Workspace", new { id = domain.Id })" data-search-entry data-module-key="domain:@domain.Id" data-module-label="@domain.Title" data-module-group="Domínio" data-module-tags="@domain.Description @domain.Summary" data-module-short="@domain.Icon"></a>
+        }
+    </div>
+
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

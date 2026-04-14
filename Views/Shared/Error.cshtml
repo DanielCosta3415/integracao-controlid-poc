@@ -1,0 +1,23 @@
+﻿@model Integracao.ControlID.PoC.ViewModels.Errors.ErrorViewModel
+@{
+    ViewData["Title"] = "Erro";
+}
+
+<div class="container mt-5">
+    <h2 class="text-danger">Ocorreu um erro</h2>
+    <div class="alert alert-danger">
+        <p><strong>@Model.Message</strong></p>
+        @if (!string.IsNullOrEmpty(Model.StackTrace))
+        {
+            <details>
+                <summary>Detalhes técnicos</summary>
+                <pre>@Model.StackTrace</pre>
+            </details>
+        }
+        @if (!string.IsNullOrEmpty(Model.RequestId))
+        {
+            <p><small>ID da Requisição: <code>@Model.RequestId</code></small></p>
+        }
+    </div>
+    <a href="@Url.Action("Index", "Home")" class="btn btn-primary">Voltar para a página inicial</a>
+</div>

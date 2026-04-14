@@ -1,0 +1,100 @@
+﻿@model Integracao.ControlID.PoC.ViewModels.Users.UserEditViewModel
+@{
+    ViewData["Title"] = "Novo usuário";
+    ViewData["Subtitle"] = "Cadastre usuários com dados essenciais, validade e credenciais alinhadas ao equipamento Control iD.";
+    var header = new AppPageHeaderViewModel
+    {
+        Eyebrow = "Pessoas e credenciais",
+        Title = "Cadastrar usuário",
+        Description = "Preencha os dados abaixo para criar um novo usuário no fluxo oficial da PoC.",
+        Actions = new[]
+        {
+            new PageHeaderActionViewModel { Label = "Voltar para usuários", Href = Url.Action("Index")!, ButtonClass = "btn btn-outline-secondary" }
+        }
+    };
+}
+
+<div class="container mt-5">
+    <partial name="_AppPageHeader" model="header" />
+
+    <section class="app-surface-card">
+        <form asp-action="Create" method="post" autocomplete="off" class="form-section">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div class="form-section">
+                <h3 class="form-section__title">Identidade</h3>
+                <p class="form-section__description">Dados básicos do usuário que aparecerão em logs, busca e validação de acesso.</p>
+                <div class="app-form-grid">
+                    <div>
+                        <label asp-for="Name" class="form-label"></label>
+                        <input asp-for="Name" class="form-control" />
+                        <span asp-validation-for="Name" class="text-danger"></span>
+                    </div>
+                    <div>
+                        <label asp-for="Registration" class="form-label"></label>
+                        <input asp-for="Registration" class="form-control" />
+                        <span asp-validation-for="Registration" class="text-danger"></span>
+                    </div>
+                    <div>
+                        <label asp-for="Email" class="form-label"></label>
+                        <input asp-for="Email" class="form-control" />
+                        <span asp-validation-for="Email" class="text-danger"></span>
+                    </div>
+                    <div>
+                        <label asp-for="Phone" class="form-label"></label>
+                        <input asp-for="Phone" class="form-control" />
+                        <span asp-validation-for="Phone" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3 class="form-section__title">Credenciais e status</h3>
+                <p class="form-section__description">Defina senha inicial, tipo de usuário e estado operacional do cadastro.</p>
+                <div class="app-form-grid">
+                    <div>
+                        <label asp-for="Password" class="form-label"></label>
+                        <input asp-for="Password" class="form-control" type="password" />
+                        <span asp-validation-for="Password" class="text-danger"></span>
+                    </div>
+                    <div>
+                        <label asp-for="UserTypeId" class="form-label"></label>
+                        <input asp-for="UserTypeId" class="form-control" />
+                        <span asp-validation-for="UserTypeId" class="text-danger"></span>
+                    </div>
+                    <div>
+                        <label asp-for="Status" class="form-label"></label>
+                        <input asp-for="Status" class="form-control" />
+                        <span asp-validation-for="Status" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3 class="form-section__title">Vigência</h3>
+                <p class="form-section__description">Configure o período de validade do usuário quando necessário.</p>
+                <div class="app-form-grid">
+                    <div>
+                        <label asp-for="BeginTime" class="form-label"></label>
+                        <input asp-for="BeginTime" class="form-control" type="datetime-local" />
+                        <span asp-validation-for="BeginTime" class="text-danger"></span>
+                    </div>
+                    <div>
+                        <label asp-for="EndTime" class="form-label"></label>
+                        <input asp-for="EndTime" class="form-control" type="datetime-local" />
+                        <span asp-validation-for="EndTime" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <a asp-action="Index" class="btn btn-quiet">Cancelar</a>
+                <button type="submit" class="btn btn-primary">Salvar usuário</button>
+            </div>
+        </form>
+    </section>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

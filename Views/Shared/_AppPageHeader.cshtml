@@ -1,0 +1,40 @@
+﻿@model Integracao.ControlID.PoC.ViewModels.Shared.AppPageHeaderViewModel
+
+<div class="app-page-header">
+    <div class="app-page-header__content">
+        @if (!string.IsNullOrWhiteSpace(Model.Eyebrow))
+        {
+            <div class="app-page-header__eyebrow">@Model.Eyebrow</div>
+        }
+        <div class="app-page-header__main">
+            <div>
+                <h1 class="app-page-header__title">@Model.Title</h1>
+                @if (!string.IsNullOrWhiteSpace(Model.Description))
+                {
+                    <p class="app-page-header__description">@Model.Description</p>
+                }
+            </div>
+            @if (!string.IsNullOrWhiteSpace(Model.BadgeText))
+            {
+                <span class="app-chip app-chip--@Model.BadgeTone">@Model.BadgeText</span>
+            }
+        </div>
+    </div>
+
+    @if (Model.Actions.Any())
+    {
+        <div class="app-page-header__actions">
+            @foreach (var action in Model.Actions)
+            {
+                if (action.NewTab)
+                {
+                    <a href="@action.Href" class="@action.ButtonClass" target="_blank" rel="noopener noreferrer">@action.Label</a>
+                }
+                else
+                {
+                    <a href="@action.Href" class="@action.ButtonClass">@action.Label</a>
+                }
+            }
+        </div>
+    }
+</div>

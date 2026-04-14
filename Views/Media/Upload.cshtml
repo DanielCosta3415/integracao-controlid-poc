@@ -1,0 +1,31 @@
+﻿@model Integracao.ControlID.PoC.ViewModels.Media.PhotoUploadViewModel
+@{
+    ViewData["Title"] = "Upload de Foto";
+}
+
+<div class="container mt-5">
+    <h2>Upload de Foto de Usuário</h2>
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <form asp-action="Upload" method="post" enctype="multipart/form-data" autocomplete="off">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                <div class="mb-3">
+                    <label asp-for="UserId" class="form-label"></label>
+                    <input asp-for="UserId" class="form-control" />
+                    <span asp-validation-for="UserId" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="PhotoFile" class="form-label"></label>
+                    <input asp-for="PhotoFile" class="form-control" type="file" accept="image/*" />
+                    <span asp-validation-for="PhotoFile" class="text-danger"></span>
+                </div>
+                <div class="form-text mb-3">Esta tela usa o endpoint oficial <code>user_set_image.fcgi</code>.</div>
+                <button type="submit" class="btn btn-success">Enviar</button>
+                <a asp-action="Index" class="btn btn-secondary ms-2">Cancelar</a>
+            </form>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

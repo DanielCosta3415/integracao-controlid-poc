@@ -1,0 +1,366 @@
+# Smoke test localhost da PoC Control iD
+
+Data: 2026-04-13 16:33:18 -03:00
+
+## Resumo
+
+- Total: 340
+- PASS: 310
+- FAIL: 0
+- SKIP: 30
+
+## Bootstrap
+
+- [PASS] /: GET 200
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] /Auth/Login: GET 200
+- [PASS] http://localhost:5000/Auth/Login: POST 200
+- [PASS] /Session/Status: GET 200
+- [PASS] http://localhost:5000/Session/Validate: POST 200
+- [SKIP] http://localhost:5000/Session/Clear: SessÃ£o nÃ£o Ã© limpa durante o smoke para preservar o contexto dos demais fluxos.
+
+## Callbacks
+
+- [PASS] /new_user_identified.fcgi: POST 200
+- [PASS] /new_card.fcgi: POST 200
+- [PASS] /new_biometric_image.fcgi: POST 200
+- [PASS] /new_qrcode.fcgi: POST 200
+- [PASS] /new_biometric_template.fcgi: POST 200
+- [PASS] /new_uhf_tag.fcgi: POST 200
+- [PASS] /new_user_id_and_password.fcgi: POST 200
+- [PASS] /device_is_alive.fcgi: POST 200
+- [PASS] /card_create.fcgi: POST 200
+- [PASS] /fingerprint_create.fcgi: POST 200
+- [PASS] /template_create.fcgi: POST 200
+- [PASS] /face_create.fcgi: POST 200
+- [PASS] /pin_create.fcgi: POST 200
+- [PASS] /password_create.fcgi: POST 200
+- [PASS] /new_rex_log.fcgi: POST 200
+- [PASS] /api/notifications/user_image: POST 200
+- [PASS] /api/notifications/template: POST 200
+- [PASS] /api/notifications/card: POST 200
+- [PASS] /api/notifications/operation_mode: POST 200
+- [PASS] /api/notifications/pin: POST 200
+- [PASS] /api/notifications/password: POST 200
+- [PASS] /api/notifications/catra_event: POST 200
+- [PASS] /api/notifications/usb_drive: POST 200
+- [PASS] /push?device_id=smoke-device: GET 200
+- [PASS] /result?device_id=smoke-device&status=completed: POST 200
+
+## Forms
+
+- [PASS] /Users/Create: GET 200
+- [PASS] http://localhost:5000/Users/Create: POST 200
+- [PASS] /Users/Edit/1: GET 200
+- [PASS] http://localhost:5000/Users/Edit/1: POST 200
+- [PASS] /Users/Delete/1: GET 200
+- [PASS] http://localhost:5000/Users/Delete/1: POST 200
+- [PASS] /Groups/Create: GET 200
+- [PASS] http://localhost:5000/Groups/Create: POST 200
+- [PASS] /Groups/Edit/1: GET 200
+- [PASS] http://localhost:5000/Groups/Edit/1: POST 200
+- [PASS] /Groups/Delete/1: GET 200
+- [PASS] http://localhost:5000/Groups/Delete/1: POST 200
+- [PASS] /Cards/Create: GET 200
+- [PASS] http://localhost:5000/Cards/Create: POST 200
+- [PASS] /Cards/Edit/1: GET 200
+- [PASS] http://localhost:5000/Cards/Edit/1: POST 200
+- [PASS] /Cards/Delete/1: GET 200
+- [PASS] http://localhost:5000/Cards/Delete/1: POST 200
+- [PASS] /BiometricTemplates/Create: GET 200
+- [PASS] http://localhost:5000/BiometricTemplates/Create: POST 200
+- [PASS] /BiometricTemplates/Edit/1: GET 200
+- [PASS] http://localhost:5000/BiometricTemplates/Edit/1: POST 200
+- [PASS] /BiometricTemplates/Delete/1: GET 200
+- [PASS] http://localhost:5000/BiometricTemplates/Delete/1: POST 200
+- [PASS] /QRCodes/Create: GET 200
+- [PASS] http://localhost:5000/QRCodes/Create: POST 200
+- [PASS] /QRCodes/Edit/1: GET 200
+- [PASS] http://localhost:5000/QRCodes/Edit/1: POST 200
+- [PASS] /QRCodes/Delete/1: GET 200
+- [PASS] http://localhost:5000/QRCodes/Delete/1: POST 200
+- [PASS] /Devices/Create: GET 200
+- [PASS] http://localhost:5000/Devices/Create: POST 200
+- [PASS] /Devices/Edit/1: GET 200
+- [PASS] http://localhost:5000/Devices/Edit/1: POST 200
+- [PASS] /Devices/Delete/1: GET 200
+- [PASS] http://localhost:5000/Devices/Delete/1: POST 200
+- [PASS] /AccessRules/Create: GET 200
+- [PASS] http://localhost:5000/AccessRules/Create: POST 200
+- [PASS] /AccessRules/Edit/1: GET 200
+- [PASS] http://localhost:5000/AccessRules/Edit/1: POST 200
+- [PASS] /AccessRules/Delete/1: GET 200
+- [PASS] http://localhost:5000/AccessRules/Delete/1: POST 200
+- [PASS] /Config/Create: GET 200
+- [PASS] http://localhost:5000/Config/Create: POST 200
+- [PASS] /Config/Edit/1: GET 200
+- [PASS] http://localhost:5000/Config/Edit/1: POST 200
+- [PASS] /Config/Delete/1: GET 200
+- [PASS] http://localhost:5000/Config/Delete/1: POST 200
+- [PASS] /Config/Diagnostics: GET 200
+- [PASS] http://localhost:5000/Config/ConnectionTest: POST 200
+- [PASS] http://localhost:5000/Config/PingTest: POST 200
+- [PASS] http://localhost:5000/Config/NslookupTest: POST 200
+- [PASS] /Config/Official: GET 200
+- [PASS] http://localhost:5000/Config/GetOfficial: POST 200
+- [PASS] http://localhost:5000/Config/SetOfficial: POST 200
+- [PASS] /Hardware/Gpio: GET 200
+- [PASS] /Hardware/DoorState: GET 200
+- [PASS] /Hardware/RelayAction: GET 200
+- [PASS] http://localhost:5000/Hardware/RelayAction: POST 200
+- [PASS] /System/HashPassword: GET 200
+- [PASS] http://localhost:5000/System/HashPassword: POST 200
+- [PASS] /System/LoginCredentials: GET 200
+- [PASS] http://localhost:5000/System/LoginCredentials: POST 200
+- [PASS] /System/Network: GET 200
+- [PASS] http://localhost:5000/System/Network: POST 200
+- [SKIP] /System/Network: FormulÃ¡rio com upload binÃ¡rio foi coberto pela trilha do catÃ¡logo oficial.
+- [PASS] /System/Vpn: GET 200
+- [PASS] http://localhost:5000/System/Vpn: POST 200
+- [SKIP] /System/Vpn: FormulÃ¡rio com upload binÃ¡rio foi coberto pela trilha do catÃ¡logo oficial.
+- [PASS] /AdvancedOfficial/ExportObjects: GET 200
+- [PASS] http://localhost:5000/AdvancedOfficial/ExportObjects: POST 200
+- [PASS] /AdvancedOfficial/NetworkInterlock: GET 200
+- [PASS] http://localhost:5000/AdvancedOfficial/NetworkInterlock: POST 200
+- [PASS] /AdvancedOfficial/CameraCapture: GET 200
+- [PASS] http://localhost:5000/AdvancedOfficial/CameraCapture: POST 200
+- [PASS] /AdvancedOfficial/FacialEnroll: GET 200
+- [PASS] http://localhost:5000/AdvancedOfficial/GetImageList: POST 200
+- [SKIP] /AdvancedOfficial/FacialEnroll: FormulÃ¡rio com upload binÃ¡rio foi coberto pela trilha do catÃ¡logo oficial.
+- [SKIP] /AdvancedOfficial/FacialEnroll: FormulÃ¡rio com upload binÃ¡rio foi coberto pela trilha do catÃ¡logo oficial.
+- [PASS] /AdvancedOfficial/RemoteLedControl: GET 200
+- [PASS] http://localhost:5000/AdvancedOfficial/RemoteLedControl: POST 200
+- [PASS] /DocumentedFeatures: GET 200
+- [PASS] http://localhost:5000/DocumentedFeatures/Attendance: POST 200
+- [PASS] http://localhost:5000/DocumentedFeatures/OnlineMode: POST 200
+- [PASS] http://localhost:5000/DocumentedFeatures/Security: POST 200
+- [PASS] http://localhost:5000/DocumentedFeatures/Visitors: POST 200
+- [PASS] http://localhost:5000/DocumentedFeatures/IdCloud: POST 200
+- [PASS] http://localhost:5000/DocumentedFeatures/Alarm: POST 200
+- [PASS] http://localhost:5000/DocumentedFeatures/GenerateReport: POST 200
+- [PASS] http://localhost:5000/DocumentedFeatures/ExportAfd: POST 200
+- [PASS] http://localhost:5000/DocumentedFeatures/ExportAuditLogs: POST 200
+- [PASS] /OfficialObjects: GET 200
+- [PASS] http://localhost:5000/OfficialObjects/SelectObject: POST 200
+- [PASS] http://localhost:5000/OfficialObjects/Load: POST 200
+- [PASS] http://localhost:5000/OfficialObjects/Create: POST 200
+- [PASS] http://localhost:5000/OfficialObjects/CreateOrModify: POST 200
+- [PASS] http://localhost:5000/OfficialObjects/Modify: POST 200
+- [PASS] http://localhost:5000/OfficialObjects/Destroy: POST 200
+- [PASS] /ProductSpecific: GET 200
+- [PASS] http://localhost:5000/ProductSpecific/UpgradeIdFace: POST 200
+- [PASS] http://localhost:5000/ProductSpecific/UpgradeEnterprise: POST 200
+- [PASS] http://localhost:5000/ProductSpecific/FacialSettings: POST 200
+- [PASS] http://localhost:5000/ProductSpecific/QrCodeSettings: POST 200
+- [PASS] http://localhost:5000/ProductSpecific/PowerSettings: POST 200
+- [PASS] http://localhost:5000/ProductSpecific/Streaming: POST 200
+- [PASS] http://localhost:5000/ProductSpecific/SipSettings: POST 200
+- [PASS] http://localhost:5000/ProductSpecific/RefreshSipStatus: POST 200
+- [PASS] http://localhost:5000/ProductSpecific/MakeSipCall: POST 200
+- [PASS] http://localhost:5000/ProductSpecific/FinalizeSipCall: POST 200
+- [SKIP] /ProductSpecific: FormulÃ¡rio com upload binÃ¡rio foi coberto pela trilha do catÃ¡logo oficial.
+- [PASS] http://localhost:5000/ProductSpecific/CheckSipAudio: POST 200
+- [PASS] http://localhost:5000/ProductSpecific/DownloadSipAudio: POST 200
+- [PASS] http://localhost:5000/ProductSpecific/AccessAudioSettings: POST 200
+- [SKIP] /ProductSpecific: FormulÃ¡rio com upload binÃ¡rio foi coberto pela trilha do catÃ¡logo oficial.
+- [PASS] http://localhost:5000/ProductSpecific/CheckAccessAudio: POST 200
+- [PASS] http://localhost:5000/ProductSpecific/DownloadAccessAudio: POST 200
+- [PASS] http://localhost:5000/ProductSpecific/Signals: POST 200
+- [PASS] http://localhost:5000/ProductSpecific/RefreshLeds: POST 200
+- [PASS] /RemoteActions/Authorization: GET 200
+- [PASS] http://localhost:5000/RemoteActions/Authorization: POST 200
+- [PASS] /RemoteActions/Enroll: GET 200
+- [PASS] http://localhost:5000/RemoteActions/Enroll: POST 200
+- [PASS] /PushCenter: GET 200
+- [PASS] http://localhost:5000/PushCenter/Queue: POST 200
+- [PASS] http://localhost:5000/PushCenter/Clear: POST 200
+- [PASS] /OfficialEvents: GET 200
+- [PASS] http://localhost:5000/OfficialEvents/Clear: POST 200
+
+## OfficialApi
+
+- [PASS] /OfficialApi: GET 200
+- [PASS] alarm-status: InvocaÃ§Ã£o concluÃ­da.
+- [PASS] buzzer-buzz: InvocaÃ§Ã£o concluÃ­da.
+- [PASS] cancel-remote-enroll: InvocaÃ§Ã£o concluÃ­da.
+- [SKIP] http://localhost:5000/OfficialApi/Invoke?id=cb-card-create: Callback local sem formulÃ¡rio de invocaÃ§Ã£o manual.
+- [SKIP] http://localhost:5000/OfficialApi/Invoke?id=cb-device-alive: Callback local sem formulÃ¡rio de invocaÃ§Ã£o manual.
+- [SKIP] http://localhost:5000/OfficialApi/Invoke?id=cb-face-create: Callback local sem formulÃ¡rio de invocaÃ§Ã£o manual.
+- [SKIP] http://localhost:5000/OfficialApi/Invoke?id=cb-monitor-card: Callback local sem formulÃ¡rio de invocaÃ§Ã£o manual.
+- [SKIP] http://localhost:5000/OfficialApi/Invoke?id=cb-monitor-catra-event: Callback local sem formulÃ¡rio de invocaÃ§Ã£o manual.
+- [SKIP] http://localhost:5000/OfficialApi/Invoke?id=cb-monitor-operation-mode: Callback local sem formulÃ¡rio de invocaÃ§Ã£o manual.
+- [SKIP] http://localhost:5000/OfficialApi/Invoke?id=cb-monitor-password: Callback local sem formulÃ¡rio de invocaÃ§Ã£o manual.
+- [SKIP] http://localhost:5000/OfficialApi/Invoke?id=cb-monitor-pin: Callback local sem formulÃ¡rio de invocaÃ§Ã£o manual.
+- [SKIP] http://localhost:5000/OfficialApi/Invoke?id=cb-monitor-template: Callback local sem formulÃ¡rio de invocaÃ§Ã£o manual.
+- [SKIP] http://localhost:5000/OfficialApi/Invoke?id=cb-monitor-usb-drive: Callback local sem formulÃ¡rio de invocaÃ§Ã£o manual.
+- [SKIP] http://localhost:5000/OfficialApi/Invoke?id=cb-new-biometric-image: Callback local sem formulÃ¡rio de invocaÃ§Ã£o manual.
+- [SKIP] http://localhost:5000/OfficialApi/Invoke?id=cb-new-biometric-template: Callback local sem formulÃ¡rio de invocaÃ§Ã£o manual.
+- [SKIP] http://localhost:5000/OfficialApi/Invoke?id=cb-new-card: Callback local sem formulÃ¡rio de invocaÃ§Ã£o manual.
+- [SKIP] http://localhost:5000/OfficialApi/Invoke?id=cb-new-qrcode: Callback local sem formulÃ¡rio de invocaÃ§Ã£o manual.
+- [SKIP] http://localhost:5000/OfficialApi/Invoke?id=cb-new-uhf-tag: Callback local sem formulÃ¡rio de invocaÃ§Ã£o manual.
+- [SKIP] http://localhost:5000/OfficialApi/Invoke?id=cb-new-user-identified: Callback local sem formulÃ¡rio de invocaÃ§Ã£o manual.
+- [SKIP] http://localhost:5000/OfficialApi/Invoke?id=cb-new-user-id-password: Callback local sem formulÃ¡rio de invocaÃ§Ã£o manual.
+- [SKIP] http://localhost:5000/OfficialApi/Invoke?id=cb-password-create: Callback local sem formulÃ¡rio de invocaÃ§Ã£o manual.
+- [SKIP] http://localhost:5000/OfficialApi/Invoke?id=cb-pin-create: Callback local sem formulÃ¡rio de invocaÃ§Ã£o manual.
+- [SKIP] http://localhost:5000/OfficialApi/Invoke?id=cb-template-create: Callback local sem formulÃ¡rio de invocaÃ§Ã£o manual.
+- [SKIP] http://localhost:5000/OfficialApi/Invoke?id=cb-user-image: Callback local sem formulÃ¡rio de invocaÃ§Ã£o manual.
+- [PASS] change-idcloud-code: InvocaÃ§Ã£o concluÃ­da.
+- [PASS] change-login: InvocaÃ§Ã£o concluÃ­da.
+- [PASS] connection-test: InvocaÃ§Ã£o concluÃ­da.
+- [PASS] create-objects: InvocaÃ§Ã£o concluÃ­da.
+- [PASS] create-or-modify-objects: InvocaÃ§Ã£o concluÃ­da.
+- [PASS] delete-admins: InvocaÃ§Ã£o concluÃ­da.
+- [PASS] destroy-objects: InvocaÃ§Ã£o concluÃ­da.
+- [PASS] door-state: InvocaÃ§Ã£o concluÃ­da.
+- [PASS] execute-actions: InvocaÃ§Ã£o concluÃ­da.
+- [PASS] export-afd: InvocaÃ§Ã£o concluÃ­da.
+- [PASS] export-audit-logs: InvocaÃ§Ã£o concluÃ­da.
+- [PASS] export-objects: InvocaÃ§Ã£o concluÃ­da.
+- [PASS] finalize-sip-call: InvocaÃ§Ã£o concluÃ­da.
+- [PASS] get-audio-access-message: InvocaÃ§Ã£o concluÃ­da.
+- [PASS] get-catra-info: InvocaÃ§Ã£o concluÃ­da.
+- [PASS] get-configuration: InvocaÃ§Ã£o concluÃ­da.
+- [PASS] get-pjsip-audio-message: InvocaÃ§Ã£o concluÃ­da.
+- [PASS] get-sip-status: InvocaÃ§Ã£o concluÃ­da.
+- [PASS] get-vpn-file: InvocaÃ§Ã£o concluÃ­da.
+- [PASS] get-vpn-information: InvocaÃ§Ã£o concluÃ­da.
+- [PASS] get-vpn-status: InvocaÃ§Ã£o concluÃ­da.
+- [PASS] gpio-state: InvocaÃ§Ã£o concluÃ­da.
+- [PASS] has-audio-access-messages: InvocaÃ§Ã£o concluÃ­da.
+- [PASS] hash-password: InvocaÃ§Ã£o concluÃ­da.
+- [PASS] has-pjsip-audio-message: InvocaÃ§Ã£o concluÃ­da.
+- [PASS] has-vpn-file: InvocaÃ§Ã£o concluÃ­da.
+- [PASS] load-objects: InvocaÃ§Ã£o concluÃ­da.
+- [PASS] login: InvocaÃ§Ã£o concluÃ­da.
+- [PASS] logo-change: InvocaÃ§Ã£o concluÃ­da.
+- [PASS] logo-destroy: InvocaÃ§Ã£o concluÃ­da.
+- [PASS] logo-get: InvocaÃ§Ã£o concluÃ­da.
+- [PASS] logout: InvocaÃ§Ã£o concluÃ­da.
+- [PASS] make-sip-call: InvocaÃ§Ã£o concluÃ­da.
+- [PASS] message-to-screen: InvocaÃ§Ã£o concluÃ­da.
+- [PASS] modify-objects: InvocaÃ§Ã£o concluÃ­da.
+- [PASS] nslookup-test: InvocaÃ§Ã£o concluÃ­da.
+- [PASS] ping-test: InvocaÃ§Ã£o concluÃ­da.
+- [SKIP] http://localhost:5000/OfficialApi/Invoke?id=push-poll: Callback local sem formulÃ¡rio de invocaÃ§Ã£o manual.
+- [SKIP] http://localhost:5000/OfficialApi/Invoke?id=push-result: Callback local sem formulÃ¡rio de invocaÃ§Ã£o manual.
+- [PASS] reboot: InvocaÃ§Ã£o concluÃ­da.
+- [PASS] reboot-recovery: InvocaÃ§Ã£o concluÃ­da.
+- [PASS] remote-enroll: InvocaÃ§Ã£o concluÃ­da.
+- [PASS] remote-led-control: InvocaÃ§Ã£o concluÃ­da.
+- [PASS] remote-user-authorization: InvocaÃ§Ã£o concluÃ­da.
+- [PASS] remove-custom-video: InvocaÃ§Ã£o concluÃ­da.
+- [PASS] report-generate: InvocaÃ§Ã£o concluÃ­da.
+- [PASS] reread-leds: InvocaÃ§Ã£o concluÃ­da.
+- [PASS] reset-to-factory: InvocaÃ§Ã£o concluÃ­da.
+- [PASS] save-screenshot: InvocaÃ§Ã£o concluÃ­da.
+- [PASS] send-video: InvocaÃ§Ã£o concluÃ­da.
+- [PASS] session-is-valid: InvocaÃ§Ã£o concluÃ­da.
+- [PASS] set-audio-access-message: InvocaÃ§Ã£o concluÃ­da.
+- [PASS] set-configuration: InvocaÃ§Ã£o concluÃ­da.
+- [PASS] set-custom-video: InvocaÃ§Ã£o concluÃ­da.
+- [PASS] set-network-interlock: InvocaÃ§Ã£o concluÃ­da.
+- [PASS] set-pjsip-audio-message: InvocaÃ§Ã£o concluÃ­da.
+- [PASS] set-system-network: InvocaÃ§Ã£o concluÃ­da.
+- [PASS] set-system-time: InvocaÃ§Ã£o concluÃ­da.
+- [PASS] set-vpn-file: InvocaÃ§Ã£o concluÃ­da.
+- [PASS] set-vpn-information: InvocaÃ§Ã£o concluÃ­da.
+- [PASS] ssl-certificate-change: InvocaÃ§Ã£o concluÃ­da.
+- [PASS] system-information: InvocaÃ§Ã£o concluÃ­da.
+- [PASS] upgrade-idface-pro: InvocaÃ§Ã£o concluÃ­da.
+- [PASS] upgrade-idflex-enterprise: InvocaÃ§Ã£o concluÃ­da.
+- [PASS] user-destroy-image: InvocaÃ§Ã£o concluÃ­da.
+- [PASS] user-get-image: InvocaÃ§Ã£o concluÃ­da.
+- [PASS] user-get-image-list: InvocaÃ§Ã£o concluÃ­da.
+- [PASS] user-list-images: InvocaÃ§Ã£o concluÃ­da.
+- [PASS] user-set-image: InvocaÃ§Ã£o concluÃ­da.
+- [PASS] user-set-image-list: InvocaÃ§Ã£o concluÃ­da.
+- [PASS] user-test-image: InvocaÃ§Ã£o concluÃ­da.
+- [PASS] validate-biometry: InvocaÃ§Ã£o concluÃ­da.
+
+## Pages
+
+- [PASS] /Auth/Status: GET 200
+- [PASS] /Users: GET 200
+- [PASS] /Users/Details/1: GET 200
+- [PASS] /Users/Create: GET 200
+- [PASS] /Users/Edit/1: GET 200
+- [PASS] /Users/Delete/1: GET 200
+- [PASS] /Groups: GET 200
+- [PASS] /Groups/Details/1: GET 200
+- [PASS] /Groups/Create: GET 200
+- [PASS] /Groups/Edit/1: GET 200
+- [PASS] /Groups/Delete/1: GET 200
+- [PASS] /Cards: GET 200
+- [PASS] /Cards/Details/1: GET 200
+- [PASS] /Cards/Create: GET 200
+- [PASS] /Cards/Edit/1: GET 200
+- [PASS] /Cards/Delete/1: GET 200
+- [PASS] /BiometricTemplates: GET 200
+- [PASS] /BiometricTemplates/Details/1: GET 200
+- [PASS] /BiometricTemplates/Create: GET 200
+- [PASS] /BiometricTemplates/Edit/1: GET 200
+- [PASS] /BiometricTemplates/Delete/1: GET 200
+- [PASS] /QRCodes: GET 200
+- [PASS] /QRCodes/Details/1: GET 200
+- [PASS] /QRCodes/Create: GET 200
+- [PASS] /QRCodes/Edit/1: GET 200
+- [PASS] /QRCodes/Delete/1: GET 200
+- [PASS] /Devices: GET 200
+- [PASS] /Devices/Details/1: GET 200
+- [PASS] /Devices/Create: GET 200
+- [PASS] /Devices/Edit/1: GET 200
+- [PASS] /Devices/Delete/1: GET 200
+- [PASS] /AccessRules: GET 200
+- [PASS] /AccessRules/Details/1: GET 200
+- [PASS] /AccessRules/Create: GET 200
+- [PASS] /AccessRules/Edit/1: GET 200
+- [PASS] /AccessRules/Delete/1: GET 200
+- [PASS] /AccessLogs: GET 200
+- [PASS] /AccessLogs/Details/1: GET 200
+- [PASS] /ChangeLogs: GET 200
+- [PASS] /ChangeLogs/Details/1: GET 200
+- [PASS] /Catra: GET 200
+- [PASS] /Catra/Details/1: GET 200
+- [PASS] /Catra/Delete/1: GET 200
+- [PASS] /Config: GET 200
+- [PASS] /Config/Details/1: GET 200
+- [PASS] /Config/Create: GET 200
+- [PASS] /Config/Edit/1: GET 200
+- [PASS] /Config/Delete/1: GET 200
+- [PASS] /Config/Diagnostics: GET 200
+- [PASS] /Config/Official: GET 200
+- [PASS] /Hardware/Status: GET 200
+- [PASS] /Hardware/Gpio: GET 200
+- [PASS] /Hardware/DoorState: GET 200
+- [PASS] /Hardware/RelayAction: GET 200
+- [PASS] /Hardware/ValidateBiometry: GET 200
+- [PASS] /System/Info: GET 200
+- [PASS] /System/HashPassword: GET 200
+- [PASS] /System/LoginCredentials: GET 200
+- [PASS] /System/Network: GET 200
+- [PASS] /System/Vpn: GET 200
+- [PASS] /Media: GET 200
+- [PASS] /Media/Details/1: GET 200
+- [PASS] /Media/Upload: GET 200
+- [PASS] /Media/Delete/1: GET 200
+- [PASS] /Media/AdMode: GET 200
+- [PASS] /Logo: GET 200
+- [PASS] /Logo/Details/1: GET 200
+- [PASS] /Logo/Upload: GET 200
+- [PASS] /Logo/Delete/1: GET 200
+- [PASS] /AdvancedOfficial: GET 200
+- [PASS] /AdvancedOfficial/ExportObjects: GET 200
+- [PASS] /AdvancedOfficial/NetworkInterlock: GET 200
+- [PASS] /AdvancedOfficial/CameraCapture: GET 200
+- [PASS] /AdvancedOfficial/FacialEnroll: GET 200
+- [PASS] /AdvancedOfficial/RemoteLedControl: GET 200
+- [PASS] /DocumentedFeatures: GET 200
+- [PASS] /OfficialObjects: GET 200
+- [PASS] /ProductSpecific: GET 200
+- [PASS] /RemoteActions: GET 200
+- [PASS] /RemoteActions/Authorization: GET 200
+- [PASS] /RemoteActions/Enroll: GET 200
+- [PASS] /RemoteActions/Details?action=open_door: GET 200
+- [PASS] /OfficialEvents: GET 200
+- [PASS] /PushCenter: GET 200
+

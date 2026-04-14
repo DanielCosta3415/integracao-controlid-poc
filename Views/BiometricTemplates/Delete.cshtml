@@ -1,0 +1,16 @@
+﻿@model Integracao.ControlID.PoC.ViewModels.BiometricTemplates.BiometricTemplateDeleteViewModel
+@{
+    ViewData["Title"] = "Excluir Template Biométrico";
+}
+
+<div class="container mt-5">
+    <div class="alert alert-warning">
+        <h4>Confirmação</h4>
+        <p>Deseja realmente excluir o template biométrico do usuário <strong>@Model.UserId</strong>?</p>
+        <form asp-action="Delete" asp-route-id="@Model.Id" method="post">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn btn-danger">Sim, excluir</button>
+            <a asp-action="Index" class="btn btn-secondary ms-2">Cancelar</a>
+        </form>
+    </div>
+</div>

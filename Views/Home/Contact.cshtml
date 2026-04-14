@@ -1,0 +1,40 @@
+﻿@{
+    ViewData["Title"] = "Contato";
+    ViewData["Subtitle"] = "Canal direto para dúvidas, sugestões e evolução desta PoC.";
+    var header = new AppPageHeaderViewModel
+    {
+        Eyebrow = "Painel",
+        Title = "Contato",
+        Description = "Se você quiser expandir a PoC, discutir novos fluxos ou revisar a integração, este é o ponto de contato principal.",
+        BadgeText = "Suporte do projeto",
+        BadgeTone = "info"
+    };
+}
+
+<div class="container mt-5 app-stack">
+    <partial name="_AppPageHeader" model="header" />
+
+    <section class="app-surface-card app-page-section">
+        <div class="app-page-section__heading">
+            <div>
+                <strong>Fale sobre a PoC</strong>
+                <p>Use este canal para dúvidas, sugestões, revisões de arquitetura ou próximos passos da integração.</p>
+            </div>
+        </div>
+
+        <div class="app-mini-grid">
+            <div class="app-mini-stat">
+                <span>E-mail</span>
+                <strong><a href="mailto:daniel.costa.1572782@sga.pucminas.br">daniel.costa.1572782@sga.pucminas.br</a></strong>
+            </div>
+            <div class="app-mini-stat">
+                <span>Assunto sugerido</span>
+                <strong>PoC Control iD, integração da API ou melhorias de UX/UI</strong>
+            </div>
+            <div class="app-mini-stat">
+                <span>Uso indicado</span>
+                <strong>Feedback técnico, suporte acadêmico e evolução do projeto</strong>
+            </div>
+        </div>
+    </section>
+</div>

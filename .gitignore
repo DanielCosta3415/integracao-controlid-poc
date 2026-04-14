@@ -1,0 +1,29 @@
+# Build artifacts
+bin/
+obj/
+
+# IDE and user-specific files
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Local runtime data
+Logs/
+artifacts/
+integracao_controlid.db
+integracao_controlid.db-shm
+integracao_controlid.db-wal
+
+# Local logs and temporary reports
+*.log
+warnings-*.txt
+warnings-*.log
+build.log
+app-run.log
+app-run.err.log
+
+# OS/editor noise
+.DS_Store
+Thumbs.db

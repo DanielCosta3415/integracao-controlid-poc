@@ -1,0 +1,32 @@
+﻿@model Integracao.ControlID.PoC.ViewModels.QRCodes.QRCodeEditViewModel
+@{
+    ViewData["Title"] = "Novo QR Code";
+}
+
+<div class="container mt-5">
+    <h2>Novo QR Code</h2>
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <form asp-action="Create" method="post" autocomplete="off">
+                <div class="mb-3">
+                    <label asp-for="UserId" class="form-label"></label>
+                    <input asp-for="UserId" class="form-control" />
+                    <span asp-validation-for="UserId" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Value" class="form-label"></label>
+                    <input asp-for="Value" class="form-control" />
+                    <span asp-validation-for="Value" class="text-danger"></span>
+                </div>
+                <p class="text-muted small">
+                    A PoC agora usa o objeto oficial `qrcodes`, que trabalha com `id`, `user_id` e `value`.
+                </p>
+                <button type="submit" class="btn btn-success">Salvar</button>
+                <a asp-action="Index" class="btn btn-secondary ms-2">Cancelar</a>
+            </form>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

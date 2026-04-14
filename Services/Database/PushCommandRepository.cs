@@ -1,0 +1,143 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Integracao.ControlID.PoC.Models.Database;
+using Integracao.ControlID.PoC.Data; // Contexto correto
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+
+namespace Integracao.ControlID.PoC.Services.Database
+{
+    public class PushCommandRepository
+    {
+        private readonly IntegracaoControlIDContext _dbContext;
+        private readonly ILogger<PushCommandRepository> _logger;
+
+        public PushCommandRepository(IntegracaoControlIDContext dbContext, ILogger<PushCommandRepository> logger)
+        {
+            _dbContext = dbContext;
+            _logger = logger;
+        }
+
+        /// <summary>
+        /// Adiciona um novo comando Push local.
+        /// </summary>
+        public async Task<PushCommandLocal> AddPushCommandAsync(PushCommandLocal pushCommand)
+        {
+            try
+            {
+                pushCommand.ReceivedAt = DateTime.UtcNow;
+                _dbContext.PushCommands.Add(pushCommand);
+                await _dbContext.SaveChangesAsync();
+                return pushCommand;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Erro ao adicionar comando Push local.");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Busca comando Push local pelo Id.
+        /// </summary>
+        public async Task<PushCommandLocal?> GetPushCommandByIdAsync(Guid id)
+        {
+            return await _dbContext.PushCommands.FirstOrDefaultAsync(c => c.CommandId == id);
+        }
+
+        /// <summary>
+        /// Busca todos os comandos Push locais.
+        /// </summary>
+        public async Task<List<PushCommandLocal>> GetAllPushCommandsAsync()
+        {
+            return await _dbContext.PushCommands.OrderByDescending(c => c.ReceivedAt).ToListAsync();
+        }
+
+        public async Task<PushCommandLocal?> GetNextPendingCommandAsync(string? deviceId)
+        {
+            var query = _dbContext.PushCommands
+                .Where(command => command.Status == "pending");
+
+            if (!string.IsNullOrWhiteSpace(deviceId))
+            {
+                query = query.Where(command => command.DeviceId == deviceId || string.IsNullOrEmpty(command.DeviceId));
+            }
+
+            return await query
+                .OrderBy(command => command.CreatedAt)
+                .FirstOrDefaultAsync();
+        }
+
+        /// <summary>
+        /// Atualiza dados de um comando Push local.
+        /// </summary>
+        public async Task<bool> UpdatePushCommandAsync(PushCommandLocal pushCommand)
+        {
+            try
+            {
+                _dbContext.PushCommands.Update(pushCommand);
+                await _dbContext.SaveChangesAsync();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Erro ao atualizar comando Push local {CommandId}.", pushCommand.CommandId);
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Remove comando Push local pelo Id.
+        /// </summary>
+        public async Task<bool> DeletePushCommandAsync(Guid id)
+        {
+            try
+            {
+                var cmd = await _dbContext.PushCommands.FirstOrDefaultAsync(c => c.CommandId == id);
+                if (cmd == null)
+                    return false;
+
+                _dbContext.PushCommands.Remove(cmd);
+                await _dbContext.SaveChangesAsync();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Erro ao remover comando Push local {id}.");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Busca comandos Push locais por tipo, status, usuário ou período.
+        /// </summary>
+        public async Task<List<PushCommandLocal>> SearchPushCommandsAsync(
+            string? commandType = null,
+            string? status = null,
+            long? userId = null,
+            DateTime? startDate = null,
+            DateTime? endDate = null)
+        {
+            IQueryable<PushCommandLocal> query = _dbContext.PushCommands;
+
+            if (!string.IsNullOrWhiteSpace(commandType))
+                query = query.Where(c => c.CommandType == commandType);
+
+            if (!string.IsNullOrWhiteSpace(status))
+                query = query.Where(c => c.Status == status);
+
+            if (userId.HasValue)
+                query = query.Where(c => c.UserId == userId.Value.ToString());
+
+            if (startDate.HasValue)
+                query = query.Where(c => c.ReceivedAt >= startDate.Value);
+
+            if (endDate.HasValue)
+                query = query.Where(c => c.ReceivedAt <= endDate.Value);
+
+            return await query.OrderByDescending(c => c.ReceivedAt).ToListAsync();
+        }
+    }
+}

@@ -1,0 +1,53 @@
+﻿@{
+    ViewData["Title"] = "Sobre a PoC";
+    ViewData["Subtitle"] = "Visão geral da prova de conceito, cobertura funcional e proposta de uso.";
+    var header = new AppPageHeaderViewModel
+    {
+        Eyebrow = "Painel",
+        Title = "Sobre a PoC Control iD",
+        Description = "Resumo da proposta da aplicação, do escopo técnico auditado e do valor desta interface como console operacional de integração.",
+        BadgeText = "PoC ativa",
+        BadgeTone = "success"
+    };
+}
+
+<div class="container mt-5 app-stack">
+    <partial name="_AppPageHeader" model="header" />
+
+    <section class="hero-panel">
+        <div class="hero-panel__content app-hero-copy">
+            <span class="app-chip app-chip--danger">Controle de acesso</span>
+            <h2>Uma interface operacional para explorar a API Control iD de ponta a ponta.</h2>
+            <p>Esta aplicação foi estruturada para transformar a documentação viva da Control iD em fluxos operáveis, com módulos dedicados para recursos mais usados e superfícies técnicas para investigação avançada.</p>
+        </div>
+        <div class="hero-panel__side">
+            <div class="metric-card">
+                <span class="metric-card__label">Cobertura</span>
+                <strong class="metric-card__value">API + callbacks</strong>
+                <span class="metric-card__hint">Exploração operacional e técnica na mesma interface.</span>
+            </div>
+            <div class="metric-card">
+                <span class="metric-card__label">Objetivo</span>
+                <strong class="metric-card__value">Acelerar integração</strong>
+                <span class="metric-card__hint">Facilitar testes, aprendizado, auditoria e diagnóstico.</span>
+            </div>
+        </div>
+    </section>
+
+    <section class="app-surface-card app-page-section">
+        <div class="app-mini-grid">
+            <div class="app-mini-stat">
+                <span>Escopo</span>
+                <strong>Usuários, credenciais, eventos, push, sistema e recursos avançados</strong>
+            </div>
+            <div class="app-mini-stat">
+                <span>Estilo de uso</span>
+                <strong>Operação guiada com atalhos visuais e painéis técnicos</strong>
+            </div>
+            <div class="app-mini-stat">
+                <span>Finalidade</span>
+                <strong>Demonstração técnica, validação local e aprendizado da API</strong>
+            </div>
+        </div>
+    </section>
+</div>

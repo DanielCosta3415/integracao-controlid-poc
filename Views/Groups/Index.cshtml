@@ -1,0 +1,75 @@
+﻿@model Integracao.ControlID.PoC.ViewModels.Groups.GroupListViewModel
+@{
+    ViewData["Title"] = "Grupos";
+    ViewData["Subtitle"] = "Agrupamento lógico de usuários para facilitar políticas e manutenção.";
+    var header = new AppPageHeaderViewModel
+    {
+        Eyebrow = "Pessoas e credenciais",
+        Title = "Grupos",
+        Description = "Organize usuários em conjuntos reutilizáveis e acesse rapidamente os fluxos de edição e exclusão.",
+        BadgeText = $"{(Model.Groups?.Count() ?? 0)} grupos",
+        BadgeTone = "neutral",
+        Actions = new[]
+        {
+            new PageHeaderActionViewModel { Label = "Novo grupo", Href = Url.Action("Create")!, ButtonClass = "btn btn-primary" }
+        }
+    };
+}
+
+<div class="container mt-5 app-stack">
+    <partial name="_AppPageHeader" model="header" />
+
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger">@Model.ErrorMessage</div>
+    }
+
+    <section class="app-surface-card app-page-section">
+        <div class="app-page-section__heading">
+            <div>
+                <strong>Estrutura de agrupamento</strong>
+                <p>Os grupos ajudam a simplificar atribuições de regras, lotes de cadastro e manutenção operacional.</p>
+            </div>
+        </div>
+
+        <table class="table table-borderless table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nome</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Groups != null && Model.Groups.Any())
+                {
+                    foreach (var group in Model.Groups)
+                    {
+                        <tr>
+                            <td>@group.Id</td>
+                            <td>
+                                <div class="app-table-cell-stack">
+                                    <strong>@group.Name</strong>
+                                    <small>Grupo oficial sincronizado</small>
+                                </div>
+                            </td>
+                            <td>
+                                <a asp-action="Details" asp-route-id="@group.Id" class="btn btn-sm btn-info">Detalhes</a>
+                                <a asp-action="Edit" asp-route-id="@group.Id" class="btn btn-sm btn-primary">Editar</a>
+                                <a asp-action="Delete" asp-route-id="@group.Id" class="btn btn-sm btn-danger" onclick="return confirm('Deseja excluir este grupo?');">Excluir</a>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="3">
+                            <div class="app-empty app-empty--center">Nenhum grupo encontrado.</div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </section>
+</div>

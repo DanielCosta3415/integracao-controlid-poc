@@ -1,0 +1,328 @@
+﻿@model Integracao.ControlID.PoC.ViewModels.DocumentedFeatures.DocumentedFeaturesViewModel
+@{
+    ViewData["Title"] = "Recursos documentados";
+    ViewData["Subtitle"] = "Fluxos especiais mapeados a partir da documentação oficial viva da Control iD.";
+    var header = new AppPageHeaderViewModel
+    {
+        Eyebrow = "API e recursos avançados",
+        Title = "Recursos documentados",
+        Description = "Fluxos dedicados para tópicos especiais da documentação oficial que complementam a navegação principal da PoC.",
+        BadgeText = "Mapa expandido",
+        BadgeTone = "danger",
+        Actions = new[]
+        {
+            new PageHeaderActionViewModel { Label = "Voltar", Href = Url.Action("Index", "AdvancedOfficial")!, ButtonClass = "btn btn-outline-secondary" }
+        }
+    };
+}
+
+<div class="container mt-5 app-stack">
+    <partial name="_AppPageHeader" model="header" />
+    @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger">@Model.ErrorMessage</div>
+    }
+    @if (!string.IsNullOrWhiteSpace(Model.ResultMessage))
+    {
+        <div class="alert alert-@(string.IsNullOrWhiteSpace(Model.ResultStatusType) ? "info" : Model.ResultStatusType)">@Model.ResultMessage</div>
+    }
+
+    <div class="row g-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h4 class="mb-3">Modo Ponto</h4>
+                    <form asp-action="Attendance" method="post">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <div class="form-check mt-4">
+                                    <input asp-for="AttendanceModeEnabled" class="form-check-input" />
+                                    <label asp-for="AttendanceModeEnabled" class="form-check-label"></label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-check mt-4">
+                                    <input asp-for="AttendanceCustomLogTypesEnabled" class="form-check-input" />
+                                    <label asp-for="AttendanceCustomLogTypesEnabled" class="form-check-label"></label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="AttendanceClearExpiredUsers" class="form-label"></label>
+                                <select asp-for="AttendanceClearExpiredUsers" class="form-select">
+                                    <option value="disable">disable</option>
+                                    <option value="visitors">visitors</option>
+                                    <option value="all">all</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <button type="submit" class="btn btn-primary">Aplicar modo ponto</button>
+                        </div>
+                    </form>
+                    @if (Model.ActiveSection == "attendance" && !string.IsNullOrWhiteSpace(Model.ResponseJson))
+                    {
+                        <hr />
+                        <pre class="small mb-0">@Model.ResponseJson</pre>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h4 class="mb-3">Modo Online</h4>
+                    <form asp-action="OnlineMode" method="post">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <div class="form-check mt-4">
+                                    <input asp-for="OnlineUseExistingDevice" class="form-check-input" />
+                                    <label asp-for="OnlineUseExistingDevice" class="form-check-label"></label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="OnlineExistingDeviceId" class="form-label"></label>
+                                <input asp-for="OnlineExistingDeviceId" class="form-control" />
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="OnlineCurrentServerId" class="form-label"></label>
+                                <input asp-for="OnlineCurrentServerId" class="form-control" readonly />
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="OnlineServerName" class="form-label"></label>
+                                <input asp-for="OnlineServerName" class="form-control" />
+                            </div>
+                            <div class="col-md-5">
+                                <label asp-for="OnlineServerUrl" class="form-label"></label>
+                                <input asp-for="OnlineServerUrl" class="form-control" />
+                            </div>
+                            <div class="col-md-3">
+                                <label asp-for="OnlinePublicKey" class="form-label"></label>
+                                <input asp-for="OnlinePublicKey" class="form-control" />
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-check mt-4">
+                                    <input asp-for="OnlineEnabled" class="form-check-input" />
+                                    <label asp-for="OnlineEnabled" class="form-check-label"></label>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-check mt-4">
+                                    <input asp-for="OnlineLocalIdentification" class="form-check-input" />
+                                    <label asp-for="OnlineLocalIdentification" class="form-check-label"></label>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-check mt-4">
+                                    <input asp-for="OnlineExtractTemplate" class="form-check-input" />
+                                    <label asp-for="OnlineExtractTemplate" class="form-check-label"></label>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <label asp-for="OnlineMaxRequestAttempts" class="form-label"></label>
+                                <input asp-for="OnlineMaxRequestAttempts" class="form-control" />
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <button type="submit" class="btn btn-primary">Aplicar modo online</button>
+                        </div>
+                    </form>
+                    @if (Model.ActiveSection == "online" && !string.IsNullOrWhiteSpace(Model.ResponseJson))
+                    {
+                        <hr />
+                        <pre class="small mb-0">@Model.ResponseJson</pre>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h4 class="mb-3">Seguranca Operacional</h4>
+                    <form asp-action="Security" method="post">
+                        <div class="row g-3">
+                            <div class="col-md-3"><div class="form-check"><input asp-for="SecuritySshEnabled" class="form-check-input" /><label asp-for="SecuritySshEnabled" class="form-check-label"></label></div></div>
+                            <div class="col-md-3"><div class="form-check"><input asp-for="SecurityUsbPortEnabled" class="form-check-input" /><label asp-for="SecurityUsbPortEnabled" class="form-check-label"></label></div></div>
+                            <div class="col-md-3"><div class="form-check"><input asp-for="SecurityWebServerEnabled" class="form-check-input" /><label asp-for="SecurityWebServerEnabled" class="form-check-label"></label></div></div>
+                            <div class="col-md-3"><div class="form-check"><input asp-for="SecuritySnmpEnabled" class="form-check-input" /><label asp-for="SecuritySnmpEnabled" class="form-check-label"></label></div></div>
+                        </div>
+                        <div class="mt-3">
+                            <button type="submit" class="btn btn-primary">Aplicar seguranca</button>
+                        </div>
+                    </form>
+                    @if (Model.ActiveSection == "security" && !string.IsNullOrWhiteSpace(Model.ResponseJson))
+                    {
+                        <hr />
+                        <pre class="small mb-0">@Model.ResponseJson</pre>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-xl-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h4 class="mb-3">Visitantes</h4>
+                    <form asp-action="Visitors" method="post">
+                        <div class="mb-3">
+                            <label asp-for="VisitorsClearExpiredUsers" class="form-label"></label>
+                            <select asp-for="VisitorsClearExpiredUsers" class="form-select">
+                                <option value="disable">disable</option>
+                                <option value="visitors">visitors</option>
+                                <option value="all">all</option>
+                            </select>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input asp-for="VisitorsCollectCardOnExit" class="form-check-input" />
+                            <label asp-for="VisitorsCollectCardOnExit" class="form-check-label"></label>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Aplicar suporte a visitantes</button>
+                    </form>
+                    @if (Model.ActiveSection == "visitors" && !string.IsNullOrWhiteSpace(Model.ResponseJson))
+                    {
+                        <hr />
+                        <pre class="small mb-0">@Model.ResponseJson</pre>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-xl-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h4 class="mb-3">iDCloud</h4>
+                    <form asp-action="IdCloud" method="post">
+                        <div class="mb-3">
+                            <label asp-for="IdCloudPushRemoteAddress" class="form-label"></label>
+                            <input asp-for="IdCloudPushRemoteAddress" class="form-control" />
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label asp-for="IdCloudPushRequestTimeout" class="form-label"></label>
+                                <input asp-for="IdCloudPushRequestTimeout" class="form-control" />
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="IdCloudPushRequestPeriod" class="form-label"></label>
+                                <input asp-for="IdCloudPushRequestPeriod" class="form-control" />
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <label asp-for="IdCloudVerificationCode" class="form-label"></label>
+                            <input asp-for="IdCloudVerificationCode" class="form-control" readonly />
+                        </div>
+                        <div class="mt-3 d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">Salvar iDCloud</button>
+                            <button type="submit" formaction="@Url.Action("RegenerateIdCloudCode", "DocumentedFeatures")" class="btn btn-outline-primary">Regenerar codigo</button>
+                        </div>
+                    </form>
+                    @if (Model.ActiveSection == "idcloud" && !string.IsNullOrWhiteSpace(Model.ResponseJson))
+                    {
+                        <hr />
+                        <pre class="small mb-0">@Model.ResponseJson</pre>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center gap-2 mb-3">
+                        <h4 class="mb-0">Alarme</h4>
+                        <div class="small text-muted">Ativo: @(Model.AlarmActive ? "sim" : "nao") | Causa: @Model.AlarmCause</div>
+                    </div>
+                    <form asp-action="Alarm" method="post">
+                        <div class="row g-3">
+                            <div class="col-md-3"><div class="form-check"><input asp-for="AlarmDeviceViolationEnabled" class="form-check-input" /><label asp-for="AlarmDeviceViolationEnabled" class="form-check-label"></label></div></div>
+                            <div class="col-md-3"><div class="form-check"><input asp-for="AlarmDoorSensorEnabled" class="form-check-input" /><label asp-for="AlarmDoorSensorEnabled" class="form-check-label"></label></div></div>
+                            <div class="col-md-3"><div class="form-check"><input asp-for="AlarmForcedAccessEnabled" class="form-check-input" /><label asp-for="AlarmForcedAccessEnabled" class="form-check-label"></label></div></div>
+                            <div class="col-md-3"><div class="form-check"><input asp-for="AlarmPanicCardEnabled" class="form-check-input" /><label asp-for="AlarmPanicCardEnabled" class="form-check-label"></label></div></div>
+                            <div class="col-md-3"><div class="form-check"><input asp-for="AlarmPanicFingerEnabled" class="form-check-input" /><label asp-for="AlarmPanicFingerEnabled" class="form-check-label"></label></div></div>
+                            <div class="col-md-3"><div class="form-check"><input asp-for="AlarmPanicPasswordEnabled" class="form-check-input" /><label asp-for="AlarmPanicPasswordEnabled" class="form-check-label"></label></div></div>
+                            <div class="col-md-3"><div class="form-check"><input asp-for="AlarmPanicPinEnabled" class="form-check-input" /><label asp-for="AlarmPanicPinEnabled" class="form-check-label"></label></div></div>
+                            <div class="col-md-3"><label asp-for="AlarmDoorSensorAlarmTimeoutAfterClosure" class="form-label"></label><input asp-for="AlarmDoorSensorAlarmTimeoutAfterClosure" class="form-control" /></div>
+                            <div class="col-md-3"><label asp-for="AlarmDoorSensorDelay" class="form-label"></label><input asp-for="AlarmDoorSensorDelay" class="form-control" /></div>
+                            <div class="col-md-3"><label asp-for="AlarmForcedAccessDebounce" class="form-label"></label><input asp-for="AlarmForcedAccessDebounce" class="form-control" /></div>
+                            <div class="col-md-3"><label asp-for="AlarmPanicFingerDelay" class="form-label"></label><input asp-for="AlarmPanicFingerDelay" class="form-control" /></div>
+                        </div>
+                        <div class="mt-3 d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">Salvar alarme</button>
+                            <button type="submit" formaction="@Url.Action("StopAlarm", "DocumentedFeatures")" class="btn btn-outline-danger">Parar alarme</button>
+                        </div>
+                    </form>
+                    @if (Model.ActiveSection == "alarm" && !string.IsNullOrWhiteSpace(Model.ResponseJson))
+                    {
+                        <hr />
+                        <pre class="small mb-0">@Model.ResponseJson</pre>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h4 class="mb-3">Relatorios Oficiais</h4>
+                    <div class="row g-4">
+                        <div class="col-xl-6">
+                            <form asp-action="GenerateReport" method="post">
+                                <label asp-for="ReportPayload" class="form-label"></label>
+                                <textarea asp-for="ReportPayload" class="form-control" rows="14"></textarea>
+                                <div class="mt-3">
+                                    <button type="submit" class="btn btn-primary">Gerar relatorio</button>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="col-xl-6">
+                            <form asp-action="ExportAfd" method="post" class="mb-4">
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <label asp-for="AfdMode" class="form-label"></label>
+                                        <select asp-for="AfdMode" class="form-select">
+                                            <option value="595">595</option>
+                                            <option value="671">671</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label asp-for="AfdInitialNsr" class="form-label"></label>
+                                        <input asp-for="AfdInitialNsr" class="form-control" />
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label asp-for="AfdInitialDate" class="form-label"></label>
+                                        <input asp-for="AfdInitialDate" class="form-control" type="date" />
+                                    </div>
+                                </div>
+                                <div class="mt-3">
+                                    <button type="submit" class="btn btn-outline-primary">Exportar AFD</button>
+                                </div>
+                            </form>
+
+                            <form asp-action="ExportAuditLogs" method="post">
+                                <div class="row g-3">
+                                    <div class="col-md-3"><div class="form-check"><input asp-for="AuditConfig" class="form-check-input" /><label asp-for="AuditConfig" class="form-check-label"></label></div></div>
+                                    <div class="col-md-3"><div class="form-check"><input asp-for="AuditApi" class="form-check-input" /><label asp-for="AuditApi" class="form-check-label"></label></div></div>
+                                    <div class="col-md-3"><div class="form-check"><input asp-for="AuditUsb" class="form-check-input" /><label asp-for="AuditUsb" class="form-check-label"></label></div></div>
+                                    <div class="col-md-3"><div class="form-check"><input asp-for="AuditNetwork" class="form-check-input" /><label asp-for="AuditNetwork" class="form-check-label"></label></div></div>
+                                    <div class="col-md-3"><div class="form-check"><input asp-for="AuditTime" class="form-check-input" /><label asp-for="AuditTime" class="form-check-label"></label></div></div>
+                                    <div class="col-md-3"><div class="form-check"><input asp-for="AuditOnline" class="form-check-input" /><label asp-for="AuditOnline" class="form-check-label"></label></div></div>
+                                    <div class="col-md-3"><div class="form-check"><input asp-for="AuditMenu" class="form-check-input" /><label asp-for="AuditMenu" class="form-check-label"></label></div></div>
+                                </div>
+                                <div class="mt-3">
+                                    <button type="submit" class="btn btn-outline-primary">Exportar auditoria</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
+
+
+

@@ -1,0 +1,67 @@
+﻿@model Integracao.ControlID.PoC.ViewModels.Users.UserEditViewModel
+@{
+    ViewData["Title"] = "Editar Usuário";
+}
+
+<div class="container mt-5">
+    <h2>Editar Usuário</h2>
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <form asp-action="Edit" method="post" autocomplete="off">
+                <input type="hidden" asp-for="Id" />
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                <div class="mb-3">
+                    <label asp-for="Name" class="form-label"></label>
+                    <input asp-for="Name" class="form-control" />
+                    <span asp-validation-for="Name" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Registration" class="form-label"></label>
+                    <input asp-for="Registration" class="form-control" />
+                    <span asp-validation-for="Registration" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Email" class="form-label"></label>
+                    <input asp-for="Email" class="form-control" />
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Phone" class="form-label"></label>
+                    <input asp-for="Phone" class="form-control" />
+                    <span asp-validation-for="Phone" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Password" class="form-label"></label>
+                    <input asp-for="Password" class="form-control" type="password" />
+                    <span asp-validation-for="Password" class="text-danger"></span>
+                    <div class="form-text">Preencha somente se quiser trocar a senha.</div>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="UserTypeId" class="form-label"></label>
+                    <input asp-for="UserTypeId" class="form-control" />
+                    <span asp-validation-for="UserTypeId" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Status" class="form-label"></label>
+                    <input asp-for="Status" class="form-control" />
+                    <span asp-validation-for="Status" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="BeginTime" class="form-label"></label>
+                    <input asp-for="BeginTime" class="form-control" type="datetime-local" />
+                    <span asp-validation-for="BeginTime" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="EndTime" class="form-label"></label>
+                    <input asp-for="EndTime" class="form-control" type="datetime-local" />
+                    <span asp-validation-for="EndTime" class="text-danger"></span>
+                </div>
+                <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+                <a asp-action="Index" class="btn btn-secondary ms-2">Cancelar</a>
+            </form>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

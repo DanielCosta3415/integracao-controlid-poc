@@ -1,0 +1,103 @@
+﻿@model Integracao.ControlID.PoC.ViewModels.System.SystemInfoViewModel
+@{
+    ViewData["Title"] = "Sistema";
+    ViewData["Subtitle"] = "Estado do equipamento, manutenção administrativa e atalhos para rede, VPN e credenciais.";
+    var header = new AppPageHeaderViewModel
+    {
+        Eyebrow = "Operação",
+        Title = "Informações do sistema do equipamento",
+        Description = "Consulte dados de firmware, rede e uptime antes de executar ações administrativas sensíveis.",
+        Actions = new[]
+        {
+            new PageHeaderActionViewModel { Label = "Credenciais", Href = Url.Action("LoginCredentials")!, ButtonClass = "btn btn-outline-secondary" },
+            new PageHeaderActionViewModel { Label = "Rede e SSL", Href = Url.Action("Network")!, ButtonClass = "btn btn-outline-secondary" },
+            new PageHeaderActionViewModel { Label = "OpenVPN", Href = Url.Action("Vpn")!, ButtonClass = "btn btn-outline-secondary" },
+            new PageHeaderActionViewModel { Label = "Hash de senha", Href = Url.Action("HashPassword")!, ButtonClass = "btn btn-primary" }
+        }
+    };
+    var rawPanel = !string.IsNullOrWhiteSpace(Model.SystemInfo?.RawJson)
+        ? new RawResponsePanelViewModel
+        {
+            Title = "Resposta oficial do sistema",
+            Description = "Payload bruto retornado pela consulta de informações do equipamento.",
+            Content = Model.SystemInfo!.RawJson,
+            PanelId = "system-info-raw",
+            BadgeText = "JSON",
+            BadgeTone = "neutral"
+        }
+        : null;
+}
+
+<div class="container mt-5">
+    <partial name="_AppPageHeader" model="header" />
+
+    @if (TempData["StatusMessage"] is string statusMessage)
+    {
+        <div class="alert alert-@(TempData["StatusType"] ?? "info")">@statusMessage</div>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger">@Model.ErrorMessage</div>
+    }
+
+    @if (Model.SystemInfo != null)
+    {
+        <section class="detail-card app-stack">
+            <div class="entity-overview">
+                <div class="entity-overview__item"><span>Número de série</span><strong>@Model.SystemInfo.Serial</strong></div>
+                <div class="entity-overview__item"><span>Modelo</span><strong>@Model.SystemInfo.Model</strong></div>
+                <div class="entity-overview__item"><span>Hostname</span><strong>@Model.SystemInfo.Hostname</strong></div>
+                <div class="entity-overview__item"><span>IP</span><strong>@Model.SystemInfo.IpAddress</strong></div>
+                <div class="entity-overview__item"><span>Gateway</span><strong>@Model.SystemInfo.Gateway</strong></div>
+                <div class="entity-overview__item"><span>MAC</span><strong>@Model.SystemInfo.MacAddress</strong></div>
+                <div class="entity-overview__item"><span>Firmware</span><strong>@Model.SystemInfo.Firmware</strong></div>
+                <div class="entity-overview__item"><span>Versão</span><strong>@Model.SystemInfo.Version</strong></div>
+                <div class="entity-overview__item"><span>Device ID</span><strong>@Model.SystemInfo.DeviceId</strong></div>
+                <div class="entity-overview__item"><span>Modo</span><strong>@Model.SystemInfo.OnlineMode</strong></div>
+                <div class="entity-overview__item"><span>Hora atual</span><strong>@Model.SystemInfo.CurrentTime</strong></div>
+                <div class="entity-overview__item"><span>Uptime</span><strong>@Model.SystemInfo.Uptime</strong></div>
+            </div>
+        </section>
+
+        <section class="detail-card app-stack danger-zone">
+            <div>
+                <span class="app-chip app-chip--warning">Ações administrativas</span>
+                <h3 class="mt-3">Comandos críticos do equipamento</h3>
+                <p class="mt-2">As ações abaixo executam endpoints oficiais diretamente no equipamento. Use com cuidado.</p>
+            </div>
+
+            <div class="app-button-stack">
+                <form asp-action="SetDateTime" method="post" class="app-inline-form">
+                    <button type="submit" class="btn btn-primary">Sincronizar data e hora</button>
+                </form>
+                <form asp-action="Reset" method="post" class="app-inline-form" onsubmit="return confirm('Deseja reiniciar o equipamento agora?');">
+                    <button type="submit" class="btn btn-warning">Reiniciar equipamento</button>
+                </form>
+                <form asp-action="RebootRecovery" method="post" class="app-inline-form" onsubmit="return confirm('Deseja reiniciar o equipamento em modo de update?');">
+                    <button type="submit" class="btn btn-outline-warning">Reiniciar em update</button>
+                </form>
+                <form asp-action="DeleteAdmins" method="post" class="app-inline-form" onsubmit="return confirm('Deseja remover todos os administradores do equipamento?');">
+                    <button type="submit" class="btn btn-outline-danger">Remover administradores</button>
+                </form>
+                <form asp-action="FactoryReset" method="post" class="app-inline-form" onsubmit="return confirm('Deseja iniciar reset de fábrica preservando as informações de rede?');">
+                    <input type="hidden" name="keepNetworkInfo" value="true" />
+                    <button type="submit" class="btn btn-danger">Reset com rede</button>
+                </form>
+                <form asp-action="FactoryReset" method="post" class="app-inline-form" onsubmit="return confirm('Deseja iniciar reset de fábrica apagando também as informações de rede?');">
+                    <input type="hidden" name="keepNetworkInfo" value="false" />
+                    <button type="submit" class="btn btn-outline-danger">Reset total</button>
+                </form>
+            </div>
+        </section>
+
+        @if (rawPanel != null)
+        {
+            <partial name="_RawResponsePanel" model="rawPanel" />
+        }
+    }
+    else
+    {
+        <div class="alert alert-danger">Não foi possível obter as informações do sistema.</div>
+    }
+</div>

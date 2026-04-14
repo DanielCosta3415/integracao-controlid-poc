@@ -1,0 +1,24 @@
+﻿@model Integracao.ControlID.PoC.ViewModels.Config.ConfigViewModel
+@{
+    ViewData["Title"] = "Detalhes da Configuração";
+}
+
+<div class="container mt-5">
+    <h2>Detalhes da Configuração</h2>
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <dl class="row">
+                <dt class="col-sm-3">ID</dt>
+                <dd class="col-sm-9">@Model.Id</dd>
+                <dt class="col-sm-3">Grupo</dt>
+                <dd class="col-sm-9">@Model.Group</dd>
+                <dt class="col-sm-3">Chave</dt>
+                <dd class="col-sm-9">@Model.Key</dd>
+                <dt class="col-sm-3">Valor</dt>
+                <dd class="col-sm-9">@Model.Value</dd>
+            </dl>
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Editar</a>
+            <a asp-action="Index" class="btn btn-secondary ms-2">Voltar</a>
+        </div>
+    </div>
+</div>

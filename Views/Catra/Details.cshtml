@@ -1,0 +1,34 @@
+﻿@model Integracao.ControlID.PoC.ViewModels.Catra.CatraEventViewModel
+@{
+    ViewData["Title"] = "Detalhes do Evento de Catraca";
+}
+
+<div class="container mt-5">
+    <h2>Detalhes do Evento de Catraca</h2>
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <dl class="row">
+                <dt class="col-sm-3">ID</dt>
+                <dd class="col-sm-9">@Model.Id</dd>
+                <dt class="col-sm-3">Direção</dt>
+                <dd class="col-sm-9">
+                    @(
+                        Model.Direction == 0 ? "Entrada" :
+                        Model.Direction == 1 ? "Saída" : Model.Direction.ToString()
+                    )
+                </dd>
+                <dt class="col-sm-3">Data/Hora</dt>
+                <dd class="col-sm-9">@(Model.Time?.ToString("dd/MM/yyyy HH:mm") ?? "-")</dd>
+                <dt class="col-sm-3">Usuário</dt>
+                <dd class="col-sm-9">@Model.UserId</dd>
+                <dt class="col-sm-3">Dispositivo</dt>
+                <dd class="col-sm-9">@Model.DeviceId</dd>
+                <dt class="col-sm-3">Info</dt>
+                <dd class="col-sm-9">@Model.Info</dd>
+                <dt class="col-sm-3">Criado em</dt>
+                <dd class="col-sm-9">@(Model.CreatedAt?.ToString("dd/MM/yyyy HH:mm") ?? "-")</dd>
+            </dl>
+            <a asp-action="Index" class="btn btn-secondary">Voltar</a>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,118 @@
+﻿@model Integracao.ControlID.PoC.ViewModels.AccessLogs.AccessLogListViewModel
+@{
+    ViewData["Title"] = "Logs de acesso";
+    ViewData["Subtitle"] = "Auditoria de eventos de acesso com filtros rápidos por usuário, dispositivo, evento e período.";
+    var header = new AppPageHeaderViewModel
+    {
+        Eyebrow = "Dispositivo e infraestrutura",
+        Title = "Logs de acesso",
+        Description = "Use os filtros para localizar eventos específicos e abrir o detalhe de cada ocorrência capturada pela PoC.",
+        BadgeText = $"{(Model.AccessLogs?.Count() ?? 0)} eventos",
+        BadgeTone = "neutral"
+    };
+}
+
+<div class="container mt-5 app-stack">
+    <partial name="_AppPageHeader" model="header" />
+
+    <section class="app-surface-card app-page-section">
+        <div class="app-page-section__heading">
+            <div>
+                <strong>Filtros de auditoria</strong>
+                <p>Combine identificadores e período para reduzir o volume e focar nos eventos mais relevantes.</p>
+            </div>
+            <span class="app-chip app-chip--neutral">Consulta oficial</span>
+        </div>
+
+        <form asp-action="Index" method="get" class="app-form-grid">
+            <div>
+                <label class="form-label" for="UserId">ID do usuário</label>
+                <input id="UserId" name="UserId" class="form-control" value="@Context.Request.Query["UserId"]" placeholder="Ex.: 101" />
+            </div>
+            <div>
+                <label class="form-label" for="DeviceId">ID do dispositivo</label>
+                <input id="DeviceId" name="DeviceId" class="form-control" value="@Context.Request.Query["DeviceId"]" placeholder="Ex.: 1" />
+            </div>
+            <div>
+                <label class="form-label" for="Event">Código do evento</label>
+                <input id="Event" name="Event" class="form-control" value="@Context.Request.Query["Event"]" placeholder="Ex.: 7" />
+            </div>
+            <div>
+                <label class="form-label" for="StartDate">Data inicial</label>
+                <input id="StartDate" name="StartDate" type="date" class="form-control" value="@Context.Request.Query["StartDate"]" />
+            </div>
+            <div>
+                <label class="form-label" for="EndDate">Data final</label>
+                <input id="EndDate" name="EndDate" type="date" class="form-control" value="@Context.Request.Query["EndDate"]" />
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Aplicar filtros</button>
+                <a asp-action="Index" class="btn btn-outline-secondary">Limpar</a>
+            </div>
+        </form>
+    </section>
+
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger">@Model.ErrorMessage</div>
+    }
+
+    <section class="app-surface-card app-page-section">
+        <div class="app-page-section__heading">
+            <div>
+                <strong>Eventos encontrados</strong>
+                <p>Os registros de acesso são exibidos em modo somente leitura nesta PoC.</p>
+            </div>
+        </div>
+
+        <table class="table table-borderless table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Quando</th>
+                    <th>Evento</th>
+                    <th>Dispositivo</th>
+                    <th>Usuário</th>
+                    <th>Portal</th>
+                    <th>Informações</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.AccessLogs != null && Model.AccessLogs.Any())
+                {
+                    foreach (var log in Model.AccessLogs)
+                    {
+                        <tr>
+                            <td>@log.Id</td>
+                            <td>
+                                <div class="app-table-cell-stack">
+                                    <strong>@(log.Time?.ToString("dd/MM/yyyy HH:mm") ?? "-")</strong>
+                                    <small>Evento oficial sincronizado</small>
+                                </div>
+                            </td>
+                            <td><span class="app-chip app-chip--neutral">@log.Event</span></td>
+                            <td>@log.DeviceId</td>
+                            <td>@log.UserId</td>
+                            <td>@log.PortalId</td>
+                            <td>@(string.IsNullOrWhiteSpace(log.Info) ? "-" : log.Info)</td>
+                            <td>
+                                <a asp-action="Details" asp-route-id="@log.Id" class="btn btn-sm btn-info">Detalhes</a>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="8">
+                            <div class="app-empty app-empty--center">Nenhum registro de acesso encontrado com os filtros atuais.</div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        <div class="app-note">Os logs de acesso são somente leitura na trilha oficial desta PoC.</div>
+    </section>
+</div>

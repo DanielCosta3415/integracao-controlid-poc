@@ -1,0 +1,64 @@
+@model Integracao.ControlID.PoC.ViewModels.AdvancedOfficial.CameraCaptureViewModel
+@{
+    ViewData["Title"] = "Captura da Câmera";
+}
+
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center gap-2 mb-3">
+        <div>
+            <h2 class="mb-1">Captura da Câmera</h2>
+            <p class="text-muted mb-0">Fluxo dedicado para `save_screenshot.fcgi`.</p>
+        </div>
+        <a asp-action="Index" class="btn btn-outline-secondary">Voltar</a>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger">@Model.ErrorMessage</div>
+    }
+    @if (!string.IsNullOrWhiteSpace(Model.ResultMessage))
+    {
+        <div class="alert alert-@(string.IsNullOrWhiteSpace(Model.ResultStatusType) ? "info" : Model.ResultStatusType)">@Model.ResultMessage</div>
+    }
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <form asp-action="CameraCapture" method="post">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label asp-for="FrameType" class="form-label"></label>
+                        <input asp-for="FrameType" class="form-control" />
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="Camera" class="form-label"></label>
+                        <select asp-for="Camera" class="form-select">
+                            <option value="rgb">rgb</option>
+                            <option value="ir">ir</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary">Capturar</button>
+                </div>
+            </form>
+
+            @if (!string.IsNullOrWhiteSpace(Model.Base64Image))
+            {
+                <hr />
+                <h5>Imagem Capturada</h5>
+                <img src="data:@Model.ImageContentType;base64,@Model.Base64Image" alt="Captura" class="img-fluid rounded border" />
+            }
+
+            @if (!string.IsNullOrWhiteSpace(Model.ResponseJson))
+            {
+                <hr />
+                <h5>Detalhes</h5>
+                <pre class="small mb-0">@Model.ResponseJson</pre>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,7 @@
+<Project>
+  <PropertyGroup>
+    <!-- Keep the solution warning-clean by failing builds on any compiler/analyzer warning. -->
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <CodeAnalysisTreatWarningsAsErrors>true</CodeAnalysisTreatWarningsAsErrors>
+  </PropertyGroup>
+</Project>

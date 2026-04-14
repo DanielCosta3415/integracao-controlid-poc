@@ -1,0 +1,144 @@
+@model Integracao.ControlID.PoC.ViewModels.System.SystemNetworkViewModel
+@{
+    ViewData["Title"] = "Rede do Equipamento";
+}
+
+<div class="container mt-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <div>
+            <h2 class="mb-1">Rede e SSL</h2>
+            <p class="text-muted mb-0">Gerencia parâmetros de rede do equipamento e o certificado SSL oficial.</p>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <a asp-action="Vpn" class="btn btn-outline-info">OpenVPN</a>
+            <a asp-action="Info" class="btn btn-outline-secondary">Voltar para Sistema</a>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger">@Model.ErrorMessage</div>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(Model.ResultMessage))
+    {
+        <div class="alert alert-@(string.IsNullOrWhiteSpace(Model.ResultStatusType) ? "info" : Model.ResultStatusType)">
+            @Model.ResultMessage
+        </div>
+    }
+
+    <div class="row g-4">
+        <div class="col-xl-8">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Configuração de Rede</h5>
+                    <form asp-action="Network" method="post" autocomplete="off">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label asp-for="IpAddress" class="form-label"></label>
+                                <input asp-for="IpAddress" class="form-control" />
+                                <span asp-validation-for="IpAddress" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Netmask" class="form-label"></label>
+                                <input asp-for="Netmask" class="form-control" />
+                                <span asp-validation-for="Netmask" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Gateway" class="form-label"></label>
+                                <input asp-for="Gateway" class="form-control" />
+                                <span asp-validation-for="Gateway" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="WebServerPort" class="form-label"></label>
+                                <input asp-for="WebServerPort" class="form-control" />
+                                <span asp-validation-for="WebServerPort" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="DnsPrimary" class="form-label"></label>
+                                <input asp-for="DnsPrimary" class="form-control" />
+                                <span asp-validation-for="DnsPrimary" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="DnsSecondary" class="form-label"></label>
+                                <input asp-for="DnsSecondary" class="form-control" />
+                                <span asp-validation-for="DnsSecondary" class="text-danger"></span>
+                            </div>
+                            <div class="col-12">
+                                <div class="form-check">
+                                    <input asp-for="CustomHostnameEnabled" class="form-check-input" />
+                                    <label asp-for="CustomHostnameEnabled" class="form-check-label"></label>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <label asp-for="DeviceHostname" class="form-label"></label>
+                                <input asp-for="DeviceHostname" class="form-control" />
+                                <span asp-validation-for="DeviceHostname" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input asp-for="SslEnabled" class="form-check-input" />
+                                    <label asp-for="SslEnabled" class="form-check-label"></label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input asp-for="SelfSignedCertificate" class="form-check-input" />
+                                    <label asp-for="SelfSignedCertificate" class="form-check-label"></label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 d-flex flex-wrap gap-2">
+                            <button type="submit" class="btn btn-primary">Aplicar Rede</button>
+                            <a asp-action="Info" class="btn btn-secondary">Cancelar</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Certificado SSL</h5>
+                    <p class="text-muted small">Envie um arquivo PEM para substituir o certificado do servidor web do equipamento.</p>
+                    <form asp-action="UploadSslCertificate" method="post" enctype="multipart/form-data" autocomplete="off">
+                        <input asp-for="IpAddress" type="hidden" />
+                        <input asp-for="Netmask" type="hidden" />
+                        <input asp-for="Gateway" type="hidden" />
+                        <input asp-for="CustomHostnameEnabled" type="hidden" />
+                        <input asp-for="DeviceHostname" type="hidden" />
+                        <input asp-for="WebServerPort" type="hidden" />
+                        <input asp-for="SslEnabled" type="hidden" />
+                        <input asp-for="SelfSignedCertificate" type="hidden" />
+                        <input asp-for="DnsPrimary" type="hidden" />
+                        <input asp-for="DnsSecondary" type="hidden" />
+
+                        <div class="mb-3">
+                            <label asp-for="CertificateFile" class="form-label"></label>
+                            <input asp-for="CertificateFile" class="form-control" type="file" accept=".pem,.crt,.cer" />
+                            <span asp-validation-for="CertificateFile" class="text-danger"></span>
+                        </div>
+
+                        <button type="submit" class="btn btn-warning">Enviar Certificado</button>
+                    </form>
+                </div>
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(Model.LastResponseJson))
+            {
+                <div class="card shadow-sm mt-4">
+                    <div class="card-body">
+                        <h5 class="card-title">Última Resposta</h5>
+                        <pre class="small mb-0">@Model.LastResponseJson</pre>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

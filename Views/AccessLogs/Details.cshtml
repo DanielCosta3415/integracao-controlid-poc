@@ -1,0 +1,33 @@
+﻿@model Integracao.ControlID.PoC.ViewModels.AccessLogs.AccessLogViewModel
+@{
+    ViewData["Title"] = "Detalhes do log de acesso";
+    ViewData["Subtitle"] = "Inspeção pontual de um evento oficial sincronizado pela PoC.";
+    var header = new AppPageHeaderViewModel
+    {
+        Eyebrow = "Dispositivo e infraestrutura",
+        Title = "Detalhes do log de acesso",
+        Description = "Resumo completo do evento com foco em dispositivo, usuário, portal e informação complementar.",
+        BadgeText = $"Evento #{Model.Id}",
+        BadgeTone = "neutral",
+        Actions = new[]
+        {
+            new PageHeaderActionViewModel { Label = "Voltar aos logs", Href = Url.Action("Index")!, ButtonClass = "btn btn-outline-secondary" }
+        }
+    };
+}
+
+<div class="container mt-5 app-stack">
+    <partial name="_AppPageHeader" model="header" />
+
+    <section class="app-surface-card app-detail-shell">
+        <dl class="app-detail-list">
+            <div class="app-detail-list__row"><dt>ID</dt><dd>@Model.Id</dd></div>
+            <div class="app-detail-list__row"><dt>Data e hora</dt><dd>@(Model.Time?.ToString("dd/MM/yyyy HH:mm") ?? "-")</dd></div>
+            <div class="app-detail-list__row"><dt>Código do evento</dt><dd><span class="app-chip app-chip--neutral">@Model.Event</span></dd></div>
+            <div class="app-detail-list__row"><dt>ID do dispositivo</dt><dd>@Model.DeviceId</dd></div>
+            <div class="app-detail-list__row"><dt>ID do usuário</dt><dd>@Model.UserId</dd></div>
+            <div class="app-detail-list__row"><dt>Portal</dt><dd>@Model.PortalId</dd></div>
+            <div class="app-detail-list__row"><dt>Informações</dt><dd>@(string.IsNullOrWhiteSpace(Model.Info) ? "-" : Model.Info)</dd></div>
+        </dl>
+    </section>
+</div>

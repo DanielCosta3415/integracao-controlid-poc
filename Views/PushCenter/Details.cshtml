@@ -1,0 +1,31 @@
+@model Integracao.ControlID.PoC.ViewModels.Push.PushEventViewModel
+@{
+    ViewData["Title"] = "Detalhes do Comando Push";
+}
+
+<div class="container mt-5">
+    <h2>Detalhes do Comando Push</h2>
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <dl class="row">
+                <dt class="col-sm-3">ID</dt>
+                <dd class="col-sm-9">@Model.EventId</dd>
+                <dt class="col-sm-3">Recebido em</dt>
+                <dd class="col-sm-9">@Model.ReceivedAt.ToString("dd/MM/yyyy HH:mm:ss")</dd>
+                <dt class="col-sm-3">Tipo</dt>
+                <dd class="col-sm-9">@Model.CommandType</dd>
+                <dt class="col-sm-3">Status</dt>
+                <dd class="col-sm-9">@Model.Status</dd>
+                <dt class="col-sm-3">Dispositivo</dt>
+                <dd class="col-sm-9">@Model.DeviceId</dd>
+                <dt class="col-sm-3">Usuário</dt>
+                <dd class="col-sm-9">@Model.UserId</dd>
+                <dt class="col-sm-3">Payload</dt>
+                <dd class="col-sm-9"><pre>@Model.Payload</pre></dd>
+                <dt class="col-sm-3">JSON bruto</dt>
+                <dd class="col-sm-9"><pre>@Model.RawJson</pre></dd>
+            </dl>
+            <a asp-action="Index" class="btn btn-secondary">Voltar</a>
+        </div>
+    </div>
+</div>

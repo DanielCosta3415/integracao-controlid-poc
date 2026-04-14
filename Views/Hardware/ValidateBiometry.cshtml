@@ -1,0 +1,50 @@
+@model Integracao.ControlID.PoC.ViewModels.Hardware.BiometryValidationViewModel
+@{
+    ViewData["Title"] = "Validar Biometria";
+}
+
+<div class="container mt-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <div>
+            <h2 class="mb-1">Validar Biometria</h2>
+            <p class="text-muted mb-0">Envia um arquivo binário para o endpoint oficial `is_valid_biometry`.</p>
+        </div>
+        <a asp-action="Status" class="btn btn-outline-secondary">Voltar para Hardware</a>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger">@Model.ErrorMessage</div>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(Model.ResultMessage))
+    {
+        <div class="alert alert-@(string.IsNullOrWhiteSpace(Model.ResultStatusType) ? "info" : Model.ResultStatusType)">
+            @Model.ResultMessage
+        </div>
+    }
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <form asp-action="ValidateBiometry" method="post" enctype="multipart/form-data" autocomplete="off">
+                <div class="mb-3">
+                    <label asp-for="BiometryFile" class="form-label"></label>
+                    <input asp-for="BiometryFile" class="form-control" type="file" />
+                    <span asp-validation-for="BiometryFile" class="text-danger"></span>
+                </div>
+                <button type="submit" class="btn btn-primary">Validar</button>
+            </form>
+
+            @if (!string.IsNullOrWhiteSpace(Model.ResponseJson))
+            {
+                <hr />
+                <h5>Resposta Oficial</h5>
+                <pre class="small mb-0">@Model.ResponseJson</pre>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,47 @@
+@model Integracao.ControlID.PoC.ViewModels.AdvancedOfficial.ExportObjectsViewModel
+@{
+    ViewData["Title"] = "Exportar Objetos";
+}
+
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center gap-2 mb-3">
+        <div>
+            <h2 class="mb-1">Exportar Objetos</h2>
+            <p class="text-muted mb-0">Fluxo dedicado para `export_objects.fcgi`.</p>
+        </div>
+        <a asp-action="Index" class="btn btn-outline-secondary">Voltar</a>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger">@Model.ErrorMessage</div>
+    }
+    @if (!string.IsNullOrWhiteSpace(Model.ResultMessage))
+    {
+        <div class="alert alert-@(string.IsNullOrWhiteSpace(Model.ResultStatusType) ? "info" : Model.ResultStatusType)">@Model.ResultMessage</div>
+    }
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <form asp-action="ExportObjects" method="post" autocomplete="off">
+                <div class="mb-3">
+                    <label asp-for="ObjectName" class="form-label"></label>
+                    <input asp-for="ObjectName" class="form-control" placeholder="users, cards, logs..." />
+                    <span asp-validation-for="ObjectName" class="text-danger"></span>
+                </div>
+                <button type="submit" class="btn btn-primary">Exportar</button>
+            </form>
+
+            @if (!string.IsNullOrWhiteSpace(Model.ResponseJson))
+            {
+                <hr />
+                <h5>Resposta Oficial</h5>
+                <pre class="small mb-0">@Model.ResponseJson</pre>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

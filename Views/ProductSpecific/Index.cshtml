@@ -1,0 +1,397 @@
+﻿@model Integracao.ControlID.PoC.ViewModels.ProductSpecific.ProductSpecificViewModel
+@{
+    ViewData["Title"] = "Recursos específicos de produto";
+    ViewData["Subtitle"] = "Particularidades por linha de equipamento, como upgrade, SIP, streaming, QR/TOTP e sinais especiais.";
+    var header = new AppPageHeaderViewModel
+    {
+        Eyebrow = "API e recursos avançados",
+        Title = "Recursos específicos de produto",
+        Description = "Controle particularidades por linha de equipamento, como upgrades, SIP, streaming, áudio, QR/TOTP e sinais especiais.",
+        BadgeText = "Por dispositivo",
+        BadgeTone = "danger",
+        Actions = new[]
+        {
+            new PageHeaderActionViewModel { Label = "Voltar", Href = Url.Action("Index", "AdvancedOfficial")!, ButtonClass = "btn btn-outline-secondary" }
+        }
+    };
+}
+
+<div class="container mt-5 app-stack">
+    <partial name="_AppPageHeader" model="header" />
+    @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger">@Model.ErrorMessage</div>
+    }
+    @if (!string.IsNullOrWhiteSpace(Model.ResultMessage))
+    {
+        <div class="alert alert-@(string.IsNullOrWhiteSpace(Model.ResultStatusType) ? "info" : Model.ResultStatusType)">@Model.ResultMessage</div>
+    }
+
+    <div class="row g-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h4 class="mb-3">Upgrade de licenças</h4>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <form asp-action="UpgradeIdFace" method="post">
+                                <label asp-for="IdFaceProPassword" class="form-label"></label>
+                                <input asp-for="IdFaceProPassword" class="form-control" />
+                                <button type="submit" class="btn btn-primary mt-3">Executar upgrade Pro do iDFace</button>
+                            </form>
+                        </div>
+                        <div class="col-md-6">
+                            <form asp-action="UpgradeEnterprise" method="post">
+                                <label asp-for="IdFlexEnterprisePassword" class="form-label"></label>
+                                <input asp-for="IdFlexEnterprisePassword" class="form-control" />
+                                <button type="submit" class="btn btn-primary mt-3">Executar upgrade Enterprise</button>
+                            </form>
+                        </div>
+                    </div>
+                    @if (Model.ActiveSection == "upgrades" && !string.IsNullOrWhiteSpace(Model.ResponseJson))
+                    {
+                        <hr />
+                        <pre class="small mb-0">@Model.ResponseJson</pre>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h4 class="mb-3">Reconhecimento facial e métodos de identificação</h4>
+                    <form asp-action="FacialSettings" method="post">
+                        <div class="row g-3">
+                            <div class="col-md-3">
+                                <label asp-for="FaceMaskDetectionEnabled" class="form-label"></label>
+                                <select asp-for="FaceMaskDetectionEnabled" class="form-select">
+                                    <option value="0">0 - desabilitado</option>
+                                    <option value="1">1 - obrigatorio</option>
+                                    <option value="2">2 - recomendado</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3"><label asp-for="FaceMaxIdentifiedDuration" class="form-label"></label><input asp-for="FaceMaxIdentifiedDuration" class="form-control" /></div>
+                            <div class="col-md-3"><label asp-for="FaceCameraOverlayZoom" class="form-label"></label><input asp-for="FaceCameraOverlayZoom" class="form-control" /></div>
+                            <div class="col-md-3"><label asp-for="FaceCameraOverlayVerticalCrop" class="form-label"></label><input asp-for="FaceCameraOverlayVerticalCrop" class="form-control" /></div>
+                            <div class="col-md-3"><label asp-for="FaceMinDetectBoundsWidth" class="form-label"></label><input asp-for="FaceMinDetectBoundsWidth" class="form-control" /></div>
+                            <div class="col-md-3">
+                                <label asp-for="FaceLightThresholdLedActivation" class="form-label"></label>
+                                <select asp-for="FaceLightThresholdLedActivation" class="form-select">
+                                    <option value="40">40 - baixa</option>
+                                    <option value="280">280 - media</option>
+                                    <option value="1500">1500 - alta</option>
+                                    <option value="1000000">1000000 - sempre ligado</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3"><label asp-for="FaceLedBrightness" class="form-label"></label><input asp-for="FaceLedBrightness" class="form-control" /></div>
+                            <div class="col-md-3"><div class="form-check mt-4"><input asp-for="FaceVehicleModeEnabled" class="form-check-input" /><label asp-for="FaceVehicleModeEnabled" class="form-check-label"></label></div></div>
+                            <div class="col-md-3"><div class="form-check mt-4"><input asp-for="FaceScreenAlwaysOn" class="form-check-input" /><label asp-for="FaceScreenAlwaysOn" class="form-check-label"></label></div></div>
+                            <div class="col-md-4"><div class="form-check mt-4"><input asp-for="FaceLimitIdentificationToDisplayRegion" class="form-check-input" /><label asp-for="FaceLimitIdentificationToDisplayRegion" class="form-check-label"></label></div></div>
+                            <div class="col-md-2"><div class="form-check mt-4"><input asp-for="IdentifierCardEnabled" class="form-check-input" /><label asp-for="IdentifierCardEnabled" class="form-check-label"></label></div></div>
+                            <div class="col-md-2"><div class="form-check mt-4"><input asp-for="IdentifierFaceEnabled" class="form-check-input" /><label asp-for="IdentifierFaceEnabled" class="form-check-label"></label></div></div>
+                            <div class="col-md-2"><div class="form-check mt-4"><input asp-for="IdentifierQrCodeEnabled" class="form-check-input" /><label asp-for="IdentifierQrCodeEnabled" class="form-check-label"></label></div></div>
+                            <div class="col-md-2"><div class="form-check mt-4"><input asp-for="IdentifierPinEnabled" class="form-check-input" /><label asp-for="IdentifierPinEnabled" class="form-check-label"></label></div></div>
+                        </div>
+                        <button type="submit" class="btn btn-primary mt-3">Salvar configurações faciais</button>
+                    </form>
+                    @if (Model.ActiveSection == "facial" && !string.IsNullOrWhiteSpace(Model.ResponseJson))
+                    {
+                        <hr />
+                        <pre class="small mb-0">@Model.ResponseJson</pre>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-xl-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h4 class="mb-3">QR Code e TOTP</h4>
+                    <form asp-action="QrCodeSettings" method="post">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label asp-for="QrModule" class="form-label"></label>
+                                <select asp-for="QrModule" class="form-select">
+                                    <option value="face_id">face_id (iDFace / V6)</option>
+                                    <option value="barras">barras (Linha V5)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="QrCodeLegacyModeEnabled" class="form-label"></label>
+                                <select asp-for="QrCodeLegacyModeEnabled" class="form-select">
+                                    <option value="0">0 - alfanumerico</option>
+                                    <option value="1">1 - numerico</option>
+                                    <option value="2">2 - hexadecimal numerico</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4"><div class="form-check mt-4"><input asp-for="QrTotpEnabled" class="form-check-input" /><label asp-for="QrTotpEnabled" class="form-check-label"></label></div></div>
+                            <div class="col-md-3"><label asp-for="QrTotpWindowSize" class="form-label"></label><input asp-for="QrTotpWindowSize" class="form-control" /></div>
+                            <div class="col-md-3"><label asp-for="QrTotpWindowNum" class="form-label"></label><input asp-for="QrTotpWindowNum" class="form-control" /></div>
+                            <div class="col-md-3"><div class="form-check mt-4"><input asp-for="QrTotpSingleUse" class="form-check-input" /><label asp-for="QrTotpSingleUse" class="form-check-label"></label></div></div>
+                            <div class="col-md-3"><label asp-for="QrTotpTzOffset" class="form-label"></label><input asp-for="QrTotpTzOffset" class="form-control" /></div>
+                        </div>
+                        <button type="submit" class="btn btn-primary mt-3">Salvar QR Code/TOTP</button>
+                    </form>
+                    @if (Model.ActiveSection == "qr" && !string.IsNullOrWhiteSpace(Model.ResponseJson))
+                    {
+                        <hr />
+                        <pre class="small mb-0">@Model.ResponseJson</pre>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-xl-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h4 class="mb-3">Energia e Screenshot iDFace Max</h4>
+                    <form asp-action="PowerSettings" method="post">
+                        <div class="row g-3">
+                            <div class="col-md-4"><label asp-for="ScreenshotResize" class="form-label"></label><input asp-for="ScreenshotResize" class="form-control" /></div>
+                            <div class="col-md-4">
+                                <label asp-for="EnergyMode" class="form-label"></label>
+                                <select asp-for="EnergyMode" class="form-select">
+                                    <option value="0">0 - standard</option>
+                                    <option value="1">1 - external source 2A</option>
+                                    <option value="2">2 - POE + lock</option>
+                                    <option value="3">3 - custom</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4"><label asp-for="EnergyDisplayCustom" class="form-label"></label><input asp-for="EnergyDisplayCustom" class="form-control" /></div>
+                            <div class="col-md-4"><label asp-for="EnergySoundCustom" class="form-label"></label><input asp-for="EnergySoundCustom" class="form-control" /></div>
+                            <div class="col-md-4"><label asp-for="EnergyIrCustom" class="form-label"></label><input asp-for="EnergyIrCustom" class="form-control" /></div>
+                            <div class="col-md-4"><label asp-for="EnergyLedCustom" class="form-label"></label><input asp-for="EnergyLedCustom" class="form-control" /></div>
+                        </div>
+                        <button type="submit" class="btn btn-primary mt-3">Salvar energia e screenshot</button>
+                    </form>
+                    @if (Model.ActiveSection == "power" && !string.IsNullOrWhiteSpace(Model.ResponseJson))
+                    {
+                        <hr />
+                        <pre class="small mb-0">@Model.ResponseJson</pre>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h4 class="mb-3">Streaming RTSP e ONVIF</h4>
+                    <form asp-action="Streaming" method="post">
+                        <div class="row g-3">
+                            <div class="col-md-2"><div class="form-check mt-4"><input asp-for="StreamingRtspEnabled" class="form-check-input" /><label asp-for="StreamingRtspEnabled" class="form-check-label"></label></div></div>
+                            <div class="col-md-2"><label asp-for="StreamingRtspPort" class="form-label"></label><input asp-for="StreamingRtspPort" class="form-control" /></div>
+                            <div class="col-md-3"><label asp-for="StreamingRtspUsername" class="form-label"></label><input asp-for="StreamingRtspUsername" class="form-control" /></div>
+                            <div class="col-md-3"><label asp-for="StreamingRtspPassword" class="form-label"></label><input asp-for="StreamingRtspPassword" class="form-control" /></div>
+                            <div class="col-md-2">
+                                <label asp-for="StreamingRtspCodec" class="form-label"></label>
+                                <select asp-for="StreamingRtspCodec" class="form-select">
+                                    <option value="mjpeg">mjpeg</option>
+                                    <option value="h264">h264</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2"><div class="form-check mt-4"><input asp-for="StreamingRtspRgb" class="form-check-input" /><label asp-for="StreamingRtspRgb" class="form-check-label"></label></div></div>
+                            <div class="col-md-2"><div class="form-check mt-4"><input asp-for="StreamingOnvifEnabled" class="form-check-input" /><label asp-for="StreamingOnvifEnabled" class="form-check-label"></label></div></div>
+                            <div class="col-md-2"><label asp-for="StreamingOnvifPort" class="form-label"></label><input asp-for="StreamingOnvifPort" class="form-control" /></div>
+                            <div class="col-md-2"><div class="form-check mt-4"><input asp-for="StreamingRtspFlipped" class="form-check-input" /><label asp-for="StreamingRtspFlipped" class="form-check-label"></label></div></div>
+                            <div class="col-md-2"><div class="form-check mt-4"><input asp-for="StreamingWatermarkEnabled" class="form-check-input" /><label asp-for="StreamingWatermarkEnabled" class="form-check-label"></label></div></div>
+                            <div class="col-md-2"><div class="form-check mt-4"><input asp-for="StreamingWatermarkLogoEnabled" class="form-check-input" /><label asp-for="StreamingWatermarkLogoEnabled" class="form-check-label"></label></div></div>
+                            <div class="col-md-2"><div class="form-check mt-4"><input asp-for="StreamingWatermarkCustomLogoEnabled" class="form-check-input" /><label asp-for="StreamingWatermarkCustomLogoEnabled" class="form-check-label"></label></div></div>
+                        </div>
+                        <button type="submit" class="btn btn-primary mt-3">Salvar streaming</button>
+                    </form>
+                    @if (Model.ActiveSection == "streaming" && !string.IsNullOrWhiteSpace(Model.ResponseJson))
+                    {
+                        <hr />
+                        <pre class="small mb-0">@Model.ResponseJson</pre>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center gap-2 mb-3">
+                        <h4 class="mb-0">Intercom SIP</h4>
+                        <div class="small text-muted">Status: @Model.SipStatusCode | Em chamada: @(Model.SipInCall ? "sim" : "nao")</div>
+                    </div>
+                    <form asp-action="SipSettings" method="post">
+                        <div class="row g-3">
+                            <div class="col-md-2"><div class="form-check mt-4"><input asp-for="SipEnabled" class="form-check-input" /><label asp-for="SipEnabled" class="form-check-label"></label></div></div>
+                            <div class="col-md-4"><label asp-for="SipServerIp" class="form-label"></label><input asp-for="SipServerIp" class="form-control" /></div>
+                            <div class="col-md-2"><label asp-for="SipServerPort" class="form-label"></label><input asp-for="SipServerPort" class="form-control" /></div>
+                            <div class="col-md-2"><label asp-for="SipServerOutboundPort" class="form-label"></label><input asp-for="SipServerOutboundPort" class="form-control" /></div>
+                            <div class="col-md-2"><label asp-for="SipServerOutboundPortRange" class="form-label"></label><input asp-for="SipServerOutboundPortRange" class="form-control" /></div>
+                            <div class="col-md-2"><div class="form-check mt-4"><input asp-for="SipNumericBranchEnabled" class="form-check-input" /><label asp-for="SipNumericBranchEnabled" class="form-check-label"></label></div></div>
+                            <div class="col-md-2"><label asp-for="SipBranch" class="form-label"></label><input asp-for="SipBranch" class="form-control" /></div>
+                            <div class="col-md-2"><label asp-for="SipLogin" class="form-label"></label><input asp-for="SipLogin" class="form-control" /></div>
+                            <div class="col-md-2"><label asp-for="SipPassword" class="form-label"></label><input asp-for="SipPassword" class="form-control" /></div>
+                            <div class="col-md-2"><div class="form-check mt-4"><input asp-for="SipPeerToPeerEnabled" class="form-check-input" /><label asp-for="SipPeerToPeerEnabled" class="form-check-label"></label></div></div>
+                            <div class="col-md-2"><label asp-for="SipRegStatusQueryPeriod" class="form-label"></label><input asp-for="SipRegStatusQueryPeriod" class="form-control" /></div>
+                            <div class="col-md-2"><label asp-for="SipServerRetryInterval" class="form-label"></label><input asp-for="SipServerRetryInterval" class="form-control" /></div>
+                            <div class="col-md-2"><label asp-for="SipMaxCallTime" class="form-label"></label><input asp-for="SipMaxCallTime" class="form-control" /></div>
+                            <div class="col-md-2"><label asp-for="SipPushButtonDebounce" class="form-label"></label><input asp-for="SipPushButtonDebounce" class="form-control" /></div>
+                            <div class="col-md-2"><div class="form-check mt-4"><input asp-for="SipAutoAnswerEnabled" class="form-check-input" /><label asp-for="SipAutoAnswerEnabled" class="form-check-label"></label></div></div>
+                            <div class="col-md-2"><label asp-for="SipAutoAnswerDelay" class="form-label"></label><input asp-for="SipAutoAnswerDelay" class="form-control" /></div>
+                            <div class="col-md-2"><div class="form-check mt-4"><input asp-for="SipAutoCallButtonEnabled" class="form-check-input" /><label asp-for="SipAutoCallButtonEnabled" class="form-check-label"></label></div></div>
+                            <div class="col-md-2"><div class="form-check mt-4"><input asp-for="SipRexEnabled" class="form-check-input" /><label asp-for="SipRexEnabled" class="form-check-label"></label></div></div>
+                            <div class="col-md-2">
+                                <label asp-for="SipDialingDisplayMode" class="form-label"></label>
+                                <select asp-for="SipDialingDisplayMode" class="form-select">
+                                    <option value="0">0 - auto dial</option>
+                                    <option value="1">1 - lista</option>
+                                    <option value="2">2 - teclado/lista</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2"><label asp-for="SipAutoCallTarget" class="form-label"></label><input asp-for="SipAutoCallTarget" class="form-control" /></div>
+                            <div class="col-md-3"><label asp-for="SipCustomIdentifierAutoCall" class="form-label"></label><input asp-for="SipCustomIdentifierAutoCall" class="form-control" /></div>
+                            <div class="col-md-2"><div class="form-check mt-4"><input asp-for="SipVideoEnabled" class="form-check-input" /><label asp-for="SipVideoEnabled" class="form-check-label"></label></div></div>
+                            <div class="col-md-2"><div class="form-check mt-4"><input asp-for="SipCustomAudioEnabled" class="form-check-input" /><label asp-for="SipCustomAudioEnabled" class="form-check-label"></label></div></div>
+                            <div class="col-md-2">
+                                <label asp-for="SipCustomAudioVolumeGain" class="form-label"></label>
+                                <select asp-for="SipCustomAudioVolumeGain" class="form-select"><option value="1">1x</option><option value="2">2x</option><option value="3">3x</option></select>
+                            </div>
+                            <div class="col-md-2"><label asp-for="SipMicVolume" class="form-label"></label><input asp-for="SipMicVolume" class="form-control" /></div>
+                            <div class="col-md-2"><label asp-for="SipSpeakerVolume" class="form-label"></label><input asp-for="SipSpeakerVolume" class="form-control" /></div>
+                            <div class="col-md-2"><div class="form-check mt-4"><input asp-for="SipOpenDoorEnabled" class="form-check-input" /><label asp-for="SipOpenDoorEnabled" class="form-check-label"></label></div></div>
+                            <div class="col-md-2"><label asp-for="SipOpenDoorCommand" class="form-label"></label><input asp-for="SipOpenDoorCommand" class="form-control" /></div>
+                            <div class="col-md-3"><div class="form-check mt-4"><input asp-for="SipFacialIdDuringCallEnabled" class="form-check-input" /><label asp-for="SipFacialIdDuringCallEnabled" class="form-check-label"></label></div></div>
+                        </div>
+                        <button type="submit" class="btn btn-primary mt-3">Salvar configurações SIP</button>
+                    </form>
+                    <div class="row g-3 mt-1">
+                        <div class="col-md-4">
+                            <form asp-action="RefreshSipStatus" method="post">
+                                <button type="submit" class="btn btn-outline-primary w-100">Atualizar status SIP</button>
+                            </form>
+                        </div>
+                        <div class="col-md-4">
+                            <form asp-action="MakeSipCall" method="post">
+                                <div class="input-group">
+                                    <input asp-for="SipCallTarget" class="form-control" />
+                                    <button type="submit" class="btn btn-outline-primary">Ligar</button>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="col-md-4">
+                            <form asp-action="FinalizeSipCall" method="post">
+                                <button type="submit" class="btn btn-outline-danger w-100">Encerrar chamada</button>
+                            </form>
+                        </div>
+                    </div>
+                    @if ((Model.ActiveSection == "sip" || Model.ActiveSection == "sip-audio") && !string.IsNullOrWhiteSpace(Model.ResponseJson))
+                    {
+                        <hr />
+                        <pre class="small mb-0">@Model.ResponseJson</pre>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-xl-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h4 class="mb-3">Toque Personalizado do SIP</h4>
+                    <div class="small text-muted mb-3">Existe arquivo customizado: @(Model.SipAudioExists ? "sim" : "nao")</div>
+                    <form asp-action="UploadSipAudio" method="post" enctype="multipart/form-data" class="mb-3">
+                        <div class="row g-3">
+                            <div class="col-md-6"><label asp-for="SipAudioFile" class="form-label"></label><input asp-for="SipAudioFile" class="form-control" type="file" accept=".wav,audio/wav" /></div>
+                            <div class="col-md-3"><label asp-for="SipAudioCurrent" class="form-label"></label><input asp-for="SipAudioCurrent" class="form-control" /></div>
+                            <div class="col-md-3"><label asp-for="SipAudioTotal" class="form-label"></label><input asp-for="SipAudioTotal" class="form-control" /></div>
+                        </div>
+                        <button type="submit" class="btn btn-primary mt-3">Enviar toque SIP</button>
+                    </form>
+                    <div class="d-flex gap-2">
+                        <form asp-action="CheckSipAudio" method="post"><button type="submit" class="btn btn-outline-primary">Verificar</button></form>
+                        <form asp-action="DownloadSipAudio" method="post"><button type="submit" class="btn btn-outline-secondary">Baixar</button></form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-xl-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h4 class="mb-3">Áudios de eventos do iDFace</h4>
+                    <form asp-action="AccessAudioSettings" method="post" class="mb-3">
+                        <div class="row g-3">
+                            <div class="col-md-6"><label asp-for="AccessAudioNotIdentified" class="form-label"></label><select asp-for="AccessAudioNotIdentified" class="form-select"><option value="disabled">disabled</option><option value="default">default</option><option value="custom">custom</option></select></div>
+                            <div class="col-md-6"><label asp-for="AccessAudioAuthorized" class="form-label"></label><select asp-for="AccessAudioAuthorized" class="form-select"><option value="disabled">disabled</option><option value="default">default</option><option value="custom">custom</option></select></div>
+                            <div class="col-md-6"><label asp-for="AccessAudioNotAuthorized" class="form-label"></label><select asp-for="AccessAudioNotAuthorized" class="form-select"><option value="disabled">disabled</option><option value="default">default</option><option value="custom">custom</option></select></div>
+                            <div class="col-md-6"><label asp-for="AccessAudioUseMask" class="form-label"></label><select asp-for="AccessAudioUseMask" class="form-select"><option value="disabled">disabled</option><option value="default">default</option><option value="custom">custom</option></select></div>
+                            <div class="col-md-4"><label asp-for="AccessAudioVolumeGain" class="form-label"></label><select asp-for="AccessAudioVolumeGain" class="form-select"><option value="1">1x</option><option value="2">2x</option><option value="3">3x</option></select></div>
+                        </div>
+                        <button type="submit" class="btn btn-primary mt-3">Salvar configurações de áudio</button>
+                    </form>
+                    <form asp-action="UploadAccessAudio" method="post" enctype="multipart/form-data" class="mb-3">
+                        <div class="row g-3">
+                            <div class="col-md-4"><label asp-for="AccessAudioEvent" class="form-label"></label><select asp-for="AccessAudioEvent" class="form-select"><option value="not_identified">not_identified</option><option value="authorized">authorized</option><option value="not_authorized">not_authorized</option><option value="use_mask">use_mask</option></select></div>
+                            <div class="col-md-4"><label asp-for="AccessAudioFile" class="form-label"></label><input asp-for="AccessAudioFile" class="form-control" type="file" accept=".wav,audio/wav" /></div>
+                            <div class="col-md-2"><label asp-for="AccessAudioCurrent" class="form-label"></label><input asp-for="AccessAudioCurrent" class="form-control" /></div>
+                            <div class="col-md-2"><label asp-for="AccessAudioTotal" class="form-label"></label><input asp-for="AccessAudioTotal" class="form-control" /></div>
+                        </div>
+                        <button type="submit" class="btn btn-outline-primary mt-3">Enviar audio do evento</button>
+                    </form>
+                    <div class="small text-muted mb-3">
+                        Nao identificado: @(Model.AccessAudioHasNotIdentified ? "sim" : "nao") |
+                        Autorizado: @(Model.AccessAudioHasAuthorized ? "sim" : "nao") |
+                        Nao autorizado: @(Model.AccessAudioHasNotAuthorized ? "sim" : "nao") |
+                        Use mascara: @(Model.AccessAudioHasUseMask ? "sim" : "nao")
+                    </div>
+                    <div class="d-flex gap-2">
+                        <form asp-action="CheckAccessAudio" method="post"><button type="submit" class="btn btn-outline-primary">Verificar audios</button></form>
+                        <form asp-action="DownloadAccessAudio" method="post"><button type="submit" class="btn btn-outline-secondary">Baixar audio selecionado</button></form>
+                    </div>
+                    @if (Model.ActiveSection == "access-audio" && !string.IsNullOrWhiteSpace(Model.ResponseJson))
+                    {
+                        <hr />
+                        <pre class="small mb-0">@Model.ResponseJson</pre>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h4 class="mb-3">Sinais Configuráveis e Refresh de LEDs</h4>
+                    <form asp-action="Signals" method="post">
+                        <div class="row g-3">
+                            <div class="col-md-3"><label asp-for="SignalSecBoxOutMode" class="form-label"></label><select asp-for="SignalSecBoxOutMode" class="form-select"><option value="0">0 - normal</option><option value="1">1 - rejeitados</option><option value="2">2 - campainha</option><option value="3">3 - alarme</option></select></div>
+                            <div class="col-md-3"><label asp-for="SignalRelayOutMode" class="form-label"></label><select asp-for="SignalRelayOutMode" class="form-select"><option value="0">0 - normal</option><option value="1">1 - rejeitados</option><option value="2">2 - campainha</option><option value="3">3 - alarme</option></select></div>
+                            <div class="col-md-2"><div class="form-check mt-4"><input asp-for="SignalRelayEnabled" class="form-check-input" /><label asp-for="SignalRelayEnabled" class="form-check-label"></label></div></div>
+                            <div class="col-md-2"><div class="form-check mt-4"><input asp-for="SignalRelayAutoClose" class="form-check-input" /><label asp-for="SignalRelayAutoClose" class="form-check-label"></label></div></div>
+                            <div class="col-md-2"><label asp-for="SignalRelayTimeout" class="form-label"></label><input asp-for="SignalRelayTimeout" class="form-control" /></div>
+                            <div class="col-md-2"><label asp-for="SignalGpioExt1Mode" class="form-label"></label><select asp-for="SignalGpioExt1Mode" class="form-select"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option></select></div>
+                            <div class="col-md-2"><label asp-for="SignalGpioExt1Idle" class="form-label"></label><select asp-for="SignalGpioExt1Idle" class="form-select"><option value="0">0 - NC</option><option value="1">1 - NO</option></select></div>
+                            <div class="col-md-2"><label asp-for="SignalGpioExt2Mode" class="form-label"></label><select asp-for="SignalGpioExt2Mode" class="form-select"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option></select></div>
+                            <div class="col-md-2"><label asp-for="SignalGpioExt2Idle" class="form-label"></label><select asp-for="SignalGpioExt2Idle" class="form-select"><option value="0">0 - NC</option><option value="1">1 - NO</option></select></div>
+                            <div class="col-md-2"><label asp-for="SignalGpioExt3Mode" class="form-label"></label><select asp-for="SignalGpioExt3Mode" class="form-select"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option></select></div>
+                            <div class="col-md-2"><label asp-for="SignalGpioExt3Idle" class="form-label"></label><select asp-for="SignalGpioExt3Idle" class="form-select"><option value="0">0 - NC</option><option value="1">1 - NO</option></select></div>
+                        </div>
+                        <div class="d-flex gap-2 mt-3">
+                            <button type="submit" class="btn btn-primary">Salvar sinais customizados</button>
+                        </div>
+                    </form>
+                    <form asp-action="RefreshLeds" method="post" class="mt-3">
+                        <button type="submit" class="btn btn-outline-primary">Reaplicar configuração de LEDs</button>
+                    </form>
+                    @if (Model.ActiveSection == "signals" && !string.IsNullOrWhiteSpace(Model.ResponseJson))
+                    {
+                        <hr />
+                        <pre class="small mb-0">@Model.ResponseJson</pre>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
+
+
+

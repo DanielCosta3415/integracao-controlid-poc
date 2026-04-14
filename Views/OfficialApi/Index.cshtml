@@ -1,0 +1,113 @@
+﻿@model Integracao.ControlID.PoC.ViewModels.OfficialApi.OfficialApiIndexViewModel
+@{
+    ViewData["Title"] = "Catálogo oficial da API";
+    ViewData["Subtitle"] = "Inventário navegável da documentação viva da Control iD com acesso direto aos endpoints invocáveis.";
+    var header = new AppPageHeaderViewModel
+    {
+        Eyebrow = "API e recursos avançados",
+        Title = "Catálogo oficial da API Control iD",
+        Description = "Navegue pelas rotas oficiais por categoria, diferencie callbacks de chamadas para o equipamento e abra os endpoints invocáveis diretamente pela PoC.",
+        BadgeText = $"{Model.Endpoints.Count()} entradas filtradas",
+        BadgeTone = "danger",
+        Actions = new[]
+        {
+            new PageHeaderActionViewModel { Label = "Limpar filtro", Href = Url.Action("Index")!, ButtonClass = "btn btn-outline-secondary" }
+        }
+    };
+}
+
+<div class="container mt-5 app-stack">
+    <partial name="_AppPageHeader" model="header" />
+
+    <section class="app-surface-card app-stack">
+        <div class="app-toolbar">
+            <div>
+                <strong>Filtros do explorador técnico</strong>
+                <p>Combine domínio funcional, método HTTP, direção da chamada e exigência de sessão para reduzir o ruído do catálogo.</p>
+            </div>
+        </div>
+
+        <form asp-action="Index" method="get" class="directory-filter-bar">
+            <div class="directory-filter-bar__field">
+                <label class="form-label" for="category">Categoria</label>
+                <select id="category" name="category" class="form-select">
+                    <option value="">Todas as categorias</option>
+                    @foreach (var category in Model.Categories)
+                    {
+                        <option value="@category" selected="@(Model.SelectedCategory == category)">@category</option>
+                    }
+                </select>
+            </div>
+            <div class="directory-filter-bar__field">
+                <label class="form-label" for="method">Método</label>
+                <select id="method" name="method" class="form-select">
+                    <option value="">Todos os métodos</option>
+                    @foreach (var method in Model.Methods)
+                    {
+                        <option value="@method" selected="@(Model.SelectedMethod == method)">@method</option>
+                    }
+                </select>
+            </div>
+            <div class="directory-filter-bar__field">
+                <label class="form-label" for="direction">Direção</label>
+                <select id="direction" name="direction" class="form-select">
+                    <option value="">Todas as direções</option>
+                    @foreach (var direction in Model.Directions)
+                    {
+                        <option value="@direction" selected="@(Model.SelectedDirection == direction)">@direction</option>
+                    }
+                </select>
+            </div>
+            <div class="directory-filter-bar__field">
+                <label class="form-label" for="session">Sessão</label>
+                <select id="session" name="session" class="form-select">
+                    <option value="">Qualquer contexto</option>
+                    <option value="required" selected="@(Model.SelectedSessionFilter == "required")">Sessão obrigatória</option>
+                    <option value="optional" selected="@(Model.SelectedSessionFilter == "optional")">Sem sessão</option>
+                </select>
+            </div>
+            <div class="directory-filter-bar__actions">
+                <button type="submit" class="btn btn-primary">Aplicar filtros</button>
+                <a class="btn btn-quiet" href="@Url.Action("Index")">Limpar</a>
+            </div>
+        </form>
+    </section>
+
+    @if (Model.Endpoints.Any())
+    {
+        <section class="module-grid">
+            @foreach (var endpoint in Model.Endpoints)
+            {
+                <article class="module-card">
+                    <div class="module-card__meta">
+                        <span class="app-chip app-chip--neutral">@endpoint.Category</span>
+                        <span class="app-chip @(endpoint.Direction == "server-callback" ? "app-chip--warning" : "app-chip--danger")">@endpoint.Method @endpoint.Path</span>
+                    </div>
+                    <div class="app-stack">
+                        <h3>@endpoint.Title</h3>
+                        <p>@endpoint.Summary</p>
+                        <div class="quick-links">
+                            <span class="app-chip app-chip--neutral">@(endpoint.Direction == "server-callback" ? "Callback do equipamento" : "Chamada ao equipamento")</span>
+                            <span class="app-chip app-chip--neutral">Corpo: @endpoint.BodyKind</span>
+                            <span class="app-chip @(endpoint.RequiresSession ? "app-chip--warning" : "app-chip--success")">@(endpoint.RequiresSession ? "Sessão obrigatória" : "Sem sessão")</span>
+                        </div>
+                    </div>
+                    <div class="quick-links">
+                        <a asp-action="Invoke" asp-route-id="@endpoint.Id" data-endpoint-id="@endpoint.Id" class="btn @(endpoint.Invokable ? "btn-primary" : "btn-outline-secondary")">
+                            @(endpoint.Invokable ? "Abrir endpoint" : "Ver callback")
+                        </a>
+                        <a href="@endpoint.DocumentationUrl" class="btn btn-quiet" target="_blank" rel="noopener noreferrer">Documentação</a>
+                    </div>
+                </article>
+            }
+        </section>
+    }
+    else
+    {
+        <section class="app-surface-card">
+            <div class="app-empty app-empty--center">
+                Nenhum endpoint corresponde aos filtros informados. Ajuste os filtros do explorador ou limpe a busca para voltar ao catálogo completo.
+            </div>
+        </section>
+    }
+</div>

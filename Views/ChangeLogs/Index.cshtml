@@ -1,0 +1,73 @@
+﻿@model Integracao.ControlID.PoC.ViewModels.ChangeLogs.ChangeLogListViewModel
+@{
+    ViewData["Title"] = "Logs de alteração";
+    ViewData["Subtitle"] = "Trilha de auditoria das mudanças aplicadas aos objetos e configurações.";
+    var header = new AppPageHeaderViewModel
+    {
+        Eyebrow = "Dispositivo e infraestrutura",
+        Title = "Logs de alteração",
+        Description = "Acompanhe mudanças estruturais e rastreie o histórico das operações persistidas pela PoC.",
+        BadgeText = $"{(Model.ChangeLogs?.Count() ?? 0)} mudanças",
+        BadgeTone = "neutral"
+    };
+}
+
+<div class="container mt-5 app-stack">
+    <partial name="_AppPageHeader" model="header" />
+
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger">@Model.ErrorMessage</div>
+    }
+
+    <section class="app-surface-card app-page-section">
+        <div class="app-page-section__heading">
+            <div>
+                <strong>Trilha de auditoria</strong>
+                <p>Os change logs são exibidos em modo consulta para facilitar inspeção e troubleshooting.</p>
+            </div>
+            <span class="app-chip app-chip--neutral">Somente leitura</span>
+        </div>
+
+        <table class="table table-borderless table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Operação</th>
+                    <th>Tabela</th>
+                    <th>Registro</th>
+                    <th>Quando</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.ChangeLogs != null && Model.ChangeLogs.Any())
+                {
+                    foreach (var log in Model.ChangeLogs)
+                    {
+                        <tr>
+                            <td>@log.Id</td>
+                            <td><span class="app-chip app-chip--neutral">@log.OperationType</span></td>
+                            <td>@log.TableName</td>
+                            <td>@log.TableId</td>
+                            <td>@(log.Timestamp?.ToString("dd/MM/yyyy HH:mm") ?? "-")</td>
+                            <td>
+                                <a asp-action="Details" asp-route-id="@log.Id" class="btn btn-sm btn-info">Detalhes</a>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="6">
+                            <div class="app-empty app-empty--center">Nenhum log de alteração encontrado.</div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        <div class="app-note">A trilha de alterações é apresentada como consulta somente leitura.</div>
+    </section>
+</div>

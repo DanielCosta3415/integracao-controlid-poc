@@ -1,0 +1,123 @@
+﻿@model Integracao.ControlID.PoC.ViewModels.RemoteActions.RemoteActionListViewModel
+@{
+    ViewData["Title"] = "Ações remotas";
+    ViewData["Subtitle"] = "Execução imediata de ações oficiais, autorização online e cadastro remoto do equipamento.";
+    var header = new AppPageHeaderViewModel
+    {
+        Eyebrow = "Operação",
+        Title = "Ações remotas",
+        Description = "Acione comandos imediatos no equipamento, acompanhe o histórico da operação e entre rápido nos fluxos especializados de autorização e enrolamento.",
+        BadgeText = $"{(Model.Actions?.Count() ?? 0)} ações registradas",
+        BadgeTone = "danger",
+        Actions = new[]
+        {
+            new PageHeaderActionViewModel { Label = "Autorização remota", Href = Url.Action("Authorization")!, ButtonClass = "btn btn-outline-secondary" },
+            new PageHeaderActionViewModel { Label = "Cadastro remoto", Href = Url.Action("Enroll")!, ButtonClass = "btn btn-primary" }
+        }
+    };
+}
+
+<div class="container mt-5 app-stack">
+    <partial name="_AppPageHeader" model="header" />
+
+    @if (TempData["StatusMessage"] is string statusMessage)
+    {
+        <div class="alert alert-@(TempData["StatusType"] ?? "info")">@statusMessage</div>
+    }
+
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger">@Model.ErrorMessage</div>
+    }
+
+    <section class="app-surface-card app-page-section">
+        <div class="app-page-section__heading">
+            <div>
+                <strong>Disparo imediato de comando</strong>
+                <p>Esta área usa ações confirmadas da API oficial, incluindo execução genérica, buzzer, mensagem na tela e cancelamento de cadastro remoto.</p>
+            </div>
+            <span class="app-chip app-chip--neutral">Operação oficial</span>
+        </div>
+
+        <div class="app-grid-two">
+            <form asp-action="Execute" method="post" autocomplete="off" class="app-surface-card app-stack">
+                <div>
+                    <label for="Action" class="form-label">Ação remota</label>
+                    <select name="Action" class="form-select" required>
+                        <option value="">Selecione...</option>
+                        <option value="open_door">Abrir porta</option>
+                        <option value="activate_buzzer">Ativar buzzer</option>
+                        <option value="send_message">Enviar mensagem</option>
+                        <option value="cancel_remote_enroll">Cancelar cadastro remoto</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="Door" class="form-label">Porta</label>
+                    <input type="number" name="Door" class="form-control" min="1" />
+                </div>
+                <div>
+                    <label for="Message" class="form-label">Mensagem</label>
+                    <input type="text" name="Message" class="form-control" maxlength="64" />
+                </div>
+                <div class="app-note">Use a porta apenas quando a ação for abertura remota e a mensagem apenas para exibição na tela.</div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Executar ação</button>
+                </div>
+            </form>
+
+            <div class="app-surface-card app-stack">
+                <strong>Último resultado</strong>
+                @if (ViewBag.ExecutionResult != null)
+                {
+                    <div class="alert alert-info">@ViewBag.ExecutionResult</div>
+                }
+                else
+                {
+                    <div class="app-empty">Nenhuma execução recente nesta sessão do navegador.</div>
+                }
+            </div>
+        </div>
+    </section>
+
+    <section class="app-surface-card app-page-section">
+        <div class="app-page-section__heading">
+            <div>
+                <strong>Histórico de ações executadas</strong>
+                <p>Consulte o rastro local dos comandos emitidos pela PoC e o resultado registrado para cada um.</p>
+            </div>
+        </div>
+
+        <table class="table table-borderless table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>Ação</th>
+                    <th>Exibição</th>
+                    <th>Parâmetros</th>
+                    <th>Resultado</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Actions != null && Model.Actions.Any())
+                {
+                    foreach (var action in Model.Actions)
+                    {
+                        <tr>
+                            <td><span class="app-chip app-chip--neutral">@action.Action</span></td>
+                            <td>@action.DisplayName</td>
+                            <td>@(string.IsNullOrWhiteSpace(action.Parameters) ? "-" : action.Parameters)</td>
+                            <td>@(string.IsNullOrWhiteSpace(action.Result) ? "-" : action.Result)</td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="4">
+                            <div class="app-empty app-empty--center">Nenhuma ação remota registrada.</div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </section>
+</div>

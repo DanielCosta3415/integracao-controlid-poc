@@ -1,0 +1,78 @@
+﻿@model Integracao.ControlID.PoC.ViewModels.Devices.DeviceEditViewModel
+@{
+    ViewData["Title"] = "Novo dispositivo";
+    ViewData["Subtitle"] = "Registre equipamentos locais com dados de rede, identificação e contexto operacional.";
+    var header = new AppPageHeaderViewModel
+    {
+        Eyebrow = "Dispositivo e infraestrutura",
+        Title = "Cadastrar dispositivo",
+        Description = "Use este formulário para registrar um equipamento na camada local da PoC.",
+        Actions = new[]
+        {
+            new PageHeaderActionViewModel { Label = "Voltar para dispositivos", Href = Url.Action("Index")!, ButtonClass = "btn btn-outline-secondary" }
+        }
+    };
+}
+
+<div class="container mt-5">
+    <partial name="_AppPageHeader" model="header" />
+
+    <section class="app-surface-card">
+        <form asp-action="Create" method="post" autocomplete="off" class="form-section">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div class="form-section">
+                <h3 class="form-section__title">Identificação do equipamento</h3>
+                <p class="form-section__description">Nome amigável, IP e número de série para rastrear o dispositivo dentro da PoC.</p>
+                <div class="app-form-grid">
+                    <div>
+                        <label asp-for="Name" class="form-label"></label>
+                        <input asp-for="Name" class="form-control" />
+                        <span asp-validation-for="Name" class="text-danger"></span>
+                    </div>
+                    <div>
+                        <label asp-for="Ip" class="form-label"></label>
+                        <input asp-for="Ip" class="form-control" />
+                        <span asp-validation-for="Ip" class="text-danger"></span>
+                    </div>
+                    <div>
+                        <label asp-for="SerialNumber" class="form-label"></label>
+                        <input asp-for="SerialNumber" class="form-control" />
+                        <span asp-validation-for="SerialNumber" class="text-danger"></span>
+                    </div>
+                    <div>
+                        <label asp-for="Firmware" class="form-label"></label>
+                        <input asp-for="Firmware" class="form-control" />
+                        <span asp-validation-for="Firmware" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3 class="form-section__title">Contexto operacional</h3>
+                <p class="form-section__description">Defina o status inicial e qualquer observação importante sobre o dispositivo.</p>
+                <div class="app-form-grid">
+                    <div>
+                        <label asp-for="Status" class="form-label"></label>
+                        <input asp-for="Status" class="form-control" />
+                        <span asp-validation-for="Status" class="text-danger"></span>
+                    </div>
+                    <div>
+                        <label asp-for="Description" class="form-label"></label>
+                        <input asp-for="Description" class="form-control" />
+                        <span asp-validation-for="Description" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <a asp-action="Index" class="btn btn-quiet">Cancelar</a>
+                <button type="submit" class="btn btn-primary">Salvar dispositivo</button>
+            </div>
+        </form>
+    </section>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

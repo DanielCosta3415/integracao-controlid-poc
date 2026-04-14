@@ -1,0 +1,34 @@
+﻿@model Integracao.ControlID.PoC.ViewModels.Users.UserViewModel
+@{
+    ViewData["Title"] = "Detalhes do usuário";
+    ViewData["Subtitle"] = "Resumo operacional do usuário carregado pela PoC, com foco em validade e rastreabilidade.";
+    var header = new AppPageHeaderViewModel
+    {
+        Eyebrow = "Pessoas e credenciais",
+        Title = string.IsNullOrWhiteSpace(Model.Name) ? "Usuário" : Model.Name,
+        Description = "Visão de detalhe para auditoria e manutenção do cadastro selecionado.",
+        BadgeText = string.IsNullOrWhiteSpace(Model.Status) ? "Status n/d" : Model.Status,
+        BadgeTone = string.Equals(Model.Status, "active", StringComparison.OrdinalIgnoreCase) || string.Equals(Model.Status, "1", StringComparison.OrdinalIgnoreCase) ? "success" : "warning",
+        Actions = new[]
+        {
+            new PageHeaderActionViewModel { Label = "Editar usuário", Href = Url.Action("Edit", new { id = Model.Id })!, ButtonClass = "btn btn-primary" },
+            new PageHeaderActionViewModel { Label = "Voltar", Href = Url.Action("Index")!, ButtonClass = "btn btn-outline-secondary" }
+        }
+    };
+}
+
+<div class="container mt-5">
+    <partial name="_AppPageHeader" model="header" />
+
+    <section class="detail-card app-stack">
+        <div class="detail-grid">
+            <div class="detail-panel"><span>ID</span><strong>@Model.Id</strong></div>
+            <div class="detail-panel"><span>Matrícula</span><strong>@Model.Registration</strong></div>
+            <div class="detail-panel"><span>E-mail</span><strong>@(string.IsNullOrWhiteSpace(Model.Email) ? "n/d" : Model.Email)</strong></div>
+            <div class="detail-panel"><span>Status</span><strong>@(string.IsNullOrWhiteSpace(Model.Status) ? "n/d" : Model.Status)</strong></div>
+            <div class="detail-panel"><span>Validade inicial</span><strong>@(Model.BeginTime?.ToString("dd/MM/yyyy HH:mm") ?? "-")</strong></div>
+            <div class="detail-panel"><span>Validade final</span><strong>@(Model.EndTime?.ToString("dd/MM/yyyy HH:mm") ?? "-")</strong></div>
+            <div class="detail-panel"><span>Criado em</span><strong>@(Model.CreatedAt?.ToString("dd/MM/yyyy HH:mm") ?? "-")</strong></div>
+        </div>
+    </section>
+</div>

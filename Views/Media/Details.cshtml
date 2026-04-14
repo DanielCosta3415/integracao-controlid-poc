@@ -1,0 +1,45 @@
+﻿@model Integracao.ControlID.PoC.ViewModels.Media.PhotoViewModel
+@{
+    ViewData["Title"] = "Detalhes da foto";
+    ViewData["Subtitle"] = "Visualização ampliada e metadados da imagem facial armazenada.";
+    var header = new AppPageHeaderViewModel
+    {
+        Eyebrow = "Pessoas e credenciais",
+        Title = "Detalhes da foto",
+        Description = "Veja o preview ampliado, confirme metadados do arquivo e baixe a imagem a partir desta superfície.",
+        BadgeText = Model.HasImage ? "Imagem disponível" : "Sem imagem",
+        BadgeTone = Model.HasImage ? "success" : "warning",
+        Actions = new[]
+        {
+            new PageHeaderActionViewModel { Label = "Baixar imagem", Href = Url.Action("Download", new { id = Model.UserId })!, ButtonClass = "btn btn-primary" },
+            new PageHeaderActionViewModel { Label = "Voltar à galeria", Href = Url.Action("Index")!, ButtonClass = "btn btn-outline-secondary" }
+        }
+    };
+}
+
+<div class="container mt-5 app-stack">
+    <partial name="_AppPageHeader" model="header" />
+
+    <section class="app-surface-card app-detail-shell">
+        <div class="app-action-row">
+            @if (Model.HasImage && !string.IsNullOrEmpty(Model.Base64Image))
+            {
+                <span class="app-media-preview app-media-preview--lg">
+                    <img src="data:image/@Model.Format;base64,@Model.Base64Image" alt="Foto do usuário @Model.UserId" />
+                </span>
+            }
+            else
+            {
+                <div class="app-empty">Nenhuma imagem disponível para este usuário.</div>
+            }
+        </div>
+
+        <dl class="app-detail-list">
+            <div class="app-detail-list__row"><dt>ID</dt><dd>@Model.Id</dd></div>
+            <div class="app-detail-list__row"><dt>Usuário</dt><dd>@Model.UserId</dd></div>
+            <div class="app-detail-list__row"><dt>Arquivo</dt><dd>@Model.FileName</dd></div>
+            <div class="app-detail-list__row"><dt>Formato</dt><dd>@Model.Format</dd></div>
+            <div class="app-detail-list__row"><dt>Content-Type</dt><dd>@Model.ContentType</dd></div>
+        </dl>
+    </section>
+</div>

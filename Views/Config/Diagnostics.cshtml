@@ -1,0 +1,116 @@
+@model Integracao.ControlID.PoC.ViewModels.Config.ConfigDiagnosticsViewModel
+@{
+    ViewData["Title"] = "Diagnósticos";
+}
+
+<div class="container mt-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <div>
+            <h2 class="mb-1">Diagnósticos de Rede</h2>
+            <p class="text-muted mb-0">Executa os testes oficiais do equipamento para TCP, ping e resolução DNS.</p>
+        </div>
+        <a asp-action="Index" class="btn btn-outline-secondary">Voltar para Configurações</a>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger">@Model.ErrorMessage</div>
+    }
+
+    <div class="row g-4">
+        <div class="col-lg-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Teste de Conexão TCP</h5>
+                    <p class="text-muted small">Valida se o equipamento consegue abrir conexão até um host e porta específicos.</p>
+                    <form asp-action="ConnectionTest" method="post" autocomplete="off">
+                        <div class="mb-3">
+                            <label asp-for="ConnectionHost" class="form-label"></label>
+                            <input asp-for="ConnectionHost" class="form-control" />
+                            <span asp-validation-for="ConnectionHost" class="text-danger"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="ConnectionPort" class="form-label"></label>
+                            <input asp-for="ConnectionPort" class="form-control" />
+                            <span asp-validation-for="ConnectionPort" class="text-danger"></span>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Executar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Ping</h5>
+                    <p class="text-muted small">Executa um `ping` a partir do próprio equipamento Control iD.</p>
+                    <form asp-action="PingTest" method="post" autocomplete="off">
+                        <div class="mb-3">
+                            <label asp-for="PingHost" class="form-label"></label>
+                            <input asp-for="PingHost" class="form-control" />
+                            <span asp-validation-for="PingHost" class="text-danger"></span>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Executar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title">NSLookup</h5>
+                    <p class="text-muted small">Verifica resolução DNS usando a configuração atual do equipamento.</p>
+                    <form asp-action="NslookupTest" method="post" autocomplete="off">
+                        <div class="mb-3">
+                            <label asp-for="NslookupHost" class="form-label"></label>
+                            <input asp-for="NslookupHost" class="form-control" />
+                            <span asp-validation-for="NslookupHost" class="text-danger"></span>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Executar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(Model.ConnectionResultJson) ||
+         !string.IsNullOrWhiteSpace(Model.PingResultJson) ||
+         !string.IsNullOrWhiteSpace(Model.NslookupResultJson))
+    {
+        <div class="card shadow-sm mt-4">
+            <div class="card-body">
+                <h5 class="card-title">Respostas Oficiais</h5>
+
+                @if (!string.IsNullOrWhiteSpace(Model.ConnectionResultJson))
+                {
+                    <div class="mb-4">
+                        <h6>Conexão TCP</h6>
+                        <pre class="small mb-0">@Model.ConnectionResultJson</pre>
+                    </div>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(Model.PingResultJson))
+                {
+                    <div class="mb-4">
+                        <h6>Ping</h6>
+                        <pre class="small mb-0">@Model.PingResultJson</pre>
+                    </div>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(Model.NslookupResultJson))
+                {
+                    <div>
+                        <h6>NSLookup</h6>
+                        <pre class="small mb-0">@Model.NslookupResultJson</pre>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

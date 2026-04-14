@@ -1,0 +1,52 @@
+﻿@model Integracao.ControlID.PoC.ViewModels.Monitor.WebhookEventViewModel
+@{
+    ViewData["Title"] = "Detalhes do evento oficial";
+    ViewData["Subtitle"] = "Inspeção do payload persistido pela trilha oficial de monitor da PoC.";
+    var header = new AppPageHeaderViewModel
+    {
+        Eyebrow = "Eventos, logs e push",
+        Title = string.IsNullOrWhiteSpace(Model.EventType) ? "Evento oficial" : Model.EventType,
+        Description = "Payload recebido do equipamento com contexto completo de origem e rastreabilidade.",
+        BadgeText = Model.ReceivedAt.ToString("dd/MM/yyyy HH:mm:ss"),
+        BadgeTone = "neutral",
+        Actions = new[]
+        {
+            new PageHeaderActionViewModel { Label = "Voltar", Href = Url.Action("Index")!, ButtonClass = "btn btn-outline-secondary" }
+        }
+    };
+    var payloadPanel = new RawResponsePanelViewModel
+    {
+        Title = "Payload interpretado",
+        Description = "Conteúdo resumido persistido pela PoC para este evento.",
+        Content = Model.Payload ?? string.Empty,
+        PanelId = "official-event-payload",
+        BadgeText = "Payload",
+        BadgeTone = "info",
+        StartExpanded = true
+    };
+    var rawPanel = new RawResponsePanelViewModel
+    {
+        Title = "Corpo bruto",
+        Description = "Representação integral do evento recebido do equipamento.",
+        Content = Model.RawJson ?? string.Empty,
+        PanelId = "official-event-raw",
+        BadgeText = "Raw JSON",
+        BadgeTone = "neutral"
+    };
+}
+
+<div class="container mt-5 app-stack">
+    <partial name="_AppPageHeader" model="header" />
+
+    <section class="detail-card app-stack">
+        <div class="detail-grid">
+            <div class="detail-panel"><span>ID</span><strong>@Model.EventId</strong></div>
+            <div class="detail-panel"><span>Recebido em</span><strong>@Model.ReceivedAt.ToString("dd/MM/yyyy HH:mm:ss")</strong></div>
+            <div class="detail-panel"><span>Dispositivo</span><strong>@(string.IsNullOrWhiteSpace(Model.DeviceId) ? "n/d" : Model.DeviceId)</strong></div>
+            <div class="detail-panel"><span>Usuário</span><strong>@(string.IsNullOrWhiteSpace(Model.UserId) ? "n/d" : Model.UserId)</strong></div>
+        </div>
+    </section>
+
+    <partial name="_RawResponsePanel" model="payloadPanel" />
+    <partial name="_RawResponsePanel" model="rawPanel" />
+</div>

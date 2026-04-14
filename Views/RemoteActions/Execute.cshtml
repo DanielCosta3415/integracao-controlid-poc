@@ -1,0 +1,34 @@
+﻿@model Integracao.ControlID.PoC.ViewModels.RemoteActions.RemoteActionExecuteViewModel
+@{
+    ViewData["Title"] = "Executar Ação Remota";
+}
+
+<div class="container mt-5">
+    <h2>Executar Ação Remota</h2>
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <form asp-action="Execute" method="post" autocomplete="off">
+                <div class="mb-3">
+                    <label asp-for="Action" class="form-label"></label>
+                    <input asp-for="Action" class="form-control" />
+                    <span asp-validation-for="Action" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Door" class="form-label"></label>
+                    <input asp-for="Door" class="form-control" />
+                    <span asp-validation-for="Door" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Message" class="form-label"></label>
+                    <input asp-for="Message" class="form-control" />
+                    <span asp-validation-for="Message" class="text-danger"></span>
+                </div>
+                <button type="submit" class="btn btn-primary">Executar</button>
+                <a asp-action="Index" class="btn btn-secondary ms-2">Cancelar</a>
+            </form>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

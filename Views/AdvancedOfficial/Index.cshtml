@@ -1,0 +1,118 @@
+﻿@{
+    ViewData["Title"] = "Recursos oficiais avançados";
+    ViewData["Subtitle"] = "Hub para fluxos oficiais especializados que ampliam a cobertura da PoC além dos módulos mais frequentes.";
+    var header = new AppPageHeaderViewModel
+    {
+        Eyebrow = "API e recursos avançados",
+        Title = "Recursos oficiais avançados",
+        Description = "Agrupe exportação, intertravamento, captura de câmera, cadastro facial em lote, LED remoto e atalhos para módulos correlatos em uma única superfície.",
+        BadgeText = "Cobertura avançada",
+        BadgeTone = "danger",
+        Actions = new[]
+        {
+            new PageHeaderActionViewModel { Label = "Catálogo oficial", Href = Url.Action("Index", "OfficialApi")!, ButtonClass = "btn btn-outline-secondary" }
+        }
+    };
+}
+
+<div class="container mt-5 app-stack">
+    <partial name="_AppPageHeader" model="header" />
+
+    <section class="module-grid">
+        <article class="module-card">
+            <div class="module-card__meta">
+                <span class="app-chip app-chip--danger">Objetos e exportação</span>
+                <span class="app-chip app-chip--neutral">export_objects.fcgi</span>
+            </div>
+            <div class="app-stack-sm">
+                <h3>Exportar objetos</h3>
+                <p>Abra o fluxo oficial para exportação estruturada dos objetos persistidos no equipamento.</p>
+            </div>
+            <a asp-action="ExportObjects" class="btn btn-primary">Abrir</a>
+        </article>
+
+        <article class="module-card">
+            <div class="module-card__meta">
+                <span class="app-chip app-chip--danger">Infraestrutura</span>
+                <span class="app-chip app-chip--neutral">set_network_interlock.fcgi</span>
+            </div>
+            <div class="app-stack-sm">
+                <h3>Intertravamento em rede</h3>
+                <p>Configure interdependência entre dispositivos em cenários de portas e fluxos críticos.</p>
+            </div>
+            <a asp-action="NetworkInterlock" class="btn btn-primary">Abrir</a>
+        </article>
+
+        <article class="module-card">
+            <div class="module-card__meta">
+                <span class="app-chip app-chip--danger">Câmera</span>
+                <span class="app-chip app-chip--neutral">save_screenshot.fcgi</span>
+            </div>
+            <div class="app-stack-sm">
+                <h3>Captura da câmera</h3>
+                <p>Salve screenshots do equipamento para inspeção visual, apoio remoto e auditoria rápida.</p>
+            </div>
+            <a asp-action="CameraCapture" class="btn btn-primary">Abrir</a>
+        </article>
+
+        <article class="module-card">
+            <div class="module-card__meta">
+                <span class="app-chip app-chip--danger">Reconhecimento facial</span>
+                <span class="app-chip app-chip--neutral">Batch image flow</span>
+            </div>
+            <div class="app-stack-sm">
+                <h3>Cadastro facial em lote</h3>
+                <p>Concentre os endpoints de imagem facial em um fluxo único para consulta, envio e teste.</p>
+            </div>
+            <a asp-action="FacialEnroll" class="btn btn-primary">Abrir</a>
+        </article>
+
+        <article class="module-card">
+            <div class="module-card__meta">
+                <span class="app-chip app-chip--danger">Documentação viva</span>
+                <span class="app-chip app-chip--neutral">Mapeamento</span>
+            </div>
+            <div class="app-stack-sm">
+                <h3>Tópicos documentados</h3>
+                <p>Consulte o hub de tópicos especiais como modo ponto, online, iDCloud, alarmes e visitantes.</p>
+            </div>
+            <a asp-controller="DocumentedFeatures" asp-action="Index" class="btn btn-primary">Abrir</a>
+        </article>
+
+        <article class="module-card">
+            <div class="module-card__meta">
+                <span class="app-chip app-chip--danger">CRUD oficial</span>
+                <span class="app-chip app-chip--neutral">List of Objects</span>
+            </div>
+            <div class="app-stack-sm">
+                <h3>Objetos oficiais</h3>
+                <p>Abra a superfície dedicada para load, create, create-or-modify, modify e destroy de qualquer objeto oficial.</p>
+            </div>
+            <a asp-controller="OfficialObjects" asp-action="Index" class="btn btn-primary">Abrir</a>
+        </article>
+
+        <article class="module-card">
+            <div class="module-card__meta">
+                <span class="app-chip app-chip--danger">Particularidades de produto</span>
+                <span class="app-chip app-chip--neutral">SIP, áudio e upgrade</span>
+            </div>
+            <div class="app-stack-sm">
+                <h3>Recursos de produto</h3>
+                <p>Explore upgrade, SIP, streaming, áudios customizados, configurações faciais e sinais especiais.</p>
+            </div>
+            <a asp-controller="ProductSpecific" asp-action="Index" class="btn btn-primary">Abrir</a>
+        </article>
+
+        <article class="module-card">
+            <div class="module-card__meta">
+                <span class="app-chip app-chip--danger">Sinalização</span>
+                <span class="app-chip app-chip--neutral">remote_led_control.fcgi</span>
+            </div>
+            <div class="app-stack-sm">
+                <h3>LED remoto</h3>
+                <p>Envie comandos remotos para o conjunto de LEDs do equipamento em cenários de operação especial.</p>
+            </div>
+            <a asp-action="RemoteLedControl" class="btn btn-primary">Abrir</a>
+        </article>
+    </section>
+</div>

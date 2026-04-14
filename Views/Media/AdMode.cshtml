@@ -1,0 +1,116 @@
+@model Integracao.ControlID.PoC.ViewModels.Media.AdVideoManageViewModel
+@{
+    ViewData["Title"] = "Modo Propaganda";
+}
+
+<div class="container mt-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <div>
+            <h2 class="mb-1">Vídeo de Propaganda</h2>
+            <p class="text-muted mb-0">Gerencia os endpoints oficiais `send_video`, `set_custom_video` e `remove_custom_video`.</p>
+        </div>
+        <a asp-action="Index" class="btn btn-outline-secondary">Voltar para Fotos</a>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger">@Model.ErrorMessage</div>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(Model.ResultMessage))
+    {
+        <div class="alert alert-@(string.IsNullOrWhiteSpace(Model.ResultStatusType) ? "info" : Model.ResultStatusType)">
+            @Model.ResultMessage
+        </div>
+    }
+
+    <div class="row g-4">
+        <div class="col-xl-7">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Enviar Novo MP4</h5>
+                    <p class="text-muted small">A PoC envia o arquivo em blocos sequenciais para o endpoint oficial.</p>
+                    <form asp-action="UploadAdVideo" method="post" enctype="multipart/form-data" autocomplete="off">
+                        <div class="mb-3">
+                            <label asp-for="VideoFile" class="form-label"></label>
+                            <input asp-for="VideoFile" class="form-control" type="file" accept=".mp4,video/mp4" />
+                            <span asp-validation-for="VideoFile" class="text-danger"></span>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label asp-for="ChunkSizeKb" class="form-label"></label>
+                                <input asp-for="ChunkSizeKb" class="form-control" />
+                                <span asp-validation-for="ChunkSizeKb" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6 d-flex align-items-end">
+                                <div class="form-check mb-2">
+                                    <input asp-for="EnableAfterUpload" class="form-check-input" />
+                                    <label asp-for="EnableAfterUpload" class="form-check-label"></label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-primary">Enviar Vídeo</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-5">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Estado do Modo Propaganda</h5>
+                    <p class="mb-3">
+                        <strong>Status atual:</strong>
+                        @if (Model.CustomVideoEnabled.HasValue)
+                        {
+                            <span>@(Model.CustomVideoEnabled.Value ? "Ativado" : "Desativado")</span>
+                        }
+                        else
+                        {
+                            <span class="text-muted">Não identificado</span>
+                        }
+                    </p>
+
+                    <div class="d-flex flex-wrap gap-2">
+                        <form asp-action="ToggleAdVideo" method="post">
+                            <input type="hidden" name="enabled" value="true" />
+                            <button type="submit" class="btn btn-success">Ativar</button>
+                        </form>
+
+                        <form asp-action="ToggleAdVideo" method="post">
+                            <input type="hidden" name="enabled" value="false" />
+                            <button type="submit" class="btn btn-outline-warning">Desativar</button>
+                        </form>
+
+                        <form asp-action="RemoveAdVideo" method="post" onsubmit="return confirm('Deseja remover o vídeo de propaganda do equipamento?');">
+                            <button type="submit" class="btn btn-outline-danger">Remover Vídeo</button>
+                        </form>
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(Model.LastResponseJson))
+                    {
+                        <hr />
+                        <h6>Última Resposta</h6>
+                        <pre class="small mb-0">@Model.LastResponseJson</pre>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(Model.StatusJson))
+    {
+        <div class="card shadow-sm mt-4">
+            <div class="card-body">
+                <h5 class="card-title">Configuração Oficial Atual</h5>
+                <pre class="small mb-0">@Model.StatusJson</pre>
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

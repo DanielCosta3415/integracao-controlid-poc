@@ -1,0 +1,44 @@
+﻿@model Integracao.ControlID.PoC.ViewModels.Logo.LogoViewModel
+@{
+    ViewData["Title"] = "Detalhes do logo";
+    ViewData["Subtitle"] = "Visualização ampliada e metadados do slot selecionado no equipamento.";
+    var header = new AppPageHeaderViewModel
+    {
+        Eyebrow = "Pessoas e credenciais",
+        Title = "Detalhes do logo",
+        Description = "Confirme o conteúdo do slot, visualize o arquivo atual e baixe a imagem diretamente desta tela.",
+        BadgeText = Model.HasImage ? "Slot preenchido" : "Slot vazio",
+        BadgeTone = Model.HasImage ? "success" : "warning",
+        Actions = new[]
+        {
+            new PageHeaderActionViewModel { Label = "Baixar logo", Href = Url.Action("Download", new { id = Model.Id })!, ButtonClass = "btn btn-primary" },
+            new PageHeaderActionViewModel { Label = "Voltar aos slots", Href = Url.Action("Index")!, ButtonClass = "btn btn-outline-secondary" }
+        }
+    };
+}
+
+<div class="container mt-5 app-stack">
+    <partial name="_AppPageHeader" model="header" />
+
+    <section class="app-surface-card app-detail-shell">
+        <div class="app-action-row">
+            @if (Model.HasImage && !string.IsNullOrEmpty(Model.Base64Image))
+            {
+                <span class="app-media-preview app-media-preview--lg">
+                    <img src="data:image/@Model.Format;base64,@Model.Base64Image" alt="Logo do slot @Model.Id" />
+                </span>
+            }
+            else
+            {
+                <div class="app-empty">Nenhum logo disponível neste slot.</div>
+            }
+        </div>
+
+        <dl class="app-detail-list">
+            <div class="app-detail-list__row"><dt>Slot</dt><dd>@Model.Id</dd></div>
+            <div class="app-detail-list__row"><dt>Arquivo</dt><dd>@Model.FileName</dd></div>
+            <div class="app-detail-list__row"><dt>Formato</dt><dd>@Model.Format</dd></div>
+            <div class="app-detail-list__row"><dt>Content-Type</dt><dd>@Model.ContentType</dd></div>
+        </dl>
+    </section>
+</div>

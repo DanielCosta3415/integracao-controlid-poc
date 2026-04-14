@@ -1,0 +1,93 @@
+@model Integracao.ControlID.PoC.ViewModels.RemoteActions.RemoteAuthorizationViewModel
+@{
+    ViewData["Title"] = "Autorização Remota";
+}
+
+<div class="container mt-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <div>
+            <h2 class="mb-1">Autorização Remota</h2>
+            <p class="text-muted mb-0">Envia uma autorização oficial para um evento online usando `remote_user_authorization`.</p>
+        </div>
+        <a asp-action="Index" class="btn btn-outline-secondary">Voltar para Ações Remotas</a>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger">@Model.ErrorMessage</div>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(Model.ResultMessage))
+    {
+        <div class="alert alert-@(string.IsNullOrWhiteSpace(Model.ResultStatusType) ? "info" : Model.ResultStatusType)">
+            @Model.ResultMessage
+        </div>
+    }
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <form asp-action="Authorization" method="post" autocomplete="off">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label asp-for="Event" class="form-label"></label>
+                        <input asp-for="Event" class="form-control" />
+                        <span asp-validation-for="Event" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="PortalId" class="form-label"></label>
+                        <input asp-for="PortalId" class="form-control" />
+                        <span asp-validation-for="PortalId" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                        <div class="form-check mb-2">
+                            <input asp-for="UserImage" class="form-check-input" />
+                            <label asp-for="UserImage" class="form-check-label"></label>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="UserId" class="form-label"></label>
+                        <input asp-for="UserId" class="form-control" />
+                        <span asp-validation-for="UserId" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-8">
+                        <label asp-for="UserName" class="form-label"></label>
+                        <input asp-for="UserName" class="form-control" />
+                        <span asp-validation-for="UserName" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="ActionName" class="form-label"></label>
+                        <input asp-for="ActionName" class="form-control" list="remote-auth-actions" />
+                        <datalist id="remote-auth-actions">
+                            <option value="door"></option>
+                            <option value="catra"></option>
+                            <option value="collector"></option>
+                            <option value="sec_box"></option>
+                        </datalist>
+                        <span asp-validation-for="ActionName" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-8">
+                        <label asp-for="ActionParameters" class="form-label"></label>
+                        <input asp-for="ActionParameters" class="form-control" />
+                        <span asp-validation-for="ActionParameters" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="mt-4 d-flex flex-wrap gap-2">
+                    <button type="submit" class="btn btn-primary">Autorizar</button>
+                    <a asp-controller="OfficialEvents" asp-action="Index" class="btn btn-outline-primary">Ver Eventos Oficiais</a>
+                </div>
+            </form>
+
+            @if (!string.IsNullOrWhiteSpace(Model.ResponseJson))
+            {
+                <hr />
+                <h5>Resposta Oficial</h5>
+                <pre class="small mb-0">@Model.ResponseJson</pre>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,31 @@
+﻿@model Integracao.ControlID.PoC.ViewModels.Logo.LogoUploadViewModel
+@{
+    ViewData["Title"] = "Enviar Novo Logo";
+}
+
+<div class="container mt-5">
+    <h2>Enviar Novo Logo</h2>
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <form asp-action="Upload" method="post" enctype="multipart/form-data" autocomplete="off">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                <div class="mb-3">
+                    <label asp-for="Id" class="form-label"></label>
+                    <input asp-for="Id" class="form-control" min="1" max="8" />
+                    <span asp-validation-for="Id" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="LogoFile" class="form-label"></label>
+                    <input asp-for="LogoFile" class="form-control" type="file" accept=".png,image/png" />
+                    <span asp-validation-for="LogoFile" class="text-danger"></span>
+                </div>
+                <div class="form-text mb-3">A API oficial de logo usa slots de 1 a 8 e aceita PNG.</div>
+                <button type="submit" class="btn btn-success">Enviar</button>
+                <a asp-action="Index" class="btn btn-secondary ms-2">Cancelar</a>
+            </form>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

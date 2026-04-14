@@ -1,0 +1,80 @@
+﻿@model Integracao.ControlID.PoC.ViewModels.Config.ConfigListViewModel
+@{
+    ViewData["Title"] = "Configurações";
+    ViewData["Subtitle"] = "Configuração oficial do equipamento, diagnósticos e CRUD local de grupos de configuração.";
+    var header = new AppPageHeaderViewModel
+    {
+        Eyebrow = "Dispositivo e infraestrutura",
+        Title = "Configurações",
+        Description = "Centralize diagnósticos, configuração oficial JSON e manutenção dos grupos persistidos localmente pela PoC.",
+        Actions = new[]
+        {
+            new PageHeaderActionViewModel { Label = "Diagnósticos", Href = Url.Action("Diagnostics")!, ButtonClass = "btn btn-outline-secondary" },
+            new PageHeaderActionViewModel { Label = "Configuração oficial", Href = Url.Action("Official")!, ButtonClass = "btn btn-outline-secondary" },
+            new PageHeaderActionViewModel { Label = "Nova configuração", Href = Url.Action("Create")!, ButtonClass = "btn btn-primary" }
+        }
+    };
+}
+
+<div class="container mt-5">
+    <partial name="_AppPageHeader" model="header" />
+
+    @if (TempData["StatusMessage"] is string statusMessage)
+    {
+        <div class="alert alert-@(TempData["StatusType"] ?? "info")">@statusMessage</div>
+    }
+
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger">@Model.ErrorMessage</div>
+    }
+
+    <section class="app-surface-card">
+        <div class="app-toolbar">
+            <div>
+                <strong>Grupos de configuração</strong>
+                <p>Use esta base para manter a trilha local sincronizada com a configuração oficial do equipamento.</p>
+            </div>
+            <span class="app-chip app-chip--neutral">@(Model.Configs?.Count() ?? 0) itens</span>
+        </div>
+
+        <table class="table table-borderless table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Grupo</th>
+                    <th>Chave</th>
+                    <th>Valor</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Configs != null && Model.Configs.Any())
+                {
+                    foreach (var cfg in Model.Configs)
+                    {
+                        <tr>
+                            <td>@cfg.Id</td>
+                            <td><strong>@cfg.Group</strong></td>
+                            <td>@cfg.Key</td>
+                            <td>@cfg.Value</td>
+                            <td>
+                                <a asp-action="Details" asp-route-id="@cfg.Id" class="btn btn-sm btn-info">Detalhes</a>
+                                <a asp-action="Edit" asp-route-id="@cfg.Id" class="btn btn-sm btn-primary">Editar</a>
+                                <a asp-action="Delete" asp-route-id="@cfg.Id" class="btn btn-sm btn-danger">Excluir</a>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="5">
+                            <div class="app-empty">Nenhuma configuração local encontrada. Você pode criar uma nova entrada ou operar diretamente pelo JSON oficial.</div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </section>
+</div>

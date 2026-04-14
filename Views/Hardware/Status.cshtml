@@ -1,0 +1,83 @@
+﻿@model Integracao.ControlID.PoC.ViewModels.Hardware.HardwareStatusViewModel
+@{
+    ViewData["Title"] = "Status do Hardware";
+}
+
+<div class="container mt-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <div>
+            <h2 class="mb-1">Status do Hardware</h2>
+            <p class="text-muted mb-0">Consulta oficial do hardware com atalhos para GPIO, saída remota, LEDs e validação biométrica.</p>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <a asp-action="DoorState" class="btn btn-outline-info">Estado das Portas</a>
+            <a asp-action="Gpio" class="btn btn-info">Visualizar GPIOs</a>
+            <a asp-action="RelayAction" class="btn btn-primary">Abrir Saída</a>
+            <a asp-action="ValidateBiometry" class="btn btn-outline-primary">Validar Biometria</a>
+        </div>
+    </div>
+
+    @if (TempData["StatusMessage"] is string statusMessage)
+    {
+        <div class="alert alert-@(TempData["StatusType"] ?? "info")">@statusMessage</div>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger">@Model.ErrorMessage</div>
+    }
+
+    @if (Model.HardwareStatus != null)
+    {
+        <div class="card shadow-sm mb-3">
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-3">Status</dt>
+                    <dd class="col-sm-9">@Model.HardwareStatus.Status</dd>
+                    <dt class="col-sm-3">Serial</dt>
+                    <dd class="col-sm-9">@Model.HardwareStatus.Serial</dd>
+                    <dt class="col-sm-3">Device ID</dt>
+                    <dd class="col-sm-9">@Model.HardwareStatus.DeviceId</dd>
+                    <dt class="col-sm-3">IP</dt>
+                    <dd class="col-sm-9">@Model.HardwareStatus.IpAddress</dd>
+                    <dt class="col-sm-3">Firmware</dt>
+                    <dd class="col-sm-9">@Model.HardwareStatus.Firmware</dd>
+                    <dt class="col-sm-3">Temperatura</dt>
+                    <dd class="col-sm-9">@Model.HardwareStatus.Temperature</dd>
+                    <dt class="col-sm-3">Porta Aberta</dt>
+                    <dd class="col-sm-9">@(Model.HardwareStatus.DoorOpen.HasValue ? (Model.HardwareStatus.DoorOpen.Value ? "Sim" : "Não") : "-")</dd>
+                    <dt class="col-sm-3">Violação (Tamper)</dt>
+                    <dd class="col-sm-9">@(Model.HardwareStatus.Tamper.HasValue ? (Model.HardwareStatus.Tamper.Value ? "Sim" : "Não") : "-")</dd>
+                    <dt class="col-sm-3">Tensão de Alimentação</dt>
+                    <dd class="col-sm-9">@Model.HardwareStatus.PowerVoltage</dd>
+                    <dt class="col-sm-3">Sensores</dt>
+                    <dd class="col-sm-9">@Model.HardwareStatus.SensorsInfo</dd>
+                    <dt class="col-sm-3">Data da Consulta</dt>
+                    <dd class="col-sm-9">@(Model.HardwareStatus.RetrievedAt?.ToString("dd/MM/yyyy HH:mm") ?? "-")</dd>
+                </dl>
+                @if (!string.IsNullOrWhiteSpace(Model.HardwareStatus.RawJson))
+                {
+                    <hr />
+                    <h5>Resposta Oficial</h5>
+                    <pre class="small mb-0">@Model.HardwareStatus.RawJson</pre>
+                }
+            </div>
+        </div>
+
+        <div class="card shadow-sm mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Ações de Hardware</h5>
+                <div class="d-flex flex-wrap gap-2">
+                    <a asp-action="DoorState" class="btn btn-outline-info">Consultar Estado das Portas</a>
+                    <form asp-action="RereadLeds" method="post">
+                        <button type="submit" class="btn btn-outline-warning">Recarregar LEDs</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-danger">Não foi possível obter o status do hardware.</div>
+    }
+</div>

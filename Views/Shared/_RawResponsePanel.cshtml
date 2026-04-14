@@ -1,0 +1,24 @@
+@model Integracao.ControlID.PoC.ViewModels.Shared.RawResponsePanelViewModel
+@{
+    var panelId = string.IsNullOrWhiteSpace(Model.PanelId) ? $"raw-panel-{Guid.NewGuid():N}" : Model.PanelId;
+}
+
+<details class="raw-panel" @(Model.StartExpanded ? "open" : null)>
+    <summary class="raw-panel__summary">
+        <div class="raw-panel__summary-copy">
+            <strong>@Model.Title</strong>
+            @if (!string.IsNullOrWhiteSpace(Model.Description))
+            {
+                <span>@Model.Description</span>
+            }
+        </div>
+        <div class="raw-panel__summary-actions">
+            @if (!string.IsNullOrWhiteSpace(Model.BadgeText))
+            {
+                <span class="app-chip app-chip--@Model.BadgeTone">@Model.BadgeText</span>
+            }
+            <button type="button" class="btn btn-quiet btn-sm" data-copy-target="@panelId">Copiar</button>
+        </div>
+    </summary>
+    <pre id="@panelId" class="app-code-panel">@Model.Content</pre>
+</details>

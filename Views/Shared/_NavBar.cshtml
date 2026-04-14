@@ -1,0 +1,75 @@
+@model PageShellContextViewModel
+@inject Integracao.ControlID.PoC.Services.Navigation.NavigationCatalogService NavigationCatalog
+@{
+    var domains = NavigationCatalog.GetDomains();
+    var activeDomainId = Model.CurrentDomain?.Id ?? string.Empty;
+    var activeModuleKey = Model.CurrentModule?.Key ?? string.Empty;
+}
+
+<nav class="app-nav" aria-label="MÃ³dulos da aplicaÃ§Ã£o">
+    @foreach (var domain in domains)
+    {
+        var isActiveDomain = string.Equals(activeDomainId, domain.Id, StringComparison.OrdinalIgnoreCase);
+        var primaryModules = domain.Modules.Where(module => module.Visibility == "primary").OrderBy(module => module.Priority).ToList();
+        var secondaryCount = domain.Modules.Count - primaryModules.Count;
+        var isExpanded = isActiveDomain || string.IsNullOrWhiteSpace(activeDomainId) && domain == domains.First();
+
+        <section class="app-nav-group @(isActiveDomain ? "is-current-domain" : null) @(!isExpanded ? "is-collapsed" : null)" data-nav-group="@domain.Id">
+            <div class="app-nav-group__header">
+                <button type="button" class="app-nav-group__toggle" data-group-toggle="@domain.Id" aria-expanded="@(isExpanded.ToString().ToLowerInvariant())">
+                    <span class="app-nav-group__title-wrap">
+                        <span class="app-nav-group__icon">@domain.Icon</span>
+                        <span>
+                            <strong>@domain.ShortTitle</strong>
+                            <small>@primaryModules.Count mÃ³dulos principais</small>
+                        </span>
+                    </span>
+                    <span class="app-nav-group__chevron" aria-hidden="true">v</span>
+                </button>
+                <a class="app-nav-group__link" href="@Url.Action("Domain", "Workspace", new { id = domain.Id })">Abrir</a>
+            </div>
+            <p class="app-nav-group__description">@domain.Description</p>
+            <div class="app-nav-group__content">
+                @foreach (var item in primaryModules)
+                {
+                    var isActive = string.Equals(activeModuleKey, item.Key, StringComparison.OrdinalIgnoreCase)
+                        || string.Equals(ViewContext.RouteData.Values["controller"]?.ToString(), item.Controller, StringComparison.OrdinalIgnoreCase)
+                           && string.Equals(ViewContext.RouteData.Values["action"]?.ToString(), item.Action, StringComparison.OrdinalIgnoreCase);
+                    var href = Url.Action(item.Action, item.Controller) ?? "#";
+
+                    <div class="app-nav-item">
+                        <a class="app-nav-link @(isActive ? "is-active" : null)"
+                           href="@href"
+                           data-module-link
+                           data-module-key="@item.Key"
+                           data-module-group="@domain.Title"
+                           data-module-label="@item.Label"
+                           data-module-tags="@item.Tags"
+                           data-module-short="@item.ShortLabel">
+                            <span class="app-nav-link__icon">@item.ShortLabel</span>
+                            <span class="app-nav-link__copy">
+                                <strong>@item.Label</strong>
+                                <small>@item.Description</small>
+                            </span>
+                        </a>
+                        <button type="button"
+                                class="app-nav-favorite"
+                                data-favorite-toggle
+                                data-module-key="@item.Key"
+                                data-module-label="@item.Label"
+                                aria-label="Fixar @item.Label nos favoritos"
+                                title="Fixar nos favoritos">
+                            +
+                        </button>
+                    </div>
+                }
+            </div>
+            @if (secondaryCount > 0)
+            {
+                <div class="app-nav-group__footer">
+                    <span class="app-chip app-chip--neutral">+@secondaryCount especializadas</span>
+                </div>
+            }
+        </section>
+    }
+</nav>

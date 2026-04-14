@@ -1,0 +1,68 @@
+﻿@model ConnectionPanelViewModel
+
+<section class="connection-rail" id="connectionPanel" aria-label="Contexto de conexão do equipamento">
+    <div class="connection-rail__status">
+        <div class="connection-rail__status-top">
+            <span class="app-chip @(Model.IsDeviceConnected ? "app-chip--success" : "app-chip--warning")">
+                @(Model.IsDeviceConnected ? "Equipamento em contexto" : "Conexão pendente")
+            </span>
+            <strong>Equipamento de trabalho</strong>
+        </div>
+        <small>Informe protocolo, IP ou domínio e porta para testar a comunicação ou trocar o equipamento ativo da PoC.</small>
+
+        @if (Model.IsDeviceConnected)
+        {
+            <div class="connection-rail__summary">
+                <div class="connection-pill connection-pill--wide">
+                    <span>Base ativa</span>
+                    <strong>@Model.BaseAddress</strong>
+                </div>
+                <div class="connection-pill">
+                    <span>Equipamento</span>
+                    <strong>@(string.IsNullOrWhiteSpace(Model.DeviceName) ? "n/d" : Model.DeviceName)</strong>
+                </div>
+                <div class="connection-pill">
+                    <span>Sessão</span>
+                    <strong>@(Model.IsSessionActive ? "Ativa" : "Inativa")</strong>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="connection-rail__summary">
+                <div class="connection-pill connection-pill--wide">
+                    <span>Contexto atual</span>
+                    <strong>Nenhum equipamento conectado.</strong>
+                </div>
+            </div>
+        }
+    </div>
+
+    <form asp-controller="Home" asp-action="ConnectToDevice" method="post" class="connection-rail__form" autocomplete="off">
+        <input asp-for="ReturnUrl" type="hidden" />
+
+        <div class="connection-rail__field connection-rail__field--scheme">
+            <label asp-for="Scheme" class="form-label">Protocolo</label>
+            <select asp-for="Scheme" class="form-select">
+                <option value="http">http</option>
+                <option value="https">https</option>
+            </select>
+        </div>
+
+        <div class="connection-rail__field connection-rail__field--host">
+            <label asp-for="Host" class="form-label">IP ou domínio</label>
+            <input asp-for="Host" class="form-control" placeholder="192.168.0.10, controlid.local ou URL completa" />
+        </div>
+
+        <div class="connection-rail__field connection-rail__field--port">
+            <label asp-for="Port" class="form-label">Porta</label>
+            <input asp-for="Port" class="form-control" placeholder="80 / 443 / personalizada" />
+        </div>
+
+        <div class="connection-rail__actions">
+            <button type="submit" class="btn btn-primary">Conectar</button>
+            <button type="submit" class="btn btn-outline-secondary" formaction="@Url.Action("TestDeviceConnectivity", "Home")">Testar</button>
+            <a class="btn btn-quiet" href="@Url.Action("Status", "Session")">Sessão</a>
+        </div>
+    </form>
+</section>

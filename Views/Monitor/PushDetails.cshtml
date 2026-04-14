@@ -1,0 +1,53 @@
+﻿@model Integracao.ControlID.PoC.ViewModels.Monitor.PushEventViewModel
+@{
+    ViewData["Title"] = "Detalhes do evento push";
+    ViewData["Subtitle"] = "Inspeção técnica da carga recebida pela trilha legada de push.";
+    var header = new AppPageHeaderViewModel
+    {
+        Eyebrow = "Eventos, logs e push",
+        Title = "Detalhes do evento push",
+        Description = "Revise o comando recebido, status, payload resumido e JSON bruto em painéis de leitura técnica.",
+        BadgeText = Model.Status,
+        BadgeTone = "info",
+        Actions = new[]
+        {
+            new PageHeaderActionViewModel { Label = "Voltar aos eventos", Href = Url.Action("Push")!, ButtonClass = "btn btn-outline-secondary" }
+        }
+    };
+    var payloadPanel = new RawResponsePanelViewModel
+    {
+        PanelId = "push-payload-panel",
+        Title = "Payload recebido",
+        Description = "Carga resumida do evento push.",
+        Content = string.IsNullOrWhiteSpace(Model.Payload) ? "Sem payload disponível." : Model.Payload,
+        BadgeText = Model.CommandType,
+        BadgeTone = "info"
+    };
+    var jsonPanel = new RawResponsePanelViewModel
+    {
+        PanelId = "push-raw-json-panel",
+        Title = "JSON completo",
+        Description = "Resposta bruta armazenada para diagnóstico.",
+        Content = string.IsNullOrWhiteSpace(Model.RawJson) ? "Sem JSON disponível." : Model.RawJson,
+        BadgeText = $"Evento {Model.EventId}",
+        BadgeTone = "neutral"
+    };
+}
+
+<div class="container mt-5 app-stack">
+    <partial name="_AppPageHeader" model="header" />
+
+    <section class="app-surface-card app-detail-shell">
+        <dl class="app-detail-list">
+            <div class="app-detail-list__row"><dt>ID do evento</dt><dd>@Model.EventId</dd></div>
+            <div class="app-detail-list__row"><dt>Recebido em</dt><dd>@Model.ReceivedAt.ToString("dd/MM/yyyy HH:mm")</dd></div>
+            <div class="app-detail-list__row"><dt>Tipo de comando</dt><dd><span class="app-chip app-chip--neutral">@Model.CommandType</span></dd></div>
+            <div class="app-detail-list__row"><dt>Status</dt><dd><span class="app-chip app-chip--info">@Model.Status</span></dd></div>
+            <div class="app-detail-list__row"><dt>Dispositivo</dt><dd>@Model.DeviceId</dd></div>
+            <div class="app-detail-list__row"><dt>Usuário</dt><dd>@Model.UserId</dd></div>
+        </dl>
+    </section>
+
+    <partial name="_RawResponsePanel" model="payloadPanel" />
+    <partial name="_RawResponsePanel" model="jsonPanel" />
+</div>

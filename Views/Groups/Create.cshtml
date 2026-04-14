@@ -1,0 +1,27 @@
+﻿@model Integracao.ControlID.PoC.ViewModels.Groups.GroupEditViewModel
+@{
+    ViewData["Title"] = "Novo Grupo";
+}
+
+<div class="container mt-5">
+    <h2>Novo Grupo</h2>
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <form asp-action="Create" method="post" autocomplete="off">
+                <div class="mb-3">
+                    <label asp-for="Name" class="form-label"></label>
+                    <input asp-for="Name" class="form-control" />
+                    <span asp-validation-for="Name" class="text-danger"></span>
+                </div>
+                <p class="text-muted small">
+                    A camada oficial atual usa o objeto `groups`, composto pelos campos documentados `id` e `name`.
+                </p>
+                <button type="submit" class="btn btn-success">Salvar</button>
+                <a asp-action="Index" class="btn btn-secondary ms-2">Cancelar</a>
+            </form>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

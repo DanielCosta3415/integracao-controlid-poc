@@ -1,0 +1,45 @@
+﻿@model Integracao.ControlID.PoC.ViewModels.Errors.ErrorViewModel
+@{
+    ViewData["Title"] = "Detalhes do erro";
+    ViewData["Subtitle"] = "Inspeção técnica do incidente persistido pela aplicação.";
+    var header = new AppPageHeaderViewModel
+    {
+        Eyebrow = "Eventos, logs e push",
+        Title = "Detalhes do erro",
+        Description = "Revise a rota afetada, o usuário, o request id e a stack trace completa em um painel técnico mais legível.",
+        BadgeText = $"Status {Model.StatusCode}",
+        BadgeTone = "warning",
+        Actions = new[]
+        {
+            new PageHeaderActionViewModel { Label = "Voltar aos erros", Href = Url.Action("Index")!, ButtonClass = "btn btn-outline-secondary" }
+        }
+    };
+    var stackPanel = new RawResponsePanelViewModel
+    {
+        PanelId = "error-stack-trace",
+        Title = "Stack trace completa",
+        Description = "Use este painel para copiar rapidamente o erro bruto registrado.",
+        Content = string.IsNullOrWhiteSpace(Model.StackTrace) ? "Sem stack trace disponível." : Model.StackTrace,
+        BadgeText = string.IsNullOrWhiteSpace(Model.RequestId) ? "Sem request id" : $"Request {Model.RequestId}",
+        BadgeTone = "warning"
+    };
+}
+
+<div class="container mt-5 app-stack">
+    <partial name="_AppPageHeader" model="header" />
+
+    <section class="app-surface-card app-detail-shell">
+        <dl class="app-detail-list">
+            <div class="app-detail-list__row"><dt>Mensagem</dt><dd>@Model.Message</dd></div>
+            <div class="app-detail-list__row"><dt>Path</dt><dd>@Model.Path</dd></div>
+            <div class="app-detail-list__row"><dt>Status code</dt><dd><span class="app-chip app-chip--warning">@Model.StatusCode</span></dd></div>
+            <div class="app-detail-list__row"><dt>Usuário</dt><dd>@(string.IsNullOrWhiteSpace(Model.User) ? "-" : Model.User)</dd></div>
+            <div class="app-detail-list__row"><dt>Data e hora</dt><dd>@(Model.OccurredAt?.ToString("dd/MM/yyyy HH:mm") ?? "-")</dd></div>
+            <div class="app-detail-list__row"><dt>Request ID</dt><dd>@(string.IsNullOrWhiteSpace(Model.RequestId) ? "-" : Model.RequestId)</dd></div>
+            <div class="app-detail-list__row"><dt>Inner exception</dt><dd>@(string.IsNullOrWhiteSpace(Model.InnerException) ? "-" : Model.InnerException)</dd></div>
+            <div class="app-detail-list__row"><dt>Dados adicionais</dt><dd>@(string.IsNullOrWhiteSpace(Model.AdditionalData) ? "-" : Model.AdditionalData)</dd></div>
+        </dl>
+    </section>
+
+    <partial name="_RawResponsePanel" model="stackPanel" />
+</div>

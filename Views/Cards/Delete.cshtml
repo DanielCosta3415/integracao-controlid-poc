@@ -1,0 +1,16 @@
+﻿@model Integracao.ControlID.PoC.ViewModels.Cards.CardDeleteViewModel
+@{
+    ViewData["Title"] = "Excluir Cartão";
+}
+
+<div class="container mt-5">
+    <div class="alert alert-warning">
+        <h4>Confirmação</h4>
+        <p>Deseja realmente excluir o cartão <strong>@Model.Value</strong> do usuário <strong>@Model.UserId</strong>?</p>
+        <form asp-action="Delete" asp-route-id="@Model.Id" method="post">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn btn-danger">Sim, excluir</button>
+            <a asp-action="Index" class="btn btn-secondary ms-2">Cancelar</a>
+        </form>
+    </div>
+</div>

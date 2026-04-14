@@ -1,0 +1,12 @@
+﻿@model Integracao.ControlID.PoC.ViewModels.Auth.LogoutViewModel
+@{
+    ViewData["Title"] = "Logout";
+}
+
+<div class="container mt-5">
+    <div class="alert alert-success text-center">
+        <h4>Logout realizado com sucesso.</h4>
+        <p>@Model?.Message</p>
+        <a href="@Url.Action("Login", "Auth")" class="btn btn-primary mt-3">Fazer Login novamente</a>
+    </div>
+</div>

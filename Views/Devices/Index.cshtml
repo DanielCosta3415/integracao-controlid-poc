@@ -1,0 +1,86 @@
+﻿@model Integracao.ControlID.PoC.ViewModels.Devices.DeviceListViewModel
+@{
+    ViewData["Title"] = "Dispositivos";
+    ViewData["Subtitle"] = "Inventário local de equipamentos, comunicação recente e acesso rápido às ações de manutenção.";
+    var header = new AppPageHeaderViewModel
+    {
+        Eyebrow = "Dispositivo e infraestrutura",
+        Title = "Inventário de dispositivos",
+        Description = "Gerencie os equipamentos registrados pela PoC e acompanhe o último contato conhecido de cada um.",
+        BadgeText = $"{(Model.Devices?.Count() ?? 0)} equipamentos",
+        BadgeTone = "neutral",
+        Actions = new[]
+        {
+            new PageHeaderActionViewModel { Label = "Novo dispositivo", Href = Url.Action("Create")!, ButtonClass = "btn btn-primary" },
+            new PageHeaderActionViewModel { Label = "Visão de sistema", Href = Url.Action("Info", "System")!, ButtonClass = "btn btn-outline-secondary" }
+        }
+    };
+}
+
+<div class="container mt-5">
+    <partial name="_AppPageHeader" model="header" />
+
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger">@Model.ErrorMessage</div>
+    }
+
+    <section class="app-surface-card">
+        <div class="app-toolbar">
+            <div>
+                <strong>Base de equipamentos conhecida pela PoC</strong>
+                <p>Consulte dados de rede, firmware e comunicação recente sem perder o contexto operacional.</p>
+            </div>
+            <span class="app-chip app-chip--neutral">Inventário local</span>
+        </div>
+
+        <table class="table table-borderless table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nome</th>
+                    <th>IP</th>
+                    <th>Serial</th>
+                    <th>Firmware</th>
+                    <th>Status</th>
+                    <th>Registrado em</th>
+                    <th>Último contato</th>
+                    <th>Descrição</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Devices != null && Model.Devices.Any())
+                {
+                    foreach (var device in Model.Devices)
+                    {
+                        <tr>
+                            <td>@device.Id</td>
+                            <td><strong>@device.Name</strong></td>
+                            <td>@device.Ip</td>
+                            <td>@device.SerialNumber</td>
+                            <td>@device.Firmware</td>
+                            <td><span class="app-chip @(string.Equals(device.Status, "online", StringComparison.OrdinalIgnoreCase) ? "app-chip--success" : "app-chip--warning")">@device.Status</span></td>
+                            <td>@(device.RegisteredAt?.ToString("dd/MM/yyyy HH:mm") ?? "-")</td>
+                            <td>@(device.LastSeenAt?.ToString("dd/MM/yyyy HH:mm") ?? "-")</td>
+                            <td>@device.Description</td>
+                            <td>
+                                <a asp-action="Details" asp-route-id="@device.Id" class="btn btn-sm btn-info">Detalhes</a>
+                                <a asp-action="Edit" asp-route-id="@device.Id" class="btn btn-sm btn-primary">Editar</a>
+                                <a asp-action="Delete" asp-route-id="@device.Id" class="btn btn-sm btn-danger">Excluir</a>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="10">
+                            <div class="app-empty">Nenhum dispositivo encontrado. Cadastre um equipamento para formar seu inventário local.</div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </section>
+</div>

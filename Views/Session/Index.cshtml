@@ -1,0 +1,81 @@
+﻿@model IEnumerable<Integracao.ControlID.PoC.Models.Database.SessionLocal>
+@{
+    ViewData["Title"] = "Sessões ativas";
+    ViewData["Subtitle"] = "Sessões persistidas localmente para acompanhar ciclo de vida, expiração e limpeza.";
+    var sessions = Model?.ToList() ?? new List<Integracao.ControlID.PoC.Models.Database.SessionLocal>();
+    var header = new AppPageHeaderViewModel
+    {
+        Eyebrow = "Operação",
+        Title = "Sessões ativas",
+        Description = "Gerencie as sessões registradas pela PoC e acompanhe o contexto do equipamento associado a cada conexão.",
+        BadgeText = $"{sessions.Count} sessões",
+        BadgeTone = "neutral"
+    };
+}
+
+<div class="container mt-5 app-stack">
+    <partial name="_AppPageHeader" model="header" />
+
+    <section class="app-surface-card app-page-section">
+        <div class="app-page-section__heading">
+            <div>
+                <strong>Conexões persistidas</strong>
+                <p>Use esta visão para revisar expiração, status e contexto operacional antes de encerrar uma sessão.</p>
+            </div>
+        </div>
+
+        <table class="table table-borderless table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Dispositivo</th>
+                    <th>Usuário</th>
+                    <th>Equipamento</th>
+                    <th>Série</th>
+                    <th>Criada em</th>
+                    <th>Expira em</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (sessions.Any())
+                {
+                    foreach (var session in sessions)
+                    {
+                        <tr>
+                            <td>@session.Id</td>
+                            <td>@session.DeviceAddress</td>
+                            <td>@session.Username</td>
+                            <td>
+                                <div class="app-table-cell-stack">
+                                    <strong>@(string.IsNullOrWhiteSpace(session.DeviceName) ? "Equipamento sem nome" : session.DeviceName)</strong>
+                                    <small>@(session.ExpiresAt?.ToString("dd/MM/yyyy HH:mm") ?? "Sem expiração")</small>
+                                </div>
+                            </td>
+                            <td>@(string.IsNullOrWhiteSpace(session.DeviceSerial) ? "-" : session.DeviceSerial)</td>
+                            <td>@session.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td>@(session.ExpiresAt?.ToString("dd/MM/yyyy HH:mm") ?? "-")</td>
+                            <td>
+                                <span class="app-chip @(session.IsActive ? "app-chip--success" : "app-chip--warning")">@(session.IsActive ? "Ativa" : "Inativa")</span>
+                            </td>
+                            <td>
+                                <form asp-action="Delete" asp-route-id="@session.Id" method="post" class="app-inline-form">
+                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Deseja encerrar esta sessão?');">Encerrar</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="9">
+                            <div class="app-empty app-empty--center">Nenhuma sessão ativa encontrada.</div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </section>
+</div>

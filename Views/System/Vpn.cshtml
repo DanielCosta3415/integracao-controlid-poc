@@ -1,0 +1,170 @@
+@model Integracao.ControlID.PoC.ViewModels.System.SystemVpnViewModel
+@{
+    ViewData["Title"] = "OpenVPN";
+}
+
+<div class="container mt-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <div>
+            <h2 class="mb-1">OpenVPN</h2>
+            <p class="text-muted mb-0">Gerencia configuração, status e arquivos de acesso do OpenVPN oficial do equipamento.</p>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <a asp-action="DownloadVpnFile" class="btn btn-outline-primary">Baixar Exemplo</a>
+            <a asp-action="Network" class="btn btn-outline-secondary">Voltar para Rede</a>
+        </div>
+    </div>
+
+    @if (TempData["StatusMessage"] is string statusMessage)
+    {
+        <div class="alert alert-@(TempData["StatusType"] ?? "info")">@statusMessage</div>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger">@Model.ErrorMessage</div>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(Model.ResultMessage))
+    {
+        <div class="alert alert-@(string.IsNullOrWhiteSpace(Model.ResultStatusType) ? "info" : Model.ResultStatusType)">
+            @Model.ResultMessage
+        </div>
+    }
+
+    <div class="row g-4">
+        <div class="col-xl-7">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Configuração da VPN</h5>
+                    <form asp-action="Vpn" method="post" autocomplete="off">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input asp-for="Enabled" class="form-check-input" />
+                                    <label asp-for="Enabled" class="form-check-label"></label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input asp-for="LoginEnabled" class="form-check-input" />
+                                    <label asp-for="LoginEnabled" class="form-check-label"></label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Login" class="form-label"></label>
+                                <input asp-for="Login" class="form-control" />
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Password" class="form-label"></label>
+                                <input asp-for="Password" class="form-control" type="password" />
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-primary">Salvar Configuração</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card shadow-sm mt-4">
+                <div class="card-body">
+                    <h5 class="card-title">Arquivo de Configuração</h5>
+                    <form asp-action="UploadVpnFile" method="post" enctype="multipart/form-data" autocomplete="off">
+                        <input asp-for="Enabled" type="hidden" />
+                        <input asp-for="LoginEnabled" type="hidden" />
+                        <input asp-for="Login" type="hidden" />
+                        <input asp-for="Password" type="hidden" />
+
+                        <div class="mb-3">
+                            <label asp-for="VpnFile" class="form-label"></label>
+                            <input asp-for="VpnFile" class="form-control" type="file" accept=".conf,.zip" />
+                            <span asp-validation-for="VpnFile" class="text-danger"></span>
+                        </div>
+                        <button type="submit" class="btn btn-warning">Enviar Arquivo VPN</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-5">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Resumo Atual</h5>
+                    <dl class="row mb-0">
+                        <dt class="col-sm-5">VPN habilitada</dt>
+                        <dd class="col-sm-7">@(Model.Enabled ? "Sim" : "Não")</dd>
+                        <dt class="col-sm-5">Login manual</dt>
+                        <dd class="col-sm-7">@(Model.LoginEnabled ? "Sim" : "Não")</dd>
+                        <dt class="col-sm-5">Arquivo presente</dt>
+                        <dd class="col-sm-7">
+                            @if (Model.HasFile.HasValue)
+                            {
+                                @(Model.HasFile.Value ? "Sim" : "Não")
+                            }
+                            else
+                            {
+                                <span class="text-muted">Indefinido</span>
+                            }
+                        </dd>
+                        <dt class="col-sm-5">Status</dt>
+                        <dd class="col-sm-7">
+                            @if (Model.StatusCode.HasValue)
+                            {
+                                <span>@Model.StatusDescription (@Model.StatusCode)</span>
+                            }
+                            else
+                            {
+                                <span class="text-muted">Indefinido</span>
+                            }
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(Model.LastResponseJson))
+            {
+                <div class="card shadow-sm mt-4">
+                    <div class="card-body">
+                        <h5 class="card-title">Última Resposta</h5>
+                        <pre class="small mb-0">@Model.LastResponseJson</pre>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(Model.InformationJson))
+    {
+        <div class="card shadow-sm mt-4">
+            <div class="card-body">
+                <h5 class="card-title">Configuração Atual</h5>
+                <pre class="small mb-0">@Model.InformationJson</pre>
+            </div>
+        </div>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(Model.StatusJson))
+    {
+        <div class="card shadow-sm mt-4">
+            <div class="card-body">
+                <h5 class="card-title">Status Atual</h5>
+                <pre class="small mb-0">@Model.StatusJson</pre>
+            </div>
+        </div>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(Model.FileStatusJson))
+    {
+        <div class="card shadow-sm mt-4">
+            <div class="card-body">
+                <h5 class="card-title">Presença de Arquivo</h5>
+                <pre class="small mb-0">@Model.FileStatusJson</pre>
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

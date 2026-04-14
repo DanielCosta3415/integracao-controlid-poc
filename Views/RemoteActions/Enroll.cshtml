@@ -1,0 +1,80 @@
+@model Integracao.ControlID.PoC.ViewModels.RemoteActions.RemoteEnrollViewModel
+@{
+    ViewData["Title"] = "Cadastro Remoto";
+}
+
+<div class="container mt-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <div>
+            <h2 class="mb-1">Cadastro Remoto</h2>
+            <p class="text-muted mb-0">Aciona o endpoint oficial `remote_enroll` para captura de face, biometria, cartão, PIN ou senha.</p>
+        </div>
+        <a asp-action="Index" class="btn btn-outline-secondary">Voltar para Ações Remotas</a>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger">@Model.ErrorMessage</div>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(Model.ResultMessage))
+    {
+        <div class="alert alert-@(string.IsNullOrWhiteSpace(Model.ResultStatusType) ? "info" : Model.ResultStatusType)">
+            @Model.ResultMessage
+        </div>
+    }
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <form asp-action="Enroll" method="post" autocomplete="off">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label asp-for="Type" class="form-label"></label>
+                        <input asp-for="Type" class="form-control" list="remote-enroll-types" />
+                        <datalist id="remote-enroll-types">
+                            <option value="face"></option>
+                            <option value="biometry"></option>
+                            <option value="card"></option>
+                            <option value="pin"></option>
+                            <option value="password"></option>
+                        </datalist>
+                        <span asp-validation-for="Type" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="UserId" class="form-label"></label>
+                        <input asp-for="UserId" class="form-control" />
+                        <span asp-validation-for="UserId" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-check">
+                            <input asp-for="Save" class="form-check-input" />
+                            <label asp-for="Save" class="form-check-label"></label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-check">
+                            <input asp-for="Sync" class="form-check-input" />
+                            <label asp-for="Sync" class="form-check-label"></label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4 d-flex flex-wrap gap-2">
+                    <button type="submit" class="btn btn-primary">Iniciar Cadastro Remoto</button>
+                    <a asp-controller="OfficialEvents" asp-action="Index" class="btn btn-outline-primary">Ver Eventos Recebidos</a>
+                </div>
+            </form>
+
+            @if (!string.IsNullOrWhiteSpace(Model.ResponseJson))
+            {
+                <hr />
+                <h5>Resposta Oficial</h5>
+                <pre class="small mb-0">@Model.ResponseJson</pre>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

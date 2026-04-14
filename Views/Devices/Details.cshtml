@@ -1,0 +1,35 @@
+﻿@model Integracao.ControlID.PoC.ViewModels.Devices.DeviceViewModel
+@{
+    ViewData["Title"] = "Detalhes do dispositivo";
+    ViewData["Subtitle"] = "Visão resumida do equipamento selecionado para auditoria e manutenção.";
+    var header = new AppPageHeaderViewModel
+    {
+        Eyebrow = "Dispositivo e infraestrutura",
+        Title = string.IsNullOrWhiteSpace(Model.Name) ? "Dispositivo" : Model.Name,
+        Description = "Resumo operacional do equipamento registrado localmente pela PoC.",
+        BadgeText = string.IsNullOrWhiteSpace(Model.Status) ? "Status n/d" : Model.Status,
+        BadgeTone = string.Equals(Model.Status, "online", StringComparison.OrdinalIgnoreCase) ? "success" : "warning",
+        Actions = new[]
+        {
+            new PageHeaderActionViewModel { Label = "Editar dispositivo", Href = Url.Action("Edit", new { id = Model.Id })!, ButtonClass = "btn btn-primary" },
+            new PageHeaderActionViewModel { Label = "Voltar", Href = Url.Action("Index")!, ButtonClass = "btn btn-outline-secondary" }
+        }
+    };
+}
+
+<div class="container mt-5">
+    <partial name="_AppPageHeader" model="header" />
+
+    <section class="detail-card app-stack">
+        <div class="detail-grid">
+            <div class="detail-panel"><span>ID</span><strong>@Model.Id</strong></div>
+            <div class="detail-panel"><span>Endereço IP</span><strong>@(string.IsNullOrWhiteSpace(Model.Ip) ? "n/d" : Model.Ip)</strong></div>
+            <div class="detail-panel"><span>Número de série</span><strong>@(string.IsNullOrWhiteSpace(Model.SerialNumber) ? "n/d" : Model.SerialNumber)</strong></div>
+            <div class="detail-panel"><span>Firmware</span><strong>@(string.IsNullOrWhiteSpace(Model.Firmware) ? "n/d" : Model.Firmware)</strong></div>
+            <div class="detail-panel"><span>Status</span><strong>@(string.IsNullOrWhiteSpace(Model.Status) ? "n/d" : Model.Status)</strong></div>
+            <div class="detail-panel"><span>Registrado em</span><strong>@(Model.RegisteredAt?.ToString("dd/MM/yyyy HH:mm") ?? "-")</strong></div>
+            <div class="detail-panel"><span>Última comunicação</span><strong>@(Model.LastSeenAt?.ToString("dd/MM/yyyy HH:mm") ?? "-")</strong></div>
+            <div class="detail-panel"><span>Descrição</span><strong>@(string.IsNullOrWhiteSpace(Model.Description) ? "n/d" : Model.Description)</strong></div>
+        </div>
+    </section>
+</div>

@@ -1,0 +1,77 @@
+﻿@model Integracao.ControlID.PoC.ViewModels.Monitor.MonitorWebhookListViewModel
+@{
+    ViewData["Title"] = "Eventos de webhook";
+    ViewData["Subtitle"] = "Monitor histórico da trilha legada de webhooks recebidos pela aplicação.";
+    var header = new AppPageHeaderViewModel
+    {
+        Eyebrow = "Eventos, logs e push",
+        Title = "Eventos de webhook",
+        Description = "Revise os webhooks recebidos, identifique o tipo do evento e abra rapidamente a carga completa para análise.",
+        BadgeText = $"{(Model.Events?.Count() ?? 0)} eventos",
+        BadgeTone = "info"
+    };
+}
+
+<div class="container mt-5 app-stack">
+    <partial name="_AppPageHeader" model="header" />
+
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger">@Model.ErrorMessage</div>
+    }
+
+    <section class="app-surface-card app-page-section">
+        <div class="app-page-section__heading">
+            <div>
+                <strong>Monitor de webhooks</strong>
+                <p>Esta lista ajuda a auditar a trilha de entrada legada e comparar com os eventos oficiais persistidos.</p>
+            </div>
+        </div>
+
+        <table class="table table-borderless table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Quando</th>
+                    <th>Tipo</th>
+                    <th>Dispositivo</th>
+                    <th>Usuário</th>
+                    <th>Payload</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Events != null && Model.Events.Any())
+                {
+                    foreach (var evt in Model.Events)
+                    {
+                        <tr>
+                            <td>@evt.EventId</td>
+                            <td>@evt.ReceivedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td><span class="app-chip app-chip--neutral">@evt.EventType</span></td>
+                            <td>@evt.DeviceId</td>
+                            <td>@evt.UserId</td>
+                            <td>
+                                <div class="app-table-cell-stack">
+                                    <strong>@(string.IsNullOrWhiteSpace(evt.Payload) ? "Sem payload" : (evt.Payload.Length > 48 ? evt.Payload.Substring(0, 48) + "..." : evt.Payload))</strong>
+                                    <small>JSON completo no detalhe</small>
+                                </div>
+                            </td>
+                            <td>
+                                <a asp-action="WebhookDetails" asp-route-id="@evt.EventId" class="btn btn-sm btn-info">Detalhes</a>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="7">
+                            <div class="app-empty app-empty--center">Nenhum evento webhook recebido.</div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </section>
+</div>

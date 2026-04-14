@@ -1,0 +1,36 @@
+﻿@model Integracao.ControlID.PoC.ViewModels.BiometricTemplates.BiometricTemplateViewModel
+@{
+    ViewData["Title"] = "Detalhes do template biométrico";
+    ViewData["Subtitle"] = "Leitura resumida do template, metadados de dedo e janela de validade.";
+    var header = new AppPageHeaderViewModel
+    {
+        Eyebrow = "Pessoas e credenciais",
+        Title = "Detalhes do template biométrico",
+        Description = "Acompanhe usuário, tipo, posição do dedo e o conteúdo do template em uma visualização mais legível.",
+        BadgeText = $"Template #{Model.Id}",
+        BadgeTone = "neutral",
+        Actions = new[]
+        {
+            new PageHeaderActionViewModel { Label = "Editar template", Href = Url.Action("Edit", new { id = Model.Id })!, ButtonClass = "btn btn-primary" },
+            new PageHeaderActionViewModel { Label = "Voltar à lista", Href = Url.Action("Index")!, ButtonClass = "btn btn-outline-secondary" }
+        }
+    };
+}
+
+<div class="container mt-5 app-stack">
+    <partial name="_AppPageHeader" model="header" />
+
+    <section class="app-surface-card app-detail-shell">
+        <dl class="app-detail-list">
+            <div class="app-detail-list__row"><dt>ID</dt><dd>@Model.Id</dd></div>
+            <div class="app-detail-list__row"><dt>Usuário</dt><dd>@Model.UserId</dd></div>
+            <div class="app-detail-list__row"><dt>Tipo</dt><dd><span class="app-chip app-chip--neutral">@Model.Type</span></dd></div>
+            <div class="app-detail-list__row"><dt>Posição do dedo</dt><dd>@Model.FingerPosition</dd></div>
+            <div class="app-detail-list__row"><dt>Tipo do dedo</dt><dd>@Model.FingerType</dd></div>
+            <div class="app-detail-list__row"><dt>Validade inicial</dt><dd>@(Model.BeginTime?.ToString("dd/MM/yyyy HH:mm") ?? "-")</dd></div>
+            <div class="app-detail-list__row"><dt>Validade final</dt><dd>@(Model.EndTime?.ToString("dd/MM/yyyy HH:mm") ?? "-")</dd></div>
+            <div class="app-detail-list__row"><dt>Criado em</dt><dd>@(Model.CreatedAt?.ToString("dd/MM/yyyy HH:mm") ?? "-")</dd></div>
+            <div class="app-detail-list__row"><dt>Template</dt><dd><span class="app-inline-code">@Model.Template</span></dd></div>
+        </dl>
+    </section>
+</div>

@@ -1,0 +1,189 @@
+﻿@model Integracao.ControlID.PoC.ViewModels.OfficialObjects.OfficialObjectsViewModel
+@{
+    ViewData["Title"] = "Objetos oficiais";
+    ViewData["Subtitle"] = "Superfície dedicada para o mapa oficial de objetos, com CRUD estruturado e exemplos rápidos.";
+    var current = Model.Definitions.FirstOrDefault(item => item.Name == Model.SelectedObjectName);
+    var header = new AppPageHeaderViewModel
+    {
+        Eyebrow = "API e recursos avançados",
+        Title = "Objetos oficiais da API",
+        Description = "Trabalhe com qualquer objeto documentado usando os fluxos oficiais de load, create, create-or-modify, modify e destroy.",
+        BadgeText = $"{Model.Definitions.Count()} objetos",
+        BadgeTone = "danger",
+        Actions = new[]
+        {
+            new PageHeaderActionViewModel { Label = "Voltar", Href = Url.Action("Index", "AdvancedOfficial")!, ButtonClass = "btn btn-outline-secondary" }
+        }
+    };
+}
+
+<div class="container mt-5 app-stack">
+    <partial name="_AppPageHeader" model="header" />
+    @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger">@Model.ErrorMessage</div>
+    }
+    @if (!string.IsNullOrWhiteSpace(Model.ResultMessage))
+    {
+        <div class="alert alert-@(string.IsNullOrWhiteSpace(Model.ResultStatusType) ? "info" : Model.ResultStatusType)">@Model.ResultMessage</div>
+    }
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <form asp-action="SelectObject" method="post" class="row g-3 align-items-end">
+                <div class="col-lg-4">
+                    <label asp-for="SelectedObjectName" class="form-label"></label>
+                    <select asp-for="SelectedObjectName" class="form-select">
+                        @foreach (var definition in Model.Definitions)
+                        {
+                            <option value="@definition.Name">@definition.Name</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-lg-6">
+                    <div class="small text-muted">
+                        @if (current != null)
+                        {
+                            <span><strong>Resumo:</strong> @current.Summary</span><br />
+                            <span><strong>Chaves usuais:</strong> @current.KeyHints</span>
+                            @if (!string.IsNullOrWhiteSpace(current.DedicatedScreen))
+                            {
+                                <br />
+                                <span><strong>Tela dedicada existente:</strong> @current.DedicatedScreen</span>
+                            }
+                        }
+                    </div>
+                </div>
+                <div class="col-lg-2 d-grid">
+                    <button type="submit" class="btn btn-primary">Carregar exemplos</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-12 col-xl-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h4 class="mb-3">Load Objects</h4>
+                    <form asp-action="Load" method="post">
+                        <input type="hidden" name="SelectedObjectName" value="@Model.SelectedObjectName" />
+                        <label asp-for="LoadWhereJson" class="form-label"></label>
+                        <textarea asp-for="LoadWhereJson" class="form-control" rows="5"></textarea>
+                        <div class="form-text">Deixe em branco para listar tudo ou informe um filtro como <code>{ "areas": { "id": 1 } }</code>.</div>
+                        <button type="submit" class="btn btn-primary mt-3">Consultar objeto</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-xl-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h4 class="mb-3">Create Objects</h4>
+                    <form asp-action="Create" method="post">
+                        <input type="hidden" name="SelectedObjectName" value="@Model.SelectedObjectName" />
+                        <label asp-for="CreateValuesJson" class="form-label"></label>
+                        <textarea asp-for="CreateValuesJson" class="form-control" rows="8"></textarea>
+                        <button type="submit" class="btn btn-primary mt-3">Criar registros</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-xl-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h4 class="mb-3">Create or Modify Objects</h4>
+                    <form asp-action="CreateOrModify" method="post">
+                        <input type="hidden" name="SelectedObjectName" value="@Model.SelectedObjectName" />
+                        <label asp-for="UpsertValuesJson" class="form-label"></label>
+                        <textarea asp-for="UpsertValuesJson" class="form-control" rows="8"></textarea>
+                        <div class="form-text">Use este fluxo para inserir novos registros ou atualizar os existentes em uma só chamada.</div>
+                        <button type="submit" class="btn btn-primary mt-3">Executar create-or-modify</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-xl-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h4 class="mb-3">Modify Objects</h4>
+                    <form asp-action="Modify" method="post">
+                        <input type="hidden" name="SelectedObjectName" value="@Model.SelectedObjectName" />
+                        <label asp-for="ModifyWhereJson" class="form-label"></label>
+                        <textarea asp-for="ModifyWhereJson" class="form-control" rows="4"></textarea>
+                        <label asp-for="ModifyValuesJson" class="form-label mt-3"></label>
+                        <textarea asp-for="ModifyValuesJson" class="form-control" rows="5"></textarea>
+                        <button type="submit" class="btn btn-primary mt-3">Alterar registros</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h4 class="mb-3">Destroy Objects</h4>
+                    <form asp-action="Destroy" method="post">
+                        <input type="hidden" name="SelectedObjectName" value="@Model.SelectedObjectName" />
+                        <label asp-for="DestroyWhereJson" class="form-label"></label>
+                        <textarea asp-for="DestroyWhereJson" class="form-control" rows="4"></textarea>
+                        <button type="submit" class="btn btn-outline-danger mt-3">Remover registros</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h4 class="mb-3">Mapa da Lista Oficial de Objetos</h4>
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Objeto</th>
+                                    <th>Resumo</th>
+                                    <th>Chaves usuais</th>
+                                    <th>Tela dedicada</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var definition in Model.Definitions)
+                                {
+                                    <tr class="@(definition.Name == Model.SelectedObjectName ? "table-primary" : string.Empty)">
+                                        <td><code>@definition.Name</code></td>
+                                        <td>@definition.Summary</td>
+                                        <td>@definition.KeyHints</td>
+                                        <td>@(string.IsNullOrWhiteSpace(definition.DedicatedScreen) ? "Este modulo" : definition.DedicatedScreen)</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(Model.ResponseJson))
+        {
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h4 class="mb-3">Resposta da API</h4>
+                        <pre class="small mb-0">@Model.ResponseJson</pre>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
+
+
+
