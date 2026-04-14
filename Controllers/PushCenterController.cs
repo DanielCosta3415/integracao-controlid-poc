@@ -55,28 +55,43 @@ namespace Integracao.ControlID.PoC.Controllers
                 });
             }
 
-            var command = new PushCommandLocal
+            try
             {
-                CommandId = Guid.NewGuid(),
-                CommandType = model.CommandType,
-                DeviceId = model.DeviceId,
-                UserId = model.UserId,
-                Payload = model.Payload,
-                RawJson = model.Payload,
-                Status = "pending",
-                CreatedAt = DateTime.UtcNow
-            };
+                var command = new PushCommandLocal
+                {
+                    CommandId = Guid.NewGuid(),
+                    CommandType = model.CommandType,
+                    DeviceId = model.DeviceId,
+                    UserId = model.UserId,
+                    Payload = model.Payload,
+                    RawJson = model.Payload,
+                    Status = "pending",
+                    CreatedAt = DateTime.UtcNow
+                };
 
-            await _pushCommandRepository.AddPushCommandAsync(command);
+                await _pushCommandRepository.AddPushCommandAsync(command);
 
-            _logger.LogInformation(
-                "Push command {CommandId} queued for device {DeviceId} with type {CommandType}.",
-                command.CommandId,
-                command.DeviceId,
-                command.CommandType);
+                _logger.LogInformation(
+                    "Push command {CommandId} queued for device {DeviceId} with type {CommandType}.",
+                    command.CommandId,
+                    command.DeviceId,
+                    command.CommandType);
 
-            TempData["StatusMessage"] = "Comando push enfileirado com sucesso.";
-            TempData["StatusType"] = "success";
+                TempData["StatusMessage"] = "Comando push enfileirado com sucesso.";
+                TempData["StatusType"] = "success";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Failed to queue push command for device {DeviceId}. Type {CommandType}.",
+                    model.DeviceId,
+                    model.CommandType);
+
+                TempData["StatusMessage"] = "Nao foi possivel enfileirar o comando push.";
+                TempData["StatusType"] = "danger";
+            }
+
             return RedirectToAction(nameof(Index));
         }
 
@@ -84,16 +99,26 @@ namespace Integracao.ControlID.PoC.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Clear()
         {
-            var commands = await _pushCommandRepository.GetAllPushCommandsAsync();
-            foreach (var command in commands)
+            try
             {
-                await _pushCommandRepository.DeletePushCommandAsync(command.CommandId);
+                var commands = await _pushCommandRepository.GetAllPushCommandsAsync();
+                foreach (var command in commands)
+                {
+                    await _pushCommandRepository.DeletePushCommandAsync(command.CommandId);
+                }
+
+                _logger.LogWarning("Push queue cleared manually. Removed {Count} commands.", commands.Count());
+
+                TempData["StatusMessage"] = "Fila de push limpa com sucesso.";
+                TempData["StatusType"] = "success";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to clear the push queue manually.");
+                TempData["StatusMessage"] = "Nao foi possivel limpar a fila de push.";
+                TempData["StatusType"] = "danger";
             }
 
-            _logger.LogWarning("Push queue cleared manually. Removed {Count} commands.", commands.Count());
-
-            TempData["StatusMessage"] = "Fila de push limpa com sucesso.";
-            TempData["StatusType"] = "success";
             return RedirectToAction(nameof(Index));
         }
 
@@ -101,23 +126,32 @@ namespace Integracao.ControlID.PoC.Controllers
         public async Task<IActionResult> Poll([FromQuery(Name = "device_id")] string? deviceId, [FromQuery(Name = "deviceid")] string? legacyDeviceId)
         {
             var resolvedDeviceId = string.IsNullOrWhiteSpace(deviceId) ? legacyDeviceId : deviceId;
-            var command = await _pushCommandRepository.GetNextPendingCommandAsync(resolvedDeviceId);
-
-            if (command == null)
+            try
             {
-                return Ok(new { });
+                var command = await _pushCommandRepository.GetNextPendingCommandAsync(resolvedDeviceId);
+
+                if (command == null)
+                {
+                    _logger.LogDebug("Push poll found no pending command for device {DeviceId}.", resolvedDeviceId);
+                    return Ok(new { });
+                }
+
+                command.Status = "delivered";
+                command.UpdatedAt = DateTime.UtcNow;
+                await _pushCommandRepository.UpdatePushCommandAsync(command);
+
+                _logger.LogInformation(
+                    "Push poll delivered command {CommandId} to device {DeviceId}.",
+                    command.CommandId,
+                    resolvedDeviceId);
+
+                return Content(string.IsNullOrWhiteSpace(command.Payload) ? "{}" : command.Payload, "application/json", Encoding.UTF8);
             }
-
-            command.Status = "delivered";
-            command.UpdatedAt = DateTime.UtcNow;
-            await _pushCommandRepository.UpdatePushCommandAsync(command);
-
-            _logger.LogInformation(
-                "Push poll delivered command {CommandId} to device {DeviceId}.",
-                command.CommandId,
-                resolvedDeviceId);
-
-            return Content(string.IsNullOrWhiteSpace(command.Payload) ? "{}" : command.Payload, "application/json", Encoding.UTF8);
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to deliver push command to device {DeviceId}.", resolvedDeviceId);
+                return StatusCode(StatusCodes.Status500InternalServerError, new { error = "Nao foi possivel consultar a fila push." });
+            }
         }
 
         [HttpPost("/result")]
@@ -126,42 +160,55 @@ namespace Integracao.ControlID.PoC.Controllers
             using var reader = new StreamReader(Request.Body);
             var body = await reader.ReadToEndAsync();
 
-            PushCommandLocal? command = commandId.HasValue
-                ? await _pushCommandRepository.GetPushCommandByIdAsync(commandId.Value)
-                : null;
-
-            if (command == null)
+            try
             {
-                command = new PushCommandLocal
+                PushCommandLocal? command = commandId.HasValue
+                    ? await _pushCommandRepository.GetPushCommandByIdAsync(commandId.Value)
+                    : null;
+
+                if (command == null)
                 {
-                    CommandId = commandId ?? Guid.NewGuid(),
-                    CommandType = "result",
-                    DeviceId = Request.Query["device_id"].ToString(),
-                    UserId = Request.Query["user_id"].ToString(),
-                    Payload = body,
-                    RawJson = body,
-                    Status = string.IsNullOrWhiteSpace(Request.Query["status"]) ? "completed" : Request.Query["status"].ToString(),
-                    CreatedAt = DateTime.UtcNow
-                };
+                    command = new PushCommandLocal
+                    {
+                        CommandId = commandId ?? Guid.NewGuid(),
+                        CommandType = "result",
+                        DeviceId = Request.Query["device_id"].ToString(),
+                        UserId = Request.Query["user_id"].ToString(),
+                        Payload = body,
+                        RawJson = body,
+                        Status = string.IsNullOrWhiteSpace(Request.Query["status"]) ? "completed" : Request.Query["status"].ToString(),
+                        CreatedAt = DateTime.UtcNow
+                    };
 
-                await _pushCommandRepository.AddPushCommandAsync(command);
+                    await _pushCommandRepository.AddPushCommandAsync(command);
+                }
+                else
+                {
+                    command.RawJson = body;
+                    command.Payload = body;
+                    command.Status = string.IsNullOrWhiteSpace(Request.Query["status"]) ? "completed" : Request.Query["status"].ToString();
+                    command.UpdatedAt = DateTime.UtcNow;
+                    await _pushCommandRepository.UpdatePushCommandAsync(command);
+                }
+
+                _logger.LogInformation(
+                    "Push result stored for command {CommandId}. Device {DeviceId}. Status {Status}.",
+                    command.CommandId,
+                    command.DeviceId,
+                    command.Status);
+
+                return Ok();
             }
-            else
+            catch (Exception ex)
             {
-                command.RawJson = body;
-                command.Payload = body;
-                command.Status = string.IsNullOrWhiteSpace(Request.Query["status"]) ? "completed" : Request.Query["status"].ToString();
-                command.UpdatedAt = DateTime.UtcNow;
-                await _pushCommandRepository.UpdatePushCommandAsync(command);
+                _logger.LogError(
+                    ex,
+                    "Failed to persist push result for command {CommandId}. Device {DeviceId}.",
+                    commandId,
+                    Request.Query["device_id"].ToString());
+
+                return StatusCode(StatusCodes.Status500InternalServerError, new { error = "Nao foi possivel persistir o resultado push." });
             }
-
-            _logger.LogInformation(
-                "Push result stored for command {CommandId}. Device {DeviceId}. Status {Status}.",
-                command.CommandId,
-                command.DeviceId,
-                command.Status);
-
-            return Ok();
         }
 
         private static PushEventViewModel ToViewModel(PushCommandLocal command)

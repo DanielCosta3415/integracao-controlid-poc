@@ -13,4 +13,5 @@ Pontos operacionais importantes:
 
 - o timeout das chamadas oficiais usa `ControlIDApi__ConnectionTimeoutSeconds`;
 - erros de validação, timeout e falhas inesperadas são registrados em log;
+- resolução de endpoint inexistente e falha de parse JSON também geram log estruturado;
 - a camada visual de `OfficialApi` usa esses serviços para documentar endpoint, query, body e exemplos.

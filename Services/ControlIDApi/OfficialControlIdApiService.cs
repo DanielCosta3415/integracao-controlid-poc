@@ -43,11 +43,19 @@ namespace Integracao.ControlID.PoC.Services.ControlIDApi
             return !string.IsNullOrWhiteSpace(deviceAddress) && !string.IsNullOrWhiteSpace(sessionString);
         }
 
+        /// <summary>
+        /// Recupera apenas o endereco base do equipamento atualmente salvo na sessao da PoC.
+        /// </summary>
+        /// <returns>Endereco do equipamento ou string vazia quando nao houver contexto ativo.</returns>
         public string GetDeviceAddress()
         {
             return _httpContextAccessor.HttpContext?.Session.GetString(SessionDeviceAddressKey) ?? string.Empty;
         }
 
+        /// <summary>
+        /// Recupera apenas a sessao oficial atualmente salva na PoC.
+        /// </summary>
+        /// <returns>Token de sessao oficial ou string vazia quando nao houver autenticacao ativa.</returns>
         public string GetSessionString()
         {
             return _httpContextAccessor.HttpContext?.Session.GetString(SessionSessionStringKey) ?? string.Empty;
@@ -102,6 +110,13 @@ namespace Integracao.ControlID.PoC.Services.ControlIDApi
                 SerializePayload(payload));
         }
 
+        /// <summary>
+        /// Invoca um endpoint oficial usando o contexto atual da PoC e tenta parsear o retorno como JSON.
+        /// </summary>
+        /// <param name="endpointId">Identificador do endpoint oficial registrado no catalogo.</param>
+        /// <param name="payload">Payload opcional que sera serializado para JSON quando necessario.</param>
+        /// <param name="additionalQuery">Query string extra aplicada a chamada oficial.</param>
+        /// <returns>Tupla com o resultado bruto e o documento JSON quando o parse for possivel.</returns>
         public async Task<(OfficialApiInvocationResult Result, JsonDocument? Document)> InvokeJsonAsync(
             string endpointId,
             object? payload = null,

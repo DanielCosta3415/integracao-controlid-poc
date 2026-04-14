@@ -126,26 +126,41 @@ namespace Integracao.ControlID.PoC.Services.ControlIDApi
         private static readonly IReadOnlyDictionary<string, OfficialApiEndpointDefinition> EndpointsById = NormalizedEndpoints
             .ToDictionary(endpoint => endpoint.Id, StringComparer.OrdinalIgnoreCase);
 
+        /// <summary>
+        /// Retorna o catalogo oficial ja normalizado, ordenado e pronto para consumo pela UI.
+        /// </summary>
         public List<OfficialApiEndpointDefinition> GetAll()
         {
             return [.. NormalizedEndpoints];
         }
 
+        /// <summary>
+        /// Retorna as categorias distintas do catalogo oficial para uso em filtros.
+        /// </summary>
         public List<string> GetCategories()
         {
             return [.. Categories];
         }
 
+        /// <summary>
+        /// Retorna os metodos HTTP distintos presentes no catalogo oficial.
+        /// </summary>
         public List<string> GetMethods()
         {
             return [.. Methods];
         }
 
+        /// <summary>
+        /// Retorna as direcoes de fluxo distintas do catalogo oficial, como callback ou requisicao ao equipamento.
+        /// </summary>
         public List<string> GetDirections()
         {
             return [.. Directions];
         }
 
+        /// <summary>
+        /// Recupera um endpoint especifico pelo identificador interno do catalogo.
+        /// </summary>
         public OfficialApiEndpointDefinition? GetById(string id)
         {
             return EndpointsById.TryGetValue(id, out var endpoint) ? endpoint : null;

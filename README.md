@@ -38,7 +38,7 @@ Pastas principais:
 dotnet restore .\Integracao.ControlID.PoC.sln
 ```
 
-2. Ajuste as configurações locais, se necessário, por variáveis de ambiente ou por `appsettings.Development.json`.
+2. Ajuste as configurações locais, se necessário, por variáveis de ambiente, `appsettings.Development.json` ou User Secrets para segredos.
 
 3. Compile a solução:
 
@@ -51,6 +51,11 @@ dotnet build .\Integracao.ControlID.PoC.sln
 ```powershell
 dotnet run --project .\Integracao.ControlID.PoC.csproj
 ```
+
+5. Acesse a interface:
+
+- URL padrão local: `https://localhost:5001` ou a porta configurada pelo perfil de execução;
+- o shell principal já expõe atalhos para `Workspace`, `OfficialApi`, `OperationModes`, `OfficialObjects` e `PushCenter`.
 
 ## Variáveis de ambiente úteis
 
@@ -69,12 +74,14 @@ A configuração segue o padrão nativo do ASP.NET Core (`Secao__Chave`). Exempl
 - `CallbackSecurity__AllowLoopback=true`
 - `Logging__LogLevel__Default=Information`
 - `Serilog__MinimumLevel__Default=Information`
+- `ASPNETCORE_URLS=https://localhost:5001`
 
 Observações:
 
 - nunca versione credenciais reais;
 - prefira User Secrets ou variáveis de ambiente para valores sensíveis;
 - `ControlIDApi__ConnectionTimeoutSeconds` controla o timeout real das chamadas oficiais.
+- `CallbackSecurity__SharedKey` é obrigatória quando `CallbackSecurity__RequireSharedKey=true` fora de ambiente controlado.
 
 ## Banco local e dados da PoC
 
@@ -88,6 +95,12 @@ Observações:
 
 ```powershell
 dotnet test .\Integracao.ControlID.PoC.sln
+```
+
+Para acelerar uma rodada local depois de um `build` já concluído:
+
+```powershell
+dotnet test .\Integracao.ControlID.PoC.sln --no-build
 ```
 
 ### Smoke test funcional local
@@ -110,11 +123,19 @@ A PoC já sai preparada para monitoramento básico local:
 - log estruturado de invocação oficial da Access API, incluindo endpoint, target, status e duração;
 - log de entrada de callbacks com aceite, bloqueio e falha de persistência;
 - log de fila push para enfileiramento, entrega e recebimento de resultados.
+- compressão de resposta habilitada para HTML, CSS, JS e JSON, reduzindo custo de rede em páginas e payloads técnicos.
 
 Saídas de log:
 
 - console da aplicação;
 - arquivo rolling em `Logs/app_log.txt`.
+
+Pontos recomendados para monitorar primeiro:
+
+- falhas de `OfficialApiInvokerService` por timeout, validação ou status HTTP inesperado;
+- eventos rejeitados em `CallbackIngressService`;
+- erros de persistência e entrega em `PushCenterController`;
+- exceções capturadas por `ExceptionHandlingMiddleware`.
 
 Checklist recomendado para debug operacional:
 
@@ -131,6 +152,8 @@ Checklist recomendado para debug operacional:
 - `OperationModes`: centro unificado para `Standalone`, `Pro` e `Enterprise`
 - `OfficialApi`: catálogo de endpoints oficiais e invocação assistida
 - `OfficialObjects`: CRUD técnico de objetos oficiais
+- `ProductSpecific`: particularidades por linha de equipamento, SIP, áudio, QR/TOTP e upgrades
+- `AdvancedOfficial`: recursos oficiais avançados, exportação, câmera e intertravamento
 - `OfficialEvents` e `PushCenter`: observabilidade, callbacks e fila push
 
 ## Documentação complementar
@@ -162,3 +185,10 @@ Checklist recomendado para debug operacional:
 - confira se o dispositivo está consultando `GET /push`;
 - valide se os resultados estão chegando em `POST /result`;
 - acompanhe os logs de `PushCenterController`.
+
+### O shell parece lento em páginas técnicas longas
+
+- valide se os assets estáticos estão sendo servidos normalmente;
+- confira se há compressão de resposta habilitada no ambiente;
+- use a página `OfficialApi` como referência para verificar se o catálogo está sendo carregado com os filtros esperados;
+- em ambiente local, evite extensões do navegador que injetem scripts pesados sobre o `localhost`.
