@@ -58,14 +58,14 @@ A configuração segue o padrão nativo do ASP.NET Core (`Secao__Chave`). Exempl
 
 - `ASPNETCORE_ENVIRONMENT=Development`
 - `ConnectionStrings__DefaultConnection=Data Source=integracao_controlid.db`
-- `ControlIDApi__DefaultDeviceUrl=http://192.168.1.100:8080`
-- `ControlIDApi__DefaultUsername=admin`
+- `ControlIDApi__DefaultDeviceUrl=http://<equipamento-ou-host>:8080`
+- `ControlIDApi__DefaultUsername=<usuario-opcional>`
 - `ControlIDApi__DefaultPassword=`
 - `ControlIDApi__ConnectionTimeoutSeconds=30`
 - `Session__IdleTimeout=30`
 - `CallbackSecurity__RequireSharedKey=true`
 - `CallbackSecurity__SharedKeyHeaderName=X-ControlID-Callback-Key`
-- `CallbackSecurity__SharedKey=segredo-local`
+- `CallbackSecurity__SharedKey=<segredo-configurado-fora-do-repositorio>`
 - `CallbackSecurity__AllowLoopback=true`
 - `Logging__LogLevel__Default=Information`
 - `Serilog__MinimumLevel__Default=Information`

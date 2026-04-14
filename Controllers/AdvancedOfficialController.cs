@@ -1,20 +1,29 @@
 using System.Text.Json;
 using Integracao.ControlID.PoC.Models.ControlIDApi;
 using Integracao.ControlID.PoC.Services.ControlIDApi;
+using Integracao.ControlID.PoC.Services.Files;
 using Integracao.ControlID.PoC.ViewModels.AdvancedOfficial;
 using Integracao.ControlID.PoC.Helpers;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Integracao.ControlID.PoC.Controllers
 {
     public class AdvancedOfficialController : Controller
     {
+        private const long MaxFacialImageBytes = 5L * 1024 * 1024;
+
         private readonly OfficialControlIdApiService _apiService;
+        private readonly UploadedFileBase64Encoder _fileEncoder;
         private readonly ILogger<AdvancedOfficialController> _logger;
 
-        public AdvancedOfficialController(OfficialControlIdApiService apiService, ILogger<AdvancedOfficialController> logger)
+        public AdvancedOfficialController(
+            OfficialControlIdApiService apiService,
+            UploadedFileBase64Encoder fileEncoder,
+            ILogger<AdvancedOfficialController> logger)
         {
             _apiService = apiService;
+            _fileEncoder = fileEncoder;
             _logger = logger;
         }
 
@@ -210,18 +219,16 @@ namespace Integracao.ControlID.PoC.Controllers
                 for (var index = 0; index < model.BatchFiles.Count; index++)
                 {
                     var file = model.BatchFiles[index];
-                    if (file.Length == 0)
-                        continue;
-
-                    await using var stream = file.OpenReadStream();
-                    using var memory = new MemoryStream();
-                    await stream.CopyToAsync(memory);
+                    EnsureSupportedImageFile(file);
 
                     userImages.Add(new
                     {
                         user_id = userIds[index],
                         timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
-                        image = Convert.ToBase64String(memory.ToArray())
+                        image = await _fileEncoder.EncodeAsync(
+                            file,
+                            "Selecione arquivos JPG ou PNG validos para o cadastro em lote.",
+                            MaxFacialImageBytes)
                     });
                 }
 
@@ -262,11 +269,13 @@ namespace Integracao.ControlID.PoC.Controllers
 
             try
             {
-                await using var stream = model.TestFile.OpenReadStream();
-                using var memory = new MemoryStream();
-                await stream.CopyToAsync(memory);
+                EnsureSupportedImageFile(model.TestFile);
+                var base64Image = await _fileEncoder.EncodeAsync(
+                    model.TestFile,
+                    "Selecione um arquivo JPG ou PNG para teste.",
+                    MaxFacialImageBytes);
 
-                var (result, document) = await _apiService.InvokeJsonAsync("user-test-image", Convert.ToBase64String(memory.ToArray()));
+                var (result, document) = await _apiService.InvokeJsonAsync("user-test-image", base64Image);
                 if (!result.Success)
                     throw new InvalidOperationException(BuildErrorMessage(result, "Erro ao testar foto facial"));
 
@@ -393,6 +402,27 @@ namespace Integracao.ControlID.PoC.Controllers
         private static string GetContentType(string contentType, string fallback)
         {
             return string.IsNullOrWhiteSpace(contentType) ? fallback : contentType;
+        }
+
+        private static void EnsureSupportedImageFile(IFormFile? file)
+        {
+            if (file == null || file.Length == 0)
+                throw new InvalidOperationException("Selecione um arquivo JPG ou PNG valido.");
+
+            if (file.Length > MaxFacialImageBytes)
+                throw new InvalidOperationException("Envie um arquivo JPG ou PNG de ate 5 MB.");
+
+            var fileName = file.FileName ?? string.Empty;
+            var contentType = file.ContentType ?? string.Empty;
+            var isSupported =
+                contentType.Equals("image/jpeg", StringComparison.OrdinalIgnoreCase) ||
+                contentType.Equals("image/png", StringComparison.OrdinalIgnoreCase) ||
+                fileName.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase) ||
+                fileName.EndsWith(".jpeg", StringComparison.OrdinalIgnoreCase) ||
+                fileName.EndsWith(".png", StringComparison.OrdinalIgnoreCase);
+
+            if (!isSupported)
+                throw new InvalidOperationException("Envie apenas arquivos JPG ou PNG para este fluxo.");
         }
     }
 }

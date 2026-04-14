@@ -1,6 +1,7 @@
 ﻿using System;
 using Integracao.ControlID.PoC.Models.ControlIDApi;
 using Integracao.ControlID.PoC.Services.ControlIDApi;
+using Integracao.ControlID.PoC.Services.Files;
 using Integracao.ControlID.PoC.ViewModels.Logo;
 using Integracao.ControlID.PoC.Helpers;
 using Microsoft.AspNetCore.Mvc;
@@ -10,11 +11,16 @@ namespace Integracao.ControlID.PoC.Controllers
     public class LogoController : Controller
     {
         private readonly OfficialControlIdApiService _officialApi;
+        private readonly UploadedFileBase64Encoder _fileEncoder;
         private readonly ILogger<LogoController> _logger;
 
-        public LogoController(OfficialControlIdApiService officialApi, ILogger<LogoController> logger)
+        public LogoController(
+            OfficialControlIdApiService officialApi,
+            UploadedFileBase64Encoder fileEncoder,
+            ILogger<LogoController> logger)
         {
             _officialApi = officialApi;
+            _fileEncoder = fileEncoder;
             _logger = logger;
         }
 
@@ -89,12 +95,14 @@ namespace Integracao.ControlID.PoC.Controllers
 
             try
             {
-                await using var stream = new MemoryStream();
-                await model.LogoFile.CopyToAsync(stream);
+                var base64Logo = await _fileEncoder.EncodeAsync(
+                    model.LogoFile,
+                    "Selecione um arquivo PNG de logo para enviar.",
+                    2L * 1024 * 1024);
 
                 var result = await _officialApi.InvokeAsync(
                     "logo-change",
-                    Convert.ToBase64String(stream.ToArray()),
+                    base64Logo,
                     $"id={model.Id}");
 
                 if (result.Success)

@@ -12,10 +12,10 @@ namespace Integracao.ControlID.PoC.ViewModels.ProductSpecific
         public string ResponseJson { get; set; } = string.Empty;
 
         [Display(Name = "Senha/licença do upgrade Pro")]
-        public string IdFaceProPassword { get; set; } = "ABCDE12345";
+        public string IdFaceProPassword { get; set; } = string.Empty;
 
         [Display(Name = "Senha/licença do upgrade Enterprise")]
-        public string IdFlexEnterprisePassword { get; set; } = "ABCDE12345";
+        public string IdFlexEnterprisePassword { get; set; } = string.Empty;
 
         [Display(Name = "Máscara")]
         public string FaceMaskDetectionEnabled { get; set; } = "0";
@@ -110,10 +110,10 @@ namespace Integracao.ControlID.PoC.ViewModels.ProductSpecific
         public int StreamingRtspPort { get; set; } = 554;
 
         [Display(Name = "Usuário RTSP")]
-        public string StreamingRtspUsername { get; set; } = "admin";
+        public string StreamingRtspUsername { get; set; } = string.Empty;
 
         [Display(Name = "Senha RTSP")]
-        public string StreamingRtspPassword { get; set; } = "admin";
+        public string StreamingRtspPassword { get; set; } = string.Empty;
 
         [Display(Name = "Usar câmera RGB")]
         public bool StreamingRtspRgb { get; set; } = true;
@@ -168,7 +168,7 @@ namespace Integracao.ControlID.PoC.ViewModels.ProductSpecific
         public string SipLogin { get; set; } = "987";
 
         [Display(Name = "Senha SIP")]
-        public string SipPassword { get; set; } = "123456";
+        public string SipPassword { get; set; } = string.Empty;
 
         [Display(Name = "Peer to peer")]
         public bool SipPeerToPeerEnabled { get; set; }

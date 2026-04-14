@@ -61,8 +61,8 @@ namespace Integracao.ControlID.PoC.Services.ControlIDApi
                 RequestGuidance: "Envie credenciais validas do equipamento para abrir uma sessao nova.",
                 ResponseGuidance: "O retorno esperado e um JSON com token ou informacao equivalente de sessao.",
                 Body: [
-                    new("login", "string", "Obrigatorio", "Usuario administrativo do equipamento.", "admin", true),
-                    new("password", "string", "Obrigatorio", "Senha correspondente ao usuario informado.", "admin", true)
+                    new("login", "string", "Obrigatorio", "Usuario administrativo do equipamento.", "<usuario>", true),
+                    new("password", "string", "Obrigatorio", "Senha correspondente ao usuario informado.", "<senha>", true)
                 ]),
             ["remote-user-authorization"] = new(
                 RequestGuidance: "Use este endpoint para responder a um evento online e decidir se o acesso sera autorizado.",
@@ -125,8 +125,8 @@ namespace Integracao.ControlID.PoC.Services.ControlIDApi
                 RequestGuidance: "Atualize o login local do equipamento com cuidado, pois esse dado sera exigido em acessos futuros.",
                 ResponseGuidance: "Depois da troca, a sessao atual pode precisar ser renovada com as novas credenciais.",
                 Body: [
-                    new("login", "string", "Obrigatorio", "Novo usuario de login do equipamento.", "admin", true),
-                    new("password", "string", "Obrigatorio", "Nova senha de login do equipamento.", "novaSenha123", true)
+                    new("login", "string", "Obrigatorio", "Novo usuario de login do equipamento.", "<novo-usuario>", true),
+                    new("password", "string", "Obrigatorio", "Nova senha de login do equipamento.", "<nova-senha>", true)
                 ]),
             ["set-system-time"] = new(
                 RequestGuidance: "Envie todos os componentes de data e hora na mesma chamada para evitar inconsistencia no relogio do equipamento.",

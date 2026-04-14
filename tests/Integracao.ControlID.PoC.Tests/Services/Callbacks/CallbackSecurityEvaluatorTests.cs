@@ -83,6 +83,18 @@ public class CallbackSecurityEvaluatorTests
         Assert.Equal(StatusCodes.Status413PayloadTooLarge, result.StatusCode);
     }
 
+    [Fact]
+    public void Evaluate_Rejects_Request_When_SharedKey_Is_Required_But_Not_Configured()
+    {
+        var evaluator = CreateEvaluator(options => options.RequireSharedKey = true);
+        var context = CreateHttpContext("10.10.10.10");
+
+        var result = evaluator.Evaluate(context);
+
+        Assert.False(result.IsAllowed);
+        Assert.Equal(StatusCodes.Status500InternalServerError, result.StatusCode);
+    }
+
     private static CallbackSecurityEvaluator CreateEvaluator(Action<CallbackSecurityOptions>? configure = null)
     {
         var options = new CallbackSecurityOptions();

@@ -16,6 +16,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 using Serilog;
 using System;
 
@@ -146,6 +147,18 @@ using (var scope = app.Services.CreateScope())
             CreatedAt TEXT NOT NULL,
             UpdatedAt TEXT NULL
         );");
+
+    var callbackSecurityOptions = scope.ServiceProvider.GetRequiredService<IOptions<CallbackSecurityOptions>>().Value;
+    if (callbackSecurityOptions.RequireSharedKey && string.IsNullOrWhiteSpace(callbackSecurityOptions.SharedKey))
+    {
+        // SECURITY: callback ingress com validacao ativada e segredo vazio deve
+        // ser tratado como configuracao insegura para evitar falsa sensacao de protecao.
+        Log.Error("SECURITY: CallbackSecurity.RequireSharedKey esta habilitado, mas nenhum SharedKey foi configurado.");
+    }
+    else if (!callbackSecurityOptions.RequireSharedKey && !app.Environment.IsDevelopment())
+    {
+        Log.Warning("SECURITY: Callback ingress esta sem shared key fora de Development. Restrinja IPs ou habilite chave compartilhada.");
+    }
 }
 
 // Mensagem de inicialização no log

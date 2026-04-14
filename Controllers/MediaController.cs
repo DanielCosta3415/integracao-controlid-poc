@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Text.Json;
 using Integracao.ControlID.PoC.Models.ControlIDApi;
 using Integracao.ControlID.PoC.Services.ControlIDApi;
+using Integracao.ControlID.PoC.Services.Files;
 using Integracao.ControlID.PoC.ViewModels.Media;
 using Integracao.ControlID.PoC.Helpers;
 using Microsoft.AspNetCore.Mvc;
@@ -11,12 +12,20 @@ namespace Integracao.ControlID.PoC.Controllers
 {
     public class MediaController : Controller
     {
+        private const long MaxImageUploadBytes = 2L * 1024 * 1024;
+        private const long MaxAdVideoBytes = 256L * 1024 * 1024;
+
         private readonly OfficialControlIdApiService _officialApi;
+        private readonly UploadedFileBase64Encoder _fileEncoder;
         private readonly ILogger<MediaController> _logger;
 
-        public MediaController(OfficialControlIdApiService officialApi, ILogger<MediaController> logger)
+        public MediaController(
+            OfficialControlIdApiService officialApi,
+            UploadedFileBase64Encoder fileEncoder,
+            ILogger<MediaController> logger)
         {
             _officialApi = officialApi;
+            _fileEncoder = fileEncoder;
             _logger = logger;
         }
 
@@ -230,11 +239,10 @@ namespace Integracao.ControlID.PoC.Controllers
 
             try
             {
-                await using var stream = model.VideoFile.OpenReadStream();
-                using var memoryStream = new MemoryStream();
-                await stream.CopyToAsync(memoryStream);
-
-                var videoBytes = memoryStream.ToArray();
+                var videoBytes = await _fileEncoder.ReadBytesAsync(
+                    model.VideoFile,
+                    "Selecione um arquivo MP4 valido para envio.",
+                    MaxAdVideoBytes);
                 var chunkSize = model.ChunkSizeKb * 1024;
                 var totalChunks = (int)Math.Ceiling(videoBytes.Length / (double)chunkSize);
 
@@ -432,10 +440,12 @@ namespace Integracao.ControlID.PoC.Controllers
             }
         }
 
-        private static async Task<string> BuildPhotoMultipartPayloadAsync(PhotoUploadViewModel model)
+        private async Task<string> BuildPhotoMultipartPayloadAsync(PhotoUploadViewModel model)
         {
-            await using var stream = new MemoryStream();
-            await model.PhotoFile.CopyToAsync(stream);
+            var base64Photo = await _fileEncoder.EncodeAsync(
+                model.PhotoFile,
+                "Selecione um arquivo de foto para envio.",
+                MaxImageUploadBytes);
 
             var payload = new
             {
@@ -450,7 +460,7 @@ namespace Integracao.ControlID.PoC.Controllers
                         name = "image",
                         fileName = string.IsNullOrWhiteSpace(model.PhotoFile.FileName) ? $"user_{model.UserId}.jpg" : model.PhotoFile.FileName,
                         contentType = string.IsNullOrWhiteSpace(model.PhotoFile.ContentType) ? "image/jpeg" : model.PhotoFile.ContentType,
-                        base64Content = Convert.ToBase64String(stream.ToArray())
+                        base64Content = base64Photo
                     }
                 }
             };
