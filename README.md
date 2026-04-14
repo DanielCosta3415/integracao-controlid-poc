@@ -128,6 +128,7 @@ Checklist recomendado para debug operacional:
 
 - `Home`: painel executivo-operacional da PoC
 - `Workspace`: mapa funcional por domínio
+- `OperationModes`: centro unificado para `Standalone`, `Pro` e `Enterprise`
 - `OfficialApi`: catálogo de endpoints oficiais e invocação assistida
 - `OfficialObjects`: CRUD técnico de objetos oficiais
 - `OfficialEvents` e `PushCenter`: observabilidade, callbacks e fila push
@@ -138,6 +139,8 @@ Checklist recomendado para debug operacional:
 - `docs/reports/heuristic-ui-audit-2026-04-14.md`: auditoria heurística de UX/UI
 - `docs/reports/design-system-accessibility-audit-2026-04-14.md`: auditoria de design system e acessibilidade
 - `docs/reports/visual-inventory-2026-04-14.md`: inventário visual consolidado
+- `docs/reports/operation-modes-homologation-matrix-2026-04-14.md`: matriz de cobertura e homologação por linha de produto
+- `docs/reports/operation-modes-e2e-runbook-2026-04-14.md`: roteiro E2E de bancada para validar `Standalone`, `Pro` e `Enterprise`
 - `docs/changelog-2026-04-14.md`: resumo técnico do que mudou e por que mudou
 
 ## Troubleshooting rápido

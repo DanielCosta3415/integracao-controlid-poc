@@ -1,9 +1,17 @@
 using Integracao.ControlID.PoC.ViewModels.DocumentedFeatures;
+using Integracao.ControlID.PoC.Services.OperationModes;
 
 namespace Integracao.ControlID.PoC.Services.DocumentedFeatures
 {
     public sealed class DocumentedFeaturesPayloadFactory
     {
+        private readonly OperationModesPayloadFactory _operationModesPayloadFactory;
+
+        public DocumentedFeaturesPayloadFactory(OperationModesPayloadFactory operationModesPayloadFactory)
+        {
+            _operationModesPayloadFactory = operationModesPayloadFactory;
+        }
+
         public object BuildAttendanceSettings(DocumentedFeaturesViewModel model)
         {
             return new
@@ -22,20 +30,15 @@ namespace Integracao.ControlID.PoC.Services.DocumentedFeatures
 
         public object BuildOnlineSettings(DocumentedFeaturesViewModel model, long serverId)
         {
-            return new
-            {
-                general = new
-                {
-                    online = BoolString(model.OnlineEnabled),
-                    local_identification = BoolString(model.OnlineLocalIdentification)
-                },
-                online_client = new
-                {
-                    server_id = serverId.ToString(),
-                    extract_template = BoolString(model.OnlineExtractTemplate),
-                    max_request_attempts = model.OnlineMaxRequestAttempts.ToString()
-                }
-            };
+            // Mantemos o payload do modo online centralizado para o hub de modos e o tópico documentado
+            // evoluírem juntos, sem divergência entre as trilhas da PoC.
+            return model.OnlineEnabled
+                ? _operationModesPayloadFactory.BuildOnlineProfileSettings(
+                    serverId,
+                    model.OnlineLocalIdentification,
+                    model.OnlineExtractTemplate,
+                    model.OnlineMaxRequestAttempts)
+                : _operationModesPayloadFactory.BuildStandaloneSettings();
         }
 
         public object BuildSecuritySettings(DocumentedFeaturesViewModel model)

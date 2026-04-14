@@ -14,6 +14,13 @@
         {
             new PageHeaderActionViewModel
             {
+                Label = "Centro de modos",
+                Href = Url.Action("Index", "OperationModes")!,
+                ButtonClass = "btn btn-outline-secondary",
+                AriaLabel = "Abrir o centro operacional de modos Standalone, Pro e Enterprise"
+            },
+            new PageHeaderActionViewModel
+            {
                 Label = "Voltar para avançados",
                 Href = Url.Action("Index", "AdvancedOfficial")!,
                 ButtonClass = "btn btn-outline-secondary",

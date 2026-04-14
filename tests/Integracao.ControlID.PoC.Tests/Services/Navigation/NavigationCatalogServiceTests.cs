@@ -46,4 +46,14 @@ public class NavigationCatalogServiceTests
         Assert.Equal("Pessoas", domain!.ShortTitle);
         Assert.Equal("success", domain.AccentTone);
     }
+
+    [Fact]
+    public void GetModule_ReturnsOperationModesModule()
+    {
+        var module = _service.GetModule("OperationModes", "Index");
+
+        Assert.NotNull(module);
+        Assert.Equal("Modos de operação", module!.Label);
+        Assert.Equal("operations", module.DomainId);
+    }
 }

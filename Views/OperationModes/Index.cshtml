@@ -1,0 +1,272 @@
+@model Integracao.ControlID.PoC.ViewModels.OperationModes.OperationModesViewModel
+@{
+    ViewData["Title"] = "Modos de operação";
+    ViewData["Subtitle"] = "Standalone, Pro e Enterprise em uma trilha operacional única, com licenças, sessão e callbacks oficiais.";
+
+    var header = new AppPageHeaderViewModel
+    {
+        Eyebrow = "Conexão e operação",
+        Title = "Modos de operação",
+        Description = "Aplique Standalone, Pro e Enterprise sem sair da PoC, validando sessão, licenças, callbacks e servidor online no mesmo fluxo.",
+        BadgeText = Model.CurrentModeLabel,
+        BadgeTone = Model.CurrentModeTone,
+        Actions = new[]
+        {
+            new PageHeaderActionViewModel
+            {
+                Label = "Eventos oficiais",
+                Href = Url.Action("Index", "OfficialEvents")!,
+                ButtonClass = "btn btn-outline-secondary",
+                AriaLabel = "Abrir a timeline de eventos oficiais para validar callbacks dos modos de operação"
+            },
+            new PageHeaderActionViewModel
+            {
+                Label = "Modo online detalhado",
+                Href = Url.Action("Index", "DocumentedFeatures")!,
+                ButtonClass = "btn btn-outline-secondary",
+                AriaLabel = "Abrir a tela detalhada do modo online e dos tópicos documentados"
+            }
+        }
+    };
+
+    var responsePanel = string.IsNullOrWhiteSpace(Model.ResponseJson)
+        ? null
+        : new RawResponsePanelViewModel
+        {
+            Title = "Última resposta oficial dos modos de operação",
+            Description = "JSON bruto da última operação aplicada neste centro de modos.",
+            Content = Model.ResponseJson,
+            PanelId = "operation-modes-response-json",
+            BadgeText = string.IsNullOrWhiteSpace(Model.ResultStatusType) ? "Retorno técnico" : Model.ResultStatusType,
+            BadgeTone = string.IsNullOrWhiteSpace(Model.ResultStatusType) ? "neutral" : Model.ResultStatusType
+        };
+}
+
+<div class="container mt-5 app-stack operation-modes-shell">
+    <partial name="_AppPageHeader" model="header" />
+
+    @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger" role="alert">@Model.ErrorMessage</div>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(Model.ResultMessage))
+    {
+        <div class="alert alert-@(string.IsNullOrWhiteSpace(Model.ResultStatusType) ? "info" : Model.ResultStatusType)" role="status" aria-live="polite">
+            @Model.ResultMessage
+        </div>
+    }
+
+    <section class="catalog-stat-grid" aria-label="Resumo dos modos de operação">
+        <article class="catalog-stat-card">
+            <span>Modo atual</span>
+            <strong>@Model.CurrentModeLabel</strong>
+            <small>@Model.CurrentModeDescription</small>
+        </article>
+        <article class="catalog-stat-card">
+            <span>Sessão oficial</span>
+            <strong>@(Model.SessionValidated ? "Válida" : "Pendente")</strong>
+            <small>@Model.SessionStatusSummary</small>
+        </article>
+        <article class="catalog-stat-card">
+            <span>Server ID atual</span>
+            <strong>@(Model.CurrentServerId?.ToString() ?? "Não definido")</strong>
+            <small>Reuse device: @(Model.ReuseExistingDevice ? "Sim" : "Não").</small>
+        </article>
+        <article class="catalog-stat-card">
+            <span>Modelo detectado</span>
+            <strong>@(string.IsNullOrWhiteSpace(Model.DetectedProductModel) ? "Não identificado" : Model.DetectedProductModel)</strong>
+            <small>Série: @(string.IsNullOrWhiteSpace(Model.DetectedSerialNumber) ? "Não informada" : Model.DetectedSerialNumber)</small>
+        </article>
+    </section>
+
+    <section class="app-grid-two app-grid-two--main operation-modes-main">
+        <section class="app-surface-card app-stack">
+            <div class="app-page-section__heading">
+                <div>
+                    <strong>Perfis operacionais</strong>
+                    <p>Escolha o perfil e aplique o conjunto oficial de configurações do modo. Standalone desliga o online. Pro e Enterprise usam o mesmo servidor online, mas mudam a identificação local.</p>
+                </div>
+                <span class="app-chip app-chip--@Model.CurrentModeTone">Evidência: @Model.CurrentModeEvidence</span>
+            </div>
+
+            <form method="post" autocomplete="off" class="form-section app-stack">
+                <div class="operation-modes-card-grid">
+                    @foreach (var profile in Model.Profiles)
+                    {
+                        <article class="detail-panel operation-mode-card @(profile.IsCurrent ? "operation-mode-card--current" : string.Empty)">
+                            <span class="operation-mode-card__eyebrow">@profile.Label</span>
+                            <strong>@profile.Summary</strong>
+                            <p>@profile.Requirements</p>
+                            <small>@profile.Checklist</small>
+                        </article>
+                    }
+                </div>
+
+                <div class="product-specific-form-grid product-specific-form-grid--wide">
+                    <div>
+                        <label asp-for="ServerName" class="form-label"></label>
+                        <input asp-for="ServerName" class="form-control" />
+                    </div>
+                    <div>
+                        <label asp-for="ServerUrl" class="form-label"></label>
+                        <input asp-for="ServerUrl" class="form-control" />
+                    </div>
+                    <div>
+                        <label asp-for="PublicKey" class="form-label"></label>
+                        <input asp-for="PublicKey" class="form-control" />
+                    </div>
+                    <div>
+                        <label asp-for="ExistingDeviceId" class="form-label"></label>
+                        <input asp-for="ExistingDeviceId" class="form-control" />
+                    </div>
+                    <div>
+                        <label asp-for="CurrentServerId" class="form-label"></label>
+                        <input asp-for="CurrentServerId" class="form-control" readonly />
+                    </div>
+                    <div>
+                        <label asp-for="MaxRequestAttempts" class="form-label"></label>
+                        <input asp-for="MaxRequestAttempts" class="form-control" />
+                    </div>
+                </div>
+
+                <div class="product-specific-toggle-grid">
+                    <label class="form-check app-toggle-item">
+                        <input asp-for="ReuseExistingDevice" class="form-check-input" />
+                        <span>
+                            <strong>@Html.DisplayNameFor(model => model.ReuseExistingDevice)</strong>
+                            <small>Use o server_id já cadastrado no equipamento quando a infraestrutura online já estiver pronta.</small>
+                        </span>
+                    </label>
+                    <label class="form-check app-toggle-item">
+                        <input asp-for="ExtractTemplate" class="form-check-input" />
+                        <span>
+                            <strong>@Html.DisplayNameFor(model => model.ExtractTemplate)</strong>
+                            <small>Ative a extração de template quando o servidor online precisar consolidar biometria durante a identificação.</small>
+                        </span>
+                    </label>
+                </div>
+
+                <div class="operation-modes-actions">
+                    @foreach (var profile in Model.Profiles)
+                    {
+                        <button type="submit"
+                                formaction="@Url.Action(profile.SubmitAction, "OperationModes")"
+                                class="btn @(profile.IsCurrent ? "btn-outline-secondary" : "btn-primary") btn-sm"
+                                aria-label="@profile.SubmitAriaLabel">
+                            @profile.SubmitLabel
+                        </button>
+                    }
+                </div>
+            </form>
+        </section>
+
+        <section class="app-surface-card app-stack">
+            <div class="app-page-section__heading">
+                <div>
+                    <strong>Licenciamento e saúde do fluxo</strong>
+                    <p>Feche os upgrades oficiais e valide a sessão antes de trocar o perfil do equipamento.</p>
+                </div>
+                <span class="app-chip app-chip--neutral">Base URL: @Model.CallbackBaseUrl</span>
+            </div>
+
+            <div class="detail-panel app-stack">
+                <strong>Compatibilidade prática</strong>
+                <p class="mb-0">Use <strong>Pro</strong> para manter identificação local em modo online. Use <strong>Enterprise</strong> quando a decisão precisar ficar centralizada no servidor. Use <strong>Standalone</strong> para contingência e operação local.</p>
+            </div>
+
+            <form asp-action="ValidateSession" method="post" class="app-inline-form">
+                <button type="submit" class="btn btn-outline-primary btn-sm w-100">Validar sessão oficial agora</button>
+            </form>
+
+            <div class="operation-modes-license-grid">
+                <form asp-action="UpgradeProLicense" method="post" autocomplete="off" class="detail-panel app-stack form-section">
+                    <div>
+                        <strong>Upgrade Pro do iDFace</strong>
+                        <p class="app-upload-field__hint mb-0">Use a senha/licença fornecida pela Control iD para liberar o modo Pro nas linhas compatíveis.</p>
+                    </div>
+                    <div>
+                        <label asp-for="ProLicensePassword" class="form-label"></label>
+                        <input asp-for="ProLicensePassword" class="form-control" type="password" autocomplete="off" />
+                    </div>
+                    <button type="submit" class="btn btn-outline-primary btn-sm">Solicitar upgrade Pro</button>
+                </form>
+
+                <form asp-action="UpgradeEnterpriseLicense" method="post" autocomplete="off" class="detail-panel app-stack form-section">
+                    <div>
+                        <strong>Upgrade Enterprise</strong>
+                        <p class="app-upload-field__hint mb-0">Fluxo oficial para linhas como iDFlex e iDAccess Nano quando o modo Enterprise estiver licenciado.</p>
+                    </div>
+                    <div>
+                        <label asp-for="EnterpriseLicensePassword" class="form-label"></label>
+                        <input asp-for="EnterpriseLicensePassword" class="form-control" type="password" autocomplete="off" />
+                    </div>
+                    <button type="submit" class="btn btn-outline-primary btn-sm">Solicitar upgrade Enterprise</button>
+                </form>
+            </div>
+        </section>
+    </section>
+
+    <section class="app-surface-card app-stack">
+        <div class="app-page-section__heading">
+            <div>
+                <strong>Callbacks e monitoramento dos modos</strong>
+                <p>Confira a prontidão dos endpoints que sustentam Pro e Enterprise dentro da própria PoC.</p>
+            </div>
+            <span class="app-chip app-chip--neutral">Rotas oficiais da PoC</span>
+        </div>
+
+        <div class="operation-readiness-grid">
+            @foreach (var item in Model.Readiness)
+            {
+                <article class="detail-panel app-stack operation-readiness-item">
+                    <div class="operation-readiness-item__head">
+                        <strong>@item.Title</strong>
+                        <span class="app-chip app-chip--@item.Tone">@item.StatusText</span>
+                    </div>
+                    <p>@item.Description</p>
+                    <code class="operation-readiness-item__path">@item.Path</code>
+                </article>
+            }
+        </div>
+    </section>
+
+    <section class="app-surface-card app-stack">
+        <div class="app-page-section__heading">
+            <div>
+                <strong>Sinais recentes do modo</strong>
+                <p>Últimos callbacks e notificações associados aos perfis Standalone, Pro e Enterprise recebidos pela PoC.</p>
+            </div>
+            <span class="app-chip app-chip--neutral">@Model.RecentSignals.Count sinal(is)</span>
+        </div>
+
+        @if (Model.RecentSignals.Count == 0)
+        {
+            <div class="app-note">Nenhum callback relevante foi persistido ainda. Use a trilha de eventos oficiais para validar Pro e Enterprise depois da ativação.</div>
+        }
+        else
+        {
+            <div class="operation-signal-list" role="list" aria-label="Sinais recentes dos modos de operação">
+                @foreach (var signal in Model.RecentSignals)
+                {
+                    <article class="detail-panel operation-signal" role="listitem">
+                        <div>
+                            <strong>@signal.Label</strong>
+                            <p>@signal.Description</p>
+                        </div>
+                        <span class="app-chip app-chip--@signal.Tone">@signal.ReceivedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</span>
+                    </article>
+                }
+            </div>
+        }
+    </section>
+
+    @if (responsePanel != null)
+    {
+        <partial name="_RawResponsePanel" model="responsePanel" />
+    }
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

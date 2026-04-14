@@ -7,6 +7,7 @@ using Integracao.ControlID.PoC.Services.ControlIDApi;
 using Integracao.ControlID.PoC.Services.Database;
 using Integracao.ControlID.PoC.Services.DocumentedFeatures;
 using Integracao.ControlID.PoC.Services.Navigation;
+using Integracao.ControlID.PoC.Services.OperationModes;
 using Integracao.ControlID.PoC.Services.ProductSpecific;
 using Integracao.ControlID.PoC.Services.Security;
 using Microsoft.AspNetCore.Builder;
@@ -63,6 +64,8 @@ builder.Services.AddScoped<ControlIdInputSanitizer>();
 builder.Services.AddSingleton<NavigationCatalogService>();
 builder.Services.AddScoped<PageShellService>();
 builder.Services.AddScoped<ProductSpecificConfigurationPayloadFactory>();
+builder.Services.AddScoped<OperationModesPayloadFactory>();
+builder.Services.AddScoped<OperationModesProfileResolver>();
 builder.Services.AddScoped<DocumentedFeaturesPayloadFactory>();
 
 // Repositórios de banco local
