@@ -1,4 +1,4 @@
-﻿# Integracao.ControlID.PoC
+# Integracao.ControlID.PoC
 
 PoC web em ASP.NET Core 8 para exploração operacional e técnica da Access API da Control iD. O projeto reúne:
 
@@ -52,7 +52,7 @@ dotnet restore .\Integracao.ControlID.PoC.sln
 
 ```powershell
 dotnet user-secrets set "ControlIDApi:DefaultDeviceUrl" "http://<equipamento-ou-host>:8080"
-dotnet user-secrets set "ControlIDApi:DefaultUsername" "<usuario>"
+dotnet user-secrets set "ControlIDApi:DefaultUsername" "<usuário>"
 dotnet user-secrets set "ControlIDApi:DefaultPassword" "<senha>"
 dotnet user-secrets set "CallbackSecurity:SharedKey" "<segredo-local>"
 ```
@@ -84,7 +84,7 @@ A configuração segue o padrão nativo do ASP.NET Core (`Secao__Chave`). Use as
 | `ASPNETCORE_URLS` | `https://localhost:5001` | Define a URL pública/local usada pela aplicação. |
 | `ConnectionStrings__DefaultConnection` | `Data Source=integracao_controlid.db` | Caminho do SQLite local. |
 | `ControlIDApi__DefaultDeviceUrl` | `http://<equipamento-ou-host>:8080` | Endereço padrão do equipamento Control iD. |
-| `ControlIDApi__DefaultUsername` | `<usuario>` | Usuário sugerido para autenticação local. |
+| `ControlIDApi__DefaultUsername` | `<usuário>` | Usuário sugerido para autenticação local. |
 | `ControlIDApi__DefaultPassword` | `<senha>` | Senha sugerida para autenticação local. Não versione este valor. |
 | `ControlIDApi__ConnectionTimeoutSeconds` | `30` | Timeout das chamadas oficiais. A aplicação normaliza o valor entre 5 e 300 segundos. |
 | `Session__IdleTimeout` | `30` | Tempo de expiração da sessão ASP.NET Core em minutos. |

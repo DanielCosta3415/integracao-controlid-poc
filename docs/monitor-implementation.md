@@ -1,49 +1,49 @@
-# Monitor: implementacao na PoC
+# Monitor: implementação na PoC
 
-Este documento explica como a funcionalidade Monitor foi implementada dentro da PoC de integracao com a API de controle de acesso da Control iD.
+Este documento explica como a funcionalidade Monitor foi implementada dentro da PoC de integração com a API de controle de acesso da Control iD.
 
-Na PoC, "Monitor" representa a trilha de recebimento, persistencia e visualizacao de callbacks/notificacoes enviados pelo equipamento para a aplicacao. Ele e diferente do Push: no Monitor, o equipamento envia eventos para a PoC; no Push, o equipamento consulta a PoC para buscar comandos pendentes.
+Na PoC, "Monitor" representa a trilha de recebimento, persistência e visualização de callbacks/notificações enviados pelo equipamento para a aplicação. Ele é diferente do Push: no Monitor, o equipamento envia eventos para a PoC; no Push, o equipamento consulta a PoC para buscar comandos pendentes.
 
-## Visao geral
+## Visão geral
 
 O Monitor foi implementado como um pipeline de entrada HTTP:
 
 ```text
 Equipamento Control iD
   -> endpoint da PoC
-  -> validacao de seguranca
-  -> leitura do corpo da requisicao
-  -> persistencia em SQLite
+  -> validação de segurança
+  -> leitura do corpo da requisição
+  -> persistência em SQLite
   -> tela de eventos oficiais
-  -> uso por outras telas, como Modos de operacao
+  -> uso por outras telas, como Modos de operação
 ```
 
-A tela operacional principal e `OfficialEvents`. As rotas legadas de `MonitorWebhook` redirecionam para essa tela consolidada.
+A tela operacional principal é `OfficialEvents`. As rotas legadas de `MonitorWebhook` redirecionam para essa tela consolidada.
 
 ## Arquivos envolvidos
 
 | Arquivo | Papel na funcionalidade |
 | --- | --- |
-| `Controllers/OfficialCallbacksController.cs` | Expoe endpoints oficiais de callback e monitor recebidos pelo equipamento. |
+| `Controllers/OfficialCallbacksController.cs` | Expõe endpoints oficiais de callback e monitor recebidos pelo equipamento. |
 | `Controllers/OfficialEventsController.cs` | Lista, detalha e limpa eventos oficiais persistidos. |
-| `Controllers/MonitorWebhookController.cs` | Mantem uma entrada legada para webhook e redireciona consultas para `OfficialEvents`. |
-| `Services/Callbacks/CallbackIngressService.cs` | Orquestra validacao, leitura e persistencia dos callbacks recebidos. |
-| `Services/Callbacks/CallbackSecurityEvaluator.cs` | Aplica regras de seguranca para callbacks: tamanho, IP permitido e chave compartilhada. |
-| `Services/Callbacks/CallbackRequestBodyReader.cs` | Le o corpo da requisicao e converte payload binario/imagem para Base64. |
-| `Options/CallbackSecurityOptions.cs` | Define as configuracoes de seguranca usadas pelo pipeline de callback. |
+| `Controllers/MonitorWebhookController.cs` | Mantém uma entrada legada para webhook e redireciona consultas para `OfficialEvents`. |
+| `Services/Callbacks/CallbackIngressService.cs` | Orquestra validação, leitura e persistência dos callbacks recebidos. |
+| `Services/Callbacks/CallbackSecurityEvaluator.cs` | Aplica regras de segurança para callbacks: tamanho, IP permitido e chave compartilhada. |
+| `Services/Callbacks/CallbackRequestBodyReader.cs` | Lê o corpo da requisição e converte payload binário/imagem para Base64. |
+| `Options/CallbackSecurityOptions.cs` | Define as configurações de segurança usadas pelo pipeline de callback. |
 | `Models/Database/MonitorEventLocal.cs` | Entidade local persistida na tabela `MonitorEvents`. |
-| `Services/Database/MonitorEventRepository.cs` | Repositorio de persistencia e consulta dos eventos monitorados. |
+| `Services/Database/MonitorEventRepository.cs` | Repositório de persistência e consulta dos eventos monitorados. |
 | `ViewModels/Monitor/*` | Modelos usados para listagem e detalhe dos eventos. |
 | `Views/OfficialEvents/*` | Interface principal para consultar eventos oficiais. |
 | `Monitor/MonitorEventHandler.cs` | Handler auxiliar para processar `MonitorEvent` e salvar como evento local. |
 | `Monitor/MonitorEventMapper.cs` | Conversores entre modelo de API e entidade local. |
-| `Monitor/MonitorEventQueue.cs` | Fila em memoria para expansoes futuras de processamento assincrono. |
+| `Monitor/MonitorEventQueue.cs` | Fila em memória para expansões futuras de processamento assíncrono. |
 
 ## Endpoints recebidos pela PoC
 
-O controller `OfficialCallbacksController` cobre tres familias de entrada.
+O controller `OfficialCallbacksController` cobre três famílias de entrada.
 
-### Eventos de identificacao online
+### Eventos de identificação online
 
 Rotas:
 
@@ -63,7 +63,7 @@ Essas rotas chamam:
 _callbackIngressService.PersistAsync(HttpContext, "identification", cancellationToken)
 ```
 
-Quando o evento e aceito, a PoC responde:
+Quando o evento é aceito, a PoC responde:
 
 ```json
 {
@@ -96,9 +96,9 @@ _callbackIngressService.PersistAsync(HttpContext, "callback", cancellationToken)
 
 Quando aceitas, retornam `200 OK` sem payload adicional.
 
-### Notificacoes de Monitor
+### Notificações de Monitor
 
-Rota generica:
+Rota genérica:
 
 ```text
 POST /api/notifications/{topic}
@@ -114,10 +114,10 @@ Exemplos catalogados:
 
 | Rota | Finalidade |
 | --- | --- |
-| `/api/notifications/user_image` | Receber imagem de usuario pelo Monitor. |
+| `/api/notifications/user_image` | Receber imagem de usuário pelo Monitor. |
 | `/api/notifications/template` | Receber template pelo Monitor. |
-| `/api/notifications/card` | Receber cartao pelo Monitor. |
-| `/api/notifications/operation_mode` | Receber mudanca de modo de operacao. |
+| `/api/notifications/card` | Receber cartão pelo Monitor. |
+| `/api/notifications/operation_mode` | Receber mudança de modo de operação. |
 | `/api/notifications/pin` | Receber PIN de cadastro remoto. |
 | `/api/notifications/password` | Receber senha de cadastro remoto. |
 | `/api/notifications/catra_event` | Receber evento de catraca. |
@@ -125,20 +125,20 @@ Exemplos catalogados:
 
 ## Pipeline de entrada
 
-A logica principal fica em `CallbackIngressService.PersistAsync`.
+A lógica principal fica em `CallbackIngressService.PersistAsync`.
 
-O fluxo e:
+O fluxo é:
 
-1. `CallbackSecurityEvaluator.Evaluate` valida a requisicao.
-2. `CallbackRequestBodyReader.ReadAsync` le o corpo da requisicao.
+1. `CallbackSecurityEvaluator.Evaluate` valida a requisição.
+2. `CallbackRequestBodyReader.ReadAsync` lê o corpo da requisição.
 3. A PoC monta um `MonitorEventLocal`.
-4. O evento e persistido por `MonitorEventRepository.AddMonitorEventAsync`.
-5. A resposta informa sucesso ou rejeicao.
+4. O evento é persistido por `MonitorEventRepository.AddMonitorEventAsync`.
+5. A resposta informa sucesso ou rejeição.
 
-O `EventType` e montado assim:
+O `EventType` é montado assim:
 
 ```text
-<familia>:<path>
+<família>:<path>
 ```
 
 Exemplos:
@@ -150,44 +150,44 @@ monitor:operation_mode:/api/notifications/operation_mode
 legacy-webhook:/MonitorWebhook/Receive
 ```
 
-## Seguranca dos callbacks
+## Segurança dos callbacks
 
-A seguranca do Monitor e configurada por `CallbackSecurityOptions`, carregada da secao `CallbackSecurity` do `appsettings`.
+A segurança do Monitor é configurada por `CallbackSecurityOptions`, carregada da seção `CallbackSecurity` do `appsettings`.
 
-| Opcao | Comportamento |
+| Opção | Comportamento |
 | --- | --- |
-| `MaxBodyBytes` | Limita o tamanho maximo do payload. O default e 1 MB. |
+| `MaxBodyBytes` | Limita o tamanho máximo do payload. O default é 1 MB. |
 | `AllowedRemoteIps` | Quando preenchido, restringe os IPs que podem enviar callbacks. |
-| `AllowLoopback` | Permite loopback mesmo quando ha filtro de IP. |
+| `AllowLoopback` | Permite loopback mesmo quando há filtro de IP. |
 | `RequireSharedKey` | Exige uma chave compartilhada no header configurado. |
 | `SharedKeyHeaderName` | Nome do header usado para a chave. Default: `X-ControlID-Callback-Key`. |
 | `SharedKey` | Valor esperado da chave compartilhada. |
 
-A comparacao da chave usa `CryptographicOperations.FixedTimeEquals`, evitando comparacao simples de strings para o segredo.
+A comparação da chave usa `CryptographicOperations.FixedTimeEquals`, evitando comparação simples de strings para o segredo.
 
-O `Program.cs` tambem faz uma verificacao de sanidade no startup:
+O `Program.cs` também faz uma verificação de sanidade no startup:
 
-| Condicao | Resultado |
+| Condição | Resultado |
 | --- | --- |
-| `RequireSharedKey=true` e `SharedKey` vazio | Log de erro de seguranca. |
-| `RequireSharedKey=false` fora de Development | Log de warning recomendando restricao. |
+| `RequireSharedKey=true` e `SharedKey` vazio | Log de erro de segurança. |
+| `RequireSharedKey=false` fora de Development | Log de warning recomendando restrição. |
 
-## Leitura do corpo da requisicao
+## Leitura do corpo da requisição
 
-`CallbackRequestBodyReader` trata dois cenarios:
+`CallbackRequestBodyReader` trata dois cenários:
 
 | Tipo de corpo | Tratamento |
 | --- | --- |
 | Texto/JSON/form | Lido como UTF-8 e salvo como string. |
 | `application/octet-stream` ou `image/*` | Convertido para Base64 antes de persistir. |
 
-Isso permite que eventos com imagem, template ou binario sejam inspecionados posteriormente sem quebrar a persistencia textual no SQLite.
+Isso permite que eventos com imagem, template ou binário sejam inspecionados posteriormente sem quebrar a persistência textual no SQLite.
 
-## Persistencia local
+## Persistência local
 
-Os eventos sao salvos na tabela `MonitorEvents`.
+Os eventos são salvos na tabela `MonitorEvents`.
 
-O `Program.cs` garante a criacao da tabela quando a aplicacao inicia:
+O `Program.cs` garante a criação da tabela quando a aplicação inicia:
 
 ```text
 MonitorEvents(
@@ -210,16 +210,16 @@ Campos principais:
 | --- | --- |
 | `EventId` | GUID gerado pela PoC. |
 | `ReceivedAt` | Data/hora UTC de recebimento. |
-| `RawJson` | Corpo bruto lido da requisicao. |
-| `EventType` | Familia + path do callback. |
+| `RawJson` | Corpo bruto lido da requisição. |
+| `EventType` | Família + path do callback. |
 | `DeviceId` | Query string `device_id`, quando enviada. |
 | `UserId` | Query string `user_id`, quando enviada. |
-| `Payload` | Mesmo conteudo lido do corpo, salvo para exibicao rapida. |
+| `Payload` | Mesmo conteúdo lido do corpo, salvo para exibição rápida. |
 | `Status` | Atualmente definido como `received` no pipeline principal. |
 
 ## Interface de consulta
 
-A interface principal esta em:
+A interface principal está em:
 
 ```text
 GET /OfficialEvents
@@ -229,11 +229,11 @@ POST /OfficialEvents/Clear
 
 `OfficialEventsController.Index` consulta todos os eventos por `MonitorEventRepository.GetAllMonitorEventsAsync`, ordenados do mais recente para o mais antigo.
 
-`Details` abre um evento especifico.
+`Details` abre um evento específico.
 
 `Clear` remove todos os eventos persistidos.
 
-`MonitorWebhookController` mantem compatibilidade com a rota legada:
+`MonitorWebhookController` mantém compatibilidade com a rota legada:
 
 | Rota | Comportamento |
 | --- | --- |
@@ -242,9 +242,9 @@ POST /OfficialEvents/Clear
 | `POST /MonitorWebhook/Receive` | Recebe webhook legado e persiste como `legacy-webhook`. |
 | `POST /MonitorWebhook/Clear` | Limpa eventos e redireciona para `OfficialEvents`. |
 
-## Relacao com Modos de operacao
+## Relação com Modos de operação
 
-A tela de modos usa eventos do Monitor para mostrar prontidao e sinais recentes.
+A tela de modos usa eventos do Monitor para mostrar prontidão e sinais recentes.
 
 `OperationModesController` consulta `MonitorEventRepository.GetAllMonitorEventsAsync` e verifica eventos cujo `EventType` termina com:
 
@@ -256,33 +256,33 @@ A tela de modos usa eventos do Monitor para mostrar prontidao e sinais recentes.
 /api/notifications/operation_mode
 ```
 
-Isso permite que a PoC mostre se os endpoints que sustentam Pro e Enterprise ja receberam eventos reais.
+Isso permite que a PoC mostre se os endpoints que sustentam Pro e Enterprise já receberam eventos reais.
 
 ## Componentes auxiliares de Monitor
 
 A pasta `Monitor/` possui estruturas auxiliares:
 
-| Arquivo | Situacao na implementacao atual |
+| Arquivo | Situação na implementação atual |
 | --- | --- |
-| `MonitorEventHandler.cs` | Converte um `MonitorEvent` de API em `MonitorEventLocal` e persiste. Serve como ponto de extensao para processamento programatico. |
-| `MonitorEventMapper.cs` | Faz conversao entre `MonitorEvent` e `MonitorEventLocal`. |
-| `MonitorEventQueue.cs` | Implementa fila em memoria com `ConcurrentQueue` e `SemaphoreSlim`. |
+| `MonitorEventHandler.cs` | Converte um `MonitorEvent` de API em `MonitorEventLocal` e persiste. Serve como ponto de extensão para processamento programático. |
+| `MonitorEventMapper.cs` | Faz conversão entre `MonitorEvent` e `MonitorEventLocal`. |
+| `MonitorEventQueue.cs` | Implementa fila em memória com `ConcurrentQueue` e `SemaphoreSlim`. |
 
-O pipeline HTTP principal de callbacks usa `CallbackIngressService` diretamente. A fila em memoria existe como base para evolucao futura, por exemplo processamento assincrono, SignalR ou notificacao em tempo real.
+O pipeline HTTP principal de callbacks usa `CallbackIngressService` diretamente. A fila em memória existe como base para evolução futura, por exemplo processamento assíncrono, SignalR ou notificação em tempo real.
 
 ## Cobertura de testes
 
 | Teste | Cobre |
 | --- | --- |
-| `CallbackSecurityEvaluatorTests.cs` | Validacao de IP, tamanho, loopback e chave compartilhada. |
-| `CallbackRequestBodyReaderTests.cs` | Leitura de payload textual, vazio, binario e limite de tamanho. |
-| `CallbackIngressServiceTests.cs` | Fluxo de persistencia/rejeicao dos callbacks recebidos. |
+| `CallbackSecurityEvaluatorTests.cs` | Validação de IP, tamanho, loopback e chave compartilhada. |
+| `CallbackRequestBodyReaderTests.cs` | Leitura de payload textual, vazio, binário e limite de tamanho. |
+| `CallbackIngressServiceTests.cs` | Fluxo de persistência/rejeição dos callbacks recebidos. |
 
-## Limitacoes atuais
+## Limitações atuais
 
-| Ponto | Observacao |
+| Ponto | Observação |
 | --- | --- |
-| Equipamento real | A validacao completa depende de um dispositivo Control iD enviando callbacks reais. |
-| Tempo real | A PoC persiste e lista eventos, mas ainda nao publica eventos via SignalR/websocket. |
-| Processamento assincrono | A fila em memoria existe, mas o pipeline principal persiste diretamente no banco. |
-| Exposicao publica | Para receber callbacks reais, a URL da PoC precisa estar acessivel pelo equipamento. |
+| Equipamento real | A validação completa depende de um dispositivo Control iD enviando callbacks reais. |
+| Tempo real | A PoC persiste e lista eventos, mas ainda não publica eventos via SignalR/websocket. |
+| Processamento assíncrono | A fila em memória existe, mas o pipeline principal persiste diretamente no banco. |
+| Exposicao pública | Para receber callbacks reais, a URL da PoC precisa estar acessível pelo equipamento. |

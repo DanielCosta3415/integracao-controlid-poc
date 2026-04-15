@@ -1,4 +1,4 @@
-﻿# Avaliação heurística focada em design system, língua portuguesa e acessibilidade
+# Avaliação heurística focada em design system, língua portuguesa e acessibilidade
 
 Data: 2026-04-14  
 Escopo: todas as superfícies atuais da PoC, com ênfase em shell global, busca de módulos, navegação superior, painéis compartilhados, workspaces por domínio e telas de operação/documentação técnica.
