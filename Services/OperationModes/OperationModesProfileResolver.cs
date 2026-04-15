@@ -4,6 +4,12 @@ namespace Integracao.ControlID.PoC.Services.OperationModes
 {
     public sealed class OperationModesProfileResolver
     {
+        /// <summary>
+        /// Resolve o modo operacional a partir dos flags oficiais `online` e `local_identification`.
+        /// </summary>
+        /// <param name="onlineEnabled">Indica se o equipamento esta em modo online.</param>
+        /// <param name="localIdentificationEnabled">Indica se a identificacao local permanece ativa.</param>
+        /// <returns>Snapshot com chave, rotulo e descricao do modo detectado.</returns>
         public OperationModesProfileSnapshot Resolve(bool onlineEnabled, bool localIdentificationEnabled)
         {
             if (!onlineEnabled)

@@ -15,6 +15,12 @@ namespace Integracao.ControlID.PoC.Services.Callbacks
             _options = options.Value;
         }
 
+        /// <summary>
+        /// Le o corpo bruto de um callback, respeitando limite configurado e convertendo binarios para Base64.
+        /// </summary>
+        /// <param name="request">Requisicao HTTP recebida do equipamento ou integracao externa.</param>
+        /// <param name="cancellationToken">Token usado para cancelar a leitura do stream.</param>
+        /// <returns>Resultado com corpo normalizado ou status HTTP recomendado para rejeicao.</returns>
         public async Task<CallbackRequestBodyReadResult> ReadAsync(HttpRequest request, CancellationToken cancellationToken = default)
         {
             if (request.ContentLength.HasValue && request.ContentLength.Value == 0)

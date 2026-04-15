@@ -174,6 +174,11 @@ namespace Integracao.ControlID.PoC.Services.ControlIDApi
         /// <summary>
         /// Monta a URL final da chamada oficial incluindo sessao e filtros adicionais.
         /// </summary>
+        /// <param name="deviceAddress">Endereco base ja normalizado do equipamento.</param>
+        /// <param name="path">Path oficial do endpoint catalogado.</param>
+        /// <param name="sessionString">Sessao oficial adicionada como query quando necessaria.</param>
+        /// <param name="additionalQuery">Query adicional normalizada pela camada de seguranca.</param>
+        /// <returns>URL final usada pelo HttpClient.</returns>
         private static string BuildUrl(string deviceAddress, string path, string sessionString, string additionalQuery)
         {
             var queryItems = new List<string>();
@@ -195,6 +200,8 @@ namespace Integracao.ControlID.PoC.Services.ControlIDApi
         /// <summary>
         /// Heuristica simples para decidir se a resposta deve ser mantida em Base64 no resultado.
         /// </summary>
+        /// <param name="contentType">Content-Type retornado pelo equipamento.</param>
+        /// <returns>True quando o conteudo parece binario e deve ser preservado em Base64.</returns>
         private static bool LooksLikeBinary(string contentType)
         {
             if (string.IsNullOrWhiteSpace(contentType))
@@ -207,6 +214,11 @@ namespace Integracao.ControlID.PoC.Services.ControlIDApi
                    !contentType.Contains("xml", StringComparison.OrdinalIgnoreCase);
         }
 
+        /// <summary>
+        /// Reduz o endereco do equipamento para um alvo seguro de log, sem caminho, sessao ou query string.
+        /// </summary>
+        /// <param name="deviceAddress">Endereco base normalizado.</param>
+        /// <returns>Alvo usado nos logs de observabilidade.</returns>
         private static string BuildMonitoringTarget(string deviceAddress)
         {
             return Uri.TryCreate(deviceAddress, UriKind.Absolute, out var uri)

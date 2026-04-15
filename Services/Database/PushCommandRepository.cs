@@ -55,6 +55,11 @@ namespace Integracao.ControlID.PoC.Services.Database
             return await _dbContext.PushCommands.OrderByDescending(c => c.ReceivedAt).ToListAsync();
         }
 
+        /// <summary>
+        /// Busca o proximo comando pendente elegivel para um equipamento especifico.
+        /// </summary>
+        /// <param name="deviceId">Identificador do equipamento que esta consultando a fila; quando vazio, busca comandos globais.</param>
+        /// <returns>Comando mais antigo com status `pending`, ou null quando nao houver comando disponivel.</returns>
         public async Task<PushCommandLocal?> GetNextPendingCommandAsync(string? deviceId)
         {
             var query = _dbContext.PushCommands

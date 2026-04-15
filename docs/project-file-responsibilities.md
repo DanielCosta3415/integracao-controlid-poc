@@ -518,6 +518,7 @@ As views Razor compoem a interface web da PoC. Em geral, cada pasta espelha um c
 | Arquivo/Pasta | Responsabilidade |
 | --- | --- |
 | `docs/changelog-2026-04-14.md` | Registro resumido de evolucoes relevantes realizadas na PoC. |
+| `docs/changelog-2026-04-15.md` | Registro resumido das atualizacoes de documentacao, comentarios inline e observabilidade. |
 | `docs/monitor-implementation.md` | Documenta a implementacao da funcionalidade Monitor, callbacks oficiais, seguranca e persistencia local. |
 | `docs/operation-modes-implementation.md` | Documenta a implementacao dos modos Standalone, Pro e Enterprise, incluindo payloads e transicoes. |
 | `docs/project-file-responsibilities.md` | Este inventario de responsabilidades por pasta e arquivo. |

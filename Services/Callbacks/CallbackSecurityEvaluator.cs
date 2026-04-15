@@ -16,6 +16,11 @@ namespace Integracao.ControlID.PoC.Services.Callbacks
             _options = options.Value;
         }
 
+        /// <summary>
+        /// Avalia se um callback recebido pode entrar na PoC com base em tamanho, IP remoto e chave compartilhada.
+        /// </summary>
+        /// <param name="httpContext">Contexto HTTP bruto da requisicao recebida.</param>
+        /// <returns>Resultado de autorizacao com status HTTP recomendado quando houver rejeicao.</returns>
         public CallbackSecurityEvaluationResult Evaluate(HttpContext httpContext)
         {
             var maxBodyBytes = NormalizeMaxBodyBytes();
@@ -63,6 +68,11 @@ namespace Integracao.ControlID.PoC.Services.Callbacks
             return CallbackSecurityEvaluationResult.Allow();
         }
 
+        /// <summary>
+        /// Verifica se o endereco remoto esta dentro da lista permitida, considerando loopback quando configurado.
+        /// </summary>
+        /// <param name="remoteIp">IP remoto capturado pelo ASP.NET Core.</param>
+        /// <returns>True quando o IP e aceito pela politica atual de callbacks.</returns>
         public bool IsRemoteIpAllowed(IPAddress? remoteIp)
         {
             var allowedIps = _options.AllowedRemoteIps

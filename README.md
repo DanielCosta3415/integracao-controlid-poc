@@ -48,7 +48,14 @@ Documentações funcionais de implementação:
 dotnet restore .\Integracao.ControlID.PoC.sln
 ```
 
-2. Ajuste as configurações locais, se necessário, por variáveis de ambiente, `appsettings.Development.json` ou User Secrets para segredos.
+2. Configure segredos e dados sensíveis fora do repositório. Para desenvolvimento local, prefira variáveis de ambiente ou User Secrets:
+
+```powershell
+dotnet user-secrets set "ControlIDApi:DefaultDeviceUrl" "http://<equipamento-ou-host>:8080"
+dotnet user-secrets set "ControlIDApi:DefaultUsername" "<usuario>"
+dotnet user-secrets set "ControlIDApi:DefaultPassword" "<senha>"
+dotnet user-secrets set "CallbackSecurity:SharedKey" "<segredo-local>"
+```
 
 3. Compile a solução:
 
@@ -69,29 +76,37 @@ dotnet run --project .\Integracao.ControlID.PoC.csproj
 
 ## Variáveis de ambiente úteis
 
-A configuração segue o padrão nativo do ASP.NET Core (`Secao__Chave`). Exemplos:
+A configuração segue o padrão nativo do ASP.NET Core (`Secao__Chave`). Use as variáveis abaixo para preparar execução local, integração com equipamento real e observabilidade.
 
-- `ASPNETCORE_ENVIRONMENT=Development`
-- `ConnectionStrings__DefaultConnection=Data Source=integracao_controlid.db`
-- `ControlIDApi__DefaultDeviceUrl=http://<equipamento-ou-host>:8080`
-- `ControlIDApi__DefaultUsername=<usuario-opcional>`
-- `ControlIDApi__DefaultPassword=`
-- `ControlIDApi__ConnectionTimeoutSeconds=30`
-- `Session__IdleTimeout=30`
-- `CallbackSecurity__RequireSharedKey=true`
-- `CallbackSecurity__SharedKeyHeaderName=X-ControlID-Callback-Key`
-- `CallbackSecurity__SharedKey=<segredo-configurado-fora-do-repositorio>`
-- `CallbackSecurity__AllowLoopback=true`
-- `Logging__LogLevel__Default=Information`
-- `Serilog__MinimumLevel__Default=Information`
-- `ASPNETCORE_URLS=https://localhost:5001`
+| Variável | Exemplo | Uso |
+| --- | --- | --- |
+| `ASPNETCORE_ENVIRONMENT` | `Development` | Define o ambiente de execução. |
+| `ASPNETCORE_URLS` | `https://localhost:5001` | Define a URL pública/local usada pela aplicação. |
+| `ConnectionStrings__DefaultConnection` | `Data Source=integracao_controlid.db` | Caminho do SQLite local. |
+| `ControlIDApi__DefaultDeviceUrl` | `http://<equipamento-ou-host>:8080` | Endereço padrão do equipamento Control iD. |
+| `ControlIDApi__DefaultUsername` | `<usuario>` | Usuário sugerido para autenticação local. |
+| `ControlIDApi__DefaultPassword` | `<senha>` | Senha sugerida para autenticação local. Não versione este valor. |
+| `ControlIDApi__ConnectionTimeoutSeconds` | `30` | Timeout das chamadas oficiais. A aplicação normaliza o valor entre 5 e 300 segundos. |
+| `Session__IdleTimeout` | `30` | Tempo de expiração da sessão ASP.NET Core em minutos. |
+| `Session__CookieName` | `.IntegracaoControlID.Session` | Nome do cookie de sessão. |
+| `CallbackSecurity__MaxBodyBytes` | `1048576` | Limite máximo de payload aceito em callbacks/monitor. |
+| `CallbackSecurity__RequireSharedKey` | `true` | Exige chave compartilhada para entrada de callbacks. |
+| `CallbackSecurity__SharedKeyHeaderName` | `X-ControlID-Callback-Key` | Header esperado para a chave compartilhada. |
+| `CallbackSecurity__SharedKey` | `<segredo>` | Segredo usado para validar callbacks. Deve ficar fora do repositório. |
+| `CallbackSecurity__AllowLoopback` | `true` | Permite callbacks locais mesmo com restrição de IP. |
+| `CallbackSecurity__AllowedRemoteIps__0` | `192.168.0.10` | Primeiro IP remoto permitido para callbacks. Use índices adicionais para mais IPs. |
+| `Logging__LogLevel__Default` | `Information` | Nível mínimo do logging padrão. |
+| `Serilog__MinimumLevel__Default` | `Information` | Nível mínimo do Serilog. |
+| `Logging__File__Path` | `Logs/app_log.txt` | Caminho esperado para logs em arquivo. |
+| `Logging__File__RetainedFileCountLimit` | `14` | Quantidade de arquivos de log mantidos. |
 
 Observações:
 
 - nunca versione credenciais reais;
 - prefira User Secrets ou variáveis de ambiente para valores sensíveis;
-- `ControlIDApi__ConnectionTimeoutSeconds` controla o timeout real das chamadas oficiais.
+- `ControlIDApi__ConnectionTimeoutSeconds` controla o timeout real das chamadas oficiais;
 - `CallbackSecurity__SharedKey` é obrigatória quando `CallbackSecurity__RequireSharedKey=true` fora de ambiente controlado.
+- para validar callbacks reais, a URL da PoC precisa estar acessível pelo equipamento Control iD.
 
 ## Banco local e dados da PoC
 
@@ -132,7 +147,8 @@ A PoC já sai preparada para monitoramento básico local:
 - log de requisições HTTP no middleware `RequestLoggingMiddleware`;
 - log estruturado de invocação oficial da Access API, incluindo endpoint, target, status e duração;
 - log de entrada de callbacks com aceite, bloqueio e falha de persistência;
-- log de fila push para enfileiramento, entrega e recebimento de resultados.
+- log de modos de operação para aplicação de `Standalone`, `Pro`, `Enterprise`, upgrades e validação de sessão;
+- log de fila push para enfileiramento, entrega, polling e recebimento de resultados;
 - compressão de resposta habilitada para HTML, CSS, JS e JSON, reduzindo custo de rede em páginas e payloads técnicos.
 
 Saídas de log:
@@ -142,10 +158,22 @@ Saídas de log:
 
 Pontos recomendados para monitorar primeiro:
 
-- falhas de `OfficialApiInvokerService` por timeout, validação ou status HTTP inesperado;
+- falhas de `OfficialApiInvokerService` por timeout, validação, endpoint inválido ou status HTTP inesperado;
 - eventos rejeitados em `CallbackIngressService`;
 - erros de persistência e entrega em `PushCenterController`;
+- falhas ao aplicar modos em `OperationModesController`;
+- alertas de segurança de `CallbackSecurity.RequireSharedKey` durante o startup;
 - exceções capturadas por `ExceptionHandlingMiddleware`.
+
+Sinais práticos para alertas locais ou ferramentas externas:
+
+| Sinal | Onde aparece | Ação sugerida |
+| --- | --- | --- |
+| Timeout em chamada oficial | `OfficialApiInvokerService` | Verificar rede, IP, porta, sessão e disponibilidade do equipamento. |
+| Callback bloqueado | `CallbackIngressService` ou `CallbackSecurityEvaluator` | Conferir chave compartilhada, IP permitido e tamanho do payload. |
+| Falha ao persistir Push | `PushCenterController` ou `PushCommandRepository` | Conferir SQLite, lock de arquivo e permissão de escrita. |
+| Resultado Push sem `command_id` | `PushCenterController` | Verificar se o equipamento está devolvendo o identificador correto. |
+| Modo não detectado | `OperationModesController` | Conferir resposta de `get-configuration` e sessão oficial. |
 
 Checklist recomendado para debug operacional:
 
@@ -175,6 +203,7 @@ Checklist recomendado para debug operacional:
 - `docs/reports/operation-modes-homologation-matrix-2026-04-14.md`: matriz de cobertura e homologação por linha de produto
 - `docs/reports/operation-modes-e2e-runbook-2026-04-14.md`: roteiro E2E de bancada para validar `Standalone`, `Pro` e `Enterprise`
 - `docs/changelog-2026-04-14.md`: resumo técnico do que mudou e por que mudou
+- `docs/changelog-2026-04-15.md`: changelog das atualizações de documentação, comentários e observabilidade
 
 ## Troubleshooting rápido
 
