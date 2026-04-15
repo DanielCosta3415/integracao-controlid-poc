@@ -24,6 +24,16 @@ Pastas principais:
 - `tools/`: utilitários locais, incluindo smoke test e stub do equipamento
 - `docs/reports/`: relatórios técnicos gerados durante as validações
 
+Mapa detalhado de responsabilidades por pasta e arquivo:
+
+- `docs/project-file-responsibilities.md`
+
+Documentações funcionais de implementação:
+
+- `docs/operation-modes-implementation.md`
+- `docs/monitor-implementation.md`
+- `docs/push-implementation.md`
+
 ## Requisitos
 
 - .NET SDK 8
