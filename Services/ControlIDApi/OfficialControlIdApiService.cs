@@ -1,4 +1,4 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using Integracao.ControlID.PoC.Models.ControlIDApi;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;

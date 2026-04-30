@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build-test-audit:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Restore
+        run: dotnet restore .\Integracao.ControlID.PoC.sln --locked-mode
+
+      - name: Restore device stub
+        run: dotnet restore .\tools\ControlIdDeviceStub\ControlIdDeviceStub.csproj --locked-mode
+
+      - name: Build
+        run: dotnet build .\Integracao.ControlID.PoC.sln --no-restore -v:minimal
+
+      - name: Build device stub
+        run: dotnet build .\tools\ControlIdDeviceStub\ControlIdDeviceStub.csproj --no-restore -v:minimal
+
+      - name: Test
+        run: dotnet test .\Integracao.ControlID.PoC.sln --no-build -v:minimal
+
+      - name: Format check
+        run: dotnet format .\Integracao.ControlID.PoC.sln --verify-no-changes --no-restore -v:minimal
+
+      - name: Vulnerability audit
+        shell: pwsh
+        run: |
+          $audit = dotnet list .\Integracao.ControlID.PoC.sln package --vulnerable --include-transitive 2>&1
+          $audit | Write-Output
+          if ($LASTEXITCODE -ne 0) {
+            exit $LASTEXITCODE
+          }
+
+          $auditText = $audit -join "`n"
+          if ($auditText -match '(?m)^\s*>\s+\S+\s+\S+\s+\S+') {
+            Write-Error "Vulnerable NuGet packages were found."
+            exit 1
+          }

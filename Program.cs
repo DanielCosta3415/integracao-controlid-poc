@@ -1,4 +1,4 @@
-﻿using Integracao.ControlID.PoC.Data;
+using Integracao.ControlID.PoC.Data;
 using Integracao.ControlID.PoC.Logging;
 using Integracao.ControlID.PoC.Middlewares;
 using Integracao.ControlID.PoC.Options;
@@ -118,6 +118,8 @@ builder.Services.AddLogging(logging =>
 
 var app = builder.Build();
 
+ValidateRuntimeSecurity(app);
+
 // Middlewares customizados (ordem: tratamento de erro → logging de request → sessão → session API)
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseMiddleware<RequestLoggingMiddleware>();
@@ -186,3 +188,32 @@ app.MapControllerRoute(
 app.MapRazorPages();
 
 app.Run();
+
+static void ValidateRuntimeSecurity(WebApplication app)
+{
+    if (app.Environment.IsDevelopment())
+        return;
+
+    var allowedHosts = app.Configuration["AllowedHosts"];
+    var configuredHosts = (allowedHosts ?? string.Empty)
+        .Split([';', ','], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+    if (configuredHosts.Length == 0 || configuredHosts.Any(static host => host == "*"))
+    {
+        throw new InvalidOperationException(
+            "AllowedHosts must be explicitly configured for non-Development environments.");
+    }
+
+    var callbackSecurityOptions = app.Services.GetRequiredService<IOptions<CallbackSecurityOptions>>().Value;
+    if (!callbackSecurityOptions.RequireSharedKey)
+    {
+        throw new InvalidOperationException(
+            "CallbackSecurity:RequireSharedKey must be true for non-Development environments.");
+    }
+
+    if (string.IsNullOrWhiteSpace(callbackSecurityOptions.SharedKey))
+    {
+        throw new InvalidOperationException(
+            "CallbackSecurity:SharedKey must be configured for non-Development environments.");
+    }
+}

@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 using Integracao.ControlID.PoC.Models.ControlIDApi;
 
 namespace Integracao.ControlID.PoC.Services.ControlIDApi

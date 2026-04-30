@@ -1,4 +1,4 @@
-﻿using Integracao.ControlID.PoC.Models.Database;
+using Integracao.ControlID.PoC.Models.Database;
 using Integracao.ControlID.PoC.Services.Database;
 using Microsoft.AspNetCore.Http;
 

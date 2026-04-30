@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.Text;
 using Integracao.ControlID.PoC.Helpers;
 using Integracao.ControlID.PoC.Models.ControlIDApi;

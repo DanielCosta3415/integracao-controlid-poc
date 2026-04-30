@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using Integracao.ControlID.PoC.Services.Security;
 using Integracao.ControlID.PoC.ViewModels.Shared;

@@ -1,4 +1,4 @@
-﻿using Integracao.ControlID.PoC.ViewModels.Shared;
+using Integracao.ControlID.PoC.ViewModels.Shared;
 
 namespace Integracao.ControlID.PoC.Helpers
 {

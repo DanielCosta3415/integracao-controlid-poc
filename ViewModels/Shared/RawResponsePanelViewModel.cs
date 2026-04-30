@@ -1,4 +1,4 @@
-﻿namespace Integracao.ControlID.PoC.ViewModels.Shared
+namespace Integracao.ControlID.PoC.ViewModels.Shared
 {
     public class RawResponsePanelViewModel
     {

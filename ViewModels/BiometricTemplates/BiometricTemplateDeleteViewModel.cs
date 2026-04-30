@@ -1,4 +1,4 @@
-﻿namespace Integracao.ControlID.PoC.ViewModels.BiometricTemplates
+namespace Integracao.ControlID.PoC.ViewModels.BiometricTemplates
 {
     /// <summary>
     /// ViewModel para confirmação de exclusão de template biométrico.

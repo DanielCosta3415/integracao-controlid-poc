@@ -1,4 +1,4 @@
-﻿namespace Integracao.ControlID.PoC.ViewModels.Users
+namespace Integracao.ControlID.PoC.ViewModels.Users
 {
     /// <summary>
     /// ViewModel para confirmação de exclusão de usuário.

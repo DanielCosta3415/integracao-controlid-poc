@@ -1,4 +1,4 @@
-﻿namespace Integracao.ControlID.PoC.ViewModels.Media
+namespace Integracao.ControlID.PoC.ViewModels.Media
 {
     /// <summary>
     /// ViewModel para confirmação de exclusão de foto.

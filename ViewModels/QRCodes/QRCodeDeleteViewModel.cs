@@ -1,4 +1,4 @@
-﻿namespace Integracao.ControlID.PoC.ViewModels.QRCodes
+namespace Integracao.ControlID.PoC.ViewModels.QRCodes
 {
     /// <summary>
     /// ViewModel para confirmação de exclusão de QR Code.

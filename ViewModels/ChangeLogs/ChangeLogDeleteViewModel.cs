@@ -1,4 +1,4 @@
-﻿namespace Integracao.ControlID.PoC.ViewModels.ChangeLogs
+namespace Integracao.ControlID.PoC.ViewModels.ChangeLogs
 {
     /// <summary>
     /// ViewModel para confirmação de exclusão de change log.

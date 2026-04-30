@@ -1,4 +1,4 @@
-﻿namespace Integracao.ControlID.PoC.ViewModels.Session
+namespace Integracao.ControlID.PoC.ViewModels.Session
 {
     public class SessionDeactivateViewModel
     {

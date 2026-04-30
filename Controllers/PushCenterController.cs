@@ -1,5 +1,6 @@
-﻿using System.Text;
+using System.Text;
 using Integracao.ControlID.PoC.Models.Database;
+using Integracao.ControlID.PoC.Services.Callbacks;
 using Integracao.ControlID.PoC.Services.Database;
 using Integracao.ControlID.PoC.ViewModels.Push;
 using Microsoft.AspNetCore.Mvc;
@@ -14,13 +15,16 @@ namespace Integracao.ControlID.PoC.Controllers
     public class PushCenterController : Controller
     {
         private readonly PushCommandRepository _pushCommandRepository;
+        private readonly CallbackSecurityEvaluator _securityEvaluator;
         private readonly ILogger<PushCenterController> _logger;
 
         public PushCenterController(
             PushCommandRepository pushCommandRepository,
+            CallbackSecurityEvaluator securityEvaluator,
             ILogger<PushCenterController> logger)
         {
             _pushCommandRepository = pushCommandRepository;
+            _securityEvaluator = securityEvaluator;
             _logger = logger;
         }
 
@@ -165,6 +169,10 @@ namespace Integracao.ControlID.PoC.Controllers
         [HttpGet("/push")]
         public async Task<IActionResult> Poll([FromQuery(Name = "device_id")] string? deviceId, [FromQuery(Name = "deviceid")] string? legacyDeviceId)
         {
+            var ingressRejection = ValidateIngressRequest();
+            if (ingressRejection != null)
+                return ingressRejection;
+
             var resolvedDeviceId = string.IsNullOrWhiteSpace(deviceId) ? legacyDeviceId : deviceId;
             try
             {
@@ -212,6 +220,10 @@ namespace Integracao.ControlID.PoC.Controllers
         [HttpPost("/result")]
         public async Task<IActionResult> Result([FromQuery(Name = "command_id")] Guid? commandId)
         {
+            var ingressRejection = ValidateIngressRequest();
+            if (ingressRejection != null)
+                return ingressRejection;
+
             using var reader = new StreamReader(Request.Body);
             var body = await reader.ReadToEndAsync();
 
@@ -287,6 +299,21 @@ namespace Integracao.ControlID.PoC.Controllers
 
                 return StatusCode(StatusCodes.Status500InternalServerError, new { error = "Nao foi possivel persistir o resultado push." });
             }
+        }
+
+        private IActionResult? ValidateIngressRequest()
+        {
+            var securityResult = _securityEvaluator.Evaluate(HttpContext);
+            if (securityResult.IsAllowed)
+                return null;
+
+            _logger.LogWarning(
+                "Blocked push ingress request for {Path}. Status {StatusCode}. Reason: {Reason}",
+                Request.Path,
+                securityResult.StatusCode,
+                securityResult.Message);
+
+            return StatusCode(securityResult.StatusCode, new { error = securityResult.Message });
         }
 
         /// <summary>

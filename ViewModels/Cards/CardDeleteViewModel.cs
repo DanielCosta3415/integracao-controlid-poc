@@ -1,4 +1,4 @@
-﻿namespace Integracao.ControlID.PoC.ViewModels.Cards
+namespace Integracao.ControlID.PoC.ViewModels.Cards
 {
     /// <summary>
     /// ViewModel para confirmação de exclusão de cartão.

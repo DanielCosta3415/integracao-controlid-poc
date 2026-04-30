@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Integracao.ControlID.PoC.Models.ControlIDApi;
 using Integracao.ControlID.PoC.Services.ControlIDApi;
 using Integracao.ControlID.PoC.ViewModels.RemoteActions;

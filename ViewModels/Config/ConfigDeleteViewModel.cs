@@ -1,4 +1,4 @@
-﻿namespace Integracao.ControlID.PoC.ViewModels.Config
+namespace Integracao.ControlID.PoC.ViewModels.Config
 {
     /// <summary>
     /// ViewModel para confirmação de exclusão de parâmetro de configuração.

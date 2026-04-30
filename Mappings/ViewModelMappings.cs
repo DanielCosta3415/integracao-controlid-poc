@@ -1,4 +1,4 @@
-﻿using Integracao.ControlID.PoC.Models.ControlIDApi;
+using Integracao.ControlID.PoC.Models.ControlIDApi;
 using Integracao.ControlID.PoC.Models.Database;
 using Integracao.ControlID.PoC.ViewModels.Users;
 using Integracao.ControlID.PoC.ViewModels.Groups;

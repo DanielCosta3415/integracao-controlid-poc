@@ -1,4 +1,4 @@
-﻿namespace Integracao.ControlID.PoC.ViewModels.AccessRules
+namespace Integracao.ControlID.PoC.ViewModels.AccessRules
 {
     /// <summary>
     /// ViewModel para confirmação de exclusão de regra de acesso.

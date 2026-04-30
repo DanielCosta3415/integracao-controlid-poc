@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace Integracao.ControlID.PoC.Models.Database
 {

@@ -1,4 +1,4 @@
-﻿namespace Integracao.ControlID.PoC.ViewModels.RemoteActions
+namespace Integracao.ControlID.PoC.ViewModels.RemoteActions
 {
     /// <summary>
     /// ViewModel simplificado para exibição/detalhe de ação remota.

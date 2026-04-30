@@ -1,4 +1,4 @@
-﻿namespace Integracao.ControlID.PoC.Logging
+namespace Integracao.ControlID.PoC.Logging
 {
     /// <summary>
     /// Define categorias e códigos customizados de eventos para logs com Serilog.

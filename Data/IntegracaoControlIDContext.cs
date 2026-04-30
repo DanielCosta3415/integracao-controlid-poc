@@ -1,4 +1,4 @@
-﻿using Integracao.ControlID.PoC.Models.Database;
+using Integracao.ControlID.PoC.Models.Database;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Reflection.Emit;

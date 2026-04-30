@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using Integracao.ControlID.PoC.Helpers;
 using Integracao.ControlID.PoC.ViewModels.Errors;
 using Microsoft.AspNetCore.Diagnostics;

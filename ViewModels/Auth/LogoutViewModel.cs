@@ -1,4 +1,4 @@
-﻿namespace Integracao.ControlID.PoC.ViewModels.Auth
+namespace Integracao.ControlID.PoC.ViewModels.Auth
 {
     /// <summary>
     /// ViewModel para confirmação de logout.

@@ -1,4 +1,4 @@
-﻿namespace Integracao.ControlID.PoC.ViewModels.AccessLogs
+namespace Integracao.ControlID.PoC.ViewModels.AccessLogs
 {
     /// <summary>
     /// ViewModel para confirmação de exclusão de log de acesso.

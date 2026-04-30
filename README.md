@@ -205,6 +205,8 @@ Checklist recomendado para debug operacional:
 - `docs/changelog-2026-04-14.md`: resumo técnico do que mudou e por que mudou
 - `docs/changelog-2026-04-15.md`: changelog das atualizações de documentação, comentários e observabilidade
 
+- `docs/database-and-runtime-state.md`: estado local, comandos seguros e requisitos de runtime
+
 ## Troubleshooting rápido
 
 ### A PoC não conecta ao equipamento

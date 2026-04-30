@@ -1,4 +1,4 @@
-﻿namespace Integracao.ControlID.PoC.ViewModels.Logo
+namespace Integracao.ControlID.PoC.ViewModels.Logo
 {
     /// <summary>
     /// ViewModel para confirmação de exclusão de logo.

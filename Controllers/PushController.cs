@@ -1,7 +1,8 @@
-﻿using System;
+using System;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Integracao.ControlID.PoC.Models.Database;
+using Integracao.ControlID.PoC.Services.Callbacks;
 using Integracao.ControlID.PoC.Services.Database;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -11,11 +12,16 @@ namespace Integracao.ControlID.PoC.Controllers
     public class PushController : Controller
     {
         private readonly ILogger<PushController> _logger;
+        private readonly CallbackSecurityEvaluator _securityEvaluator;
         private readonly PushCommandRepository _pushCommandRepository;
 
-        public PushController(ILogger<PushController> logger, PushCommandRepository pushCommandRepository)
+        public PushController(
+            ILogger<PushController> logger,
+            CallbackSecurityEvaluator securityEvaluator,
+            PushCommandRepository pushCommandRepository)
         {
             _logger = logger;
+            _securityEvaluator = securityEvaluator;
             _pushCommandRepository = pushCommandRepository;
         }
 
@@ -41,6 +47,10 @@ namespace Integracao.ControlID.PoC.Controllers
             string? body = null;
             try
             {
+                var ingressRejection = ValidateIngressRequest();
+                if (ingressRejection != null)
+                    return ingressRejection;
+
                 using var reader = new System.IO.StreamReader(Request.Body);
                 body = await reader.ReadToEndAsync();
 
@@ -75,6 +85,21 @@ namespace Integracao.ControlID.PoC.Controllers
             TempData["StatusMessage"] = "Eventos Push limpos com sucesso.";
             TempData["StatusType"] = "success";
             return RedirectToAction(nameof(PushCenterController.Index), "PushCenter");
+        }
+
+        private IActionResult? ValidateIngressRequest()
+        {
+            var securityResult = _securityEvaluator.Evaluate(HttpContext);
+            if (securityResult.IsAllowed)
+                return null;
+
+            _logger.LogWarning(
+                "Blocked legacy push ingress request for {Path}. Status {StatusCode}. Reason: {Reason}",
+                Request.Path,
+                securityResult.StatusCode,
+                securityResult.Message);
+
+            return StatusCode(securityResult.StatusCode, new { error = securityResult.Message });
         }
 
         /// <summary>

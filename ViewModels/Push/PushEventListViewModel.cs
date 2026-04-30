@@ -1,4 +1,4 @@
-﻿using Integracao.ControlID.PoC.ViewModels.Monitor;
+using Integracao.ControlID.PoC.ViewModels.Monitor;
 using System.Collections.Generic;
 
 namespace Integracao.ControlID.PoC.ViewModels.Push

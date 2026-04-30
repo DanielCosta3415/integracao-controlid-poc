@@ -1,4 +1,4 @@
-﻿using Integracao.ControlID.PoC.Models.ControlIDApi;
+using Integracao.ControlID.PoC.Models.ControlIDApi;
 using Integracao.ControlID.PoC.Models.Database;
 
 namespace Integracao.ControlID.PoC.Monitor

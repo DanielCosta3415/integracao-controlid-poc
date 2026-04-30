@@ -1,4 +1,4 @@
-﻿namespace Integracao.ControlID.PoC.ViewModels.Devices
+namespace Integracao.ControlID.PoC.ViewModels.Devices
 {
     /// <summary>
     /// ViewModel para confirmação de exclusão de dispositivo.

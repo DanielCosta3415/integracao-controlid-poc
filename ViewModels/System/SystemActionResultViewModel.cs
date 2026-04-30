@@ -1,4 +1,4 @@
-﻿namespace Integracao.ControlID.PoC.ViewModels.System
+namespace Integracao.ControlID.PoC.ViewModels.System
 {
     /// <summary>
     /// ViewModel para exibir resultado de ações administrativas.

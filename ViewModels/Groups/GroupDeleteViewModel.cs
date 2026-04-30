@@ -1,4 +1,4 @@
-﻿namespace Integracao.ControlID.PoC.ViewModels.Groups
+namespace Integracao.ControlID.PoC.ViewModels.Groups
 {
     /// <summary>
     /// ViewModel para confirmação de exclusão de grupo.
