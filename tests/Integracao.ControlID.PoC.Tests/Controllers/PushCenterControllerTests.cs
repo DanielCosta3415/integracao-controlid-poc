@@ -106,6 +106,39 @@ public class PushCenterControllerTests
     }
 
     [Fact]
+    public async Task Result_UsesIdempotencyKeyToUpdateExistingStandaloneResult()
+    {
+        using var database = new SqliteTestDatabase();
+        var controller = CreateController(database);
+        controller.ControllerContext.HttpContext.Request.Headers["Idempotency-Key"] = "result-key-1";
+        controller.ControllerContext.HttpContext.Request.Body = new MemoryStream(Encoding.UTF8.GetBytes("{\"ok\":true}"));
+
+        Assert.IsType<OkResult>(await controller.Result(null));
+
+        controller.ControllerContext.HttpContext.Request.Body = new MemoryStream(Encoding.UTF8.GetBytes("{\"ok\":false}"));
+        Assert.IsType<OkResult>(await controller.Result(null));
+
+        var command = Assert.Single(await CreateRepository(database).GetAllPushCommandsAsync());
+        Assert.Equal("result", command.CommandType);
+        Assert.Equal("{\"ok\":false}", command.Payload);
+        Assert.NotNull(command.UpdatedAt);
+    }
+
+    [Fact]
+    public async Task Result_RejectsOversizedBodyWhenContentLengthIsMissing()
+    {
+        using var database = new SqliteTestDatabase();
+        var controller = CreateController(database, options => options.MaxBodyBytes = 8);
+        controller.ControllerContext.HttpContext.Request.Body = new MemoryStream(Encoding.UTF8.GetBytes("0123456789"));
+
+        var result = await controller.Result(null);
+
+        var status = Assert.IsType<ObjectResult>(result);
+        Assert.Equal(StatusCodes.Status413PayloadTooLarge, status.StatusCode);
+        Assert.Empty(await CreateRepository(database).GetAllPushCommandsAsync());
+    }
+
+    [Fact]
     public async Task Clear_KeepsCommandsWhenConfirmationIsInvalid()
     {
         using var database = new SqliteTestDatabase();
@@ -149,14 +182,21 @@ public class PushCenterControllerTests
         Assert.Empty(await repository.GetAllPushCommandsAsync());
     }
 
-    private static PushCenterController CreateController(SqliteTestDatabase database)
+    private static PushCenterController CreateController(
+        SqliteTestDatabase database,
+        Action<CallbackSecurityOptions>? configure = null)
     {
+        var options = new CallbackSecurityOptions();
+        configure?.Invoke(options);
+
         var httpContext = new DefaultHttpContext();
         httpContext.Connection.RemoteIpAddress = IPAddress.Loopback;
 
         return new PushCenterController(
             CreateWorkflowService(database),
-            new CallbackSecurityEvaluator(Microsoft.Extensions.Options.Options.Create(new CallbackSecurityOptions())),
+            new CallbackSecurityEvaluator(Microsoft.Extensions.Options.Options.Create(options)),
+            new CallbackRequestBodyReader(Microsoft.Extensions.Options.Options.Create(options)),
+            new PushIdempotencyKeyResolver(),
             NullLogger<PushCenterController>.Instance)
         {
             ControllerContext = new ControllerContext

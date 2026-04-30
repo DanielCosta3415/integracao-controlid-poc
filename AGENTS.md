@@ -15,6 +15,7 @@ Trate o projeto como uma PoC operacional com pontos sensiveis de seguranca, dado
 - Framework: ASP.NET Core MVC/Razor.
 - Banco: SQLite via Entity Framework Core.
 - Logs: Serilog em console e arquivo.
+- OpenAPI/Swagger: Swashbuckle habilitado em Development ou via `OpenApi:Enabled=true`.
 - Testes: xUnit.
 - Smoke/E2E local: PowerShell + stub em `tools/ControlIdDeviceStub`.
 - CI: GitHub Actions em `.github/workflows/ci.yml`.
@@ -77,6 +78,7 @@ dotnet build .\tools\ControlIdDeviceStub\ControlIdDeviceStub.csproj --no-restore
 dotnet format .\Integracao.ControlID.PoC.sln --verify-no-changes --no-restore -v:minimal
 dotnet test .\Integracao.ControlID.PoC.sln --no-build -v:minimal
 dotnet list .\Integracao.ControlID.PoC.sln package --vulnerable --include-transitive
+powershell -ExecutionPolicy Bypass -File .\tools\scan-secrets.ps1
 git diff --check
 ```
 
@@ -86,12 +88,12 @@ Notas:
 - Typecheck separado nao existe; o typecheck e o build C#.
 - Para corrigir formatacao, use `dotnet format .\Integracao.ControlID.PoC.sln -v:minimal` e registre o efeito mecanico.
 - O smoke test escreve em `docs/reports/`, `artifacts/`, `Logs/` e no SQLite local.
+- O contrato contra equipamento real e opt-in e exige variaveis `CONTROLID_DEVICE_URL`, `CONTROLID_USERNAME` e `CONTROLID_PASSWORD`: `powershell -ExecutionPolicy Bypass -File .\tools\contract-controlid-device.ps1`.
 
 ### Comandos indisponiveis ou nao padronizados
 
 - `npm`, `pnpm`, `yarn`: nao ha frontend package manager configurado.
 - Docker/Compose: nao ha Dockerfile ou compose.
-- Secret scanner dedicado: nao ha ferramenta configurada no repo.
 - Migrations CLI destrutivas: nao ha fluxo documentado; nao execute sem aprovacao humana.
 - Deploy: nao ha provedor/manifesto de hospedagem versionado.
 

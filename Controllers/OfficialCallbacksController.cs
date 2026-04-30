@@ -1,10 +1,12 @@
 using Integracao.ControlID.PoC.Services.Callbacks;
 using Integracao.ControlID.PoC.Services.Database;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace Integracao.ControlID.PoC.Controllers
 {
     [ApiController]
+    [EnableRateLimiting("CallbackIngress")]
     public class OfficialCallbacksController : ControllerBase
     {
         private readonly CallbackIngressService _callbackIngressService;

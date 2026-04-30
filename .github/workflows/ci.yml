@@ -40,6 +40,10 @@ jobs:
       - name: Format check
         run: dotnet format .\Integracao.ControlID.PoC.sln --verify-no-changes --no-restore -v:minimal
 
+      - name: Secret scan
+        shell: pwsh
+        run: .\tools\scan-secrets.ps1
+
       - name: Vulnerability audit
         shell: pwsh
         run: |

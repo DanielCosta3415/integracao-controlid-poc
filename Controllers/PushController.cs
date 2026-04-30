@@ -4,6 +4,7 @@ using Integracao.ControlID.PoC.Helpers;
 using Integracao.ControlID.PoC.Services.Callbacks;
 using Integracao.ControlID.PoC.Services.Push;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Logging;
 
 namespace Integracao.ControlID.PoC.Controllers
@@ -13,15 +14,21 @@ namespace Integracao.ControlID.PoC.Controllers
         private readonly ILogger<PushController> _logger;
         private readonly CallbackSecurityEvaluator _securityEvaluator;
         private readonly PushCommandWorkflowService _pushWorkflowService;
+        private readonly CallbackRequestBodyReader _bodyReader;
+        private readonly PushIdempotencyKeyResolver _idempotencyKeyResolver;
 
         public PushController(
             ILogger<PushController> logger,
             CallbackSecurityEvaluator securityEvaluator,
-            PushCommandWorkflowService pushWorkflowService)
+            PushCommandWorkflowService pushWorkflowService,
+            CallbackRequestBodyReader bodyReader,
+            PushIdempotencyKeyResolver idempotencyKeyResolver)
         {
             _logger = logger;
             _securityEvaluator = securityEvaluator;
             _pushWorkflowService = pushWorkflowService;
+            _bodyReader = bodyReader;
+            _idempotencyKeyResolver = idempotencyKeyResolver;
         }
 
         // GET: /Push
@@ -41,6 +48,7 @@ namespace Integracao.ControlID.PoC.Controllers
         // POST: /Push/Receive
         [HttpPost]
         [Route("Push/Receive")]
+        [EnableRateLimiting("CallbackIngress")]
         public async Task<IActionResult> Receive()
         {
             string? body = null;
@@ -50,14 +58,14 @@ namespace Integracao.ControlID.PoC.Controllers
                 if (ingressRejection != null)
                     return ingressRejection;
 
-                using var reader = new System.IO.StreamReader(Request.Body);
-                body = await reader.ReadToEndAsync();
+                var bodyResult = await _bodyReader.ReadAsync(Request);
+                if (!bodyResult.IsSuccessful)
+                    return StatusCode(bodyResult.StatusCode, bodyResult.Message);
 
-                // Mantem um limite razoavel para proteger a PoC de cargas acidentais excessivas.
-                if (body.Length > 1024 * 1024)
-                    return BadRequest("Payload muito grande.");
-
-                var command = await _pushWorkflowService.StoreLegacyEventAsync(body);
+                body = bodyResult.Body;
+                var command = await _pushWorkflowService.StoreLegacyEventAsync(
+                    body,
+                    _idempotencyKeyResolver.Resolve(Request));
 
                 _logger.LogInformation("Evento Push legado recebido em {Time}: {Summary}",
                     command.ReceivedAt, Truncate(body, 500));

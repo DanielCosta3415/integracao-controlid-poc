@@ -33,6 +33,25 @@ public class PushControllerTests
     }
 
     [Fact]
+    public async Task Receive_UsesIdempotencyKeyToUpdateExistingLegacyEvent()
+    {
+        using var database = new SqliteTestDatabase();
+        var controller = CreateController(database);
+        controller.ControllerContext.HttpContext.Request.Headers["Idempotency-Key"] = "legacy-event-key";
+        controller.ControllerContext.HttpContext.Request.Body = new MemoryStream(Encoding.UTF8.GetBytes("{\"event\":\"first\"}"));
+
+        Assert.IsType<OkObjectResult>(await controller.Receive());
+
+        controller.ControllerContext.HttpContext.Request.Body = new MemoryStream(Encoding.UTF8.GetBytes("{\"event\":\"second\"}"));
+        Assert.IsType<OkObjectResult>(await controller.Receive());
+
+        var command = Assert.Single(await CreateRepository(database).GetAllPushCommandsAsync());
+        Assert.Equal("second", command.CommandType);
+        Assert.Equal("{\"event\":\"second\"}", command.RawJson);
+        Assert.NotNull(command.UpdatedAt);
+    }
+
+    [Fact]
     public async Task Receive_RejectsRequestWhenSharedKeyIsMissing()
     {
         using var database = new SqliteTestDatabase();
@@ -50,6 +69,20 @@ public class PushControllerTests
         Assert.Empty(await CreateRepository(database).GetAllPushCommandsAsync());
     }
 
+    [Fact]
+    public async Task Receive_RejectsOversizedBodyWhenContentLengthIsMissing()
+    {
+        using var database = new SqliteTestDatabase();
+        var controller = CreateController(database, options => options.MaxBodyBytes = 8);
+        controller.ControllerContext.HttpContext.Request.Body = new MemoryStream(Encoding.UTF8.GetBytes("0123456789"));
+
+        var result = await controller.Receive();
+
+        var status = Assert.IsType<ObjectResult>(result);
+        Assert.Equal(StatusCodes.Status413PayloadTooLarge, status.StatusCode);
+        Assert.Empty(await CreateRepository(database).GetAllPushCommandsAsync());
+    }
+
     private static PushController CreateController(
         SqliteTestDatabase database,
         Action<CallbackSecurityOptions>? configure = null)
@@ -63,7 +96,9 @@ public class PushControllerTests
         return new PushController(
             NullLogger<PushController>.Instance,
             new CallbackSecurityEvaluator(Microsoft.Extensions.Options.Options.Create(options)),
-            CreateWorkflowService(database))
+            CreateWorkflowService(database),
+            new CallbackRequestBodyReader(Microsoft.Extensions.Options.Options.Create(options)),
+            new PushIdempotencyKeyResolver())
         {
             ControllerContext = new ControllerContext
             {

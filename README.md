@@ -73,6 +73,7 @@ dotnet run --project .\Integracao.ControlID.PoC.csproj
 
 - URL padrão local: `https://localhost:5001` ou a porta configurada pelo perfil de execução;
 - o shell principal já expõe atalhos para `Workspace`, `OfficialApi`, `OperationModes`, `OfficialObjects` e `PushCenter`.
+- em `Development`, a especificação OpenAPI fica disponível em `/swagger/v1/swagger.json` e a UI em `/swagger`.
 
 ## Variáveis de ambiente úteis
 
@@ -87,6 +88,10 @@ A configuração segue o padrão nativo do ASP.NET Core (`Secao__Chave`). Use as
 | `ControlIDApi__DefaultUsername` | `<usuário>` | Usuário sugerido para autenticação local. |
 | `ControlIDApi__DefaultPassword` | `<senha>` | Senha sugerida para autenticação local. Não versione este valor. |
 | `ControlIDApi__ConnectionTimeoutSeconds` | `30` | Timeout das chamadas oficiais. A aplicação normaliza o valor entre 5 e 300 segundos. |
+| `ControlIDApi__CircuitBreaker__Enabled` | `true` | Habilita proteção contra falhas transitórias repetidas no equipamento. |
+| `ControlIDApi__CircuitBreaker__FailureThreshold` | `5` | Quantidade de falhas transitórias consecutivas antes de abrir o circuito por endpoint/equipamento. |
+| `ControlIDApi__CircuitBreaker__BreakDurationSeconds` | `30` | Tempo de bloqueio temporário após abertura do circuito. |
+| `OpenApi__Enabled` | `false` | Habilita Swagger/OpenAPI fora de Development quando explicitamente configurado. |
 | `Session__IdleTimeout` | `30` | Tempo de expiração da sessão ASP.NET Core em minutos. |
 | `Session__CookieName` | `.IntegracaoControlID.Session` | Nome do cookie de sessão. |
 | `CallbackSecurity__MaxBodyBytes` | `1048576` | Limite máximo de payload aceito em callbacks/monitor. |
@@ -128,6 +133,12 @@ Para acelerar uma rodada local depois de um `build` já concluído:
 dotnet test .\Integracao.ControlID.PoC.sln --no-build
 ```
 
+### Auditoria de secrets
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\tools\scan-secrets.ps1
+```
+
 ### Smoke test funcional local
 
 O smoke test sobe o stub local, percorre os happy paths e os edge cases críticos e gera um relatório em `docs/reports/`.
@@ -139,6 +150,17 @@ powershell -ExecutionPolicy Bypass -File .\tools\smoke-localhost.ps1
 Relatório atual de referência:
 
 - `docs/reports/localhost-smoke-test-2026-04-14.md`
+
+### Contrato com equipamento real
+
+Este check é opt-in, não roda na CI e exige credenciais fora do Git:
+
+```powershell
+$env:CONTROLID_DEVICE_URL = "http://<equipamento-ou-host>:8080"
+$env:CONTROLID_USERNAME = "<usuario>"
+$env:CONTROLID_PASSWORD = "<senha>"
+powershell -ExecutionPolicy Bypass -File .\tools\contract-controlid-device.ps1
+```
 
 ## Observabilidade e monitoramento
 
@@ -206,6 +228,7 @@ Checklist recomendado para debug operacional:
 - `docs/changelog-2026-04-15.md`: changelog das atualizações de documentação, comentários e observabilidade
 
 - `docs/database-and-runtime-state.md`: estado local, comandos seguros e requisitos de runtime
+- `docs/integration-contracts.md`: inventario de integracoes, contratos, payloads e riscos
 - `docs/privacy-and-data-retention.md`: regras de privacidade, dados sensíveis e retenção local
 - `docs/product-acceptance-criteria.md`: critérios de aceite funcionais para os fluxos críticos
 

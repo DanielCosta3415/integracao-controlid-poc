@@ -13,15 +13,19 @@ using Integracao.ControlID.PoC.Services.ProductSpecific;
 using Integracao.ControlID.PoC.Services.Push;
 using Integracao.ControlID.PoC.Services.Security;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
+using Microsoft.OpenApi.Models;
 using Serilog;
 using System;
 using System.IO.Compression;
+using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -35,6 +39,16 @@ builder.Services.AddDbContext<IntegracaoControlIDContext>(options =>
 // Add services MVC
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "Integracao Control iD PoC",
+        Version = "v1",
+        Description = "Contratos HTTP locais da PoC para catalogo oficial, callbacks, monitoramento e push."
+    });
+});
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddResponseCompression(options =>
 {
@@ -49,6 +63,22 @@ builder.Services.AddResponseCompression(options =>
 });
 builder.Services.Configure<BrotliCompressionProviderOptions>(options => options.Level = CompressionLevel.Fastest);
 builder.Services.Configure<GzipCompressionProviderOptions>(options => options.Level = CompressionLevel.Fastest);
+var callbackRateLimitPermitLimit = Math.Max(1, builder.Configuration.GetValue<int?>("CallbackSecurity:RateLimit:PermitLimit") ?? 120);
+var callbackRateLimitWindowSeconds = Math.Clamp(builder.Configuration.GetValue<int?>("CallbackSecurity:RateLimit:WindowSeconds") ?? 60, 1, 3600);
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddPolicy("CallbackIngress", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = callbackRateLimitPermitLimit,
+                Window = TimeSpan.FromSeconds(callbackRateLimitWindowSeconds),
+                QueueLimit = 0,
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst
+            }));
+});
 
 // Sessão ASP.NET Core (30 min timeout, seguro)
 builder.Services.AddSession(options =>
@@ -66,9 +96,11 @@ builder.Services.AddSession(options =>
 // Registro da camada oficial Control iD (injeção de dependência)
 builder.Services.AddHttpClient(); // HttpClientFactory
 builder.Services.Configure<CallbackSecurityOptions>(builder.Configuration.GetSection("CallbackSecurity"));
+builder.Services.Configure<ControlIdCircuitBreakerOptions>(builder.Configuration.GetSection("ControlIDApi:CircuitBreaker"));
 builder.Services.AddScoped<CallbackSecurityEvaluator>();
 builder.Services.AddScoped<CallbackRequestBodyReader>();
 builder.Services.AddScoped<CallbackIngressService>();
+builder.Services.AddSingleton<OfficialApiCircuitBreaker>();
 builder.Services.AddScoped<OfficialApiCatalogService>();
 builder.Services.AddScoped<OfficialApiDocumentationSeedCatalog>();
 builder.Services.AddScoped<OfficialApiQueryParameterStrategy>();
@@ -91,6 +123,7 @@ builder.Services.AddScoped<OperationModesPayloadFactory>();
 builder.Services.AddScoped<OperationModesProfileResolver>();
 builder.Services.AddScoped<DocumentedFeaturesPayloadFactory>();
 builder.Services.AddScoped<PushCommandWorkflowService>();
+builder.Services.AddScoped<PushIdempotencyKeyResolver>();
 
 // Repositórios de banco local
 builder.Services.AddScoped<UserRepository>();
@@ -131,6 +164,17 @@ app.UseMiddleware<SecurityHeadersMiddleware>();
 app.UseResponseCompression();
 app.UseStaticFiles();
 app.UseRouting();
+app.UseRateLimiter();
+
+if (app.Environment.IsDevelopment() || app.Configuration.GetValue<bool>("OpenApi:Enabled"))
+{
+    app.UseSwagger();
+    app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "Integracao Control iD PoC v1");
+        options.RoutePrefix = "swagger";
+    });
+}
 
 // Sessão ASP.NET Core (deve vir antes de endpoints)
 app.UseSession();

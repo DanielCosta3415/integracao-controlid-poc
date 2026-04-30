@@ -3,6 +3,7 @@ using System.Text;
 using Integracao.ControlID.PoC.Helpers;
 using Integracao.ControlID.PoC.Models.ControlIDApi;
 using Integracao.ControlID.PoC.Services.Security;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
@@ -13,17 +14,20 @@ namespace Integracao.ControlID.PoC.Services.ControlIDApi
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly ILogger<OfficialApiInvokerService> _logger;
         private readonly ControlIdInputSanitizer _inputSanitizer;
+        private readonly OfficialApiCircuitBreaker _circuitBreaker;
         private readonly TimeSpan _requestTimeout;
 
         public OfficialApiInvokerService(
             IHttpClientFactory httpClientFactory,
             ILogger<OfficialApiInvokerService> logger,
             ControlIdInputSanitizer inputSanitizer,
+            OfficialApiCircuitBreaker circuitBreaker,
             IConfiguration configuration)
         {
             _httpClientFactory = httpClientFactory;
             _logger = logger;
             _inputSanitizer = inputSanitizer;
+            _circuitBreaker = circuitBreaker;
 
             var configuredTimeout = configuration.GetValue<int?>("ControlIDApi:ConnectionTimeoutSeconds") ?? 60;
             _requestTimeout = TimeSpan.FromSeconds(Math.Clamp(configuredTimeout, 5, 300));
@@ -83,6 +87,19 @@ namespace Integracao.ControlID.PoC.Services.ControlIDApi
                 requestUrl = BuildUrl(normalizedDeviceAddress, endpoint.Path, normalizedSessionString, normalizedQuery);
                 deviceTarget = BuildMonitoringTarget(normalizedDeviceAddress);
 
+                if (!_circuitBreaker.TryAcquire(endpoint.Id, deviceTarget, out var retryAfter))
+                {
+                    _logger.LogWarning(
+                        "Official endpoint {EndpointId} blocked by circuit breaker for {DeviceTarget}. RetryAfterSeconds {RetryAfterSeconds}.",
+                        endpoint.Id,
+                        deviceTarget,
+                        Math.Ceiling(retryAfter.TotalSeconds));
+
+                    result.StatusCode = StatusCodes.Status503ServiceUnavailable;
+                    result.ErrorMessage = "Circuito de protecao temporariamente aberto para este equipamento. Tente novamente em instantes.";
+                    return result;
+                }
+
                 _logger.LogInformation(
                     "Invoking official endpoint {EndpointId} {Method} {Path} against {DeviceTarget}.",
                     endpoint.Id,
@@ -115,6 +132,15 @@ namespace Integracao.ControlID.PoC.Services.ControlIDApi
                     result.ResponseBody = Encoding.UTF8.GetString(responseBytes);
                 }
 
+                if (OfficialApiCircuitBreaker.IsTransientStatusCode(result.StatusCode))
+                {
+                    _circuitBreaker.RecordFailure(endpoint.Id, deviceTarget);
+                }
+                else
+                {
+                    _circuitBreaker.RecordSuccess(endpoint.Id, deviceTarget);
+                }
+
                 stopwatch.Stop();
                 _logger.Log(
                     result.Success ? LogLevel.Information : LogLevel.Warning,
@@ -145,6 +171,7 @@ namespace Integracao.ControlID.PoC.Services.ControlIDApi
             catch (TaskCanceledException ex)
             {
                 stopwatch.Stop();
+                _circuitBreaker.RecordFailure(endpoint.Id, deviceTarget);
                 _logger.LogError(
                     ex,
                     "Timeout while invoking official endpoint {EndpointId} after {ElapsedMs} ms. Target {DeviceTarget}.",
@@ -158,6 +185,7 @@ namespace Integracao.ControlID.PoC.Services.ControlIDApi
             catch (Exception ex)
             {
                 stopwatch.Stop();
+                _circuitBreaker.RecordFailure(endpoint.Id, deviceTarget);
                 _logger.LogError(
                     ex,
                     "Unexpected failure while invoking official endpoint {EndpointId} after {ElapsedMs} ms. Target {DeviceTarget}. Url {RequestUrl}.",

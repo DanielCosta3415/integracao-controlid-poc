@@ -160,12 +160,13 @@ O corpo da requisição é lido como texto bruto.
 O fluxo de `PushCenterController.Result` é:
 
 1. Ler `command_id` da query string, quando enviado.
-2. Ler o corpo bruto da requisição.
-3. Delegar persistência para `PushCommandWorkflowService.StoreResultAsync`.
-4. Se existir comando, atualizar `RawJson`, `Payload`, `Status` e `UpdatedAt`.
-5. Se não existir, criar um novo registro do tipo `result`.
-6. Se a query `status` não vier preenchida, usar `completed`.
-7. Retornar `200 OK`.
+2. Quando `command_id` não vem, resolver chave opcional `Idempotency-Key` ou `idempotency_key`.
+3. Ler o corpo bruto da requisição.
+4. Delegar persistência para `PushCommandWorkflowService.StoreResultAsync`.
+5. Se existir comando, atualizar `RawJson`, `Payload`, `Status` e `UpdatedAt`.
+6. Se não existir, criar um novo registro do tipo `result`.
+7. Se a query `status` não vier preenchida, usar `completed`.
+8. Retornar `200 OK`.
 
 Exemplo:
 
@@ -233,6 +234,8 @@ A rota `POST /Push/Receive` aceita um corpo bruto e tenta interpretar alguns cam
 | `user_id` ou `userid` | Define `UserId`. |
 | `payload` ou `data` | Define `Payload`. |
 
+Quando a origem envia `Idempotency-Key` ou `idempotency_key`, a PoC deriva um identificador determinístico e atualiza o mesmo evento em retries, evitando duplicatas acidentais no legado.
+
 Se o JSON for inválido, a PoC registra warning e ainda salva o corpo bruto como evento legado com `CommandType = "legacy_push_event"` e `Status = "received"`.
 
 ## Relação com Monitor
@@ -265,8 +268,12 @@ A mesma configuração de ingress usada por callbacks também vale para Push:
 | `CallbackSecurity:AllowLoopback` | Mantém validação local/stub possível mesmo com lista de IPs restrita. |
 | `CallbackSecurity:RequireSharedKey` | Exige o header configurado em `SharedKeyHeaderName`. |
 | `CallbackSecurity:SharedKeyHeaderName` | Define o nome do header, por padrão `X-ControlID-Callback-Key`. |
+| `CallbackSecurity:RateLimit:PermitLimit` | Limita chamadas de callbacks/push por IP remoto. |
+| `CallbackSecurity:RateLimit:WindowSeconds` | Define a janela do rate limit dos ingressos. |
 
 O endpoint legado `POST /Push/Receive` também limita o corpo lido a aproximadamente 1 MB. A limpeza manual da fila persistida exige confirmação textual na UI para evitar perda acidental de histórico local.
+
+`POST /result` e `POST /Push/Receive` usam o mesmo leitor limitado dos callbacks (`CallbackRequestBodyReader`), portanto o limite configurado em `CallbackSecurity:MaxBodyBytes` vale mesmo quando a requisição chega sem `Content-Length`.
 
 Para uso fora de PoC, continue recomendando:
 
@@ -287,7 +294,7 @@ A suíte cobre:
 | Enfileirar comando válido | Cria item `pending`. |
 | Enfileirar payload inválido | Rejeita antes de persistir. |
 | Poll com comando pendente | Retorna payload e marca `delivered`. |
-| Resultado sem `command_id` | Cria registro `result` com status `completed`. |
+| Resultado sem `command_id` | Cria registro `result` com status `completed`; se houver chave idempotente, retries atualizam o mesmo registro. |
 | Evento legado inválido | Persiste corpo bruto como `legacy_push_event` com status `received`. |
 | Evento legado JSON estruturado | Extrai tipo, status, dispositivo, usuário e payload no serviço de workflow. |
 | Segurança de ingress | Rejeita requisição sem shared key quando obrigatória. |

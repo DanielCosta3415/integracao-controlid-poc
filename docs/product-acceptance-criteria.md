@@ -83,6 +83,7 @@ Critérios:
 - AC-F07-06: Dado `POST /result` sem `command_id`, quando o resultado chega, então a PoC deve criar registro do tipo `result` com status `completed` se nenhum status for informado.
 - AC-F07-07: Dado evento legado em `POST /Push/Receive` com JSON inválido, quando o corpo é recebido, então a PoC deve persistir o corpo bruto como `legacy_push_event` com status `received`.
 - AC-F07-08: Dado limpeza da fila Push, quando a confirmação textual não corresponde a `LIMPAR PUSH`, então a PoC deve bloquear a exclusão.
+- AC-F07-09: Dado `POST /result` ou `POST /Push/Receive` com `Idempotency-Key` ou `idempotency_key`, quando a mesma chave é reenviada, então a PoC deve atualizar o mesmo registro em vez de criar duplicata.
 
 ### F08 - Privacidade, segurança de ingress e runtime
 
@@ -92,6 +93,8 @@ Critérios:
 - AC-F08-02: Dado ambiente diferente de `Development`, quando `CallbackSecurity:RequireSharedKey` não está habilitado ou `SharedKey` está ausente, então o startup deve falhar ou bloquear a execução conforme a validação de configuração.
 - AC-F08-03: Dado payload com dado pessoal ou sensível, quando for persistido em Monitor ou Push, então a PoC deve tratá-lo como dado local sensível e não deve versionar exemplos reais.
 - AC-F08-04: Dado log ou mensagem ao usuário, quando ocorre falha técnica, então a PoC deve preferir mensagem segura/sanitizada e registrar detalhe técnico apenas no log.
+- AC-F08-05: Dado rajada de callbacks ou push acima do limite configurado, quando a origem excede `CallbackSecurity:RateLimit`, então a PoC deve responder `429` sem persistir novo payload.
+- AC-F08-06: Dado um segredo acidental com padrão reconhecido, quando a CI executa, então o secret scan deve falhar antes da auditoria de release.
 
 ### F09 - Banco local e evolução de schema
 
@@ -207,13 +210,13 @@ Critérios:
 - Prioridade: Crítica.
 - Fluxo associado: F07.
 - Regra de negócio associada: fila usa estados `pending`, `delivered`, `completed` e `received`; endpoints Push usam a mesma segurança de ingress dos callbacks.
-- Critérios de aceite: AC-F07-01 a AC-F07-08.
+- Critérios de aceite: AC-F07-01 a AC-F07-09.
 - Dados válidos: JSON de payload, `device_id`, `command_id` GUID, status opcional.
 - Dados inválidos: JSON inválido na fila UI, shared key inválida quando exigida, payload acima do limite.
 - Estados esperados: `pending`, `delivered`, `completed`, `received`, status livre recebido em `/result`.
 - Erros esperados: rejeição por segurança, erro de persistência, fila vazia retorna `{}`.
 - Permissões esperadas: usuário UI para enfileirar/limpar; origem HTTP autorizada para `/push`, `/result` e `/Push/Receive`.
-- Testes existentes: `PushCenterControllerTests.cs`, `PushControllerTests.cs`, `PushCommandRepositoryTests.cs`.
+- Testes existentes: `PushCenterControllerTests.cs`, `PushControllerTests.cs`, `PushCommandRepositoryTests.cs`, `PushIdempotencyKeyResolverTests.cs`.
 - Testes ausentes: concorrência em múltiplos polls simultâneos, E2E com equipamento real e smoke cobrindo autenticação de shared key em ambiente exposto.
 
 ### REQ-008 - Privacidade, segurança e runtime fora de desenvolvimento
@@ -229,8 +232,8 @@ Critérios:
 - Estados esperados: startup permitido, startup bloqueado, callback aceito/rejeitado.
 - Erros esperados: falha de configuração no startup, rejeição de ingress.
 - Permissões esperadas: gestão de configuração por operador técnico; segredo nunca versionado.
-- Testes existentes: `CallbackSecurityEvaluatorTests.cs`; auditoria NuGet e docs.
-- Testes ausentes: teste automatizado de startup para ambientes não Development e varredura automatizada de secrets no CI.
+- Testes existentes: `CallbackSecurityEvaluatorTests.cs`; auditoria NuGet, secret scan na CI e docs.
+- Testes ausentes: teste automatizado de startup para ambientes não Development e teste de middleware para rate limit.
 
 ### REQ-009 - Banco local e schema
 
@@ -258,8 +261,8 @@ Critérios:
 | REQ-004 | F04 | `SystemController`, `OfficialEventsController`, `PushCenterController` | Guard, PushCenter e OfficialEvents tests | AC-F04-01..04 | Reboot/reset/rede por erro humano | Frase de confirmação e testes por ação |
 | REQ-005 | F05 | `OperationModesController`, `OperationModesPayloadFactory`, `OperationModesProfileResolver` | Payload/profile resolver tests | AC-F05-01..07 | Aplicar modo incorreto no equipamento | Testes de controller com stub e roteiro manual |
 | REQ-006 | F06 | `OfficialCallbacksController`, `CallbackIngressService`, `CallbackSecurityEvaluator`, `MonitorEventRepository` | Callback security/body/ingress tests | AC-F06-01..06 | Persistir payload não autorizado ou perder evento crítico | Shared key/IP/limite + teste E2E |
-| REQ-007 | F07 | `PushCenterController`, `PushController`, `PushCommandRepository` | Push controller/repository tests | AC-F07-01..08 | Entrega duplicada, payload inválido ou fila apagada | Teste de concorrência e smoke com equipamento/stub |
-| REQ-008 | F08 | `Program.cs`, `CallbackSecurityOptions`, docs de privacidade | Parcial em security evaluator | AC-F08-01..04 | Exposição pública sem shared key ou vazamento de dados | Startup tests, secret scan e revisão LGPD |
+| REQ-007 | F07 | `PushCenterController`, `PushController`, `PushCommandRepository` | Push controller/repository/idempotency tests | AC-F07-01..09 | Entrega duplicada, payload inválido ou fila apagada | Teste de concorrência e smoke com equipamento/stub |
+| REQ-008 | F08 | `Program.cs`, `CallbackSecurityOptions`, docs de privacidade | Security evaluator + secret scan | AC-F08-01..06 | Exposição pública sem shared key ou vazamento de dados | Startup tests, rate limit middleware test e revisão LGPD |
 | REQ-009 | F09 | `Data/Migrations/*`, `IntegracaoControlIDContext`, `Program.cs` | SQLite em memória e script validado | AC-F09-01..04 | Banco local incompatível ou schema não rastreado | Migration idempotente e teste de banco legado |
 
 ## Definition of Ready
@@ -304,7 +307,7 @@ Uma mudança só está concluída quando:
 | RBAC/permissões de UI não documentadas | Usuário com acesso à PoC pode acionar telas críticas | Alta | Definir papéis ou declarar escopo restrito de laboratório |
 | Retenção de dados não automatizada | Payload sensível pode ficar no SQLite indefinidamente | Alta | Implementar rotina de purge/backup quando houver requisito operacional |
 | Smoke/E2E dependente de equipamento real | Aceite final de integração não é totalmente automatizado | Crítica | Manter roteiro manual com modelo, firmware, licença, rede e URL pública |
-| Secret scan não automatizado no CI | Segredos podem ser versionados por erro humano | Alta | Adicionar etapa de secret scanning ao pipeline |
+| Secret scan automatizado com heurística local | Falsos negativos ainda são possíveis sem ferramenta externa dedicada | Média | Revisar achados manualmente e considerar ferramenta especializada antes de produção |
 
 ## Estratégia de validação
 
@@ -345,7 +348,7 @@ Manual guiada:
 ## Recomendações para próximas implementações/testes
 
 1. Criar testes de controller para `AuthController`, `SessionController`, `OfficialObjectsController`, `SystemController` e `OperationModesController`.
-2. Adicionar secret scanning ao CI antes de qualquer uso com credenciais reais.
+2. Validar a heurística do secret scan com amostras controladas antes de qualquer uso com credenciais reais.
 3. Definir política operacional para RBAC ou declarar formalmente que a PoC é de uso restrito em laboratório.
 4. Criar rotina opcional de retenção/purge para `MonitorEvents` e `PushCommands`.
 5. Expandir smoke local para shared key obrigatória, callbacks oficiais e ciclo Push completo com stub.

@@ -153,9 +153,29 @@ public sealed class PushCommandWorkflowService
         return command;
     }
 
-    public async Task<PushCommandLocal> StoreLegacyEventAsync(string body)
+    public async Task<PushCommandLocal> StoreLegacyEventAsync(string body, Guid? commandId = null)
     {
-        var command = BuildLegacyCommand(body);
+        var command = BuildLegacyCommand(body, commandId);
+
+        if (commandId.HasValue)
+        {
+            var existing = await _pushCommandRepository.GetPushCommandByIdAsync(commandId.Value);
+            if (existing != null)
+            {
+                existing.ReceivedAt = DateTime.UtcNow;
+                existing.RawJson = command.RawJson;
+                existing.Payload = command.Payload;
+                existing.CommandType = command.CommandType;
+                existing.Status = command.Status;
+                existing.DeviceId = command.DeviceId;
+                existing.UserId = command.UserId;
+                existing.UpdatedAt = DateTime.UtcNow;
+
+                await _pushCommandRepository.UpdatePushCommandAsync(existing);
+                return existing;
+            }
+        }
+
         await _pushCommandRepository.AddPushCommandAsync(command);
         return command;
     }
@@ -176,11 +196,11 @@ public sealed class PushCommandWorkflowService
         }
     }
 
-    private PushCommandLocal BuildLegacyCommand(string body)
+    private PushCommandLocal BuildLegacyCommand(string body, Guid? commandId)
     {
         var command = new PushCommandLocal
         {
-            CommandId = Guid.NewGuid(),
+            CommandId = commandId ?? Guid.NewGuid(),
             ReceivedAt = DateTime.UtcNow,
             CreatedAt = DateTime.UtcNow,
             RawJson = body,

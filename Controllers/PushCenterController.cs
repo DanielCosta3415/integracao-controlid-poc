@@ -5,6 +5,7 @@ using Integracao.ControlID.PoC.Services.Callbacks;
 using Integracao.ControlID.PoC.Services.Push;
 using Integracao.ControlID.PoC.ViewModels.Push;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Logging;
 
 namespace Integracao.ControlID.PoC.Controllers
@@ -17,15 +18,21 @@ namespace Integracao.ControlID.PoC.Controllers
     {
         private readonly PushCommandWorkflowService _pushWorkflowService;
         private readonly CallbackSecurityEvaluator _securityEvaluator;
+        private readonly CallbackRequestBodyReader _bodyReader;
+        private readonly PushIdempotencyKeyResolver _idempotencyKeyResolver;
         private readonly ILogger<PushCenterController> _logger;
 
         public PushCenterController(
             PushCommandWorkflowService pushWorkflowService,
             CallbackSecurityEvaluator securityEvaluator,
+            CallbackRequestBodyReader bodyReader,
+            PushIdempotencyKeyResolver idempotencyKeyResolver,
             ILogger<PushCenterController> logger)
         {
             _pushWorkflowService = pushWorkflowService;
             _securityEvaluator = securityEvaluator;
+            _bodyReader = bodyReader;
+            _idempotencyKeyResolver = idempotencyKeyResolver;
             _logger = logger;
         }
 
@@ -147,6 +154,7 @@ namespace Integracao.ControlID.PoC.Controllers
         /// <param name="legacyDeviceId">Identificador legado aceito por compatibilidade.</param>
         /// <returns>Payload JSON do comando pendente ou objeto vazio quando não houver trabalho disponível.</returns>
         [HttpGet("/push")]
+        [EnableRateLimiting("CallbackIngress")]
         public async Task<IActionResult> Poll([FromQuery(Name = "device_id")] string? deviceId, [FromQuery(Name = "deviceid")] string? legacyDeviceId)
         {
             var ingressRejection = ValidateIngressRequest();
@@ -181,18 +189,40 @@ namespace Integracao.ControlID.PoC.Controllers
         /// <param name="commandId">Identificador do comando entregue previamente, quando informado pelo equipamento.</param>
         /// <returns>OK quando o resultado foi persistido; erro 500 quando a persistência falha.</returns>
         [HttpPost("/result")]
+        [EnableRateLimiting("CallbackIngress")]
         public async Task<IActionResult> Result([FromQuery(Name = "command_id")] Guid? commandId)
         {
             var ingressRejection = ValidateIngressRequest();
             if (ingressRejection != null)
                 return ingressRejection;
 
-            using var reader = new StreamReader(Request.Body);
-            var body = await reader.ReadToEndAsync();
+            var bodyResult = await _bodyReader.ReadAsync(Request);
+            if (!bodyResult.IsSuccessful)
+            {
+                _logger.LogWarning(
+                    "Rejected push result body for {Path}. Status {StatusCode}. Reason: {Reason}",
+                    Request.Path,
+                    bodyResult.StatusCode,
+                    bodyResult.Message);
+
+                return StatusCode(bodyResult.StatusCode, new { error = bodyResult.Message });
+            }
+
+            var body = bodyResult.Body;
 
             try
             {
-                if (!commandId.HasValue)
+                var resolvedCommandId = commandId ?? _idempotencyKeyResolver.Resolve(Request);
+
+                if (!commandId.HasValue && resolvedCommandId.HasValue)
+                {
+                    _logger.LogInformation(
+                        "Push result received with idempotency key resolved to command {CommandId}. Device {DeviceId}.",
+                        resolvedCommandId.Value,
+                        Request.Query["device_id"].ToString());
+                }
+
+                if (!resolvedCommandId.HasValue)
                 {
                     _logger.LogWarning(
                         "Push result received without command_id. Device {DeviceId}. BodyBytes {BodyBytes}.",
@@ -201,7 +231,7 @@ namespace Integracao.ControlID.PoC.Controllers
                 }
 
                 var command = await _pushWorkflowService.StoreResultAsync(
-                    commandId,
+                    resolvedCommandId,
                     body,
                     Request.Query["device_id"].ToString(),
                     Request.Query["user_id"].ToString(),
