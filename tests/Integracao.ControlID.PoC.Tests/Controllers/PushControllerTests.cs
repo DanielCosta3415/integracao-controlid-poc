@@ -4,6 +4,7 @@ using Integracao.ControlID.PoC.Controllers;
 using Integracao.ControlID.PoC.Options;
 using Integracao.ControlID.PoC.Services.Callbacks;
 using Integracao.ControlID.PoC.Services.Database;
+using Integracao.ControlID.PoC.Services.Push;
 using Integracao.ControlID.PoC.Tests.TestSupport;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -62,7 +63,7 @@ public class PushControllerTests
         return new PushController(
             NullLogger<PushController>.Instance,
             new CallbackSecurityEvaluator(Microsoft.Extensions.Options.Options.Create(options)),
-            CreateRepository(database))
+            CreateWorkflowService(database))
         {
             ControllerContext = new ControllerContext
             {
@@ -75,5 +76,12 @@ public class PushControllerTests
     private static PushCommandRepository CreateRepository(SqliteTestDatabase database)
     {
         return new PushCommandRepository(database.Context, NullLogger<PushCommandRepository>.Instance);
+    }
+
+    private static PushCommandWorkflowService CreateWorkflowService(SqliteTestDatabase database)
+    {
+        return new PushCommandWorkflowService(
+            CreateRepository(database),
+            NullLogger<PushCommandWorkflowService>.Instance);
     }
 }

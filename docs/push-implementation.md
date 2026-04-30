@@ -26,8 +26,10 @@ A tela operacional principal é `PushCenter`.
 
 | Arquivo | Papel na funcionalidade |
 | --- | --- |
-| `Controllers/PushCenterController.cs` | Implementa a central atual de Push, incluindo fila, polling `GET /push`, retorno `POST /result`, detalhes e limpeza. |
+| `Controllers/PushCenterController.cs` | Adapta a central web e os endpoints oficiais servidos pela PoC para HTTP/MVC. |
 | `Controllers/PushController.cs` | Mantém rotas legadas, redirecionamentos e recebimento antigo em `POST /Push/Receive`. |
+| `Services/Push/PushCommandWorkflowService.cs` | Centraliza regras de fila, status, parsing legado, entrega e registro de resultado. |
+| `Services/Push/PushCommandStatuses.cs` | Define os status persistidos usados pelo fluxo Push. |
 | `Models/Database/PushCommandLocal.cs` | Entidade persistida na tabela `PushCommands`. |
 | `Models/ControlIDApi/PushCommand.cs` | Modelo de API para representar comando/evento Push. |
 | `Services/Database/PushCommandRepository.cs` | Repositório responsável por inserir, consultar, atualizar e remover comandos Push. |
@@ -86,7 +88,7 @@ O usuário preenche o formulário da central com:
 | `UserId` | Usuário relacionado, quando aplicável. |
 | `Payload` | JSON que será entregue ao equipamento. |
 
-`PushCenterController.Queue` valida o `PushQueueCommandViewModel` e cria um `PushCommandLocal` com:
+`PushCenterController.Queue` valida o `ModelState` e delega o caso de uso para `PushCommandWorkflowService.QueueAsync`, que valida o JSON e cria um `PushCommandLocal` com:
 
 ```text
 Status = pending
@@ -112,7 +114,7 @@ A PoC também aceita o parâmetro legado:
 GET /push?deviceid=<id-do-equipamento>
 ```
 
-O controller resolve o dispositivo usando `device_id` ou `deviceid` e chama:
+O controller resolve o dispositivo usando `device_id` ou `deviceid` e chama `PushCommandWorkflowService.DeliverNextAsync`, que consulta:
 
 ```csharp
 _pushCommandRepository.GetNextPendingCommandAsync(resolvedDeviceId)
@@ -158,11 +160,12 @@ O corpo da requisição é lido como texto bruto.
 O fluxo de `PushCenterController.Result` é:
 
 1. Ler `command_id` da query string, quando enviado.
-2. Buscar o comando existente no banco.
-3. Se existir, atualizar `RawJson`, `Payload`, `Status` e `UpdatedAt`.
-4. Se não existir, criar um novo registro do tipo `result`.
-5. Se a query `status` não vier preenchida, usar `completed`.
-6. Retornar `200 OK`.
+2. Ler o corpo bruto da requisição.
+3. Delegar persistência para `PushCommandWorkflowService.StoreResultAsync`.
+4. Se existir comando, atualizar `RawJson`, `Payload`, `Status` e `UpdatedAt`.
+5. Se não existir, criar um novo registro do tipo `result`.
+6. Se a query `status` não vier preenchida, usar `completed`.
+7. Retornar `200 OK`.
 
 Exemplo:
 
@@ -275,7 +278,7 @@ Para uso fora de PoC, continue recomendando:
 
 ## Cobertura de testes
 
-No estado atual, a funcionalidade Push é validada por smoke tests locais e por testes unitários dedicados para `PushCenterController`, `PushController` e `PushCommandRepository`.
+No estado atual, a funcionalidade Push é validada por smoke tests locais e por testes unitários dedicados para `PushCommandWorkflowService`, `PushCenterController`, `PushController` e `PushCommandRepository`.
 
 A suíte cobre:
 
@@ -286,6 +289,7 @@ A suíte cobre:
 | Poll com comando pendente | Retorna payload e marca `delivered`. |
 | Resultado sem `command_id` | Cria registro `result` com status `completed`. |
 | Evento legado inválido | Persiste corpo bruto como `legacy_push_event` com status `received`. |
+| Evento legado JSON estruturado | Extrai tipo, status, dispositivo, usuário e payload no serviço de workflow. |
 | Segurança de ingress | Rejeita requisição sem shared key quando obrigatória. |
 
 ## Limitações atuais

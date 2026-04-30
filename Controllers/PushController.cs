@@ -1,10 +1,8 @@
 using System;
-using System.Text.Json;
 using System.Threading.Tasks;
 using Integracao.ControlID.PoC.Helpers;
-using Integracao.ControlID.PoC.Models.Database;
 using Integracao.ControlID.PoC.Services.Callbacks;
-using Integracao.ControlID.PoC.Services.Database;
+using Integracao.ControlID.PoC.Services.Push;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
@@ -14,16 +12,16 @@ namespace Integracao.ControlID.PoC.Controllers
     {
         private readonly ILogger<PushController> _logger;
         private readonly CallbackSecurityEvaluator _securityEvaluator;
-        private readonly PushCommandRepository _pushCommandRepository;
+        private readonly PushCommandWorkflowService _pushWorkflowService;
 
         public PushController(
             ILogger<PushController> logger,
             CallbackSecurityEvaluator securityEvaluator,
-            PushCommandRepository pushCommandRepository)
+            PushCommandWorkflowService pushWorkflowService)
         {
             _logger = logger;
             _securityEvaluator = securityEvaluator;
-            _pushCommandRepository = pushCommandRepository;
+            _pushWorkflowService = pushWorkflowService;
         }
 
         // GET: /Push
@@ -59,8 +57,7 @@ namespace Integracao.ControlID.PoC.Controllers
                 if (body.Length > 1024 * 1024)
                     return BadRequest("Payload muito grande.");
 
-                var command = BuildPushCommand(body);
-                await _pushCommandRepository.AddPushCommandAsync(command);
+                var command = await _pushWorkflowService.StoreLegacyEventAsync(body);
 
                 _logger.LogInformation("Evento Push legado recebido em {Time}: {Summary}",
                     command.ReceivedAt, Truncate(body, 500));
@@ -86,10 +83,7 @@ namespace Integracao.ControlID.PoC.Controllers
                 return RedirectToAction(nameof(PushCenterController.Index), "PushCenter");
             }
 
-            var commands = await _pushCommandRepository.GetAllPushCommandsAsync();
-            foreach (var command in commands)
-                await _pushCommandRepository.DeletePushCommandAsync(command.CommandId);
-
+            await _pushWorkflowService.ClearAsync();
             TempData["StatusMessage"] = "Eventos Push limpos com sucesso.";
             TempData["StatusType"] = "success";
             return RedirectToAction(nameof(PushCenterController.Index), "PushCenter");
@@ -117,63 +111,6 @@ namespace Integracao.ControlID.PoC.Controllers
         {
             if (string.IsNullOrEmpty(value)) return string.Empty;
             return value.Length <= maxLength ? value : value.Substring(0, maxLength) + "...";
-        }
-
-        private PushCommandLocal BuildPushCommand(string body)
-        {
-            var command = new PushCommandLocal
-            {
-                CommandId = Guid.NewGuid(),
-                ReceivedAt = DateTime.UtcNow,
-                CreatedAt = DateTime.UtcNow,
-                RawJson = body,
-                Payload = body,
-                CommandType = "legacy_push_event",
-                Status = "received",
-                DeviceId = string.Empty,
-                UserId = string.Empty
-            };
-
-            try
-            {
-                using var document = JsonDocument.Parse(body);
-                var root = document.RootElement;
-
-                command.CommandType =
-                    TryGetJsonString(root, "command_type") ??
-                    TryGetJsonString(root, "type") ??
-                    TryGetJsonString(root, "event") ??
-                    command.CommandType;
-                command.Status = TryGetJsonString(root, "status") ?? command.Status;
-                command.DeviceId =
-                    TryGetJsonString(root, "device_id") ??
-                    TryGetJsonString(root, "deviceid") ??
-                    string.Empty;
-                command.UserId =
-                    TryGetJsonString(root, "user_id") ??
-                    TryGetJsonString(root, "userid") ??
-                    string.Empty;
-                command.Payload =
-                    TryGetJsonString(root, "payload") ??
-                    TryGetJsonString(root, "data") ??
-                    body;
-            }
-            catch (JsonException je)
-            {
-                _logger.LogWarning(je, "Erro ao desserializar JSON do evento Push legado.");
-            }
-
-            return command;
-        }
-
-        private static string? TryGetJsonString(JsonElement root, string propertyName)
-        {
-            if (!root.TryGetProperty(propertyName, out var property))
-                return null;
-
-            return property.ValueKind == JsonValueKind.String
-                ? property.GetString()
-                : property.GetRawText();
         }
     }
 }

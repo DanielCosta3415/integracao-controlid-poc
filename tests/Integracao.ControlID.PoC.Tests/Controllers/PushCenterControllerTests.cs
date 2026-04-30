@@ -6,6 +6,7 @@ using Integracao.ControlID.PoC.Models.Database;
 using Integracao.ControlID.PoC.Options;
 using Integracao.ControlID.PoC.Services.Callbacks;
 using Integracao.ControlID.PoC.Services.Database;
+using Integracao.ControlID.PoC.Services.Push;
 using Integracao.ControlID.PoC.Tests.TestSupport;
 using Integracao.ControlID.PoC.ViewModels.Push;
 using Microsoft.AspNetCore.Http;
@@ -154,7 +155,7 @@ public class PushCenterControllerTests
         httpContext.Connection.RemoteIpAddress = IPAddress.Loopback;
 
         return new PushCenterController(
-            CreateRepository(database),
+            CreateWorkflowService(database),
             new CallbackSecurityEvaluator(Microsoft.Extensions.Options.Options.Create(new CallbackSecurityOptions())),
             NullLogger<PushCenterController>.Instance)
         {
@@ -169,5 +170,12 @@ public class PushCenterControllerTests
     private static PushCommandRepository CreateRepository(SqliteTestDatabase database)
     {
         return new PushCommandRepository(database.Context, NullLogger<PushCommandRepository>.Instance);
+    }
+
+    private static PushCommandWorkflowService CreateWorkflowService(SqliteTestDatabase database)
+    {
+        return new PushCommandWorkflowService(
+            CreateRepository(database),
+            NullLogger<PushCommandWorkflowService>.Instance);
     }
 }

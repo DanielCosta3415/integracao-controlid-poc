@@ -10,6 +10,7 @@ using Integracao.ControlID.PoC.Services.Files;
 using Integracao.ControlID.PoC.Services.Navigation;
 using Integracao.ControlID.PoC.Services.OperationModes;
 using Integracao.ControlID.PoC.Services.ProductSpecific;
+using Integracao.ControlID.PoC.Services.Push;
 using Integracao.ControlID.PoC.Services.Security;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.ResponseCompression;
@@ -89,6 +90,7 @@ builder.Services.AddScoped<ProductSpecificCommandService>();
 builder.Services.AddScoped<OperationModesPayloadFactory>();
 builder.Services.AddScoped<OperationModesProfileResolver>();
 builder.Services.AddScoped<DocumentedFeaturesPayloadFactory>();
+builder.Services.AddScoped<PushCommandWorkflowService>();
 
 // Repositórios de banco local
 builder.Services.AddScoped<UserRepository>();

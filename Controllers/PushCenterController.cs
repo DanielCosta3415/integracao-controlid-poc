@@ -1,9 +1,8 @@
 using System.Text;
-using System.Text.Json;
 using Integracao.ControlID.PoC.Helpers;
 using Integracao.ControlID.PoC.Models.Database;
 using Integracao.ControlID.PoC.Services.Callbacks;
-using Integracao.ControlID.PoC.Services.Database;
+using Integracao.ControlID.PoC.Services.Push;
 using Integracao.ControlID.PoC.ViewModels.Push;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -16,16 +15,16 @@ namespace Integracao.ControlID.PoC.Controllers
     /// </summary>
     public class PushCenterController : Controller
     {
-        private readonly PushCommandRepository _pushCommandRepository;
+        private readonly PushCommandWorkflowService _pushWorkflowService;
         private readonly CallbackSecurityEvaluator _securityEvaluator;
         private readonly ILogger<PushCenterController> _logger;
 
         public PushCenterController(
-            PushCommandRepository pushCommandRepository,
+            PushCommandWorkflowService pushWorkflowService,
             CallbackSecurityEvaluator securityEvaluator,
             ILogger<PushCenterController> logger)
         {
-            _pushCommandRepository = pushCommandRepository;
+            _pushWorkflowService = pushWorkflowService;
             _securityEvaluator = securityEvaluator;
             _logger = logger;
         }
@@ -38,7 +37,7 @@ namespace Integracao.ControlID.PoC.Controllers
         {
             return View(new PushEventListViewModel
             {
-                Events = (await _pushCommandRepository.GetAllPushCommandsAsync()).Select(ToViewModel).ToList(),
+                Events = (await _pushWorkflowService.GetAllAsync()).Select(ToViewModel).ToList(),
                 StatusMessage = TempData["StatusMessage"] as string ?? string.Empty,
                 StatusType = TempData["StatusType"] as string ?? string.Empty
             });
@@ -57,7 +56,7 @@ namespace Integracao.ControlID.PoC.Controllers
                 return NotFound();
             }
 
-            var command = await _pushCommandRepository.GetPushCommandByIdAsync(id.Value);
+            var command = await _pushWorkflowService.GetByIdAsync(id.Value);
             if (command == null)
             {
                 _logger.LogWarning("Push details requested for missing command {CommandId}.", id.Value);
@@ -83,50 +82,14 @@ namespace Integracao.ControlID.PoC.Controllers
                     model.DeviceId,
                     model.CommandType);
 
-                return View(nameof(Index), new PushEventListViewModel
-                {
-                    Events = (await _pushCommandRepository.GetAllPushCommandsAsync()).Select(ToViewModel).ToList(),
-                    QueueCommand = model,
-                    ErrorMessage = "Revise os dados do comando antes de enfileirar."
-                });
-            }
-
-            if (!IsValidJsonPayload(model.Payload))
-            {
-                _logger.LogWarning(
-                    "Rejected push queue request for device {DeviceId} and type {CommandType} because the payload is not valid JSON.",
-                    model.DeviceId,
-                    model.CommandType);
-
-                return View(nameof(Index), new PushEventListViewModel
-                {
-                    Events = (await _pushCommandRepository.GetAllPushCommandsAsync()).Select(ToViewModel).ToList(),
-                    QueueCommand = model,
-                    ErrorMessage = "Informe um payload JSON valido antes de enfileirar."
-                });
+                return View(nameof(Index), await BuildIndexViewModelAsync(model, "Revise os dados do comando antes de enfileirar."));
             }
 
             try
             {
-                var command = new PushCommandLocal
-                {
-                    CommandId = Guid.NewGuid(),
-                    CommandType = model.CommandType,
-                    DeviceId = model.DeviceId,
-                    UserId = model.UserId,
-                    Payload = model.Payload,
-                    RawJson = model.Payload,
-                    Status = "pending",
-                    CreatedAt = DateTime.UtcNow
-                };
-
-                await _pushCommandRepository.AddPushCommandAsync(command);
-
-                _logger.LogInformation(
-                    "Push command {CommandId} queued for device {DeviceId} with type {CommandType}.",
-                    command.CommandId,
-                    command.DeviceId,
-                    command.CommandType);
+                var queueResult = await _pushWorkflowService.QueueAsync(model);
+                if (!queueResult.IsQueued)
+                    return View(nameof(Index), await BuildIndexViewModelAsync(model, queueResult.ErrorMessage ?? "Informe um payload JSON valido antes de enfileirar."));
 
                 TempData["StatusMessage"] = "Comando push enfileirado com sucesso.";
                 TempData["StatusType"] = "success";
@@ -163,14 +126,7 @@ namespace Integracao.ControlID.PoC.Controllers
 
             try
             {
-                var commands = await _pushCommandRepository.GetAllPushCommandsAsync();
-                foreach (var command in commands)
-                {
-                    await _pushCommandRepository.DeletePushCommandAsync(command.CommandId);
-                }
-
-                _logger.LogWarning("Push queue cleared manually. Removed {Count} commands.", commands.Count());
-
+                await _pushWorkflowService.ClearAsync();
                 TempData["StatusMessage"] = "Fila de push limpa com sucesso.";
                 TempData["StatusType"] = "success";
             }
@@ -200,26 +156,9 @@ namespace Integracao.ControlID.PoC.Controllers
             var resolvedDeviceId = string.IsNullOrWhiteSpace(deviceId) ? legacyDeviceId : deviceId;
             try
             {
-                _logger.LogDebug("Push poll started for device {DeviceId}.", resolvedDeviceId);
-
-                var command = await _pushCommandRepository.GetNextPendingCommandAsync(resolvedDeviceId);
-
+                var command = await _pushWorkflowService.DeliverNextAsync(resolvedDeviceId);
                 if (command == null)
-                {
-                    _logger.LogDebug("Push poll found no pending command for device {DeviceId}.", resolvedDeviceId);
                     return Ok(new { });
-                }
-
-                command.Status = "delivered";
-                command.UpdatedAt = DateTime.UtcNow;
-                var persisted = await _pushCommandRepository.UpdatePushCommandAsync(command);
-                if (!persisted)
-                {
-                    _logger.LogError(
-                        "Push command {CommandId} was selected for delivery to device {DeviceId}, but status persistence failed.",
-                        command.CommandId,
-                        resolvedDeviceId);
-                }
 
                 _logger.LogInformation(
                     "Push poll delivered command {CommandId} to device {DeviceId}. PayloadBytes {PayloadBytes}.",
@@ -261,48 +200,12 @@ namespace Integracao.ControlID.PoC.Controllers
                         Encoding.UTF8.GetByteCount(body));
                 }
 
-                PushCommandLocal? command = commandId.HasValue
-                    ? await _pushCommandRepository.GetPushCommandByIdAsync(commandId.Value)
-                    : null;
-
-                if (command == null)
-                {
-                    if (commandId.HasValue)
-                    {
-                        _logger.LogWarning(
-                            "Push result received for unknown command {CommandId}. A standalone result record will be created.",
-                            commandId.Value);
-                    }
-
-                    command = new PushCommandLocal
-                    {
-                        CommandId = commandId ?? Guid.NewGuid(),
-                        CommandType = "result",
-                        DeviceId = Request.Query["device_id"].ToString(),
-                        UserId = Request.Query["user_id"].ToString(),
-                        Payload = body,
-                        RawJson = body,
-                        Status = string.IsNullOrWhiteSpace(Request.Query["status"]) ? "completed" : Request.Query["status"].ToString(),
-                        CreatedAt = DateTime.UtcNow
-                    };
-
-                    await _pushCommandRepository.AddPushCommandAsync(command);
-                }
-                else
-                {
-                    command.RawJson = body;
-                    command.Payload = body;
-                    command.Status = string.IsNullOrWhiteSpace(Request.Query["status"]) ? "completed" : Request.Query["status"].ToString();
-                    command.UpdatedAt = DateTime.UtcNow;
-                    var persisted = await _pushCommandRepository.UpdatePushCommandAsync(command);
-                    if (!persisted)
-                    {
-                        _logger.LogError(
-                            "Push result for command {CommandId} could not persist status {Status}.",
-                            command.CommandId,
-                            command.Status);
-                    }
-                }
+                var command = await _pushWorkflowService.StoreResultAsync(
+                    commandId,
+                    body,
+                    Request.Query["device_id"].ToString(),
+                    Request.Query["user_id"].ToString(),
+                    Request.Query["status"].ToString());
 
                 _logger.LogInformation(
                     "Push result stored for command {CommandId}. Device {DeviceId}. Status {Status}. BodyBytes {BodyBytes}.",
@@ -340,6 +243,16 @@ namespace Integracao.ControlID.PoC.Controllers
             return StatusCode(securityResult.StatusCode, new { error = securityResult.Message });
         }
 
+        private async Task<PushEventListViewModel> BuildIndexViewModelAsync(PushQueueCommandViewModel queueCommand, string errorMessage)
+        {
+            return new PushEventListViewModel
+            {
+                Events = (await _pushWorkflowService.GetAllAsync()).Select(ToViewModel).ToList(),
+                QueueCommand = queueCommand,
+                ErrorMessage = errorMessage
+            };
+        }
+
         /// <summary>
         /// Converte a entidade persistida em ViewModel sem expor regra de banco para a camada Razor.
         /// </summary>
@@ -358,22 +271,6 @@ namespace Integracao.ControlID.PoC.Controllers
                 DeviceId = command.DeviceId,
                 UserId = command.UserId
             };
-        }
-
-        private static bool IsValidJsonPayload(string payload)
-        {
-            if (string.IsNullOrWhiteSpace(payload))
-                return false;
-
-            try
-            {
-                using var document = JsonDocument.Parse(payload);
-                return true;
-            }
-            catch (JsonException)
-            {
-                return false;
-            }
         }
     }
 }
