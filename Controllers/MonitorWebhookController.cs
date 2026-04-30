@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using Integracao.ControlID.PoC.Helpers;
 using Integracao.ControlID.PoC.Services.Callbacks;
 using Integracao.ControlID.PoC.Services.Database;
 using Microsoft.AspNetCore.Mvc;
@@ -48,8 +49,14 @@ namespace Integracao.ControlID.PoC.Controllers
         // POST: /MonitorWebhook/Clear
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Clear()
+        public async Task<IActionResult> Clear(string confirmationPhrase)
         {
+            if (!HighImpactOperationGuard.IsConfirmed(confirmationPhrase, HighImpactOperationGuard.ConfirmClearMonitorEvents))
+            {
+                TempData["StatusMessage"] = HighImpactOperationGuard.BuildRequiredMessage(HighImpactOperationGuard.ConfirmClearMonitorEvents);
+                return RedirectToAction(nameof(OfficialEventsController.Index), "OfficialEvents");
+            }
+
             var events = await _monitorEventRepository.GetAllMonitorEventsAsync();
             foreach (var item in events)
                 await _monitorEventRepository.DeleteMonitorEventAsync(item.EventId);

@@ -1,8 +1,9 @@
-﻿@model Integracao.ControlID.PoC.ViewModels.OfficialObjects.OfficialObjectsViewModel
+@model Integracao.ControlID.PoC.ViewModels.OfficialObjects.OfficialObjectsViewModel
 @{
     ViewData["Title"] = "Objetos oficiais";
     ViewData["Subtitle"] = "Superfície dedicada para o mapa oficial de objetos, com CRUD estruturado e exemplos rápidos.";
     var current = Model.Definitions.FirstOrDefault(item => item.Name == Model.SelectedObjectName);
+    var destroyConfirmation = HighImpactOperationGuard.BuildDestroyObjectsConfirmation(Model.SelectedObjectName);
     var header = new AppPageHeaderViewModel
     {
         Eyebrow = "API e recursos avançados",
@@ -130,6 +131,9 @@
                         <input type="hidden" name="SelectedObjectName" value="@Model.SelectedObjectName" />
                         <label asp-for="DestroyWhereJson" class="form-label"></label>
                         <textarea asp-for="DestroyWhereJson" class="form-control" rows="4"></textarea>
+                        <label asp-for="DestroyConfirmationPhrase" class="form-label mt-3"></label>
+                        <input asp-for="DestroyConfirmationPhrase" class="form-control" placeholder="Digite @destroyConfirmation" />
+                        <div class="form-text">Este comando remove registros no equipamento conectado. A frase esperada é <code>@destroyConfirmation</code>.</div>
                         <button type="submit" class="btn btn-outline-danger mt-3">Remover registros</button>
                     </form>
                 </div>

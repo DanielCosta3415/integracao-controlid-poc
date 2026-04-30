@@ -1,4 +1,6 @@
 using System.Text;
+using System.Text.Json;
+using Integracao.ControlID.PoC.Helpers;
 using Integracao.ControlID.PoC.Models.Database;
 using Integracao.ControlID.PoC.Services.Callbacks;
 using Integracao.ControlID.PoC.Services.Database;
@@ -72,7 +74,7 @@ namespace Integracao.ControlID.PoC.Controllers
         /// <returns>Redirecionamento para a central com mensagem de sucesso ou erro de validação.</returns>
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Queue(PushQueueCommandViewModel model)
+        public async Task<IActionResult> Queue([Bind(Prefix = nameof(PushEventListViewModel.QueueCommand))] PushQueueCommandViewModel model)
         {
             if (!ModelState.IsValid)
             {
@@ -86,6 +88,21 @@ namespace Integracao.ControlID.PoC.Controllers
                     Events = (await _pushCommandRepository.GetAllPushCommandsAsync()).Select(ToViewModel).ToList(),
                     QueueCommand = model,
                     ErrorMessage = "Revise os dados do comando antes de enfileirar."
+                });
+            }
+
+            if (!IsValidJsonPayload(model.Payload))
+            {
+                _logger.LogWarning(
+                    "Rejected push queue request for device {DeviceId} and type {CommandType} because the payload is not valid JSON.",
+                    model.DeviceId,
+                    model.CommandType);
+
+                return View(nameof(Index), new PushEventListViewModel
+                {
+                    Events = (await _pushCommandRepository.GetAllPushCommandsAsync()).Select(ToViewModel).ToList(),
+                    QueueCommand = model,
+                    ErrorMessage = "Informe um payload JSON valido antes de enfileirar."
                 });
             }
 
@@ -135,8 +152,15 @@ namespace Integracao.ControlID.PoC.Controllers
         /// <returns>Redirecionamento para a central Push com o resultado da limpeza.</returns>
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Clear()
+        public async Task<IActionResult> Clear(string confirmationPhrase)
         {
+            if (!HighImpactOperationGuard.IsConfirmed(confirmationPhrase, HighImpactOperationGuard.ConfirmClearPushQueue))
+            {
+                TempData["StatusMessage"] = HighImpactOperationGuard.BuildRequiredMessage(HighImpactOperationGuard.ConfirmClearPushQueue);
+                TempData["StatusType"] = "warning";
+                return RedirectToAction(nameof(Index));
+            }
+
             try
             {
                 var commands = await _pushCommandRepository.GetAllPushCommandsAsync();
@@ -334,6 +358,22 @@ namespace Integracao.ControlID.PoC.Controllers
                 DeviceId = command.DeviceId,
                 UserId = command.UserId
             };
+        }
+
+        private static bool IsValidJsonPayload(string payload)
+        {
+            if (string.IsNullOrWhiteSpace(payload))
+                return false;
+
+            try
+            {
+                using var document = JsonDocument.Parse(payload);
+                return true;
+            }
+            catch (JsonException)
+            {
+                return false;
+            }
         }
     }
 }

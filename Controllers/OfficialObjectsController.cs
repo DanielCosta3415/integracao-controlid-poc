@@ -207,6 +207,13 @@ namespace Integracao.ControlID.PoC.Controllers
             if (!EnsureConnected(model))
                 return View("Index", model);
 
+            var expectedConfirmation = HighImpactOperationGuard.BuildDestroyObjectsConfirmation(model.SelectedObjectName);
+            if (!HighImpactOperationGuard.IsConfirmed(model.DestroyConfirmationPhrase, expectedConfirmation))
+            {
+                model.ErrorMessage = HighImpactOperationGuard.BuildRequiredMessage(expectedConfirmation);
+                return View("Index", model);
+            }
+
             try
             {
                 JsonDocument.Parse(model.DestroyWhereJson);

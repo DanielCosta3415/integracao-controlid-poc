@@ -1,3 +1,4 @@
+using Integracao.ControlID.PoC.Helpers;
 using Integracao.ControlID.PoC.Models.Database;
 using Integracao.ControlID.PoC.Services.Database;
 using Integracao.ControlID.PoC.ViewModels.Monitor;
@@ -34,8 +35,14 @@ namespace Integracao.ControlID.PoC.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Clear()
+        public async Task<IActionResult> Clear(string confirmationPhrase)
         {
+            if (!HighImpactOperationGuard.IsConfirmed(confirmationPhrase, HighImpactOperationGuard.ConfirmClearMonitorEvents))
+            {
+                TempData["StatusMessage"] = HighImpactOperationGuard.BuildRequiredMessage(HighImpactOperationGuard.ConfirmClearMonitorEvents);
+                return RedirectToAction(nameof(Index));
+            }
+
             var events = await _monitorEventRepository.GetAllMonitorEventsAsync();
             foreach (var item in events)
                 await _monitorEventRepository.DeleteMonitorEventAsync(item.EventId);

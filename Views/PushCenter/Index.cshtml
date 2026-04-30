@@ -1,7 +1,11 @@
-﻿@model Integracao.ControlID.PoC.ViewModels.Push.PushEventListViewModel
+@model Integracao.ControlID.PoC.ViewModels.Push.PushEventListViewModel
 @{
     ViewData["Title"] = "Central push";
     ViewData["Subtitle"] = "Fila persistida para GET /push, retorno por POST /result e orquestração operacional dos comandos.";
+    var pendingCount = Model.Events.Count(evt => string.Equals(evt.Status, "pending", StringComparison.OrdinalIgnoreCase));
+    var deliveredCount = Model.Events.Count(evt => string.Equals(evt.Status, "delivered", StringComparison.OrdinalIgnoreCase));
+    var completedCount = Model.Events.Count(evt => string.Equals(evt.Status, "completed", StringComparison.OrdinalIgnoreCase));
+    var receivedCount = Model.Events.Count(evt => string.Equals(evt.Status, "received", StringComparison.OrdinalIgnoreCase));
     var header = new AppPageHeaderViewModel
     {
         Eyebrow = "Eventos, logs e push",
@@ -67,12 +71,14 @@
 
             <div class="entity-overview">
                 <div class="entity-overview__item"><span>Total na fila</span><strong>@Model.Events.Count()</strong></div>
-                <div class="entity-overview__item"><span>Pendentes</span><strong>@Model.Events.Count(evt => string.Equals(evt.Status, "pending", StringComparison.OrdinalIgnoreCase))</strong></div>
-                <div class="entity-overview__item"><span>Concluídos</span><strong>@Model.Events.Count(evt => string.Equals(evt.Status, "done", StringComparison.OrdinalIgnoreCase))</strong></div>
-                <div class="entity-overview__item"><span>Com erro</span><strong>@Model.Events.Count(evt => string.Equals(evt.Status, "error", StringComparison.OrdinalIgnoreCase))</strong></div>
+                <div class="entity-overview__item"><span>Pendentes</span><strong>@pendingCount</strong></div>
+                <div class="entity-overview__item"><span>Entregues</span><strong>@deliveredCount</strong></div>
+                <div class="entity-overview__item"><span>Concluídos</span><strong>@completedCount</strong></div>
+                <div class="entity-overview__item"><span>Recebidos legado</span><strong>@receivedCount</strong></div>
             </div>
 
             <form asp-action="Clear" method="post" class="app-inline-form">
+                <input name="confirmationPhrase" class="form-control form-control-sm" placeholder="Digite @HighImpactOperationGuard.ConfirmClearPushQueue" aria-label="Confirmacao para limpar fila push" />
                 <button type="submit" class="btn btn-outline-danger">Limpar fila persistida</button>
             </form>
         </section>
@@ -108,7 +114,7 @@
                             <td>@evt.EventId</td>
                             <td>@evt.ReceivedAt.ToString("dd/MM/yyyy HH:mm:ss")</td>
                             <td>@evt.CommandType</td>
-                            <td><span class="app-chip @(string.Equals(evt.Status, "pending", StringComparison.OrdinalIgnoreCase) ? "app-chip--warning" : string.Equals(evt.Status, "done", StringComparison.OrdinalIgnoreCase) ? "app-chip--success" : "app-chip--danger")">@evt.Status</span></td>
+                            <td><span class="app-chip @(string.Equals(evt.Status, "pending", StringComparison.OrdinalIgnoreCase) ? "app-chip--warning" : string.Equals(evt.Status, "delivered", StringComparison.OrdinalIgnoreCase) || string.Equals(evt.Status, "received", StringComparison.OrdinalIgnoreCase) ? "app-chip--neutral" : string.Equals(evt.Status, "completed", StringComparison.OrdinalIgnoreCase) ? "app-chip--success" : "app-chip--danger")">@evt.Status</span></td>
                             <td>@evt.DeviceId</td>
                             <td>@evt.UserId</td>
                             <td>@(evt.Payload?.Length > 52 ? evt.Payload.Substring(0, 52) + "..." : evt.Payload)</td>

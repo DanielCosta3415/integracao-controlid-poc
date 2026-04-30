@@ -141,6 +141,7 @@ Notas:
 - Considere usuarios, fotos, biometria, cartoes, QR Codes, logs de acesso e callbacks como dados pessoais ou sensiveis.
 - Minimize persistencia e logging de payloads pessoais. Mascarar ou truncar quando possivel.
 - Nao adicione dados reais a testes, docs, smoke ou fixtures.
+- Siga `docs/privacy-and-data-retention.md` ao tocar `MonitorEvents`, `PushCommands`, logs, payloads brutos ou limpeza de historico local.
 
 ### Dependencias
 
@@ -181,6 +182,7 @@ Notas:
 ### Documentacao
 
 - Atualize README/docs quando mudar setup, comando, seguranca, banco, contrato externo ou fluxo operacional.
+- Atualize `docs/product-acceptance-criteria.md` quando um fluxo critico ganhar, perder ou mudar criterio verificavel.
 - Relatorios em `docs/reports/` podem ser gerados por smoke/auditoria; registre data e resultado.
 - Nao documente comandos que nao existem no repositorio.
 

@@ -46,5 +46,8 @@ namespace Integracao.ControlID.PoC.ViewModels.System
         public string ResultStatusType { get; set; } = string.Empty;
         public string LastResponseJson { get; set; } = string.Empty;
         public string ErrorMessage { get; set; } = string.Empty;
+
+        [Display(Name = "Confirmacao de alteracao de rede")]
+        public string ConfirmationPhrase { get; set; } = string.Empty;
     }
 }

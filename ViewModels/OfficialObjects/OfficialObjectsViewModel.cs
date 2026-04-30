@@ -37,6 +37,9 @@ namespace Integracao.ControlID.PoC.ViewModels.OfficialObjects
         [Display(Name = "Filtro de exclusao (JSON)")]
         public string DestroyWhereJson { get; set; } = string.Empty;
 
+        [Display(Name = "Confirmacao de remocao")]
+        public string DestroyConfirmationPhrase { get; set; } = string.Empty;
+
         public IReadOnlyList<OfficialObjectDefinition> Definitions { get; set; } = Array.Empty<OfficialObjectDefinition>();
     }
 

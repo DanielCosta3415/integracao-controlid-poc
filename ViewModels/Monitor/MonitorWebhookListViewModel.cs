@@ -9,5 +9,6 @@ namespace Integracao.ControlID.PoC.ViewModels.Monitor
     {
         public List<WebhookEventViewModel> Events { get; set; } = new List<WebhookEventViewModel>();
         public string ErrorMessage { get; set; } = string.Empty;
+        public string ClearConfirmationPhrase { get; set; } = string.Empty;
     }
 }

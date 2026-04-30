@@ -18,9 +18,18 @@ Esses caminhos ja estao cobertos por `.gitignore`.
 
 ## Aplicacao de schema
 
-Na inicializacao, `Program.cs` executa `Database.Migrate()` e cria, se necessario, as tabelas locais `MonitorEvents` e `PushCommands` por SQL idempotente.
+Na inicializacao, `Program.cs` executa `Database.Migrate()`. O schema local inicial esta versionado em `Data/Migrations/` por EF Core.
 
-Na linha de base atual nao ha pasta `Migrations/` nem arquivos `.sql` versionados. Por isso, iniciar a aplicacao pode criar ou atualizar o banco local, mesmo sem alterar arquivos rastreados pelo Git.
+A migration inicial usa `CREATE TABLE IF NOT EXISTS` para preservar bancos SQLite locais ja existentes desta PoC. As tabelas locais `MonitorEvents` e `PushCommands` tambem continuam com criacao idempotente em `Program.cs` como compatibilidade para bancos criados antes da migration.
+
+Iniciar a aplicacao pode criar ou atualizar o banco local, mesmo sem alterar arquivos rastreados pelo Git. Antes de validar alteracoes de schema em um banco com dados importantes, faca backup do arquivo SQLite local.
+
+Regra de evolucao:
+
+- alteracoes de schema devem ser feitas por migrations versionadas do EF Core ou scripts `.sql` revisaveis;
+- mudanças em `Program.cs` para criacao manual de tabelas devem ser compatibilidade temporaria, nao o mecanismo principal de evolucao;
+- nao remova colunas/tabelas locais sem plano de migracao e backup do SQLite local;
+- `MonitorEvents` e `PushCommands` podem conter payloads pessoais/sensiveis e devem seguir a politica de retencao em `docs/privacy-and-data-retention.md`.
 
 ## Comandos seguros
 

@@ -88,12 +88,19 @@ namespace Integracao.ControlID.PoC.Controllers
         // POST: /System/Reset
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Reset()
+        public async Task<IActionResult> Reset(string confirmationPhrase)
         {
             if (!_apiService.TryGetConnection(out _, out _))
             {
                 TempData["StatusMessage"] = "É necessário conectar-se e autenticar com um equipamento Control iD.";
                 TempData["StatusType"] = "danger";
+                return RedirectToAction(nameof(Info));
+            }
+
+            if (!HighImpactOperationGuard.IsConfirmed(confirmationPhrase, HighImpactOperationGuard.ConfirmReboot))
+            {
+                TempData["StatusMessage"] = HighImpactOperationGuard.BuildRequiredMessage(HighImpactOperationGuard.ConfirmReboot);
+                TempData["StatusType"] = "warning";
                 return RedirectToAction(nameof(Info));
             }
 
@@ -306,6 +313,13 @@ namespace Integracao.ControlID.PoC.Controllers
 
             if (!ModelState.IsValid)
                 return View(model);
+
+            if (!HighImpactOperationGuard.IsConfirmed(model.ConfirmationPhrase, HighImpactOperationGuard.ConfirmNetworkChange))
+            {
+                model.ResultMessage = HighImpactOperationGuard.BuildRequiredMessage(HighImpactOperationGuard.ConfirmNetworkChange);
+                model.ResultStatusType = "warning";
+                return View(model);
+            }
 
             try
             {
@@ -530,12 +544,19 @@ namespace Integracao.ControlID.PoC.Controllers
         // POST: /System/FactoryReset
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> FactoryReset(bool keepNetworkInfo = true)
+        public async Task<IActionResult> FactoryReset(bool keepNetworkInfo = true, string confirmationPhrase = "")
         {
             if (!_apiService.TryGetConnection(out _, out _))
             {
                 TempData["StatusMessage"] = "É necessário conectar-se e autenticar com um equipamento Control iD.";
                 TempData["StatusType"] = "danger";
+                return RedirectToAction(nameof(Info));
+            }
+
+            if (!HighImpactOperationGuard.IsConfirmed(confirmationPhrase, HighImpactOperationGuard.ConfirmFactoryReset))
+            {
+                TempData["StatusMessage"] = HighImpactOperationGuard.BuildRequiredMessage(HighImpactOperationGuard.ConfirmFactoryReset);
+                TempData["StatusType"] = "warning";
                 return RedirectToAction(nameof(Info));
             }
 
@@ -567,12 +588,19 @@ namespace Integracao.ControlID.PoC.Controllers
         // POST: /System/RebootRecovery
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> RebootRecovery()
+        public async Task<IActionResult> RebootRecovery(string confirmationPhrase)
         {
             if (!_apiService.TryGetConnection(out _, out _))
             {
                 TempData["StatusMessage"] = "É necessário conectar-se e autenticar com um equipamento Control iD.";
                 TempData["StatusType"] = "danger";
+                return RedirectToAction(nameof(Info));
+            }
+
+            if (!HighImpactOperationGuard.IsConfirmed(confirmationPhrase, HighImpactOperationGuard.ConfirmRebootRecovery))
+            {
+                TempData["StatusMessage"] = HighImpactOperationGuard.BuildRequiredMessage(HighImpactOperationGuard.ConfirmRebootRecovery);
+                TempData["StatusType"] = "warning";
                 return RedirectToAction(nameof(Info));
             }
 
@@ -598,12 +626,19 @@ namespace Integracao.ControlID.PoC.Controllers
         // POST: /System/DeleteAdmins
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteAdmins()
+        public async Task<IActionResult> DeleteAdmins(string confirmationPhrase)
         {
             if (!_apiService.TryGetConnection(out _, out _))
             {
                 TempData["StatusMessage"] = "É necessário conectar-se e autenticar com um equipamento Control iD.";
                 TempData["StatusType"] = "danger";
+                return RedirectToAction(nameof(Info));
+            }
+
+            if (!HighImpactOperationGuard.IsConfirmed(confirmationPhrase, HighImpactOperationGuard.ConfirmDeleteAdmins))
+            {
+                TempData["StatusMessage"] = HighImpactOperationGuard.BuildRequiredMessage(HighImpactOperationGuard.ConfirmDeleteAdmins);
+                TempData["StatusType"] = "warning";
                 return RedirectToAction(nameof(Info));
             }
 

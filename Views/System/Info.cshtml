@@ -1,4 +1,4 @@
-﻿@model Integracao.ControlID.PoC.ViewModels.System.SystemInfoViewModel
+@model Integracao.ControlID.PoC.ViewModels.System.SystemInfoViewModel
 @{
     ViewData["Title"] = "Sistema";
     ViewData["Subtitle"] = "Estado do equipamento, manutenção administrativa e atalhos para rede, VPN e credenciais.";
@@ -72,20 +72,25 @@
                     <button type="submit" class="btn btn-primary">Sincronizar data e hora</button>
                 </form>
                 <form asp-action="Reset" method="post" class="app-inline-form" onsubmit="return confirm('Deseja reiniciar o equipamento agora?');">
+                    <input name="confirmationPhrase" class="form-control form-control-sm" placeholder="Digite @HighImpactOperationGuard.ConfirmReboot" aria-label="Confirmacao para reiniciar" />
                     <button type="submit" class="btn btn-warning">Reiniciar equipamento</button>
                 </form>
                 <form asp-action="RebootRecovery" method="post" class="app-inline-form" onsubmit="return confirm('Deseja reiniciar o equipamento em modo de update?');">
+                    <input name="confirmationPhrase" class="form-control form-control-sm" placeholder="Digite @HighImpactOperationGuard.ConfirmRebootRecovery" aria-label="Confirmacao para modo update" />
                     <button type="submit" class="btn btn-outline-warning">Reiniciar em update</button>
                 </form>
                 <form asp-action="DeleteAdmins" method="post" class="app-inline-form" onsubmit="return confirm('Deseja remover todos os administradores do equipamento?');">
+                    <input name="confirmationPhrase" class="form-control form-control-sm" placeholder="Digite @HighImpactOperationGuard.ConfirmDeleteAdmins" aria-label="Confirmacao para remover administradores" />
                     <button type="submit" class="btn btn-outline-danger">Remover administradores</button>
                 </form>
                 <form asp-action="FactoryReset" method="post" class="app-inline-form" onsubmit="return confirm('Deseja iniciar reset de fábrica preservando as informações de rede?');">
                     <input type="hidden" name="keepNetworkInfo" value="true" />
+                    <input name="confirmationPhrase" class="form-control form-control-sm" placeholder="Digite @HighImpactOperationGuard.ConfirmFactoryReset" aria-label="Confirmacao para reset de fabrica" />
                     <button type="submit" class="btn btn-danger">Reset com rede</button>
                 </form>
                 <form asp-action="FactoryReset" method="post" class="app-inline-form" onsubmit="return confirm('Deseja iniciar reset de fábrica apagando também as informações de rede?');">
                     <input type="hidden" name="keepNetworkInfo" value="false" />
+                    <input name="confirmationPhrase" class="form-control form-control-sm" placeholder="Digite @HighImpactOperationGuard.ConfirmFactoryReset" aria-label="Confirmacao para reset total" />
                     <button type="submit" class="btn btn-outline-danger">Reset total</button>
                 </form>
             </div>

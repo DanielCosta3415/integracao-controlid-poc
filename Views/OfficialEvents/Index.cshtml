@@ -1,4 +1,4 @@
-﻿@model Integracao.ControlID.PoC.ViewModels.Monitor.MonitorWebhookListViewModel
+@model Integracao.ControlID.PoC.ViewModels.Monitor.MonitorWebhookListViewModel
 @{
     ViewData["Title"] = "Eventos oficiais";
     ViewData["Subtitle"] = "Callbacks online e notificações de monitor persistidos pela PoC para leitura operacional.";
@@ -20,6 +20,7 @@
     <partial name="_AppPageHeader" model="header" />
 
     <form asp-action="Clear" method="post" class="app-inline-form">
+        <input name="confirmationPhrase" class="form-control form-control-sm" placeholder="Digite @HighImpactOperationGuard.ConfirmClearMonitorEvents" aria-label="Confirmacao para limpar eventos" />
         <button type="submit" class="btn btn-outline-danger">Limpar eventos persistidos</button>
     </form>
 

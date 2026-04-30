@@ -1,6 +1,7 @@
 using System;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Integracao.ControlID.PoC.Helpers;
 using Integracao.ControlID.PoC.Models.Database;
 using Integracao.ControlID.PoC.Services.Callbacks;
 using Integracao.ControlID.PoC.Services.Database;
@@ -76,8 +77,15 @@ namespace Integracao.ControlID.PoC.Controllers
         // POST: /Push/Clear
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Clear()
+        public async Task<IActionResult> Clear(string confirmationPhrase)
         {
+            if (!HighImpactOperationGuard.IsConfirmed(confirmationPhrase, HighImpactOperationGuard.ConfirmClearPushQueue))
+            {
+                TempData["StatusMessage"] = HighImpactOperationGuard.BuildRequiredMessage(HighImpactOperationGuard.ConfirmClearPushQueue);
+                TempData["StatusType"] = "warning";
+                return RedirectToAction(nameof(PushCenterController.Index), "PushCenter");
+            }
+
             var commands = await _pushCommandRepository.GetAllPushCommandsAsync();
             foreach (var command in commands)
                 await _pushCommandRepository.DeletePushCommandAsync(command.CommandId);

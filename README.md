@@ -206,6 +206,8 @@ Checklist recomendado para debug operacional:
 - `docs/changelog-2026-04-15.md`: changelog das atualizações de documentação, comentários e observabilidade
 
 - `docs/database-and-runtime-state.md`: estado local, comandos seguros e requisitos de runtime
+- `docs/privacy-and-data-retention.md`: regras de privacidade, dados sensíveis e retenção local
+- `docs/product-acceptance-criteria.md`: critérios de aceite funcionais para os fluxos críticos
 
 ## Troubleshooting rápido
 

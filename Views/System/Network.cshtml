@@ -1,4 +1,4 @@
-﻿@model Integracao.ControlID.PoC.ViewModels.System.SystemNetworkViewModel
+@model Integracao.ControlID.PoC.ViewModels.System.SystemNetworkViewModel
 @{
     ViewData["Title"] = "Rede do equipamento";
     ViewData["Subtitle"] = "Parâmetros oficiais de rede, hostname e SSL em uma visão operacional mais clara.";
@@ -112,6 +112,12 @@
                         <label asp-for="DeviceHostname" class="form-label"></label>
                         <input asp-for="DeviceHostname" class="form-control" />
                         <span asp-validation-for="DeviceHostname" class="text-danger"></span>
+                    </div>
+                    <div class="app-form-grid--full">
+                        <label asp-for="ConfirmationPhrase" class="form-label"></label>
+                        <input asp-for="ConfirmationPhrase" class="form-control" placeholder="Digite @HighImpactOperationGuard.ConfirmNetworkChange" />
+                        <div class="form-text">Alterar IP ou porta pode derrubar a sessão atual e exigir reconexão manual.</div>
+                        <span asp-validation-for="ConfirmationPhrase" class="text-danger"></span>
                     </div>
                 </div>
 

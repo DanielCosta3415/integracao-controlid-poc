@@ -251,39 +251,49 @@ Essa separação deixa mais claro o ciclo de vida:
 
 ## Segurança e considerações operacionais
 
-O endpoint legado `POST /Push/Receive` limita o corpo em aproximadamente 1 MB.
+Os endpoints oficiais servidos pela PoC (`GET /push` e `POST /result`) e o endpoint legado `POST /Push/Receive` passam por `CallbackSecurityEvaluator`.
 
-Os endpoints oficiais servidos pela PoC (`GET /push` e `POST /result`) foram implementados para facilitar a demonstração funcional. Diferentemente do pipeline de callbacks, eles não passam atualmente por `CallbackSecurityEvaluator`.
+A mesma configuração de ingress usada por callbacks também vale para Push:
 
-Para uso fora de PoC, seria recomendável:
+| Opção | Efeito no Push |
+| --- | --- |
+| `CallbackSecurity:MaxBodyBytes` | Rejeita chamadas com `Content-Length` acima do limite configurado. |
+| `CallbackSecurity:AllowedRemoteIps` | Restringe os IPs que podem consultar `/push`, enviar `/result` ou chamar `/Push/Receive`. |
+| `CallbackSecurity:AllowLoopback` | Mantém validação local/stub possível mesmo com lista de IPs restrita. |
+| `CallbackSecurity:RequireSharedKey` | Exige o header configurado em `SharedKeyHeaderName`. |
+| `CallbackSecurity:SharedKeyHeaderName` | Define o nome do header, por padrão `X-ControlID-Callback-Key`. |
 
-- exigir chave compartilhada ou assinatura;
+O endpoint legado `POST /Push/Receive` também limita o corpo lido a aproximadamente 1 MB. A limpeza manual da fila persistida exige confirmação textual na UI para evitar perda acidental de histórico local.
+
+Para uso fora de PoC, continue recomendando:
+
+- habilitar `RequireSharedKey=true` e provisionar `SharedKey` fora do repositório;
 - restringir IPs de origem;
 - usar HTTPS em uma URL acessível pelo equipamento;
-- validar formato do payload antes de entregar ao dispositivo;
-- registrar tentativa de polling e resultados com mais metadados.
+- registrar tentativa de polling e resultados com mais metadados;
+- tratar concorrência em múltiplos polls simultâneos.
 
 ## Cobertura de testes
 
-No estado atual, a funcionalidade Push é validada principalmente pelos smoke tests locais e pela estrutura de repositório/fluxo da aplicação.
+No estado atual, a funcionalidade Push é validada por smoke tests locais e por testes unitários dedicados para `PushCenterController`, `PushController` e `PushCommandRepository`.
 
-Ainda não há uma suíte unitária dedicada para `PushCenterController`, `PushController` ou `PushCommandRepository`. Uma evolução natural seria cobrir:
+A suíte cobre:
 
-| Cenário | Teste sugerido |
+| Cenário | Cobertura |
 | --- | --- |
-| Enfileirar comando válido | Deve criar item `pending`. |
-| Poll com comando pendente | Deve retornar payload e marcar `delivered`. |
-| Poll sem comando | Deve retornar `{}`. |
-| Resultado com `command_id` existente | Deve atualizar item existente. |
-| Resultado sem `command_id` | Deve criar registro `result`. |
-| Evento legado inválido | Deve persistir corpo bruto sem quebrar. |
+| Enfileirar comando válido | Cria item `pending`. |
+| Enfileirar payload inválido | Rejeita antes de persistir. |
+| Poll com comando pendente | Retorna payload e marca `delivered`. |
+| Resultado sem `command_id` | Cria registro `result` com status `completed`. |
+| Evento legado inválido | Persiste corpo bruto como `legacy_push_event` com status `received`. |
+| Segurança de ingress | Rejeita requisição sem shared key quando obrigatória. |
 
 ## Limitações atuais
 
 | Ponto | Observação |
 | --- | --- |
 | Equipamento real | O ciclo completo depende de um dispositivo consultando `GET /push` e enviando `POST /result`. |
-| Autenticação dos endpoints Push | Ainda não foi aplicada a mesma camada de segurança dos callbacks. |
+| Autenticação dos endpoints Push | Usa `CallbackSecurityEvaluator`; a robustez depende de configurar shared key/IPs em ambientes expostos. |
 | Status padronizados | A PoC aceita status livres vindos de `/result`, o que é flexível, mas pode exigir normalização futura. |
 | Concorrência | O fluxo entrega o primeiro comando pendente; em produção, seria interessante reforcar controle transacional para múltiplos polls simultaneos. |
 

@@ -231,7 +231,7 @@ POST /OfficialEvents/Clear
 
 `Details` abre um evento específico.
 
-`Clear` remove todos os eventos persistidos.
+`Clear` remove todos os eventos persistidos somente depois de confirmação textual na UI, porque esses registros podem conter payloads pessoais/sensíveis e servem como histórico operacional local.
 
 `MonitorWebhookController` mantém compatibilidade com a rota legada:
 

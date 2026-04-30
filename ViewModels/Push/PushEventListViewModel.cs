@@ -13,6 +13,7 @@ namespace Integracao.ControlID.PoC.ViewModels.Push
         public string ErrorMessage { get; set; } = string.Empty;
         public string StatusMessage { get; set; } = string.Empty;
         public string StatusType { get; set; } = string.Empty;
+        public string ClearConfirmationPhrase { get; set; } = string.Empty;
     }
 }
 
