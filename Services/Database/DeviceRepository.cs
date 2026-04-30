@@ -52,7 +52,10 @@ namespace Integracao.ControlID.PoC.Services.Database
         /// </summary>
         public async Task<List<DeviceLocal>> GetAllDevicesAsync()
         {
-            return await _dbContext.Devices.OrderBy(d => d.Id).ToListAsync();
+            return await _dbContext.Devices
+                .OrderBy(d => d.Id)
+                .Take(LocalDataQueryLimits.DefaultListLimit)
+                .ToListAsync();
         }
 
         /// <summary>
@@ -106,9 +109,12 @@ namespace Integracao.ControlID.PoC.Services.Database
                 query = query.Where(d => d.Name.Contains(name));
 
             if (!string.IsNullOrWhiteSpace(ip))
-                query = query.Where(d => d.IpAddress == ip);
+                query = query.Where(d => d.Ip == ip);
 
-            return await query.OrderBy(d => d.Id).ToListAsync();
+            return await query
+                .OrderBy(d => d.Id)
+                .Take(LocalDataQueryLimits.DefaultListLimit)
+                .ToListAsync();
         }
     }
 }

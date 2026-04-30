@@ -8,6 +8,7 @@ namespace Integracao.ControlID.PoC.Controllers
 {
     public class OfficialEventsController : Controller
     {
+        private const int EventListLimit = LocalDataQueryLimits.DefaultListLimit;
         private readonly MonitorEventRepository _monitorEventRepository;
 
         public OfficialEventsController(MonitorEventRepository monitorEventRepository)
@@ -19,7 +20,9 @@ namespace Integracao.ControlID.PoC.Controllers
         {
             return View(new MonitorWebhookListViewModel
             {
-                Events = (await _monitorEventRepository.GetAllMonitorEventsAsync()).Select(ToViewModel).ToList(),
+                Events = (await _monitorEventRepository.GetRecentMonitorEventsAsync(EventListLimit)).Select(ToViewModel).ToList(),
+                TotalCount = await _monitorEventRepository.CountMonitorEventsAsync(),
+                DisplayLimit = EventListLimit,
                 ErrorMessage = TempData["StatusMessage"] as string ?? string.Empty
             });
         }
@@ -43,11 +46,27 @@ namespace Integracao.ControlID.PoC.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            var events = await _monitorEventRepository.GetAllMonitorEventsAsync();
-            foreach (var item in events)
-                await _monitorEventRepository.DeleteMonitorEventAsync(item.EventId);
+            var removedCount = await _monitorEventRepository.DeleteAllMonitorEventsAsync();
 
-            TempData["StatusMessage"] = "Eventos oficiais limpos com sucesso.";
+            TempData["StatusMessage"] = $"Eventos oficiais limpos com sucesso. Registros removidos: {removedCount}.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Purge(int retentionDays, string confirmationPhrase)
+        {
+            if (!HighImpactOperationGuard.IsConfirmed(confirmationPhrase, HighImpactOperationGuard.ConfirmPurgeMonitorEvents))
+            {
+                TempData["StatusMessage"] = HighImpactOperationGuard.BuildRequiredMessage(HighImpactOperationGuard.ConfirmPurgeMonitorEvents);
+                return RedirectToAction(nameof(Index));
+            }
+
+            var normalizedRetentionDays = LocalDataQueryLimits.NormalizeRetentionDays(retentionDays);
+            var cutoffUtc = DateTime.UtcNow.AddDays(-normalizedRetentionDays);
+            var removedCount = await _monitorEventRepository.DeleteMonitorEventsOlderThanAsync(cutoffUtc);
+
+            TempData["StatusMessage"] = $"Expurgo concluido. Retencao: {normalizedRetentionDays} dias. Registros removidos: {removedCount}.";
             return RedirectToAction(nameof(Index));
         }
 

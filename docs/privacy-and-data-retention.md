@@ -16,6 +16,8 @@ Esta PoC manipula dados operacionais da Access API da Control iD. Trate os dados
 - Usar User Secrets, variaveis de ambiente ou cofre externo para credenciais e `CallbackSecurity:SharedKey`.
 - Validar `AllowedHosts`, shared key e IPs permitidos antes de expor a PoC fora de localhost.
 - Limpar `MonitorEvents` e `PushCommands` apenas por acao manual confirmada na UI.
+- Preferir expurgo por retencao (`EXPURGAR EVENTOS` ou `EXPURGAR PUSH`) a limpeza total quando o objetivo for reduzir historico.
+- Tratar backups SQLite em `artifacts/backups/` como dados sensiveis; nao versionar nem compartilhar esses arquivos.
 
 ## Retencao recomendada
 
@@ -25,6 +27,7 @@ Esta PoC manipula dados operacionais da Access API da Control iD. Trate os dados
 | `PushCommands` | ate concluir analise do ciclo Push | pode conter comando, resultado, device_id, user_id e payload livre. |
 | `Logs/` | curto prazo local | pode conter endpoints, status, IPs e metadados operacionais. |
 | `integracao_controlid.db*` | ambiente local controlado | banco nao deve ser compartilhado como artefato de produto. |
+| `artifacts/backups/` | apenas enquanto necessario para rollback local | copia completa do SQLite pode conter todos os dados sensiveis da PoC. |
 
 ## Critérios de aceite de privacidade
 

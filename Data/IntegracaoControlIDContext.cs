@@ -1,7 +1,5 @@
 using Integracao.ControlID.PoC.Models.Database;
 using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
-using System.Reflection.Emit;
 
 namespace Integracao.ControlID.PoC.Data
 {
@@ -48,9 +46,138 @@ namespace Integracao.ControlID.PoC.Data
                 .Property(item => item.CommandId)
                 .ValueGeneratedNever();
 
-            // Exemplo de configuração adicional (caso precise de índices únicos ou relacionamentos):
-            // modelBuilder.Entity<UserLocal>().HasIndex(u => u.Registration).IsUnique();
-            // modelBuilder.Entity<DeviceLocal>().HasIndex(d => d.IpAddress);
+            ConfigureOperationalIndexes(modelBuilder);
+        }
+
+        private static void ConfigureOperationalIndexes(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<AccessLogLocal>()
+                .HasIndex(item => item.Time)
+                .HasDatabaseName("IX_AccessLogs_Time");
+
+            modelBuilder.Entity<AccessLogLocal>()
+                .HasIndex(item => new { item.UserId, item.Time })
+                .HasDatabaseName("IX_AccessLogs_UserId_Time");
+
+            modelBuilder.Entity<AccessLogLocal>()
+                .HasIndex(item => new { item.DeviceId, item.Time })
+                .HasDatabaseName("IX_AccessLogs_DeviceId_Time");
+
+            modelBuilder.Entity<AccessLogLocal>()
+                .HasIndex(item => new { item.Event, item.Time })
+                .HasDatabaseName("IX_AccessLogs_Event_Time");
+
+            modelBuilder.Entity<BiometricTemplateLocal>()
+                .HasIndex(item => new { item.UserId, item.Type })
+                .HasDatabaseName("IX_BiometricTemplates_UserId_Type");
+
+            modelBuilder.Entity<CardLocal>()
+                .HasIndex(item => new { item.UserId, item.Status })
+                .HasDatabaseName("IX_Cards_UserId_Status");
+
+            modelBuilder.Entity<ChangeLogLocal>()
+                .HasIndex(item => item.Timestamp)
+                .HasDatabaseName("IX_ChangeLogs_Timestamp");
+
+            modelBuilder.Entity<ChangeLogLocal>()
+                .HasIndex(item => new { item.TableName, item.Timestamp })
+                .HasDatabaseName("IX_ChangeLogs_TableName_Timestamp");
+
+            modelBuilder.Entity<ChangeLogLocal>()
+                .HasIndex(item => new { item.OperationType, item.Timestamp })
+                .HasDatabaseName("IX_ChangeLogs_OperationType_Timestamp");
+
+            modelBuilder.Entity<ConfigLocal>()
+                .HasIndex(item => new { item.Group, item.Key })
+                .HasDatabaseName("IX_Configs_Group_Key");
+
+            modelBuilder.Entity<DeviceLocal>()
+                .HasIndex(item => item.Ip)
+                .HasDatabaseName("IX_Devices_Ip");
+
+            modelBuilder.Entity<DeviceLocal>()
+                .HasIndex(item => item.IpAddress)
+                .HasDatabaseName("IX_Devices_IpAddress");
+
+            modelBuilder.Entity<DeviceLocal>()
+                .HasIndex(item => item.SerialNumber)
+                .HasDatabaseName("IX_Devices_SerialNumber");
+
+            modelBuilder.Entity<LogLocal>()
+                .HasIndex(item => item.CreatedAt)
+                .HasDatabaseName("IX_Logs_CreatedAt");
+
+            modelBuilder.Entity<LogLocal>()
+                .HasIndex(item => new { item.Level, item.CreatedAt })
+                .HasDatabaseName("IX_Logs_Level_CreatedAt");
+
+            modelBuilder.Entity<MonitorEventLocal>()
+                .HasIndex(item => item.ReceivedAt)
+                .HasDatabaseName("IX_MonitorEvents_ReceivedAt");
+
+            modelBuilder.Entity<MonitorEventLocal>()
+                .HasIndex(item => new { item.EventType, item.ReceivedAt })
+                .HasDatabaseName("IX_MonitorEvents_EventType_ReceivedAt");
+
+            modelBuilder.Entity<MonitorEventLocal>()
+                .HasIndex(item => new { item.Status, item.ReceivedAt })
+                .HasDatabaseName("IX_MonitorEvents_Status_ReceivedAt");
+
+            modelBuilder.Entity<MonitorEventLocal>()
+                .HasIndex(item => new { item.DeviceId, item.ReceivedAt })
+                .HasDatabaseName("IX_MonitorEvents_DeviceId_ReceivedAt");
+
+            modelBuilder.Entity<PhotoLocal>()
+                .HasIndex(item => new { item.UserId, item.CreatedAt })
+                .HasDatabaseName("IX_Photos_UserId_CreatedAt");
+
+            modelBuilder.Entity<PushCommandLocal>()
+                .HasIndex(item => new { item.Status, item.DeviceId, item.CreatedAt })
+                .HasDatabaseName("IX_PushCommands_Status_DeviceId_CreatedAt");
+
+            modelBuilder.Entity<PushCommandLocal>()
+                .HasIndex(item => item.ReceivedAt)
+                .HasDatabaseName("IX_PushCommands_ReceivedAt");
+
+            modelBuilder.Entity<PushCommandLocal>()
+                .HasIndex(item => new { item.CommandType, item.ReceivedAt })
+                .HasDatabaseName("IX_PushCommands_CommandType_ReceivedAt");
+
+            modelBuilder.Entity<PushCommandLocal>()
+                .HasIndex(item => new { item.UserId, item.ReceivedAt })
+                .HasDatabaseName("IX_PushCommands_UserId_ReceivedAt");
+
+            modelBuilder.Entity<QRCodeLocal>()
+                .HasIndex(item => new { item.UserId, item.Status })
+                .HasDatabaseName("IX_QRCodes_UserId_Status");
+
+            modelBuilder.Entity<SessionLocal>()
+                .HasIndex(item => new { item.IsActive, item.CreatedAt })
+                .HasDatabaseName("IX_Sessions_IsActive_CreatedAt");
+
+            modelBuilder.Entity<SessionLocal>()
+                .HasIndex(item => new { item.DeviceAddress, item.IsActive, item.CreatedAt })
+                .HasDatabaseName("IX_Sessions_DeviceAddress_IsActive_CreatedAt");
+
+            modelBuilder.Entity<SessionLocal>()
+                .HasIndex(item => new { item.Username, item.CreatedAt })
+                .HasDatabaseName("IX_Sessions_Username_CreatedAt");
+
+            modelBuilder.Entity<SyncLocal>()
+                .HasIndex(item => item.StartedAt)
+                .HasDatabaseName("IX_Syncs_StartedAt");
+
+            modelBuilder.Entity<SyncLocal>()
+                .HasIndex(item => new { item.Status, item.StartedAt })
+                .HasDatabaseName("IX_Syncs_Status_StartedAt");
+
+            modelBuilder.Entity<UserLocal>()
+                .HasIndex(item => item.Registration)
+                .HasDatabaseName("IX_Users_Registration");
+
+            modelBuilder.Entity<UserLocal>()
+                .HasIndex(item => item.Username)
+                .HasDatabaseName("IX_Users_Username");
         }
     }
 }

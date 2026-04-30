@@ -52,7 +52,22 @@ namespace Integracao.ControlID.PoC.Services.Database
         /// </summary>
         public async Task<List<PushCommandLocal>> GetAllPushCommandsAsync()
         {
-            return await _dbContext.PushCommands.OrderByDescending(c => c.ReceivedAt).ToListAsync();
+            return await GetRecentPushCommandsAsync();
+        }
+
+        public async Task<List<PushCommandLocal>> GetRecentPushCommandsAsync(int? limit = null)
+        {
+            var normalizedLimit = LocalDataQueryLimits.NormalizeLimit(limit);
+
+            return await _dbContext.PushCommands
+                .OrderByDescending(c => c.ReceivedAt)
+                .Take(normalizedLimit)
+                .ToListAsync();
+        }
+
+        public async Task<int> CountPushCommandsAsync()
+        {
+            return await _dbContext.PushCommands.CountAsync();
         }
 
         /// <summary>
@@ -115,6 +130,18 @@ namespace Integracao.ControlID.PoC.Services.Database
             }
         }
 
+        public async Task<int> DeleteAllPushCommandsAsync()
+        {
+            return await _dbContext.PushCommands.ExecuteDeleteAsync();
+        }
+
+        public async Task<int> DeletePushCommandsOlderThanAsync(DateTime cutoffUtc)
+        {
+            return await _dbContext.PushCommands
+                .Where(item => item.ReceivedAt < cutoffUtc)
+                .ExecuteDeleteAsync();
+        }
+
         /// <summary>
         /// Busca comandos Push locais por tipo, status, usuário ou período.
         /// </summary>
@@ -142,7 +169,10 @@ namespace Integracao.ControlID.PoC.Services.Database
             if (endDate.HasValue)
                 query = query.Where(c => c.ReceivedAt <= endDate.Value);
 
-            return await query.OrderByDescending(c => c.ReceivedAt).ToListAsync();
+            return await query
+                .OrderByDescending(c => c.ReceivedAt)
+                .Take(LocalDataQueryLimits.DefaultListLimit)
+                .ToListAsync();
         }
     }
 }

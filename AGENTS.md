@@ -70,6 +70,13 @@ O smoke test tambem sobe app e stub localmente:
 powershell -ExecutionPolicy Bypass -File .\tools\smoke-localhost.ps1
 ```
 
+Backup local nao destrutivo do SQLite:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\tools\backup-sqlite.ps1
+powershell -ExecutionPolicy Bypass -File .\tools\restore-smoke-sqlite.ps1
+```
+
 ### Build, lint, format, typecheck, testes e auditoria
 
 ```powershell
@@ -131,6 +138,8 @@ Notas:
 - O SQLite local e estado runtime. Arquivos `integracao_controlid.db*` nao devem ser versionados.
 - `Program.cs` aplica `Database.Migrate()` e cria tabelas auxiliares idempotentes; iniciar app altera estado local.
 - Mudancas de schema exigem documentacao e testes. Migracoes destrutivas exigem confirmacao humana.
+- Consulte `docs/data-model-and-recovery.md` antes de tocar tabelas, indices, migrations, backup, restore ou retencao.
+- Listagens locais devem aplicar limite padrao de `LocalDataQueryLimits.DefaultListLimit`; use metodos de expurgo/limpeza confirmados para operacoes destrutivas.
 
 ### Seguranca
 

@@ -52,7 +52,22 @@ namespace Integracao.ControlID.PoC.Services.Database
         /// </summary>
         public async Task<List<MonitorEventLocal>> GetAllMonitorEventsAsync()
         {
-            return await _dbContext.MonitorEvents.OrderByDescending(e => e.ReceivedAt).ToListAsync();
+            return await GetRecentMonitorEventsAsync();
+        }
+
+        public async Task<List<MonitorEventLocal>> GetRecentMonitorEventsAsync(int? limit = null)
+        {
+            var normalizedLimit = LocalDataQueryLimits.NormalizeLimit(limit);
+
+            return await _dbContext.MonitorEvents
+                .OrderByDescending(e => e.ReceivedAt)
+                .Take(normalizedLimit)
+                .ToListAsync();
+        }
+
+        public async Task<int> CountMonitorEventsAsync()
+        {
+            return await _dbContext.MonitorEvents.CountAsync();
         }
 
         /// <summary>
@@ -95,6 +110,18 @@ namespace Integracao.ControlID.PoC.Services.Database
             }
         }
 
+        public async Task<int> DeleteAllMonitorEventsAsync()
+        {
+            return await _dbContext.MonitorEvents.ExecuteDeleteAsync();
+        }
+
+        public async Task<int> DeleteMonitorEventsOlderThanAsync(DateTime cutoffUtc)
+        {
+            return await _dbContext.MonitorEvents
+                .Where(item => item.ReceivedAt < cutoffUtc)
+                .ExecuteDeleteAsync();
+        }
+
         /// <summary>
         /// Busca eventos monitorados locais por tipo, status ou período.
         /// </summary>
@@ -118,7 +145,10 @@ namespace Integracao.ControlID.PoC.Services.Database
             if (endDate.HasValue)
                 query = query.Where(e => e.ReceivedAt <= endDate.Value);
 
-            return await query.OrderByDescending(e => e.ReceivedAt).ToListAsync();
+            return await query
+                .OrderByDescending(e => e.ReceivedAt)
+                .Take(LocalDataQueryLimits.DefaultListLimit)
+                .ToListAsync();
         }
     }
 }

@@ -64,6 +64,39 @@ public class PushCommandRepositoryTests
         Assert.Equal(completed.CommandId, item.CommandId);
     }
 
+    [Fact]
+    public async Task GetAllPushCommandsAsync_AppliesDefaultListLimit()
+    {
+        using var database = new SqliteTestDatabase();
+        var repository = CreateRepository(database);
+
+        for (var i = 0; i < LocalDataQueryLimits.DefaultListLimit + 5; i++)
+        {
+            await repository.AddPushCommandAsync(CreateCommand("item-" + i, "device-1", DateTime.UtcNow.AddMinutes(i), "completed"));
+        }
+
+        var result = await repository.GetAllPushCommandsAsync();
+
+        Assert.Equal(LocalDataQueryLimits.DefaultListLimit, result.Count);
+    }
+
+    [Fact]
+    public async Task DeletePushCommandsOlderThanAsync_RemovesOnlyCommandsBeforeCutoff()
+    {
+        using var database = new SqliteTestDatabase();
+        var repository = CreateRepository(database);
+        var oldCommand = await repository.AddPushCommandAsync(CreateCommand("old", "device-1", DateTime.UtcNow.AddDays(-10), "completed"));
+        oldCommand.ReceivedAt = DateTime.UtcNow.AddDays(-10);
+        await repository.UpdatePushCommandAsync(oldCommand);
+        var recentCommand = await repository.AddPushCommandAsync(CreateCommand("recent", "device-1", DateTime.UtcNow, "completed"));
+
+        var removedCount = await repository.DeletePushCommandsOlderThanAsync(DateTime.UtcNow.AddDays(-5));
+
+        Assert.Equal(1, removedCount);
+        Assert.Null(await repository.GetPushCommandByIdAsync(oldCommand.CommandId));
+        Assert.NotNull(await repository.GetPushCommandByIdAsync(recentCommand.CommandId));
+    }
+
     private static PushCommandRepository CreateRepository(SqliteTestDatabase database)
     {
         return new PushCommandRepository(database.Context, NullLogger<PushCommandRepository>.Instance);

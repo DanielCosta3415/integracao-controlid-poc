@@ -52,7 +52,10 @@ namespace Integracao.ControlID.PoC.Services.Database
         /// </summary>
         public async Task<List<ChangeLogLocal>> GetAllChangeLogsAsync()
         {
-            return await _dbContext.ChangeLogs.OrderByDescending(l => l.Timestamp).ToListAsync();
+            return await _dbContext.ChangeLogs
+                .OrderByDescending(l => l.Timestamp)
+                .Take(LocalDataQueryLimits.DefaultListLimit)
+                .ToListAsync();
         }
 
         /// <summary>
@@ -122,7 +125,10 @@ namespace Integracao.ControlID.PoC.Services.Database
             if (endDate.HasValue)
                 query = query.Where(l => l.Timestamp <= endDate.Value);
 
-            return await query.OrderByDescending(l => l.Timestamp).ToListAsync();
+            return await query
+                .OrderByDescending(l => l.Timestamp)
+                .Take(LocalDataQueryLimits.DefaultListLimit)
+                .ToListAsync();
         }
     }
 }

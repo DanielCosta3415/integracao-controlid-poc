@@ -52,7 +52,10 @@ namespace Integracao.ControlID.PoC.Services.Database
         /// </summary>
         public async Task<List<BiometricTemplateLocal>> GetAllTemplatesAsync()
         {
-            return await _dbContext.BiometricTemplates.OrderBy(t => t.Id).ToListAsync();
+            return await _dbContext.BiometricTemplates
+                .OrderBy(t => t.Id)
+                .Take(LocalDataQueryLimits.DefaultListLimit)
+                .ToListAsync();
         }
 
         /// <summary>
@@ -103,6 +106,7 @@ namespace Integracao.ControlID.PoC.Services.Database
             return await _dbContext.BiometricTemplates
                 .Where(t => t.UserId == userId)
                 .OrderBy(t => t.Id)
+                .Take(LocalDataQueryLimits.DefaultListLimit)
                 .ToListAsync();
         }
 
@@ -121,7 +125,10 @@ namespace Integracao.ControlID.PoC.Services.Database
                     return new List<BiometricTemplateLocal>();
             }
 
-            return await query.OrderBy(t => t.Id).ToListAsync();
+            return await query
+                .OrderBy(t => t.Id)
+                .Take(LocalDataQueryLimits.DefaultListLimit)
+                .ToListAsync();
         }
     }
 }

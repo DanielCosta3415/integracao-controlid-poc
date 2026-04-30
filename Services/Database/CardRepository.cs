@@ -52,7 +52,10 @@ namespace Integracao.ControlID.PoC.Services.Database
         /// </summary>
         public async Task<List<CardLocal>> GetAllCardsAsync()
         {
-            return await _dbContext.Cards.OrderBy(c => c.Id).ToListAsync();
+            return await _dbContext.Cards
+                .OrderBy(c => c.Id)
+                .Take(LocalDataQueryLimits.DefaultListLimit)
+                .ToListAsync();
         }
 
         /// <summary>
@@ -108,7 +111,10 @@ namespace Integracao.ControlID.PoC.Services.Database
             if (!string.IsNullOrWhiteSpace(status))
                 query = query.Where(c => c.Status == status);
 
-            return await query.OrderBy(c => c.Id).ToListAsync();
+            return await query
+                .OrderBy(c => c.Id)
+                .Take(LocalDataQueryLimits.DefaultListLimit)
+                .ToListAsync();
         }
     }
 }

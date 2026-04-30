@@ -52,7 +52,10 @@ namespace Integracao.ControlID.PoC.Services.Database
         /// </summary>
         public async Task<List<PhotoLocal>> GetAllPhotosAsync()
         {
-            return await _dbContext.Photos.OrderBy(p => p.Id).ToListAsync();
+            return await _dbContext.Photos
+                .OrderBy(p => p.Id)
+                .Take(LocalDataQueryLimits.DefaultListLimit)
+                .ToListAsync();
         }
 
         /// <summary>
@@ -118,7 +121,10 @@ namespace Integracao.ControlID.PoC.Services.Database
             if (endDate.HasValue)
                 query = query.Where(p => p.CreatedAt <= endDate.Value);
 
-            return await query.OrderBy(p => p.Id).ToListAsync();
+            return await query
+                .OrderBy(p => p.Id)
+                .Take(LocalDataQueryLimits.DefaultListLimit)
+                .ToListAsync();
         }
     }
 }

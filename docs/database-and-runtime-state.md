@@ -54,6 +54,19 @@ powershell -ExecutionPolicy Bypass -File .\tools\smoke-localhost.ps1
 
 O smoke test sobe o stub local, executa fluxos HTTP e escreve relatorios em `docs/reports/`.
 
+## Backup local
+
+Antes de validar mudancas de schema em um banco local com dados importantes, gere uma copia segura:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\tools\backup-sqlite.ps1
+powershell -ExecutionPolicy Bypass -File .\tools\restore-smoke-sqlite.ps1
+```
+
+O script copia `integracao_controlid.db` e, quando existirem, `integracao_controlid.db-wal` e `integracao_controlid.db-shm` para `artifacts/backups/`. Backups podem conter dados pessoais, sessoes, logs e payloads brutos; nao versione nem compartilhe esses arquivos.
+
+O smoke de restore aplica migrations apenas sobre uma copia temporaria do backup mais recente. O mapa completo de tabelas, indices, riscos de integridade e procedimento de restore esta em `docs/data-model-and-recovery.md`.
+
 ## Requisitos para ambientes nao Development
 
 Ambientes fora de `Development` devem configurar:

@@ -52,7 +52,10 @@ namespace Integracao.ControlID.PoC.Services.Database
         /// </summary>
         public async Task<List<AccessLogLocal>> GetAllAccessLogsAsync()
         {
-            return await _dbContext.AccessLogs.OrderByDescending(l => l.Time).ToListAsync();
+            return await _dbContext.AccessLogs
+                .OrderByDescending(l => l.Time)
+                .Take(LocalDataQueryLimits.DefaultListLimit)
+                .ToListAsync();
         }
 
         /// <summary>
@@ -131,7 +134,10 @@ namespace Integracao.ControlID.PoC.Services.Database
             if (endDate.HasValue)
                 query = query.Where(l => l.Time <= endDate.Value);
 
-            return await query.OrderByDescending(l => l.Time).ToListAsync();
+            return await query
+                .OrderByDescending(l => l.Time)
+                .Take(LocalDataQueryLimits.DefaultListLimit)
+                .ToListAsync();
         }
     }
 }

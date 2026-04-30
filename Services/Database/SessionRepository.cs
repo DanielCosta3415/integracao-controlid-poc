@@ -52,7 +52,10 @@ namespace Integracao.ControlID.PoC.Services.Database
         /// </summary>
         public async Task<List<SessionLocal>> GetAllSessionsAsync()
         {
-            return await _dbContext.Sessions.OrderByDescending(s => s.CreatedAt).ToListAsync();
+            return await _dbContext.Sessions
+                .OrderByDescending(s => s.CreatedAt)
+                .Take(LocalDataQueryLimits.DefaultListLimit)
+                .ToListAsync();
         }
 
         /// <summary>
@@ -103,6 +106,7 @@ namespace Integracao.ControlID.PoC.Services.Database
             return await _dbContext.Sessions
                 .Where(s => s.IsActive)
                 .OrderByDescending(s => s.CreatedAt)
+                .Take(LocalDataQueryLimits.DefaultListLimit)
                 .ToListAsync();
         }
 
@@ -125,6 +129,7 @@ namespace Integracao.ControlID.PoC.Services.Database
             return await _dbContext.Sessions
                 .Where(s => s.Username == username)
                 .OrderByDescending(s => s.CreatedAt)
+                .Take(LocalDataQueryLimits.DefaultListLimit)
                 .ToListAsync();
         }
 
@@ -155,15 +160,9 @@ namespace Integracao.ControlID.PoC.Services.Database
         /// </summary>
         public async Task<int> CleanupInactiveSessionsAsync()
         {
-            var inactives = await _dbContext.Sessions
+            return await _dbContext.Sessions
                 .Where(s => !s.IsActive || (s.ExpiresAt != null && s.ExpiresAt < DateTime.UtcNow))
-                .ToListAsync();
-
-            if (!inactives.Any())
-                return 0;
-
-            _dbContext.Sessions.RemoveRange(inactives);
-            return await _dbContext.SaveChangesAsync();
+                .ExecuteDeleteAsync();
         }
     }
 }

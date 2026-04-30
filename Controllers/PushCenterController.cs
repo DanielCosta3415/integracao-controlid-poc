@@ -2,6 +2,7 @@ using System.Text;
 using Integracao.ControlID.PoC.Helpers;
 using Integracao.ControlID.PoC.Models.Database;
 using Integracao.ControlID.PoC.Services.Callbacks;
+using Integracao.ControlID.PoC.Services.Database;
 using Integracao.ControlID.PoC.Services.Push;
 using Integracao.ControlID.PoC.ViewModels.Push;
 using Microsoft.AspNetCore.Mvc;
@@ -16,6 +17,7 @@ namespace Integracao.ControlID.PoC.Controllers
     /// </summary>
     public class PushCenterController : Controller
     {
+        private const int EventListLimit = LocalDataQueryLimits.DefaultListLimit;
         private readonly PushCommandWorkflowService _pushWorkflowService;
         private readonly CallbackSecurityEvaluator _securityEvaluator;
         private readonly CallbackRequestBodyReader _bodyReader;
@@ -44,7 +46,9 @@ namespace Integracao.ControlID.PoC.Controllers
         {
             return View(new PushEventListViewModel
             {
-                Events = (await _pushWorkflowService.GetAllAsync()).Select(ToViewModel).ToList(),
+                Events = (await _pushWorkflowService.GetRecentAsync(EventListLimit)).Select(ToViewModel).ToList(),
+                TotalCount = await _pushWorkflowService.CountAsync(),
+                DisplayLimit = EventListLimit,
                 StatusMessage = TempData["StatusMessage"] as string ?? string.Empty,
                 StatusType = TempData["StatusType"] as string ?? string.Empty
             });
@@ -141,6 +145,36 @@ namespace Integracao.ControlID.PoC.Controllers
             {
                 _logger.LogError(ex, "Failed to clear the push queue manually.");
                 TempData["StatusMessage"] = "Nao foi possivel limpar a fila de push.";
+                TempData["StatusType"] = "danger";
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Purge(int retentionDays, string confirmationPhrase)
+        {
+            if (!HighImpactOperationGuard.IsConfirmed(confirmationPhrase, HighImpactOperationGuard.ConfirmPurgePushQueue))
+            {
+                TempData["StatusMessage"] = HighImpactOperationGuard.BuildRequiredMessage(HighImpactOperationGuard.ConfirmPurgePushQueue);
+                TempData["StatusType"] = "warning";
+                return RedirectToAction(nameof(Index));
+            }
+
+            try
+            {
+                var normalizedRetentionDays = LocalDataQueryLimits.NormalizeRetentionDays(retentionDays);
+                var cutoffUtc = DateTime.UtcNow.AddDays(-normalizedRetentionDays);
+                var removedCount = await _pushWorkflowService.PurgeOlderThanAsync(cutoffUtc);
+
+                TempData["StatusMessage"] = $"Expurgo concluido. Retencao: {normalizedRetentionDays} dias. Registros removidos: {removedCount}.";
+                TempData["StatusType"] = "success";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to purge the push queue manually.");
+                TempData["StatusMessage"] = "Nao foi possivel expurgar a fila de push.";
                 TempData["StatusType"] = "danger";
             }
 
@@ -277,7 +311,9 @@ namespace Integracao.ControlID.PoC.Controllers
         {
             return new PushEventListViewModel
             {
-                Events = (await _pushWorkflowService.GetAllAsync()).Select(ToViewModel).ToList(),
+                Events = (await _pushWorkflowService.GetRecentAsync(EventListLimit)).Select(ToViewModel).ToList(),
+                TotalCount = await _pushWorkflowService.CountAsync(),
+                DisplayLimit = EventListLimit,
                 QueueCommand = queueCommand,
                 ErrorMessage = errorMessage
             };

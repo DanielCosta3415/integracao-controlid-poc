@@ -52,7 +52,10 @@ namespace Integracao.ControlID.PoC.Services.Database
         /// </summary>
         public async Task<List<GroupLocal>> GetAllGroupsAsync()
         {
-            return await _dbContext.Groups.OrderBy(g => g.Id).ToListAsync();
+            return await _dbContext.Groups
+                .OrderBy(g => g.Id)
+                .Take(LocalDataQueryLimits.DefaultListLimit)
+                .ToListAsync();
         }
 
         /// <summary>
@@ -108,7 +111,10 @@ namespace Integracao.ControlID.PoC.Services.Database
             if (!string.IsNullOrWhiteSpace(status))
                 query = query.Where(g => g.Status == status);
 
-            return await query.OrderBy(g => g.Id).ToListAsync();
+            return await query
+                .OrderBy(g => g.Id)
+                .Take(LocalDataQueryLimits.DefaultListLimit)
+                .ToListAsync();
         }
     }
 }

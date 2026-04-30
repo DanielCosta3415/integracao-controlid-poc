@@ -182,6 +182,41 @@ public class PushCenterControllerTests
         Assert.Empty(await repository.GetAllPushCommandsAsync());
     }
 
+    [Fact]
+    public async Task Purge_KeepsCommandsWhenConfirmationIsInvalid()
+    {
+        using var database = new SqliteTestDatabase();
+        var repository = CreateRepository(database);
+        var command = await repository.AddPushCommandAsync(CreateCommand("custom", "device-1", "pending"));
+        command.ReceivedAt = DateTime.UtcNow.AddDays(-40);
+        await repository.UpdatePushCommandAsync(command);
+        var controller = CreateController(database);
+
+        var result = await controller.Purge(30, "wrong");
+
+        Assert.IsType<RedirectToActionResult>(result);
+        Assert.Single(await repository.GetAllPushCommandsAsync());
+    }
+
+    [Fact]
+    public async Task Purge_DeletesOnlyCommandsOlderThanRetentionWindow()
+    {
+        using var database = new SqliteTestDatabase();
+        var repository = CreateRepository(database);
+        var oldCommand = await repository.AddPushCommandAsync(CreateCommand("old", "device-1", "completed"));
+        oldCommand.ReceivedAt = DateTime.UtcNow.AddDays(-40);
+        await repository.UpdatePushCommandAsync(oldCommand);
+        await repository.AddPushCommandAsync(CreateCommand("new", "device-1", "completed"));
+        var controller = CreateController(database);
+
+        var result = await controller.Purge(30, HighImpactOperationGuard.ConfirmPurgePushQueue);
+
+        Assert.IsType<RedirectToActionResult>(result);
+        var remaining = await repository.GetAllPushCommandsAsync();
+        var item = Assert.Single(remaining);
+        Assert.NotEqual(oldCommand.CommandId, item.CommandId);
+    }
+
     private static PushCenterController CreateController(
         SqliteTestDatabase database,
         Action<CallbackSecurityOptions>? configure = null)
@@ -217,5 +252,20 @@ public class PushCenterControllerTests
         return new PushCommandWorkflowService(
             CreateRepository(database),
             NullLogger<PushCommandWorkflowService>.Instance);
+    }
+
+    private static PushCommandLocal CreateCommand(string type, string deviceId, string status)
+    {
+        return new PushCommandLocal
+        {
+            CommandId = Guid.NewGuid(),
+            CommandType = type,
+            DeviceId = deviceId,
+            UserId = string.Empty,
+            Payload = "{\"type\":\"" + type + "\"}",
+            RawJson = "{\"type\":\"" + type + "\"}",
+            Status = status,
+            CreatedAt = DateTime.UtcNow
+        };
     }
 }

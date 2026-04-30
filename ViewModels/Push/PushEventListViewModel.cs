@@ -14,6 +14,10 @@ namespace Integracao.ControlID.PoC.ViewModels.Push
         public string StatusMessage { get; set; } = string.Empty;
         public string StatusType { get; set; } = string.Empty;
         public string ClearConfirmationPhrase { get; set; } = string.Empty;
+        public int TotalCount { get; set; }
+        public int DisplayLimit { get; set; }
+        public bool IsTruncated => TotalCount > Events.Count;
+        public int RetentionDays { get; set; } = 30;
     }
 }
 

@@ -52,7 +52,10 @@ namespace Integracao.ControlID.PoC.Services.Database
         /// </summary>
         public async Task<List<QRCodeLocal>> GetAllQRCodesAsync()
         {
-            return await _dbContext.QRCodes.OrderBy(q => q.Id).ToListAsync();
+            return await _dbContext.QRCodes
+                .OrderBy(q => q.Id)
+                .Take(LocalDataQueryLimits.DefaultListLimit)
+                .ToListAsync();
         }
 
         /// <summary>
@@ -108,7 +111,10 @@ namespace Integracao.ControlID.PoC.Services.Database
             if (!string.IsNullOrWhiteSpace(status))
                 query = query.Where(q => q.Status == status);
 
-            return await query.OrderBy(q => q.Id).ToListAsync();
+            return await query
+                .OrderBy(q => q.Id)
+                .Take(LocalDataQueryLimits.DefaultListLimit)
+                .ToListAsync();
         }
     }
 }

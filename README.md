@@ -119,6 +119,9 @@ Observações:
 - As migrações são aplicadas automaticamente no startup.
 - A PoC também cria tabelas auxiliares de monitoramento local para callbacks e push.
 
+- Antes de validar mudancas de schema em um banco local importante, gere backup com `powershell -ExecutionPolicy Bypass -File .\tools\backup-sqlite.ps1`.
+- Para validar recuperacao sem sobrescrever dados reais, rode o smoke em copia restaurada com `powershell -ExecutionPolicy Bypass -File .\tools\restore-smoke-sqlite.ps1`.
+
 ## Testes automatizados
 
 ### Testes unitários
@@ -228,6 +231,7 @@ Checklist recomendado para debug operacional:
 - `docs/changelog-2026-04-15.md`: changelog das atualizações de documentação, comentários e observabilidade
 
 - `docs/database-and-runtime-state.md`: estado local, comandos seguros e requisitos de runtime
+- `docs/data-model-and-recovery.md`: modelo de dados local, indices, migrations, backup e restore
 - `docs/integration-contracts.md`: inventario de integracoes, contratos, payloads e riscos
 - `docs/privacy-and-data-retention.md`: regras de privacidade, dados sensíveis e retenção local
 - `docs/product-acceptance-criteria.md`: critérios de aceite funcionais para os fluxos críticos

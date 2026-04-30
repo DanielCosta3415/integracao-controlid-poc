@@ -54,6 +54,41 @@ public class OfficialEventsControllerTests
         Assert.Empty(await repository.GetAllMonitorEventsAsync());
     }
 
+    [Fact]
+    public async Task Purge_KeepsEventsWhenConfirmationIsInvalid()
+    {
+        using var database = new SqliteTestDatabase();
+        var repository = CreateRepository(database);
+        var oldEvent = await AddMonitorEventAsync(repository);
+        oldEvent.ReceivedAt = DateTime.UtcNow.AddDays(-40);
+        await repository.UpdateMonitorEventAsync(oldEvent);
+        var controller = CreateController(repository);
+
+        var result = await controller.Purge(30, "wrong");
+
+        Assert.IsType<RedirectToActionResult>(result);
+        Assert.Single(await repository.GetAllMonitorEventsAsync());
+    }
+
+    [Fact]
+    public async Task Purge_DeletesOnlyEventsOlderThanRetentionWindow()
+    {
+        using var database = new SqliteTestDatabase();
+        var repository = CreateRepository(database);
+        var oldEvent = await AddMonitorEventAsync(repository);
+        oldEvent.ReceivedAt = DateTime.UtcNow.AddDays(-40);
+        await repository.UpdateMonitorEventAsync(oldEvent);
+        await AddMonitorEventAsync(repository);
+        var controller = CreateController(repository);
+
+        var result = await controller.Purge(30, HighImpactOperationGuard.ConfirmPurgeMonitorEvents);
+
+        Assert.IsType<RedirectToActionResult>(result);
+        var remaining = await repository.GetAllMonitorEventsAsync();
+        var item = Assert.Single(remaining);
+        Assert.NotEqual(oldEvent.EventId, item.EventId);
+    }
+
     private static OfficialEventsController CreateController(MonitorEventRepository repository)
     {
         var httpContext = new DefaultHttpContext();
@@ -71,5 +106,17 @@ public class OfficialEventsControllerTests
     private static MonitorEventRepository CreateRepository(SqliteTestDatabase database)
     {
         return new MonitorEventRepository(database.Context, NullLogger<MonitorEventRepository>.Instance);
+    }
+
+    private static async Task<MonitorEventLocal> AddMonitorEventAsync(MonitorEventRepository repository)
+    {
+        return await repository.AddMonitorEventAsync(new MonitorEventLocal
+        {
+            EventId = Guid.NewGuid(),
+            EventType = "access",
+            RawJson = "{\"event\":\"access\"}",
+            Payload = "{\"event\":\"access\"}",
+            Status = "received"
+        });
     }
 }

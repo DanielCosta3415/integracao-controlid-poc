@@ -52,7 +52,10 @@ namespace Integracao.ControlID.PoC.Services.Database
         /// </summary>
         public async Task<List<ConfigLocal>> GetAllConfigsAsync()
         {
-            return await _dbContext.Configs.OrderBy(c => c.Id).ToListAsync();
+            return await _dbContext.Configs
+                .OrderBy(c => c.Id)
+                .Take(LocalDataQueryLimits.DefaultListLimit)
+                .ToListAsync();
         }
 
         /// <summary>
@@ -111,7 +114,10 @@ namespace Integracao.ControlID.PoC.Services.Database
             if (!string.IsNullOrWhiteSpace(value))
                 query = query.Where(c => c.Value == value);
 
-            return await query.OrderBy(c => c.Id).ToListAsync();
+            return await query
+                .OrderBy(c => c.Id)
+                .Take(LocalDataQueryLimits.DefaultListLimit)
+                .ToListAsync();
         }
     }
 }

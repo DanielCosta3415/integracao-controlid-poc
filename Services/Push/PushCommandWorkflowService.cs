@@ -23,6 +23,16 @@ public sealed class PushCommandWorkflowService
         return await _pushCommandRepository.GetAllPushCommandsAsync();
     }
 
+    public async Task<List<PushCommandLocal>> GetRecentAsync(int? limit = null)
+    {
+        return await _pushCommandRepository.GetRecentPushCommandsAsync(limit);
+    }
+
+    public async Task<int> CountAsync()
+    {
+        return await _pushCommandRepository.CountPushCommandsAsync();
+    }
+
     public async Task<PushCommandLocal?> GetByIdAsync(Guid commandId)
     {
         return await _pushCommandRepository.GetPushCommandByIdAsync(commandId);
@@ -65,14 +75,22 @@ public sealed class PushCommandWorkflowService
 
     public async Task<int> ClearAsync()
     {
-        var commands = await _pushCommandRepository.GetAllPushCommandsAsync();
-        foreach (var command in commands)
-        {
-            await _pushCommandRepository.DeletePushCommandAsync(command.CommandId);
-        }
+        var removedCount = await _pushCommandRepository.DeleteAllPushCommandsAsync();
 
-        _logger.LogWarning("Push queue cleared manually. Removed {Count} commands.", commands.Count);
-        return commands.Count;
+        _logger.LogWarning("Push queue cleared manually. Removed {Count} commands.", removedCount);
+        return removedCount;
+    }
+
+    public async Task<int> PurgeOlderThanAsync(DateTime cutoffUtc)
+    {
+        var removedCount = await _pushCommandRepository.DeletePushCommandsOlderThanAsync(cutoffUtc);
+
+        _logger.LogWarning(
+            "Push queue retention purge removed {Count} commands older than {CutoffUtc}.",
+            removedCount,
+            cutoffUtc);
+
+        return removedCount;
     }
 
     public async Task<PushCommandLocal?> DeliverNextAsync(string? deviceId)

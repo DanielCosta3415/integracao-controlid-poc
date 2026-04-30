@@ -10,7 +10,9 @@ namespace Integracao.ControlID.PoC.Helpers
         public const string ConfirmDeleteAdmins = "REMOVER ADMINS";
         public const string ConfirmFactoryReset = "RESET FABRICA";
         public const string ConfirmClearPushQueue = "LIMPAR PUSH";
+        public const string ConfirmPurgePushQueue = "EXPURGAR PUSH";
         public const string ConfirmClearMonitorEvents = "LIMPAR EVENTOS";
+        public const string ConfirmPurgeMonitorEvents = "EXPURGAR EVENTOS";
 
         public static string BuildDestroyObjectsConfirmation(string objectName)
         {

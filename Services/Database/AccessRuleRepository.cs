@@ -52,7 +52,10 @@ namespace Integracao.ControlID.PoC.Services.Database
         /// </summary>
         public async Task<List<AccessRuleLocal>> GetAllAccessRulesAsync()
         {
-            return await _dbContext.AccessRules.OrderBy(r => r.Id).ToListAsync();
+            return await _dbContext.AccessRules
+                .OrderBy(r => r.Id)
+                .Take(LocalDataQueryLimits.DefaultListLimit)
+                .ToListAsync();
         }
 
         /// <summary>
@@ -111,7 +114,10 @@ namespace Integracao.ControlID.PoC.Services.Database
             if (priority.HasValue)
                 query = query.Where(r => r.Priority == priority.Value);
 
-            return await query.OrderBy(r => r.Id).ToListAsync();
+            return await query
+                .OrderBy(r => r.Id)
+                .Take(LocalDataQueryLimits.DefaultListLimit)
+                .ToListAsync();
         }
     }
 }
