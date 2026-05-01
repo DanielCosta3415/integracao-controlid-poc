@@ -10,6 +10,7 @@ using Integracao.ControlID.PoC.Services.Files;
 using Integracao.ControlID.PoC.Services.Navigation;
 using Integracao.ControlID.PoC.Services.OperationModes;
 using Integracao.ControlID.PoC.Services.Privacy;
+using Integracao.ControlID.PoC.Services.Performance;
 using Integracao.ControlID.PoC.Services.ProductSpecific;
 using Integracao.ControlID.PoC.Services.Push;
 using Integracao.ControlID.PoC.Services.Security;
@@ -239,7 +240,11 @@ app.UseMiddleware<SecurityHeadersMiddleware>();
 
 // Ativa arquivos estáticos e roteamento padrão
 app.UseResponseCompression();
-app.UseStaticFiles();
+app.UseStaticFiles(new StaticFileOptions
+{
+    OnPrepareResponse = context =>
+        StaticAssetCachePolicy.ApplyVersionedAssetCacheHeaders(context.Context)
+});
 app.UseRouting();
 
 if (app.Environment.IsDevelopment() && app.Configuration.GetValue<bool>("OpenApi:Enabled"))

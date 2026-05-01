@@ -81,6 +81,21 @@ public class PushCommandRepositoryTests
     }
 
     [Fact]
+    public async Task CountPendingPushCommandsAsync_CountsOnlyPendingCommands()
+    {
+        using var database = new SqliteTestDatabase();
+        var repository = CreateRepository(database);
+
+        await repository.AddPushCommandAsync(CreateCommand("pending-1", "device-1", DateTime.UtcNow.AddMinutes(-3), "pending"));
+        await repository.AddPushCommandAsync(CreateCommand("completed", "device-1", DateTime.UtcNow.AddMinutes(-2), "completed"));
+        await repository.AddPushCommandAsync(CreateCommand("pending-2", "device-2", DateTime.UtcNow.AddMinutes(-1), "pending"));
+
+        var result = await repository.CountPendingPushCommandsAsync();
+
+        Assert.Equal(2, result);
+    }
+
+    [Fact]
     public async Task DeletePushCommandsOlderThanAsync_RemovesOnlyCommandsBeforeCutoff()
     {
         using var database = new SqliteTestDatabase();

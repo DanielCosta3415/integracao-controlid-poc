@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text.Json;
 using Integracao.ControlID.PoC.Helpers;
@@ -7,6 +8,7 @@ using Integracao.ControlID.PoC.Models.ControlIDApi;
 using Integracao.ControlID.PoC.Services.ControlIDApi;
 using Integracao.ControlID.PoC.Services.Database;
 using Integracao.ControlID.PoC.Services.Navigation;
+using Integracao.ControlID.PoC.Services.Performance;
 using Integracao.ControlID.PoC.ViewModels.Home;
 using Integracao.ControlID.PoC.ViewModels.Shared;
 using Microsoft.AspNetCore.Mvc;
@@ -28,6 +30,8 @@ namespace Integracao.ControlID.PoC.Controllers
         private const string SessionDeviceSerialKey = "ControlID_DeviceSerial";
         private const string SessionDeviceFirmwareKey = "ControlID_DeviceFirmware";
         private const string SessionSessionStringKey = "ControlID_SessionString";
+        private const int RecentActivitySourceLimit = 4;
+        private const string DashboardLocalMetricsTimingName = "dashboard-local-metrics";
 
         public HomeController(
             ILogger<HomeController> logger,
@@ -119,18 +123,36 @@ namespace Integracao.ControlID.PoC.Controllers
                 ]
             };
 
+            var metricsStopwatch = Stopwatch.StartNew();
+
             try
             {
-                var events = await _monitorEventRepository.GetAllMonitorEventsAsync();
-                var pushCommands = await _pushCommandRepository.GetAllPushCommandsAsync();
+                var eventCount = await _monitorEventRepository.CountMonitorEventsAsync();
+                var pendingPushCount = await _pushCommandRepository.CountPendingPushCommandsAsync();
+                var events = await _monitorEventRepository.GetRecentMonitorEventsAsync(RecentActivitySourceLimit);
+                var pushCommands = await _pushCommandRepository.GetRecentPushCommandsAsync(RecentActivitySourceLimit);
 
-                model.RecentEventCount = events.Count;
-                model.PendingPushCount = pushCommands.Count(command => string.Equals(command.Status, "pending", StringComparison.OrdinalIgnoreCase));
+                model.RecentEventCount = eventCount;
+                model.PendingPushCount = pendingPushCount;
                 model.RecentActivities = BuildRecentActivities(events, pushCommands);
+
+                metricsStopwatch.Stop();
+                ServerTimingHeaderWriter.AppendMetric(Response, DashboardLocalMetricsTimingName, metricsStopwatch.Elapsed);
+                _logger.LogInformation(
+                    "Métricas locais da dashboard carregadas em {ElapsedMilliseconds} ms. Eventos: {EventCount}; Push pendentes: {PendingPushCount}; Atividades renderizadas: {RecentActivityCount}.",
+                    metricsStopwatch.ElapsedMilliseconds,
+                    eventCount,
+                    pendingPushCount,
+                    model.RecentActivities.Count);
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Não foi possível carregar as métricas locais da dashboard.");
+                metricsStopwatch.Stop();
+                ServerTimingHeaderWriter.AppendMetric(Response, DashboardLocalMetricsTimingName, metricsStopwatch.Elapsed);
+                _logger.LogWarning(
+                    ex,
+                    "Não foi possível carregar as métricas locais da dashboard em {ElapsedMilliseconds} ms.",
+                    metricsStopwatch.ElapsedMilliseconds);
                 if (string.IsNullOrWhiteSpace(model.StatusMessage))
                 {
                     model.StatusMessage = "A dashboard foi carregada, mas algumas métricas locais não puderam ser atualizadas.";

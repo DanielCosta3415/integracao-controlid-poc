@@ -24,6 +24,22 @@ public class MonitorEventRepositoryTests
     }
 
     [Fact]
+    public async Task GetRecentMonitorEventsAsync_AppliesExplicitLimit()
+    {
+        using var database = new SqliteTestDatabase();
+        var repository = CreateRepository(database);
+
+        for (var i = 0; i < 6; i++)
+        {
+            await repository.AddMonitorEventAsync(CreateEvent("access-" + i));
+        }
+
+        var result = await repository.GetRecentMonitorEventsAsync(4);
+
+        Assert.Equal(4, result.Count);
+    }
+
+    [Fact]
     public async Task DeleteMonitorEventsOlderThanAsync_RemovesOnlyEventsBeforeCutoff()
     {
         using var database = new SqliteTestDatabase();

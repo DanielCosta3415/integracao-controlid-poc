@@ -60,6 +60,7 @@ namespace Integracao.ControlID.PoC.Services.Database
             var normalizedLimit = LocalDataQueryLimits.NormalizeLimit(limit);
 
             return await _dbContext.MonitorEvents
+                .AsNoTracking()
                 .OrderByDescending(e => e.ReceivedAt)
                 .Take(normalizedLimit)
                 .ToListAsync();
@@ -131,7 +132,7 @@ namespace Integracao.ControlID.PoC.Services.Database
             DateTime? startDate = null,
             DateTime? endDate = null)
         {
-            IQueryable<MonitorEventLocal> query = _dbContext.MonitorEvents;
+            IQueryable<MonitorEventLocal> query = _dbContext.MonitorEvents.AsNoTracking();
 
             if (!string.IsNullOrWhiteSpace(eventType))
                 query = query.Where(e => e.EventType == eventType);

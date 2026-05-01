@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Integracao.ControlID.PoC.Models.Database;
 using Integracao.ControlID.PoC.Data; // Contexto correto
+using Integracao.ControlID.PoC.Services.Push;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -60,6 +61,7 @@ namespace Integracao.ControlID.PoC.Services.Database
             var normalizedLimit = LocalDataQueryLimits.NormalizeLimit(limit);
 
             return await _dbContext.PushCommands
+                .AsNoTracking()
                 .OrderByDescending(c => c.ReceivedAt)
                 .Take(normalizedLimit)
                 .ToListAsync();
@@ -70,6 +72,11 @@ namespace Integracao.ControlID.PoC.Services.Database
             return await _dbContext.PushCommands.CountAsync();
         }
 
+        public async Task<int> CountPendingPushCommandsAsync()
+        {
+            return await _dbContext.PushCommands.CountAsync(command => command.Status == PushCommandStatuses.Pending);
+        }
+
         /// <summary>
         /// Busca o proximo comando pendente elegivel para um equipamento especifico.
         /// </summary>
@@ -78,7 +85,7 @@ namespace Integracao.ControlID.PoC.Services.Database
         public async Task<PushCommandLocal?> GetNextPendingCommandAsync(string? deviceId)
         {
             var query = _dbContext.PushCommands
-                .Where(command => command.Status == "pending");
+                .Where(command => command.Status == PushCommandStatuses.Pending);
 
             if (!string.IsNullOrWhiteSpace(deviceId))
             {
@@ -152,7 +159,7 @@ namespace Integracao.ControlID.PoC.Services.Database
             DateTime? startDate = null,
             DateTime? endDate = null)
         {
-            IQueryable<PushCommandLocal> query = _dbContext.PushCommands;
+            IQueryable<PushCommandLocal> query = _dbContext.PushCommands.AsNoTracking();
 
             if (!string.IsNullOrWhiteSpace(commandType))
                 query = query.Where(c => c.CommandType == commandType);
