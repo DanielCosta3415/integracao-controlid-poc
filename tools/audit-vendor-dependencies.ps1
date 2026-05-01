@@ -12,8 +12,19 @@ function Get-RelativePath {
         [Parameter(Mandatory = $true)][string]$Path
     )
 
-    $prefix = $Root.TrimEnd('\') + '\'
-    return $Path.Substring($prefix.Length).Replace('\', '/')
+    $comparison = if ([Environment]::OSVersion.Platform -eq [PlatformID]::Win32NT) {
+        [StringComparison]::OrdinalIgnoreCase
+    }
+    else {
+        [StringComparison]::Ordinal
+    }
+
+    $rootPrefix = $Root.TrimEnd('\', '/')
+    if (-not $Path.StartsWith($rootPrefix, $comparison)) {
+        throw "Path '$Path' is not inside root '$Root'."
+    }
+
+    return $Path.Substring($rootPrefix.Length).TrimStart('\', '/').Replace('\', '/')
 }
 
 function Get-TextSha256 {
@@ -53,13 +64,14 @@ function Get-DirectorySha256 {
     param([Parameter(Mandatory = $true)][string]$Path)
 
     $root = (Resolve-Path -LiteralPath $Path).Path
-    $lines = Get-ChildItem -LiteralPath $root -Recurse -File |
-        Sort-Object FullName |
-        ForEach-Object {
-            $relative = Get-RelativePath -Root $root -Path $_.FullName
-            $hash = Get-NormalizedFileSha256 -Path $_.FullName
-            "$relative`t$hash"
-        }
+    $files = [string[]](Get-ChildItem -LiteralPath $root -Recurse -File | ForEach-Object { $_.FullName })
+    [Array]::Sort($files, [StringComparer]::Ordinal)
+
+    $lines = $files | ForEach-Object {
+        $relative = Get-RelativePath -Root $root -Path $_
+        $hash = Get-NormalizedFileSha256 -Path $_
+        "$relative`t$hash"
+    }
 
     return @{
         FileCount = @($lines).Count
@@ -128,7 +140,7 @@ foreach ($dependency in $manifest.dependencies) {
     }
 
     if ($directoryHash.Sha256 -ne [string]$dependency.directorySha256) {
-        $failures.Add("Directory SHA256 mismatch for $($dependency.id).")
+        $failures.Add("Directory SHA256 mismatch for $($dependency.id): manifest=$($dependency.directorySha256), detected=$($directoryHash.Sha256).")
     }
 }
 

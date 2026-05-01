@@ -65,7 +65,9 @@ public class CiQualityGateContractTests
         Assert.Contains("Get-NormalizedFileSha256", vendorAudit, StringComparison.Ordinal);
         Assert.Contains("Replace(\"`r`n\", \"`n\").Replace(\"`r\", \"`n\")", vendorAudit, StringComparison.Ordinal);
         Assert.Contains("Get-FileHash -LiteralPath $Path", vendorAudit, StringComparison.Ordinal);
-        Assert.Contains("normaliza finais de linha", supplyChainDocs, StringComparison.Ordinal);
+        Assert.Contains("[Array]::Sort($files, [StringComparer]::Ordinal)", vendorAudit, StringComparison.Ordinal);
+        Assert.Contains("manifest=$($dependency.directorySha256), detected=$($directoryHash.Sha256)", vendorAudit, StringComparison.Ordinal);
+        Assert.Contains("normaliza finais de linha de arquivos texto e usa ordenacao ordinal de caminhos", supplyChainDocs, StringComparison.Ordinal);
     }
 
     private static string ReadRepoFile(params string[] segments)
