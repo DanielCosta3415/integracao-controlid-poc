@@ -52,6 +52,22 @@ public class CiQualityGateContractTests
         Assert.Contains("docs/ci-cd-quality-gates.md", projectMap, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void ContainerAndVendorAudit_AreResilientAcrossCiRunnerImagesAndLineEndings()
+    {
+        var dockerfile = ReadRepoFile("Dockerfile");
+        var vendorAudit = ReadRepoFile("tools", "audit-vendor-dependencies.ps1");
+        var supplyChainDocs = ReadRepoFile("docs", "supply-chain-review.md");
+
+        Assert.Contains("if ! grep -q '^app:' /etc/group; then addgroup -S app; fi", dockerfile, StringComparison.Ordinal);
+        Assert.Contains("if ! id -u app >/dev/null 2>&1; then adduser -S -G app app; fi", dockerfile, StringComparison.Ordinal);
+        Assert.Contains("USER app", dockerfile, StringComparison.Ordinal);
+        Assert.Contains("Get-NormalizedFileSha256", vendorAudit, StringComparison.Ordinal);
+        Assert.Contains("Replace(\"`r`n\", \"`n\").Replace(\"`r\", \"`n\")", vendorAudit, StringComparison.Ordinal);
+        Assert.Contains("Get-FileHash -LiteralPath $Path", vendorAudit, StringComparison.Ordinal);
+        Assert.Contains("normaliza finais de linha", supplyChainDocs, StringComparison.Ordinal);
+    }
+
     private static string ReadRepoFile(params string[] segments)
     {
         return File.ReadAllText(Path.Combine(FindRepositoryRoot(), Path.Combine(segments)));

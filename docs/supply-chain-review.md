@@ -64,7 +64,7 @@ Inventario atual:
 
 `jquery-validation` foi atualizado de `1.19.5` para `1.20.0` porque a versao anterior e afetada pelo advisory moderado `GHSA-rrj2-ph5q-jxw2` / `CVE-2025-3573`, corrigido em `1.20.0`.
 
-O arquivo `wwwroot/lib/vendor-dependencies.json` funciona como lockfile operacional dessas bibliotecas: registra versao, licenca, origem, versao minima segura e hash SHA-256 do diretorio. Valide com:
+O arquivo `wwwroot/lib/vendor-dependencies.json` funciona como lockfile operacional dessas bibliotecas: registra versao, licenca, origem, versao minima segura e hash SHA-256 do diretorio. O hash normaliza finais de linha de arquivos texto para ser reprodutivel entre Windows, Linux e runners de CI. Valide com:
 
 ```powershell
 .\tools\audit-vendor-dependencies.ps1

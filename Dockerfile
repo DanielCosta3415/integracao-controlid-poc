@@ -24,8 +24,8 @@ ENV ASPNETCORE_ENVIRONMENT=Production \
     ASPNETCORE_URLS=http://+:8080 \
     ConnectionStrings__DefaultConnection="Data Source=/app/data/integracao_controlid.db"
 
-RUN addgroup -S app && \
-    adduser -S -G app app && \
+RUN if ! grep -q '^app:' /etc/group; then addgroup -S app; fi && \
+    if ! id -u app >/dev/null 2>&1; then adduser -S -G app app; fi && \
     mkdir -p /app/data /app/Logs && \
     chown -R app:app /app
 

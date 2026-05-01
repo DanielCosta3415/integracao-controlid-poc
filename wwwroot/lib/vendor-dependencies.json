@@ -19,7 +19,7 @@
       "versionFile": "wwwroot/lib/bootstrap/dist/css/bootstrap.css",
       "versionPattern": "Bootstrap v(?<version>\\d+\\.\\d+\\.\\d+)",
       "fileCount": 45,
-      "directorySha256": "20f1c0c126a1634c1474efa87b848470f97d13a20453d6f49cb05b242158ea7e",
+      "directorySha256": "307587a2841a0ea1c90cfce80294238f3a79ca14c3067a8b594f6c65e44ffaa2",
       "securityNotes": "Current 5.x vendor is outside reviewed Bootstrap advisories affecting 3.x/4.x lines."
     },
     {
@@ -35,7 +35,7 @@
       "versionFile": "wwwroot/lib/jquery/dist/jquery.js",
       "versionPattern": "jQuery JavaScript Library v(?<version>\\d+\\.\\d+\\.\\d+)",
       "fileCount": 4,
-      "directorySha256": "0d5333955cb94a5ff6d076b990cb7190916c0d1f47926aea4b84b3a45534b530",
+      "directorySha256": "e420022e38bafeaca25488619e4007584d27f5064c420029d720a79baf0d2986",
       "securityNotes": "Minimum safe version covers GHSA-gxr4-xjj5-5px2 and GHSA-jpcq-cgw6-v4j6."
     },
     {
@@ -51,7 +51,7 @@
       "versionFile": "wwwroot/lib/jquery-validation/dist/jquery.validate.js",
       "versionPattern": "jQuery Validation Plugin v(?<version>\\d+\\.\\d+\\.\\d+)",
       "fileCount": 5,
-      "directorySha256": "26eeed721efb0c539e8f8cbe92a352aefd659c25514f11d790dda610af5bd0ee",
+      "directorySha256": "ad7c4a4fe73895a0ebabbfd7977c99cf2be2d9390129ca38dfb8c0438b42c9bb",
       "securityNotes": "Minimum safe version covers GHSA-rrj2-ph5q-jxw2 / CVE-2025-3573."
     },
     {
@@ -67,7 +67,7 @@
       "versionFile": "wwwroot/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.js",
       "versionPattern": "@version v(?<version>\\d+\\.\\d+\\.\\d+)",
       "fileCount": 3,
-      "directorySha256": "2b6bdd4bbba541aa9abacd3885265a7bdf13d52768e2dd9b07853df7ddc7a67d",
+      "directorySha256": "6cf99dfa47266d19aa18062b3cd4721b5ab5bbb501d0620ed708555e5ae38c11",
       "securityNotes": "Pinned vendor manifest prevents silent drift because there is no JavaScript package manager."
     }
   ]

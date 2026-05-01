@@ -30,6 +30,25 @@ function Get-TextSha256 {
     }
 }
 
+function Get-NormalizedFileSha256 {
+    param([Parameter(Mandatory = $true)][string]$Path)
+
+    $bytes = [IO.File]::ReadAllBytes($Path)
+    if ($bytes -contains 0) {
+        return (Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash.ToLowerInvariant()
+    }
+
+    try {
+        $text = [Text.UTF8Encoding]::new($false, $true).GetString($bytes)
+    }
+    catch {
+        return (Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash.ToLowerInvariant()
+    }
+
+    $normalizedText = $text.Replace("`r`n", "`n").Replace("`r", "`n")
+    return Get-TextSha256 -Text $normalizedText
+}
+
 function Get-DirectorySha256 {
     param([Parameter(Mandatory = $true)][string]$Path)
 
@@ -38,7 +57,7 @@ function Get-DirectorySha256 {
         Sort-Object FullName |
         ForEach-Object {
             $relative = Get-RelativePath -Root $root -Path $_.FullName
-            $hash = (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+            $hash = Get-NormalizedFileSha256 -Path $_.FullName
             "$relative`t$hash"
         }
 
