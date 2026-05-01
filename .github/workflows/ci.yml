@@ -57,6 +57,10 @@ jobs:
         shell: pwsh
         run: .\tools\scan-secrets.ps1
 
+      - name: Observability artifact check
+        shell: pwsh
+        run: .\tools\observability-check.ps1 -OfflineValidateOnly
+
       - name: Supply-chain audit
         shell: pwsh
         run: .\tools\audit-supply-chain.ps1

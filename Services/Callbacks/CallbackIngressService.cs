@@ -1,6 +1,7 @@
 using Integracao.ControlID.PoC.Helpers;
 using Integracao.ControlID.PoC.Models.Database;
 using Integracao.ControlID.PoC.Services.Database;
+using Integracao.ControlID.PoC.Services.Observability;
 using Microsoft.AspNetCore.Http;
 
 namespace Integracao.ControlID.PoC.Services.Callbacks
@@ -42,7 +43,14 @@ namespace Integracao.ControlID.PoC.Services.Callbacks
             var securityResult = _securityEvaluator.Evaluate(httpContext);
             if (!securityResult.IsAllowed)
             {
+                OperationalMetrics.RecordCallbackIngress(
+                    eventFamily,
+                    httpContext.Request.Path.Value ?? string.Empty,
+                    "security_rejected",
+                    securityResult.StatusCode);
+
                 _logger.LogWarning(
+                    OperationalEventIds.CallbackRejected,
                     "Blocked callback request for {Path}. Status {StatusCode}. Reason: {Reason}",
                     httpContext.Request.Path,
                     securityResult.StatusCode,
@@ -54,7 +62,14 @@ namespace Integracao.ControlID.PoC.Services.Callbacks
             var bodyResult = await _bodyReader.ReadAsync(httpContext.Request, cancellationToken);
             if (!bodyResult.IsSuccessful)
             {
+                OperationalMetrics.RecordCallbackIngress(
+                    eventFamily,
+                    httpContext.Request.Path.Value ?? string.Empty,
+                    "body_rejected",
+                    bodyResult.StatusCode);
+
                 _logger.LogWarning(
+                    OperationalEventIds.CallbackRejected,
                     "Rejected callback request body for {Path}. Status {StatusCode}. Reason: {Reason}",
                     httpContext.Request.Path,
                     bodyResult.StatusCode,
@@ -66,7 +81,14 @@ namespace Integracao.ControlID.PoC.Services.Callbacks
             var signatureResult = _signatureValidator.Validate(httpContext.Request, bodyResult.Body);
             if (!signatureResult.IsAllowed)
             {
+                OperationalMetrics.RecordCallbackIngress(
+                    eventFamily,
+                    httpContext.Request.Path.Value ?? string.Empty,
+                    "signature_rejected",
+                    signatureResult.StatusCode);
+
                 _logger.LogWarning(
+                    OperationalEventIds.CallbackRejected,
                     "Rejected callback signature for {Path}. Status {StatusCode}. Reason: {Reason}",
                     httpContext.Request.Path,
                     signatureResult.StatusCode,
@@ -95,7 +117,14 @@ namespace Integracao.ControlID.PoC.Services.Callbacks
             }
             catch (Exception ex)
             {
+                OperationalMetrics.RecordCallbackIngress(
+                    eventFamily,
+                    path,
+                    "persistence_failed",
+                    StatusCodes.Status500InternalServerError);
+
                 _logger.LogError(
+                    OperationalEventIds.CallbackPersistenceFailed,
                     ex,
                     "Failed to persist callback event for {Path}. EventFamily {EventFamily}. RequestId {RequestId}.",
                     path,
@@ -107,7 +136,14 @@ namespace Integracao.ControlID.PoC.Services.Callbacks
                     "Nao foi possivel persistir o callback recebido.");
             }
 
+            OperationalMetrics.RecordCallbackIngress(
+                eventFamily,
+                path,
+                "accepted",
+                StatusCodes.Status200OK);
+
             _logger.LogInformation(
+                OperationalEventIds.CallbackAccepted,
                 "Accepted callback request for {Path} as event {EventId}. EventFamily {EventFamily}. Device {DeviceRef}.",
                 path,
                 monitorEvent.EventId,

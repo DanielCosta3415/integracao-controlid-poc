@@ -107,6 +107,7 @@ Os controllers coordenam as rotas MVC, recebem a entrada da UI, acionam serviço
 | Arquivo | Responsabilidade |
 | --- | --- |
 | `Middlewares/ApiSessionMiddleware.cs` | Garante contexto mínimo de sessão/API durante o pipeline HTTP. |
+| `Middlewares/CorrelationIdMiddleware.cs` | Normaliza, propaga e registra correlation ID seguro em requests/responses. |
 | `Middlewares/ExceptionHandlingMiddleware.cs` | Captura exceções não tratadas e padroniza a resposta/registro de erro. |
 | `Middlewares/RequestLoggingMiddleware.cs` | Registra informações de requests para observabilidade local. |
 | `Middlewares/SecurityHeadersMiddleware.cs` | Aplica cabeçalhos de segurança HTTP nas respostas da aplicação. |
@@ -239,6 +240,12 @@ Repositórios que encapsulam acesso ao SQLite local para cada entidade da PoC.
 | `Services/Files/UploadedFileBase64Encoder.cs` | Converte arquivos enviados pela UI para Base64 antes de envio/persistência. |
 | `Services/Navigation/NavigationCatalogService.cs` | Monta o catálogo de navegação das páginas e módulos da PoC. |
 | `Services/Navigation/PageShellService.cs` | Fornece metadados de shell, cabeçalho e breadcrumbs das páginas. |
+| `Services/Observability/HealthCheckResponseWriter.cs` | Serializa health checks sem expor excecoes, paths locais ou connection string. |
+| `Services/Observability/ObservabilityConstants.cs` | Centraliza nomes de header, item de contexto e propriedades de escopo. |
+| `Services/Observability/OperationalEventIds.cs` | Define IDs estaveis para eventos operacionais criticos. |
+| `Services/Observability/OperationalMetrics.cs` | Publica metricas via `System.Diagnostics.Metrics` para coleta futura. |
+| `Services/Observability/PrometheusMetricsWriter.cs` | Renderiza snapshot de metricas locais em formato Prometheus text para `/metrics`. |
+| `Services/Observability/SqliteReadinessHealthCheck.cs` | Verifica readiness do SQLite local usado como estado runtime. |
 | `Services/OperationModes/OperationModesPayloadFactory.cs` | Monta payloads demonstrativos dos modos Standalone, Pro e Enterprise. |
 | `Services/OperationModes/OperationModesProfileResolver.cs` | Resolve perfis, comportamento esperado e transições dos modos de operação. |
 | `Services/ProductSpecific/ProductSpecificCommandService.cs` | Executa comandos específicos por produto/modelo. |
@@ -520,6 +527,9 @@ As views Razor compõem a interface web da PoC. Em geral, cada pasta espelha um 
 | `docs/changelog-2026-04-14.md` | Registro resumido de evolucoes relevantes realizadas na PoC. |
 | `docs/changelog-2026-04-15.md` | Registro resumido das atualizacoes de documentação, comentarios inline e observabilidade. |
 | `docs/monitor-implementation.md` | Documenta a implementação da funcionalidade Monitor, callbacks oficiais, segurança e persistência local. |
+| `docs/observability-runbook.md` | Define health, metricas, alertas, dashboards e resposta a incidentes operacionais. |
+| `docs/observability/alert-rules.json` | Regras versionadas de alerta para o monitor local e ferramentas externas. |
+| `docs/observability/dashboard.json` | Especificacao versionada de dashboards independente de fornecedor. |
 | `docs/operation-modes-implementation.md` | Documenta a implementação dos modos Standalone, Pro e Enterprise, incluindo payloads e transições. |
 | `docs/project-file-responsibilities.md` | Este inventário de responsabilidades por pasta e arquivo. |
 | `docs/push-implementation.md` | Documenta a implementação da funcionalidade Push, fila persistida, polling e retorno de resultados. |
@@ -572,6 +582,8 @@ As views Razor compõem a interface web da PoC. Em geral, cada pasta espelha um 
 
 | Arquivo/Pasta | Responsabilidade |
 | --- | --- |
+| `tools/observability-check.ps1` | Valida artefatos de observabilidade, health checks, metricas e contrato fisico opcional. |
+| `tools/test-readiness-gates.ps1` | Orquestra build, testes, format, secret scan, observabilidade offline, cobertura, smoke, auditoria, contrato fisico, scanners externos e modo estrito `-ReleaseGate`. |
 | `tools/smoke-localhost.ps1` | Script PowerShell que executa smoke test local, sobe stub e percorre fluxos criticos da PoC. |
 | `tools/ControlIdDeviceStub/ControlIdDeviceStub.csproj` | Projeto .NET do stub local que simula respostas de um equipamento Control iD. |
 | `tools/ControlIdDeviceStub/Program.cs` | Implementa os endpoints simulados usados pelos smoke tests locais. |

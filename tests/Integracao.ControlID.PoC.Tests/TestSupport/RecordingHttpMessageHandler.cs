@@ -27,7 +27,11 @@ public sealed class RecordingHttpMessageHandler : HttpMessageHandler
             request.Method.Method,
             request.RequestUri?.ToString() ?? string.Empty,
             body,
-            request.Content?.Headers.ContentType?.MediaType ?? string.Empty));
+            request.Content?.Headers.ContentType?.MediaType ?? string.Empty,
+            request.Headers.ToDictionary(
+                header => header.Key,
+                header => string.Join(",", header.Value),
+                StringComparer.OrdinalIgnoreCase)));
 
         return _responses.Count == 0
             ? new HttpResponseMessage(HttpStatusCode.OK)
@@ -42,4 +46,5 @@ public sealed record RecordedHttpRequest(
     string Method,
     string Url,
     string Body,
-    string ContentType);
+    string ContentType,
+    IReadOnlyDictionary<string, string> Headers);

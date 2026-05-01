@@ -184,8 +184,17 @@ powershell -ExecutionPolicy Bypass -File .\tools\contract-controlid-device.ps1
 
 ## Observabilidade e monitoramento
 
+Runbook detalhado: `docs/observability-runbook.md`.
+
 A PoC já sai preparada para monitoramento básico local:
 
+- correlation ID por request via `X-Correlation-ID`, retornado em toda resposta e propagado para chamadas outbound da Access API;
+- health checks seguros em `GET /health/live` e `GET /health/ready`;
+- metricas instrumentadas por `System.Diagnostics.Metrics` no meter `Integracao.ControlID.PoC.Operations` e expostas em `GET /metrics` para usuario administrador;
+- alertas e dashboards versionados em `docs/observability/`;
+- monitor local em `tools/observability-check.ps1`;
+- gate de readiness em `tools/test-readiness-gates.ps1`, com validacao offline de observabilidade por padrao e modo online autenticado para `/metrics`;
+- modo estrito de release com `tools/test-readiness-gates.ps1 -ReleaseGate`, que falha se contrato fisico, metricas online ou scanners externos exigidos nao estiverem disponiveis;
 - log de requisições HTTP no middleware `RequestLoggingMiddleware`;
 - log estruturado de invocação oficial da Access API, incluindo endpoint, target, status e duração;
 - log de entrada de callbacks com aceite, bloqueio e falha de persistência;

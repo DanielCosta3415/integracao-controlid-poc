@@ -29,6 +29,7 @@ public static class OfficialApiTestFactory
             {
                 Enabled = false
             })),
+            new HttpContextAccessor { HttpContext = httpContext },
             configuration);
 
         return new OfficialControlIdApiService(

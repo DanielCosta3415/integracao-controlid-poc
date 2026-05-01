@@ -3,6 +3,7 @@ using Integracao.ControlID.PoC.Helpers;
 using Integracao.ControlID.PoC.Models.Database;
 using Integracao.ControlID.PoC.Services.Callbacks;
 using Integracao.ControlID.PoC.Services.Database;
+using Integracao.ControlID.PoC.Services.Observability;
 using Integracao.ControlID.PoC.Services.Push;
 using Integracao.ControlID.PoC.Services.Security;
 using Integracao.ControlID.PoC.ViewModels.Push;
@@ -217,6 +218,7 @@ namespace Integracao.ControlID.PoC.Controllers
                     return Ok(new { });
 
                 _logger.LogInformation(
+                    OperationalEventIds.PushDelivered,
                     "Push poll delivered command {CommandId} to device {DeviceRef}. PayloadBytes {PayloadBytes}.",
                     command.CommandId,
                     PrivacyLogHelper.PseudonymizeIdentifier(resolvedDeviceId),
@@ -290,6 +292,7 @@ namespace Integracao.ControlID.PoC.Controllers
                     Request.Query["status"].ToString());
 
                 _logger.LogInformation(
+                    OperationalEventIds.PushResultStored,
                     "Push result stored for command {CommandId}. Device {DeviceRef}. Status {Status}. BodyBytes {BodyBytes}.",
                     command.CommandId,
                     PrivacyLogHelper.PseudonymizeIdentifier(command.DeviceId),
@@ -316,7 +319,14 @@ namespace Integracao.ControlID.PoC.Controllers
             if (securityResult.IsAllowed)
                 return null;
 
+            OperationalMetrics.RecordCallbackIngress(
+                "push",
+                Request.Path.Value ?? string.Empty,
+                "security_rejected",
+                securityResult.StatusCode);
+
             _logger.LogWarning(
+                OperationalEventIds.CallbackRejected,
                 "Blocked push ingress request for {Path}. Status {StatusCode}. Reason: {Reason}",
                 Request.Path,
                 securityResult.StatusCode,
@@ -331,7 +341,14 @@ namespace Integracao.ControlID.PoC.Controllers
             if (signatureResult.IsAllowed)
                 return null;
 
+            OperationalMetrics.RecordCallbackIngress(
+                "push",
+                Request.Path.Value ?? string.Empty,
+                "signature_rejected",
+                signatureResult.StatusCode);
+
             _logger.LogWarning(
+                OperationalEventIds.CallbackRejected,
                 "Blocked push ingress signature for {Path}. Status {StatusCode}. Reason: {Reason}",
                 Request.Path,
                 signatureResult.StatusCode,

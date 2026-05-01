@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Text;
 using Integracao.ControlID.PoC.Helpers;
 using Integracao.ControlID.PoC.Models.ControlIDApi;
+using Integracao.ControlID.PoC.Services.Observability;
 using Integracao.ControlID.PoC.Services.Security;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
@@ -15,6 +16,7 @@ namespace Integracao.ControlID.PoC.Services.ControlIDApi
         private readonly ILogger<OfficialApiInvokerService> _logger;
         private readonly ControlIdInputSanitizer _inputSanitizer;
         private readonly OfficialApiCircuitBreaker _circuitBreaker;
+        private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly TimeSpan _requestTimeout;
 
         public OfficialApiInvokerService(
@@ -22,12 +24,14 @@ namespace Integracao.ControlID.PoC.Services.ControlIDApi
             ILogger<OfficialApiInvokerService> logger,
             ControlIdInputSanitizer inputSanitizer,
             OfficialApiCircuitBreaker circuitBreaker,
+            IHttpContextAccessor httpContextAccessor,
             IConfiguration configuration)
         {
             _httpClientFactory = httpClientFactory;
             _logger = logger;
             _inputSanitizer = inputSanitizer;
             _circuitBreaker = circuitBreaker;
+            _httpContextAccessor = httpContextAccessor;
 
             var configuredTimeout = configuration.GetValue<int?>("ControlIDApi:ConnectionTimeoutSeconds") ?? 60;
             _requestTimeout = TimeSpan.FromSeconds(Math.Clamp(configuredTimeout, 5, 300));
@@ -56,7 +60,15 @@ namespace Integracao.ControlID.PoC.Services.ControlIDApi
 
             if (string.IsNullOrWhiteSpace(deviceAddress))
             {
+                OperationalMetrics.RecordOfficialApiInvocation(
+                    endpoint.Id,
+                    endpoint.Method,
+                    "blocked_empty_device",
+                    null,
+                    stopwatch.Elapsed.TotalMilliseconds);
+
                 _logger.LogWarning(
+                    OperationalEventIds.OfficialApiInvocationBlocked,
                     "Official API invocation blocked for {EndpointId} because the device address is empty.",
                     endpoint.Id);
 
@@ -66,7 +78,15 @@ namespace Integracao.ControlID.PoC.Services.ControlIDApi
 
             if (endpoint.RequiresSession && string.IsNullOrWhiteSpace(sessionString))
             {
+                OperationalMetrics.RecordOfficialApiInvocation(
+                    endpoint.Id,
+                    endpoint.Method,
+                    "blocked_missing_session",
+                    null,
+                    stopwatch.Elapsed.TotalMilliseconds);
+
                 _logger.LogWarning(
+                    OperationalEventIds.OfficialApiInvocationBlocked,
                     "Official API invocation blocked for {EndpointId} because no active session was provided.",
                     endpoint.Id);
 
@@ -89,7 +109,15 @@ namespace Integracao.ControlID.PoC.Services.ControlIDApi
 
                 if (!_circuitBreaker.TryAcquire(endpoint.Id, deviceTarget, out var retryAfter))
                 {
+                    OperationalMetrics.RecordOfficialApiInvocation(
+                        endpoint.Id,
+                        endpoint.Method,
+                        "blocked_circuit_open",
+                        StatusCodes.Status503ServiceUnavailable,
+                        stopwatch.Elapsed.TotalMilliseconds);
+
                     _logger.LogWarning(
+                        OperationalEventIds.OfficialApiInvocationBlocked,
                         "Official endpoint {EndpointId} blocked by circuit breaker for {DeviceTarget}. RetryAfterSeconds {RetryAfterSeconds}.",
                         endpoint.Id,
                         deviceTarget,
@@ -101,6 +129,7 @@ namespace Integracao.ControlID.PoC.Services.ControlIDApi
                 }
 
                 _logger.LogInformation(
+                    OperationalEventIds.OfficialApiInvocationStarted,
                     "Invoking official endpoint {EndpointId} {Method} {Path} against {DeviceTarget}.",
                     endpoint.Id,
                     endpoint.Method,
@@ -111,6 +140,8 @@ namespace Integracao.ControlID.PoC.Services.ControlIDApi
                 {
                     Content = _inputSanitizer.BuildSanitizedContent(endpoint, requestBody)
                 };
+
+                AddCorrelationHeader(request);
 
                 result.RequestUrl = BuildSafeDisplayUrl(requestUrl);
 
@@ -142,8 +173,16 @@ namespace Integracao.ControlID.PoC.Services.ControlIDApi
                 }
 
                 stopwatch.Stop();
+                OperationalMetrics.RecordOfficialApiInvocation(
+                    endpoint.Id,
+                    endpoint.Method,
+                    result.Success ? "success" : "http_error",
+                    result.StatusCode,
+                    stopwatch.Elapsed.TotalMilliseconds);
+
                 _logger.Log(
                     result.Success ? LogLevel.Information : LogLevel.Warning,
+                    OperationalEventIds.OfficialApiInvocationCompleted,
                     "Official endpoint {EndpointId} completed with status {StatusCode} in {ElapsedMs} ms. Target {DeviceTarget}. ContentType {ContentType}.",
                     endpoint.Id,
                     result.StatusCode,
@@ -156,7 +195,15 @@ namespace Integracao.ControlID.PoC.Services.ControlIDApi
             catch (InvalidOperationException ex)
             {
                 stopwatch.Stop();
+                OperationalMetrics.RecordOfficialApiInvocation(
+                    endpoint.Id,
+                    endpoint.Method,
+                    "validation_failure",
+                    null,
+                    stopwatch.Elapsed.TotalMilliseconds);
+
                 _logger.LogWarning(
+                    OperationalEventIds.OfficialApiInvocationFailed,
                     ex,
                     "Validation failure while invoking official endpoint {EndpointId} after {ElapsedMs} ms. Target {DeviceTarget}.",
                     endpoint.Id,
@@ -172,7 +219,15 @@ namespace Integracao.ControlID.PoC.Services.ControlIDApi
             {
                 stopwatch.Stop();
                 _circuitBreaker.RecordFailure(endpoint.Id, deviceTarget);
+                OperationalMetrics.RecordOfficialApiInvocation(
+                    endpoint.Id,
+                    endpoint.Method,
+                    "timeout",
+                    StatusCodes.Status408RequestTimeout,
+                    stopwatch.Elapsed.TotalMilliseconds);
+
                 _logger.LogError(
+                    OperationalEventIds.OfficialApiInvocationFailed,
                     ex,
                     "Timeout while invoking official endpoint {EndpointId} after {ElapsedMs} ms. Target {DeviceTarget}.",
                     endpoint.Id,
@@ -186,7 +241,15 @@ namespace Integracao.ControlID.PoC.Services.ControlIDApi
             {
                 stopwatch.Stop();
                 _circuitBreaker.RecordFailure(endpoint.Id, deviceTarget);
+                OperationalMetrics.RecordOfficialApiInvocation(
+                    endpoint.Id,
+                    endpoint.Method,
+                    "unexpected_failure",
+                    null,
+                    stopwatch.Elapsed.TotalMilliseconds);
+
                 _logger.LogError(
+                    OperationalEventIds.OfficialApiInvocationFailed,
                     ex,
                     "Unexpected failure while invoking official endpoint {EndpointId} after {ElapsedMs} ms. Target {DeviceTarget}.",
                     endpoint.Id,
@@ -222,6 +285,21 @@ namespace Integracao.ControlID.PoC.Services.ControlIDApi
 
             var queryString = queryItems.Count == 0 ? string.Empty : $"?{string.Join("&", queryItems)}";
             return $"{deviceAddress.TrimEnd('/')}{path}{queryString}";
+        }
+
+        private void AddCorrelationHeader(HttpRequestMessage request)
+        {
+            var httpContext = _httpContextAccessor.HttpContext;
+            if (httpContext == null)
+                return;
+
+            var correlationId = ObservabilityConstants.GetCorrelationId(httpContext);
+            if (string.IsNullOrWhiteSpace(correlationId))
+                return;
+
+            request.Headers.TryAddWithoutValidation(
+                ObservabilityConstants.CorrelationIdHeaderName,
+                correlationId);
         }
 
         private static string BuildSafeDisplayUrl(string requestUrl)

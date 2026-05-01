@@ -9,6 +9,7 @@ using Integracao.ControlID.PoC.Services.DocumentedFeatures;
 using Integracao.ControlID.PoC.Services.Files;
 using Integracao.ControlID.PoC.Services.Navigation;
 using Integracao.ControlID.PoC.Services.OperationModes;
+using Integracao.ControlID.PoC.Services.Observability;
 using Integracao.ControlID.PoC.Services.Privacy;
 using Integracao.ControlID.PoC.Services.Performance;
 using Integracao.ControlID.PoC.Services.ProductSpecific;
@@ -17,6 +18,7 @@ using Integracao.ControlID.PoC.Services.Security;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.AspNetCore.RateLimiting;
@@ -61,6 +63,10 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 builder.Services.AddHttpContextAccessor();
+builder.Services
+    .AddHealthChecks()
+    .AddCheck("self", () => Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult.Healthy(), tags: ["live"])
+    .AddCheck<SqliteReadinessHealthCheck>("sqlite-runtime-state", tags: ["ready"]);
 builder.Services.AddResponseCompression(options =>
 {
     options.EnableForHttps = true;
@@ -233,7 +239,8 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-// Middlewares customizados (ordem: tratamento de erro → logging de request → sessão → session API)
+// Middlewares customizados (ordem: correlacao -> tratamento de erro -> logging de request -> sessao -> session API)
+app.UseMiddleware<CorrelationIdMiddleware>();
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseMiddleware<RequestLoggingMiddleware>();
 app.UseMiddleware<SecurityHeadersMiddleware>();
@@ -312,6 +319,39 @@ using (var scope = app.Services.CreateScope())
 // Mensagem de inicialização no log
 Log.Information("Aplicação Integracao.ControlID.PoC inicializada em {Env}...", app.Environment.EnvironmentName);
 
+var healthCheckResponseWriter = HealthCheckResponseWriter.WriteAsync;
+
+app.MapHealthChecks("/health/live", new HealthCheckOptions
+{
+    Predicate = registration => registration.Tags.Contains("live"),
+    ResponseWriter = healthCheckResponseWriter
+})
+.AllowAnonymous()
+.DisableRateLimiting();
+
+app.MapHealthChecks("/health/ready", new HealthCheckOptions
+{
+    Predicate = registration => registration.Tags.Contains("ready"),
+    ResponseWriter = healthCheckResponseWriter
+})
+.AllowAnonymous()
+.DisableRateLimiting();
+
+if (app.Configuration.GetValue<bool?>("Observability:Metrics:Enabled") ?? true)
+{
+    var metricsEndpoint = app.MapGet("/metrics", PrometheusMetricsWriter.WriteAsync)
+        .DisableRateLimiting();
+
+    if (app.Configuration.GetValue<bool>("Observability:Metrics:AllowAnonymous"))
+    {
+        metricsEndpoint.AllowAnonymous();
+    }
+    else
+    {
+        metricsEndpoint.RequireAuthorization("AdministratorOnly");
+    }
+}
+
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
@@ -357,6 +397,12 @@ static void ValidateRuntimeSecurity(WebApplication app)
     {
         throw new InvalidOperationException(
             "OpenApi:Enabled must be false for non-Development environments.");
+    }
+
+    if (app.Configuration.GetValue<bool>("Observability:Metrics:AllowAnonymous"))
+    {
+        throw new InvalidOperationException(
+            "Observability:Metrics:AllowAnonymous must be false for non-Development environments.");
     }
 
     var egressOptions = app.Services.GetRequiredService<IOptions<ControlIdEgressOptions>>().Value;

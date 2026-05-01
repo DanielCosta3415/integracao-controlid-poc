@@ -1,0 +1,132 @@
+{
+  "version": 1,
+  "runbook": "docs/observability-runbook.md",
+  "alerts": [
+    {
+      "id": "OBS-001",
+      "name": "Aplicacao indisponivel",
+      "source": "health",
+      "target": "/health/live",
+      "expectedStatus": "Healthy",
+      "consecutiveFailures": 2,
+      "severity": "critical",
+      "action": "Reiniciar processo, verificar porta, logs de startup e ultimo deploy."
+    },
+    {
+      "id": "OBS-002",
+      "name": "Runtime SQLite indisponivel",
+      "source": "health",
+      "target": "/health/ready",
+      "expectedStatus": "Healthy",
+      "consecutiveFailures": 2,
+      "severity": "critical",
+      "action": "Verificar arquivo SQLite, locks, permissao de escrita e espaco em disco."
+    },
+    {
+      "id": "OBS-003",
+      "name": "Erros HTTP 5xx",
+      "source": "metrics",
+      "metric": "controlid_http_requests_total",
+      "labelFilters": {
+        "status_group": "5xx"
+      },
+      "operator": ">",
+      "threshold": 0,
+      "window": "5m",
+      "severity": "high",
+      "action": "Buscar X-Correlation-ID no log, identificar rota, excecao e ultimo fluxo afetado."
+    },
+    {
+      "id": "OBS-004",
+      "name": "Timeout Control iD",
+      "source": "metrics",
+      "metric": "controlid_official_api_invocations_total",
+      "labelFilters": {
+        "outcome": "timeout"
+      },
+      "operator": ">=",
+      "threshold": 3,
+      "window": "10m",
+      "severity": "high",
+      "action": "Conferir IP, porta, rede, firmware, sessao e disponibilidade do equipamento."
+    },
+    {
+      "id": "OBS-005",
+      "name": "Circuit breaker aberto",
+      "source": "metrics",
+      "metric": "controlid_official_api_invocations_total",
+      "labelFilters": {
+        "outcome": "blocked_circuit_open"
+      },
+      "operator": ">=",
+      "threshold": 1,
+      "window": "5m",
+      "severity": "high",
+      "action": "Pausar operacao contra o equipamento e validar conectividade antes de retentar."
+    },
+    {
+      "id": "OBS-006",
+      "name": "Falha de autenticacao local elevada",
+      "source": "metrics",
+      "metric": "controlid_local_auth_attempts_total",
+      "labelFilters": {
+        "outcome": "failed"
+      },
+      "operator": ">=",
+      "threshold": 10,
+      "window": "5m",
+      "severity": "medium",
+      "action": "Revisar abuso, rate limit, origem aproximada nos logs e conta afetada."
+    },
+    {
+      "id": "OBS-007",
+      "name": "Callbacks rejeitados",
+      "source": "metrics",
+      "metric": "controlid_callback_ingress_total",
+      "labelFilters": {
+        "status_group": "4xx"
+      },
+      "operator": ">=",
+      "threshold": 5,
+      "window": "5m",
+      "severity": "high",
+      "action": "Conferir shared key, assinatura HMAC, IP permitido e tamanho do payload."
+    },
+    {
+      "id": "OBS-008",
+      "name": "Falha de persistencia de callback",
+      "source": "metrics",
+      "metric": "controlid_callback_ingress_total",
+      "labelFilters": {
+        "outcome": "persistence_failed"
+      },
+      "operator": ">",
+      "threshold": 0,
+      "window": "5m",
+      "severity": "critical",
+      "action": "Verificar SQLite, migrations, lock de arquivo, permissao e espaco em disco."
+    },
+    {
+      "id": "OBS-009",
+      "name": "Falha de persistencia de push",
+      "source": "metrics",
+      "metric": "controlid_push_operations_total",
+      "labelFilters": {
+        "outcome": "persist_failed"
+      },
+      "operator": ">",
+      "threshold": 0,
+      "window": "5m",
+      "severity": "critical",
+      "action": "Verificar fila local, SQLite, command id afetado e logs correlacionados."
+    },
+    {
+      "id": "OBS-010",
+      "name": "Validacao fisica por gate",
+      "source": "hardware-contract",
+      "script": "tools/contract-controlid-device.ps1",
+      "severity": "medium",
+      "action": "Executar com CONTROLID_DEVICE_URL, CONTROLID_USERNAME e CONTROLID_PASSWORD fora do Git antes de release com equipamento real."
+    }
+  ]
+}

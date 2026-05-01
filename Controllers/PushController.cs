@@ -3,6 +3,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Integracao.ControlID.PoC.Helpers;
 using Integracao.ControlID.PoC.Services.Callbacks;
+using Integracao.ControlID.PoC.Services.Observability;
 using Integracao.ControlID.PoC.Services.Push;
 using Integracao.ControlID.PoC.Services.Security;
 using Microsoft.AspNetCore.Authorization;
@@ -79,6 +80,7 @@ namespace Integracao.ControlID.PoC.Controllers
                     _idempotencyKeyResolver.Resolve(Request));
 
                 _logger.LogInformation(
+                    OperationalEventIds.PushResultStored,
                     "Evento Push legado recebido em {Time}. Command {CommandId}. BodyBytes {BodyBytes}.",
                     command.ReceivedAt,
                     command.CommandId,
@@ -121,7 +123,14 @@ namespace Integracao.ControlID.PoC.Controllers
             if (securityResult.IsAllowed)
                 return null;
 
+            OperationalMetrics.RecordCallbackIngress(
+                "legacy-push",
+                Request.Path.Value ?? string.Empty,
+                "security_rejected",
+                securityResult.StatusCode);
+
             _logger.LogWarning(
+                OperationalEventIds.CallbackRejected,
                 "Blocked legacy push ingress request for {Path}. Status {StatusCode}. Reason: {Reason}",
                 Request.Path,
                 securityResult.StatusCode,
@@ -136,7 +145,14 @@ namespace Integracao.ControlID.PoC.Controllers
             if (signatureResult.IsAllowed)
                 return null;
 
+            OperationalMetrics.RecordCallbackIngress(
+                "legacy-push",
+                Request.Path.Value ?? string.Empty,
+                "signature_rejected",
+                signatureResult.StatusCode);
+
             _logger.LogWarning(
+                OperationalEventIds.CallbackRejected,
                 "Blocked legacy push signature for {Path}. Status {StatusCode}. Reason: {Reason}",
                 Request.Path,
                 signatureResult.StatusCode,

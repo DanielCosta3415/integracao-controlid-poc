@@ -2,6 +2,7 @@ using System;
 using System.Net;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Integracao.ControlID.PoC.Services.Observability;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 
@@ -26,7 +27,12 @@ namespace Integracao.ControlID.PoC.Middlewares
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Exceção não tratada durante o processamento da requisição.");
+                var correlationId = ObservabilityConstants.GetCorrelationId(context);
+                _logger.LogError(
+                    OperationalEventIds.UnhandledException,
+                    ex,
+                    "Excecao nao tratada durante o processamento da requisicao. Correlation {CorrelationId}.",
+                    correlationId);
 
                 context.Response.ContentType = "application/json";
                 context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
@@ -38,7 +44,8 @@ namespace Integracao.ControlID.PoC.Middlewares
                     Message = "Ocorreu um erro interno no servidor.",
                     // SECURITY: detalhes internos ficam apenas no log para evitar
                     // vazamento de infraestrutura, paths locais e stack trace ao client-side.
-                    TraceId = traceId
+                    TraceId = traceId,
+                    CorrelationId = correlationId
                 };
 
                 var json = JsonSerializer.Serialize(errorResponse, new JsonSerializerOptions

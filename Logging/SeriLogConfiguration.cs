@@ -1,8 +1,6 @@
-using System;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Serilog;
-using Serilog.Events;
 
 namespace Integracao.ControlID.PoC.Logging
 {
@@ -18,16 +16,7 @@ namespace Integracao.ControlID.PoC.Logging
             {
                 loggerConfiguration
                     .ReadFrom.Configuration(configuration)
-                    .Enrich.FromLogContext()
-                    .WriteTo.Console()
-                    .WriteTo.File(
-                        path: "Logs/app_log.txt",
-                        rollingInterval: RollingInterval.Day,
-                        restrictedToMinimumLevel: LogEventLevel.Information,
-                        retainedFileCountLimit: 14,
-                        fileSizeLimitBytes: 10_000_000,
-                        outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}"
-                    );
+                    .Enrich.FromLogContext();
             });
         }
     }

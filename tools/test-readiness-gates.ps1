@@ -3,8 +3,12 @@ param(
     [switch]$RunCoverage,
     [switch]$RunSupplyChainAudit,
     [switch]$RunSmoke,
+    [switch]$RunObservabilityOnline,
+    [switch]$RequireObservabilityMetrics,
     [switch]$RequireHardwareContract,
-    [switch]$RequireExternalScanners
+    [switch]$RequireExternalScanners,
+    [switch]$ReleaseGate,
+    [string]$ObservabilityBaseUrl = $env:OBSERVABILITY_BASE_URL
 )
 
 Set-StrictMode -Version Latest
@@ -12,6 +16,16 @@ $ErrorActionPreference = "Stop"
 
 $root = Split-Path -Parent $PSScriptRoot
 $artifactsRoot = Join-Path $root "artifacts\test-readiness"
+
+if ($ReleaseGate) {
+    $RunCoverage = $true
+    $RunSupplyChainAudit = $true
+    $RunSmoke = $true
+    $RunObservabilityOnline = $true
+    $RequireObservabilityMetrics = $true
+    $RequireHardwareContract = $true
+    $RequireExternalScanners = $true
+}
 
 if (-not (Test-Path $artifactsRoot)) {
     New-Item -ItemType Directory -Force -Path $artifactsRoot | Out-Null
@@ -56,6 +70,29 @@ try {
 
     Invoke-Step "secret-scan" {
         powershell -ExecutionPolicy Bypass -File ".\tools\scan-secrets.ps1"
+    }
+
+    Invoke-Step "observability-offline" {
+        powershell -ExecutionPolicy Bypass -File ".\tools\observability-check.ps1" -OfflineValidateOnly
+    }
+
+    if ($RunObservabilityOnline -or $RequireObservabilityMetrics) {
+        Invoke-Step "observability-online" {
+            $arguments = @(
+                "-ExecutionPolicy", "Bypass",
+                "-File", ".\tools\observability-check.ps1"
+            )
+
+            if (-not [string]::IsNullOrWhiteSpace($ObservabilityBaseUrl)) {
+                $arguments += @("-BaseUrl", $ObservabilityBaseUrl)
+            }
+
+            if ($RequireObservabilityMetrics) {
+                $arguments += "-RequireMetrics"
+            }
+
+            powershell @arguments
+        }
     }
 
     if ($RunCoverage) {

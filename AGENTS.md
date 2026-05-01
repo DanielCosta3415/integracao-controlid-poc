@@ -106,7 +106,10 @@ dotnet list .\tools\ControlIdCallbackSigningProxy\ControlIdCallbackSigningProxy.
 powershell -ExecutionPolicy Bypass -File .\tools\audit-supply-chain.ps1
 powershell -ExecutionPolicy Bypass -File .\tools\scan-secrets.ps1
 powershell -ExecutionPolicy Bypass -File .\tools\generate-sbom.ps1
+powershell -ExecutionPolicy Bypass -File .\tools\observability-check.ps1 -OfflineValidateOnly
 powershell -ExecutionPolicy Bypass -File .\tools\test-readiness-gates.ps1 -RunCoverage
+powershell -ExecutionPolicy Bypass -File .\tools\test-readiness-gates.ps1 -RunObservabilityOnline -RequireObservabilityMetrics
+powershell -ExecutionPolicy Bypass -File .\tools\test-readiness-gates.ps1 -ReleaseGate
 git diff --check
 ```
 
@@ -116,6 +119,8 @@ Notas:
 - Typecheck separado nao existe; o typecheck e o build C#.
 - Para corrigir formatacao, use `dotnet format .\Integracao.ControlID.PoC.sln -v:minimal` e registre o efeito mecanico.
 - O smoke test escreve em `docs/reports/`, `artifacts/`, `Logs/` e no SQLite local.
+- O gate `test-readiness-gates.ps1` executa observabilidade offline por padrao; contra app rodando, use `OBSERVABILITY_BASE_URL` e credencial local para `/metrics` quando necessario.
+- `test-readiness-gates.ps1 -ReleaseGate` e o modo estrito para release: exige smoke, cobertura, supply chain, observabilidade online, contrato fisico e scanners externos.
 - O contrato contra equipamento real e opt-in e exige variaveis `CONTROLID_DEVICE_URL`, `CONTROLID_USERNAME` e `CONTROLID_PASSWORD`: `powershell -ExecutionPolicy Bypass -File .\tools\contract-controlid-device.ps1`.
 
 ### Comandos indisponiveis ou nao padronizados

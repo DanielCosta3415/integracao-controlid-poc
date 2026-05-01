@@ -295,7 +295,7 @@ Uma mudança só está concluída quando:
 - riscos residuais e testes não executados foram documentados;
 - arquivos alterados foram listados no fechamento da tarefa.
 
-## Lacunas de aceite e validação
+## Gates de aceite e validação externa
 
 | Lacuna | Impacto | Prioridade | Recomendação |
 | --- | --- | --- | --- |
@@ -306,8 +306,10 @@ Uma mudança só está concluída quando:
 | Status de `/result` é livre | Relatórios podem ficar inconsistentes | Média | Definir enum/normalização se o produto exigir relatórios formais |
 | RBAC/permissões de UI não documentadas | Usuário com acesso à PoC pode acionar telas críticas | Alta | Definir papéis ou declarar escopo restrito de laboratório |
 | Retenção de dados não automatizada | Payload sensível pode ficar no SQLite indefinidamente | Alta | Implementar rotina de purge/backup quando houver requisito operacional |
-| Smoke/E2E dependente de equipamento real | Aceite final de integração não é totalmente automatizado | Crítica | Manter roteiro manual com modelo, firmware, licença, rede e URL pública |
-| Secret scan automatizado com heurística local | Falsos negativos ainda são possíveis sem ferramenta externa dedicada | Média | Revisar achados manualmente e considerar ferramenta especializada antes de produção |
+| Smoke/E2E dependente de equipamento real | Aceite final de integração depende de ambiente físico | Crítica | Bloquear release com `tools/test-readiness-gates.ps1 -RequireHardwareContract` e registrar modelo, firmware, licença, rede e URL pública |
+| Secret scan automatizado com heurística local | Falsos negativos ainda são possíveis sem ferramenta externa dedicada | Média | Bloquear release ampliado com `-RequireExternalScanners`; revisar achados manualmente antes de produção |
+| Observabilidade online | `/metrics` exige app rodando e credencial local de administrador | Alta | Bloquear release operacional com `-RunObservabilityOnline -RequireObservabilityMetrics` |
+| Release sem exceções | Depende de ambiente físico, credencial local, app rodando e ferramentas externas | Crítica | Usar `tools/test-readiness-gates.ps1 -ReleaseGate`; qualquer dependência ausente deve falhar o gate |
 
 ## Estratégia de validação
 

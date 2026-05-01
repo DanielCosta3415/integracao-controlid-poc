@@ -1,0 +1,95 @@
+{
+  "version": 1,
+  "runbook": "docs/observability-runbook.md",
+  "dashboards": [
+    {
+      "id": "process-health",
+      "title": "Saude do processo",
+      "panels": [
+        {
+          "title": "Liveness",
+          "source": "health",
+          "target": "/health/live"
+        },
+        {
+          "title": "Readiness SQLite",
+          "source": "health",
+          "target": "/health/ready"
+        },
+        {
+          "title": "Requests por status",
+          "source": "metrics",
+          "metric": "controlid_http_requests_total",
+          "groupBy": [ "status_group" ]
+        },
+        {
+          "title": "Latencia HTTP",
+          "source": "metrics",
+          "metric": "controlid_http_request_duration_milliseconds",
+          "series": [ "count", "sum", "max" ]
+        }
+      ]
+    },
+    {
+      "id": "controlid-integration",
+      "title": "Integracao Control iD",
+      "panels": [
+        {
+          "title": "Invocacoes por endpoint",
+          "source": "metrics",
+          "metric": "controlid_official_api_invocations_total",
+          "groupBy": [ "endpoint_id", "outcome" ]
+        },
+        {
+          "title": "Duracao das chamadas oficiais",
+          "source": "metrics",
+          "metric": "controlid_official_api_duration_milliseconds",
+          "series": [ "count", "sum", "max" ]
+        },
+        {
+          "title": "Timeouts e circuit breaker",
+          "source": "metrics",
+          "metric": "controlid_official_api_invocations_total",
+          "filters": {
+            "outcome": [ "timeout", "blocked_circuit_open" ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "external-ingress",
+      "title": "Ingressos externos",
+      "panels": [
+        {
+          "title": "Callbacks por familia e status",
+          "source": "metrics",
+          "metric": "controlid_callback_ingress_total",
+          "groupBy": [ "event_family", "outcome", "status_group" ]
+        },
+        {
+          "title": "Push operacional",
+          "source": "metrics",
+          "metric": "controlid_push_operations_total",
+          "groupBy": [ "operation", "outcome" ]
+        }
+      ]
+    },
+    {
+      "id": "security-privacy",
+      "title": "Seguranca e privacidade",
+      "panels": [
+        {
+          "title": "Tentativas de autenticacao local",
+          "source": "metrics",
+          "metric": "controlid_local_auth_attempts_total",
+          "groupBy": [ "outcome", "role" ]
+        },
+        {
+          "title": "Revisao de logs seguros",
+          "source": "runbook",
+          "target": "Dados proibidos em logs"
+        }
+      ]
+    }
+  ]
+}

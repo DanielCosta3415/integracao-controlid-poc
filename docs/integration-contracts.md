@@ -199,9 +199,14 @@ Nao ha loader `.env` configurado. Use `appsettings.json`, User Secrets ou variav
 
 ### INT-009 - Observabilidade Serilog
 
-- Tipo: logs.
+- Tipo: logs, correlation ID, health checks e metricas in-process.
 - Destino: console e `Logs/app_log.txt`.
-- Payload: mensagens estruturadas com endpoint, device id, command id, status, duracao e excecoes.
+- Payload: mensagens estruturadas com endpoint, device id pseudonimizado, command id, status, duracao, correlation id e excecoes.
+- Correlacao: `X-Correlation-ID` inbound/outbound, retornado em toda resposta HTTP.
+- Health: `GET /health/live` e `GET /health/ready`.
+- Metricas: meter `Integracao.ControlID.PoC.Operations` via `System.Diagnostics.Metrics` e `GET /metrics` em formato Prometheus text.
+- Autorizacao: `/metrics` exige `AdministratorOnly` por padrao; `AllowAnonymous` e bloqueado fora de `Development`.
+- Artefatos: alertas em `docs/observability/alert-rules.json`, dashboards em `docs/observability/dashboard.json`, monitor local em `tools/observability-check.ps1`.
 - Dados sensiveis: nao logar credenciais, shared key, biometria bruta ou payload integral.
 - Retencao: configurada por `Logging__File__RetainedFileCountLimit`/Serilog.
 

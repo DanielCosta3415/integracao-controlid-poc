@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Integracao.ControlID.PoC.Helpers;
+using Integracao.ControlID.PoC.Services.Observability;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 
@@ -31,8 +32,17 @@ namespace Integracao.ControlID.PoC.Middlewares
                 var request = context.Request;
                 var response = context.Response;
 
-                _logger.LogInformation(
-                    "[{Timestamp}] {Method} {Path} => {StatusCode} ({Elapsed} ms) IP:{IPRef} User:{UserRef} Trace:{TraceId}",
+                var correlationId = ObservabilityConstants.GetCorrelationId(context);
+                OperationalMetrics.RecordHttpRequest(
+                    request.Method,
+                    request.Path.Value ?? string.Empty,
+                    response.StatusCode,
+                    sw.Elapsed.TotalMilliseconds);
+
+                _logger.Log(
+                    response.StatusCode >= StatusCodes.Status500InternalServerError ? LogLevel.Warning : LogLevel.Information,
+                    OperationalEventIds.RequestCompleted,
+                    "[{Timestamp}] {Method} {Path} => {StatusCode} ({Elapsed} ms) IP:{IPRef} User:{UserRef} Correlation:{CorrelationId} Trace:{TraceId}",
                     DateTime.UtcNow,
                     request.Method,
                     request.Path,
@@ -42,16 +52,24 @@ namespace Integracao.ControlID.PoC.Middlewares
                     context.User.Identity?.IsAuthenticated == true
                         ? PrivacyLogHelper.PseudonymizeUser(context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? context.User.Identity.Name)
                         : "anonymous",
+                    correlationId,
                     context.TraceIdentifier
                 );
             }
             catch (Exception ex)
             {
                 sw.Stop();
-                _logger.LogError(ex, "Erro durante o processamento da requisição [{Method}] {Path}. Tempo decorrido: {Elapsed} ms",
+                OperationalMetrics.RecordHttpRequest(
+                    context.Request.Method,
+                    context.Request.Path.Value ?? string.Empty,
+                    StatusCodes.Status500InternalServerError,
+                    sw.Elapsed.TotalMilliseconds);
+
+                _logger.LogError(OperationalEventIds.RequestFailed, ex, "Erro durante o processamento da requisicao [{Method}] {Path}. Tempo decorrido: {Elapsed} ms. Correlation {CorrelationId}.",
                     context.Request.Method,
                     context.Request.Path,
-                    sw.ElapsedMilliseconds
+                    sw.ElapsedMilliseconds,
+                    ObservabilityConstants.GetCorrelationId(context)
                 );
                 throw;
             }

@@ -65,7 +65,9 @@ Use flags adicionais conforme o ambiente permitir:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\tools\test-readiness-gates.ps1 -RunCoverage -RunSupplyChainAudit -RunSmoke
+powershell -ExecutionPolicy Bypass -File .\tools\test-readiness-gates.ps1 -RunObservabilityOnline -RequireObservabilityMetrics
 powershell -ExecutionPolicy Bypass -File .\tools\test-readiness-gates.ps1 -RequireHardwareContract -RequireExternalScanners
+powershell -ExecutionPolicy Bypass -File .\tools\test-readiness-gates.ps1 -ReleaseGate
 ```
 
 Smoke local quando a mudanca tocar callbacks, push, catalogo oficial, autenticacao ou banco:
@@ -84,8 +86,10 @@ powershell -ExecutionPolicy Bypass -File .\tools\test-readiness-gates.ps1 -RunCo
 
 Threshold numerico ainda exige ferramenta de leitura/relatorio compativel com `.coverage`; caso seja necessario bloquear por percentual, adicionar essa ferramenta deve ser uma mudanca separada, justificada e validada no lockfile.
 
-## Lacunas restantes
+## Gates de validacao externa
 
-- Homologacao com equipamento real, firmware e rede publica continua dependente de ambiente e e bloqueada por `-RequireHardwareContract` quando exigida.
+- Homologacao com equipamento real, firmware e rede publica depende de ambiente e e bloqueada por `-RequireHardwareContract` quando exigida.
 - Auditoria formal WCAG/DAST/SAST externa depende de ferramentas fora do repo e e bloqueada por `-RequireExternalScanners` quando exigida.
-- Coverage numerico por percentual nao esta configurado; ha coleta de artefato, mas nao threshold.
+- Validacao online de metricas depende de app rodando e credencial local de administrador; use `-RunObservabilityOnline -RequireObservabilityMetrics`.
+- Coverage numerico por percentual depende de parser/relatorio compativel; `-RunCoverage` bloqueia ausencia de artefato e qualquer threshold formal deve ser definido com ferramenta versionada antes de release regulado.
+- Para release sem excecoes, `-ReleaseGate` agrega smoke, cobertura, supply chain, observabilidade online, contrato fisico e scanners externos; se ambiente/ferramenta estiver ausente, o gate falha.

@@ -2,6 +2,7 @@ using System.Text.Json;
 using Integracao.ControlID.PoC.Helpers;
 using Integracao.ControlID.PoC.Models.Database;
 using Integracao.ControlID.PoC.Services.Database;
+using Integracao.ControlID.PoC.Services.Observability;
 using Integracao.ControlID.PoC.ViewModels.Push;
 
 namespace Integracao.ControlID.PoC.Services.Push;
@@ -43,7 +44,9 @@ public sealed class PushCommandWorkflowService
     {
         if (!IsValidJsonPayload(model.Payload))
         {
+            OperationalMetrics.RecordPushOperation("queue", "invalid_payload");
             _logger.LogWarning(
+                OperationalEventIds.PushRejected,
                 "Rejected push queue request for device {DeviceRef} and type {CommandType} because the payload is not valid JSON.",
                 PrivacyLogHelper.PseudonymizeIdentifier(model.DeviceId),
                 model.CommandType);
@@ -64,8 +67,10 @@ public sealed class PushCommandWorkflowService
         };
 
         await _pushCommandRepository.AddPushCommandAsync(command);
+        OperationalMetrics.RecordPushOperation("queue", "queued");
 
         _logger.LogInformation(
+            OperationalEventIds.PushQueued,
             "Push command {CommandId} queued for device {DeviceRef} with type {CommandType}.",
             command.CommandId,
             PrivacyLogHelper.PseudonymizeIdentifier(command.DeviceId),
@@ -77,16 +82,19 @@ public sealed class PushCommandWorkflowService
     public async Task<int> ClearAsync()
     {
         var removedCount = await _pushCommandRepository.DeleteAllPushCommandsAsync();
+        OperationalMetrics.RecordPushOperation("clear", "completed");
 
-        _logger.LogWarning("Push queue cleared manually. Removed {Count} commands.", removedCount);
+        _logger.LogWarning(OperationalEventIds.PushQueueCleared, "Push queue cleared manually. Removed {Count} commands.", removedCount);
         return removedCount;
     }
 
     public async Task<int> PurgeOlderThanAsync(DateTime cutoffUtc)
     {
         var removedCount = await _pushCommandRepository.DeletePushCommandsOlderThanAsync(cutoffUtc);
+        OperationalMetrics.RecordPushOperation("purge", "completed");
 
         _logger.LogWarning(
+            OperationalEventIds.PushQueueCleared,
             "Push queue retention purge removed {Count} commands older than {CutoffUtc}.",
             removedCount,
             cutoffUtc);
@@ -101,10 +109,12 @@ public sealed class PushCommandWorkflowService
         var command = await _pushCommandRepository.ClaimNextPendingCommandForDeliveryAsync(deviceId);
         if (command == null)
         {
+            OperationalMetrics.RecordPushOperation("poll", "empty");
             _logger.LogDebug("Push poll found no pending command for device {DeviceRef}.", PrivacyLogHelper.PseudonymizeIdentifier(deviceId));
             return null;
         }
 
+        OperationalMetrics.RecordPushOperation("poll", "delivered");
         return command;
     }
 
@@ -142,6 +152,7 @@ public sealed class PushCommandWorkflowService
             };
 
             await _pushCommandRepository.AddPushCommandAsync(command);
+            OperationalMetrics.RecordPushOperation("result", "created");
             return command;
         }
 
@@ -152,12 +163,14 @@ public sealed class PushCommandWorkflowService
         var persisted = await _pushCommandRepository.UpdatePushCommandAsync(command);
         if (!persisted)
         {
+            OperationalMetrics.RecordPushOperation("result", "persist_failed");
             _logger.LogError(
                 "Push result for command {CommandId} could not persist status {Status}.",
                 command.CommandId,
                 command.Status);
         }
 
+        OperationalMetrics.RecordPushOperation("result", "updated");
         return command;
     }
 
@@ -180,11 +193,13 @@ public sealed class PushCommandWorkflowService
                 existing.UpdatedAt = DateTime.UtcNow;
 
                 await _pushCommandRepository.UpdatePushCommandAsync(existing);
+                OperationalMetrics.RecordPushOperation("legacy_receive", "updated");
                 return existing;
             }
         }
 
         await _pushCommandRepository.AddPushCommandAsync(command);
+        OperationalMetrics.RecordPushOperation("legacy_receive", "created");
         return command;
     }
 
