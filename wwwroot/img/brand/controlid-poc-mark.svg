@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
+  <title id="title">Control iD PoC mark</title>
+  <desc id="desc">A square operational console mark with a red scan ring, central access point, and two signal nodes.</desc>
+  <rect width="128" height="128" rx="24" fill="#171214"/>
+  <path d="M28 64c0-19.9 16.1-36 36-36 11.2 0 21.2 5.1 27.8 13.1" fill="none" stroke="#f03b3f" stroke-width="10" stroke-linecap="round"/>
+  <path d="M100 64c0 19.9-16.1 36-36 36-11.2 0-21.2-5.1-27.8-13.1" fill="none" stroke="#ff6262" stroke-width="10" stroke-linecap="round"/>
+  <circle cx="64" cy="64" r="14" fill="#fffdfd"/>
+  <circle cx="64" cy="64" r="6" fill="#b61b24"/>
+  <path d="M64 42V28M64 100V86M42 64H28M100 64H86" stroke="#fffdfd" stroke-width="6" stroke-linecap="round" opacity=".88"/>
+  <circle cx="96" cy="36" r="7" fill="#0f766e"/>
+  <circle cx="32" cy="92" r="7" fill="#2563eb"/>
+</svg>

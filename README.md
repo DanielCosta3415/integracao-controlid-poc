@@ -34,6 +34,7 @@ Documentações funcionais de implementação:
 - `docs/monitor-implementation.md`
 - `docs/push-implementation.md`
 - `docs/security-hardening.md`
+- `docs/brand.md`
 
 ## Requisitos
 
@@ -252,6 +253,7 @@ Checklist recomendado para debug operacional:
 - `docs/integration-contracts.md`: inventario de integracoes, contratos, payloads e riscos
 - `docs/privacy-and-data-retention.md`: regras de privacidade, dados sensíveis e retenção local
 - `docs/product-acceptance-criteria.md`: critérios de aceite funcionais para os fluxos críticos
+- `docs/brand.md`: identidade visual, tokens, contraste, diretrizes de componentes e uso do simbolo da PoC
 
 ## Troubleshooting rápido
 
