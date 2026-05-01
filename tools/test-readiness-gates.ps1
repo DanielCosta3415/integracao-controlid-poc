@@ -8,6 +8,7 @@ param(
     [switch]$RunObservabilityOnline,
     [switch]$RequireObservabilityMetrics,
     [switch]$RequireOperationalConfig,
+    [switch]$RequireFinOpsCapacity,
     [switch]$RequireHardwareContract,
     [switch]$RequireExternalScanners,
     [switch]$ReleaseGate,
@@ -30,6 +31,7 @@ if ($ReleaseGate) {
     $RunObservabilityOnline = $true
     $RequireObservabilityMetrics = $true
     $RequireOperationalConfig = $true
+    $RequireFinOpsCapacity = $true
     $RequireHardwareContract = $true
     $RequireExternalScanners = $true
 }
@@ -91,6 +93,19 @@ try {
 
         if ($RequireOperationalConfig) {
             $arguments += "-RequireConfig"
+        }
+
+        powershell @arguments
+    }
+
+    Invoke-Step "finops-capacity" {
+        $arguments = @(
+            "-ExecutionPolicy", "Bypass",
+            "-File", ".\tools\finops-capacity-check.ps1"
+        )
+
+        if ($RequireFinOpsCapacity) {
+            $arguments += "-FailOnWarnings"
         }
 
         powershell @arguments

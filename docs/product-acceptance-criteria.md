@@ -309,7 +309,8 @@ Uma mudança só está concluída quando:
 | Smoke/E2E dependente de equipamento real | Aceite final de integração depende de ambiente físico | Crítica | Bloquear release com `tools/test-readiness-gates.ps1 -RequireHardwareContract` e registrar modelo, firmware, licença, rede e URL pública |
 | Secret scan automatizado com heurística local | Falsos negativos ainda são possíveis sem ferramenta externa dedicada | Média | Bloquear release ampliado com `-RequireExternalScanners`; revisar achados manualmente antes de produção |
 | Observabilidade online | `/metrics` exige app rodando e credencial local de administrador | Alta | Bloquear release operacional com `-RunObservabilityOnline -RequireObservabilityMetrics` |
-| Release sem exceções | Depende de container build, ambiente físico, credencial local, app rodando e ferramentas externas | Crítica | Usar `tools/test-readiness-gates.ps1 -ReleaseGate`; qualquer dependência ausente deve falhar o gate |
+| FinOps/capacidade | Storage, logs, backups, build minutes e terceiros podem crescer sem budget | Alta | Bloquear release operacional com `-RequireFinOpsCapacity` ou `-ReleaseGate` e revisar `docs/finops-capacity.md` |
+| Release sem exceções | Depende de container build, ambiente físico, credencial local, app rodando, FinOps/capacidade e ferramentas externas | Crítica | Usar `tools/test-readiness-gates.ps1 -ReleaseGate`; qualquer dependência ausente ou warning estrito deve falhar o gate |
 
 ## Estratégia de validação
 

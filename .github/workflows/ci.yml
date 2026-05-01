@@ -65,6 +65,10 @@ jobs:
         shell: pwsh
         run: .\tools\operational-readiness-check.ps1
 
+      - name: FinOps capacity artifact check
+        shell: pwsh
+        run: .\tools\finops-capacity-check.ps1
+
       - name: Supply-chain audit
         shell: pwsh
         run: .\tools\audit-supply-chain.ps1

@@ -253,6 +253,7 @@ Repositórios que encapsulam acesso ao SQLite local para cada entidade da PoC.
 | `Services/Observability/OperationalEventIds.cs` | Define IDs estaveis para eventos operacionais criticos. |
 | `Services/Observability/OperationalMetrics.cs` | Publica metricas via `System.Diagnostics.Metrics` para coleta futura. |
 | `Services/Observability/PrometheusMetricsWriter.cs` | Renderiza snapshot de metricas locais em formato Prometheus text para `/metrics`. |
+| `Services/Observability/RuntimeCapacityMetricsProvider.cs` | Coleta gauges seguros de memoria, storage local e disco para FinOps/capacidade. |
 | `Services/Observability/SqliteReadinessHealthCheck.cs` | Verifica readiness do SQLite local usado como estado runtime. |
 | `Services/OperationModes/OperationModesPayloadFactory.cs` | Monta payloads demonstrativos dos modos Standalone, Pro e Enterprise. |
 | `Services/OperationModes/OperationModesProfileResolver.cs` | Resolve perfis, comportamento esperado e transições dos modos de operação. |
@@ -537,6 +538,7 @@ As views Razor compõem a interface web da PoC. Em geral, cada pasta espelha um 
 | `docs/deployment-runbook.md` | Mapeia ambientes, container, variaveis obrigatorias, deploy, rollback e riscos de infraestrutura. |
 | `docs/equipment-contingency-runbook.md` | Define contingencia operacional do equipamento Control iD, fallback manual e validacao de bancada. |
 | `docs/external-validation-runbook.md` | Padroniza SAST, OSV, DAST, acessibilidade e contrato com stub/equipamento. |
+| `docs/finops-capacity.md` | Define inventario de custos, capacidade, limites, governanca FinOps e sustentabilidade operacional. |
 | `docs/incident-response-and-dr.md` | Define matriz SEV, runbooks de incidentes, continuidade, backup/restore operacional, DR, comunicacao e postmortem. |
 | `docs/monitor-implementation.md` | Documenta a implementação da funcionalidade Monitor, callbacks oficiais, segurança e persistência local. |
 | `docs/observability-runbook.md` | Define health, metricas, alertas, dashboards e resposta a incidentes operacionais. |
@@ -601,7 +603,8 @@ As views Razor compõem a interface web da PoC. Em geral, cada pasta espelha um 
 | `tools/backup-sqlite-operational.ps1` | Orquestra backup SQLite protegido, espelhamento opcional, restore-smoke e retencao confirmada. |
 | `tools/contract-controlid-stub.ps1` | Sobe o stub local e valida contrato Control iD sem equipamento fisico ou credenciais reais. |
 | `tools/external-security-scans.ps1` | Orquestra inventario e execucao de Semgrep, OSV Scanner, ZAP baseline e axe quando disponiveis. |
-| `tools/test-readiness-gates.ps1` | Orquestra build, testes, format, secret scan, observabilidade offline, cobertura, smoke, auditoria, contrato fisico, scanners externos e modo estrito `-ReleaseGate`. |
+| `tools/finops-capacity-check.ps1` | Valida runbook, alertas, governanca e tamanhos locais de SQLite, logs, artifacts e reports sem apagar dados. |
+| `tools/test-readiness-gates.ps1` | Orquestra build, testes, format, secret scan, observabilidade offline, FinOps/capacidade, cobertura, smoke, auditoria, contrato fisico, scanners externos e modo estrito `-ReleaseGate`. |
 | `tools/smoke-localhost.ps1` | Script PowerShell que executa smoke test local, sobe stub e percorre fluxos criticos da PoC. |
 | `tools/ControlIdDeviceStub/ControlIdDeviceStub.csproj` | Projeto .NET do stub local que simula respostas de um equipamento Control iD. |
 | `tools/ControlIdDeviceStub/Program.cs` | Implementa os endpoints simulados usados pelos smoke tests locais. |

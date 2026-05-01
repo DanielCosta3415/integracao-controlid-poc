@@ -69,10 +69,21 @@ claro.
 | `controlid.push.operations` | Counter | `operation`, `outcome` | Fila push, polling, resultado, clear e purge |
 | `controlid.product.flow.events` | Counter | `flow`, `event`, `action`, `outcome`, `status_group` | Uso privacy-aware de fluxos de produto sem usuario, IP, query, body ou payload |
 | `controlid.product.flow.duration` | Histogram | `flow`, `event`, `action`, `outcome`, `status_group` | Tempo percebido por fluxo de produto |
+| `controlid.runtime.process.memory.bytes` | Gauge | `scope` | Memoria de processo sem expor host/path |
+| `controlid.runtime.managed_heap.bytes` | Gauge | `scope` | Heap gerenciado .NET |
+| `controlid.runtime.storage.local.bytes` | Gauge | `scope` | Tamanho agregado de SQLite, logs, artifacts e reports, sem path real |
+| `controlid.runtime.disk.total.bytes` | Gauge | `scope` | Capacidade total do disco/volume para dados e logs |
+| `controlid.runtime.disk.free.bytes` | Gauge | `scope` | Espaco livre do disco/volume para dados e logs |
+| `controlid.runtime.disk.free.percent` | Gauge | `scope` | Percentual livre para alertas de capacidade |
 
 O catalogo de eventos, KPIs e propriedades permitidas fica versionado em
 `docs/product-analytics.md`. Nao adicione labels livres, identificadores reais
 ou propriedades de analytics sem revisao de privacidade.
+
+As metricas runtime/FinOps sao calculadas no momento da coleta de `/metrics` e
+usam apenas labels fixas como `sqlite`, `logs`, `artifacts`, `reports`, `data` e
+`working_set`. Paths locais, connection string, nome de arquivo e host real nao
+sao serializados.
 
 ## Alertas recomendados
 
@@ -90,6 +101,7 @@ Regras versionadas: `docs/observability/alert-rules.json`.
 | Falha de persistencia | logs `CallbackPersistenceFailed` ou `Push result persist_failed` | qualquer ocorrencia | Critico | Verificar SQLite, migrations, disco e permissao |
 | Resultado push sem command id | logs de `/result` sem id/chave | >= 1 em 10 min | Medio | Revisar firmware/configuracao do equipamento |
 | Expurgo/limpeza manual | evento `PushQueueCleared` | qualquer ocorrencia | Medio | Confirmar operador, janela e impacto esperado |
+| Storage/logs acima do budget | `tools/finops-capacity-check.ps1` ou monitor do host | ver `FIN-*` | Medio/Alto | Revisar SQLite, logs, backups e artifacts sem apagar dados sem confirmacao |
 
 ## Dashboards sugeridos
 
@@ -205,4 +217,4 @@ O relatorio padrao fica em `artifacts/observability/`, fora do Git.
   `-RunObservabilityOnline -RequireObservabilityMetrics`.
 - O modo `tools/test-readiness-gates.ps1 -ReleaseGate` torna essa validacao
   obrigatoria junto com smoke, cobertura, supply chain, container build, contrato
-  fisico e scanners externos.
+  fisico, FinOps/capacidade e scanners externos.

@@ -37,6 +37,8 @@ Variaveis minimas:
 - `ControlIDApi__AllowedDeviceHosts__0` com o host/IP permitido do equipamento.
 - `OpenApi__Enabled=false`.
 - `Observability__Metrics__AllowAnonymous=false`.
+- `Serilog__WriteTo__1__Args__retainedFileCountLimit=14` ou valor aprovado.
+- `Serilog__WriteTo__1__Args__fileSizeLimitBytes=10000000` ou limite aprovado.
 
 Reverse proxy:
 
@@ -115,7 +117,7 @@ powershell -ExecutionPolicy Bypass -File .\tools\test-readiness-gates.ps1 -Relea
 
 O `-ReleaseGate` exige tambem `ops.local.json` preenchido fora do Git, baseado em
 `ops.example.json`, para bloquear release sem ownership, on-call, RTO/RPO,
-backup externo e contingencia fisica validados.
+backup externo, FinOps/capacidade e contingencia fisica validados.
 
 ## Rollback tecnico
 

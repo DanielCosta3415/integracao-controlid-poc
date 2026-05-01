@@ -13,12 +13,16 @@ public class ReadinessGateContractTests
         Assert.Contains("RequireObservabilityMetrics", script, StringComparison.Ordinal);
         Assert.Contains("RunContainerBuild", script, StringComparison.Ordinal);
         Assert.Contains("RunExternalScanners", script, StringComparison.Ordinal);
+        Assert.Contains("RequireFinOpsCapacity", script, StringComparison.Ordinal);
+        Assert.Contains("finops-capacity", script, StringComparison.Ordinal);
+        Assert.Contains("finops-capacity-check.ps1", script, StringComparison.Ordinal);
         Assert.Contains("simulated-device-contract", script, StringComparison.Ordinal);
         Assert.Contains("contract-controlid-stub.ps1", script, StringComparison.Ordinal);
         Assert.Contains("external-security-scans.ps1", script, StringComparison.Ordinal);
         Assert.Contains("docker build --pull", script, StringComparison.Ordinal);
         Assert.Contains("ReleaseGate", script, StringComparison.Ordinal);
         Assert.Contains("$RequireExternalScanners = $true", script, StringComparison.Ordinal);
+        Assert.Contains("$RequireFinOpsCapacity = $true", script, StringComparison.Ordinal);
     }
 
     [Fact]

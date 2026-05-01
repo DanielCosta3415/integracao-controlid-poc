@@ -119,6 +119,8 @@ A configuração segue o padrão nativo do ASP.NET Core (`Secao__Chave`). Use as
 | `CallbackSecurity__AllowedRemoteIps__0` | `192.168.0.10` | Primeiro IP remoto permitido para callbacks. Use índices adicionais para mais IPs. |
 | `Logging__LogLevel__Default` | `Information` | Nível mínimo do logging padrão. |
 | `Serilog__MinimumLevel__Default` | `Information` | Nível mínimo do Serilog. |
+| `Serilog__WriteTo__1__Args__retainedFileCountLimit` | `14` | Quantidade de arquivos rolling mantidos no sink de arquivo. |
+| `Serilog__WriteTo__1__Args__fileSizeLimitBytes` | `10000000` | Limite de tamanho por arquivo de log Serilog. |
 | `Logging__File__Path` | `Logs/app_log.txt` | Caminho esperado para logs em arquivo. |
 | `Logging__File__RetainedFileCountLimit` | `14` | Quantidade de arquivos de log mantidos. |
 | `AllowedHosts` | `poc.example.internal` | Hosts aceitos fora de `Development`; nao use `*` em Staging/Production. |
@@ -223,10 +225,12 @@ A PoC já sai preparada para monitoramento básico local:
 - health checks seguros em `GET /health/live` e `GET /health/ready`;
 - metricas instrumentadas por `System.Diagnostics.Metrics` no meter `Integracao.ControlID.PoC.Operations` e expostas em `GET /metrics` para usuario administrador;
 - analytics de produto privacy-aware em `docs/product-analytics.md`, usando apenas eventos agregados por fluxo, sem usuario, IP, payload, query ou device real;
+- metricas FinOps/capacidade em `/metrics` para memoria de processo, heap, storage local e espaco livre de disco, sem expor paths locais;
 - alertas e dashboards versionados em `docs/observability/`;
 - monitor local em `tools/observability-check.ps1`;
 - gate de readiness em `tools/test-readiness-gates.ps1`, com validacao offline de observabilidade por padrao e modo online autenticado para `/metrics`;
 - gate de scanners externos em `tools/external-security-scans.ps1`, documentado em `docs/external-validation-runbook.md`;
+- gate FinOps/capacidade em `tools/finops-capacity-check.ps1`, documentado em `docs/finops-capacity.md`;
 - modo estrito de release com `tools/test-readiness-gates.ps1 -ReleaseGate`, que falha se contrato fisico, metricas online ou scanners externos exigidos nao estiverem disponiveis;
 - gate operacional em `tools/operational-readiness-check.ps1`; para release, crie `ops.local.json` a partir de `ops.example.json` fora do Git e use `-RequireOperationalConfig`;
 - backup operacional com espelhamento opcional em `tools/backup-sqlite-operational.ps1`, usando `CONTROLID_BACKUP_MIRROR_DIRECTORY` ou `-MirrorDirectory`;
@@ -296,6 +300,7 @@ Checklist recomendado para debug operacional:
 - `docs/incident-response-and-dr.md`: matriz SEV, runbooks de incidentes, continuidade, RTO/RPO e postmortem
 - `docs/equipment-contingency-runbook.md`: contingencia operacional do equipamento Control iD e fallback manual aprovado
 - `docs/external-validation-runbook.md`: execucao de SAST, OSV, DAST, acessibilidade e contrato com stub/equipamento
+- `docs/finops-capacity.md`: inventario de custos, capacidade, limites, governanca FinOps e sustentabilidade operacional
 - `docs/security-hardening.md`: controles de autenticação local, RBAC, assinatura HMAC, proxy assinador, backup protegido, allowlist de egress e headers
 - `docs/integration-contracts.md`: inventario de integracoes, contratos, payloads e riscos
 - `docs/privacy-and-data-retention.md`: regras de privacidade, dados sensíveis e retenção local

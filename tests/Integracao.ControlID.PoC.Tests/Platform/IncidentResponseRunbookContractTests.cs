@@ -42,6 +42,8 @@ public class IncidentResponseRunbookContractTests
         Assert.Contains("incidentCommander", example, StringComparison.Ordinal);
         Assert.Contains("externalBackupTarget", example, StringComparison.Ordinal);
         Assert.Contains("manualAccessProcedureOwner", example, StringComparison.Ordinal);
+        Assert.Contains("costOwner", example, StringComparison.Ordinal);
+        Assert.Contains("monthlyBudget", example, StringComparison.Ordinal);
         Assert.Contains("MirrorDirectory", backupScript, StringComparison.Ordinal);
         Assert.Contains("RunRestoreSmoke", backupScript, StringComparison.Ordinal);
         Assert.Contains("RetentionConfirmation", backupScript, StringComparison.Ordinal);

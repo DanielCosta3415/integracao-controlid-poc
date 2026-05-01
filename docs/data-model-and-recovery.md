@@ -115,6 +115,7 @@ Recomendacoes:
 - Proteja backups como dados sensiveis; eles podem conter usuarios, sessoes, fotos, biometria, logs e payloads brutos.
 - Restrinja permissoes locais de SQLite, logs e backups com `powershell -ExecutionPolicy Bypass -File .\tools\harden-local-state.ps1`.
 - Nao versionar backups.
+- Para revisar capacidade e custo local sem apagar dados, rode `powershell -ExecutionPolicy Bypass -File .\tools\finops-capacity-check.ps1`.
 
 ## Restore
 

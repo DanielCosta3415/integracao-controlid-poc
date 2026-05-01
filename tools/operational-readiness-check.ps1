@@ -139,7 +139,18 @@ function Assert-OperationalConfig {
         "equipment.testCadence",
         "securityIncident.evidenceRepository",
         "securityIncident.dpoEscalation",
-        "securityIncident.secretRotationOwner"
+        "securityIncident.secretRotationOwner",
+        "finops.costOwner",
+        "finops.monthlyBudget",
+        "finops.billingDashboard",
+        "finops.actualSpendReviewSource",
+        "finops.billingAlertOwner",
+        "finops.billingAlertThresholds",
+        "finops.capacityReviewCadence",
+        "finops.logRetentionReview",
+        "finops.storageBudget",
+        "finops.previewEnvironmentTtl",
+        "finops.thirdPartyCostReview"
     )
 
     foreach ($field in $requiredFields) {
@@ -215,6 +226,19 @@ try {
 catch {
     $hasFailure = $true
     Add-Result -Results $results -Name "incident-runbook" -Status "FAIL" -Detail $_.Exception.Message
+}
+
+try {
+    Assert-TextContains -Path "docs\finops-capacity.md" -Patterns @(
+        "Inventario de custos",
+        "Governanca FinOps",
+        "Alertas e limites sugeridos"
+    )
+    Add-Result -Results $results -Name "finops-runbook" -Status "PASS" -Detail "Runbook FinOps/capacidade cobre custo, limites e governanca."
+}
+catch {
+    $hasFailure = $true
+    Add-Result -Results $results -Name "finops-runbook" -Status "FAIL" -Detail $_.Exception.Message
 }
 
 try {

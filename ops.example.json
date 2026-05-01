@@ -64,5 +64,18 @@
     "evidenceRepository": "replace-with-restricted-security-evidence-location",
     "dpoEscalation": "replace-with-dpo-escalation-path",
     "secretRotationOwner": "replace-with-secret-rotation-owner"
+  },
+  "finops": {
+    "costOwner": "replace-with-person-or-team",
+    "monthlyBudget": "replace-with-approved-budget-or-cost-ceiling",
+    "billingDashboard": "replace-with-provider-billing-dashboard-or-not-applicable",
+    "actualSpendReviewSource": "replace-with-billing-export-report-or-manual-review-location",
+    "billingAlertOwner": "replace-with-person-or-team",
+    "billingAlertThresholds": "replace-with-alert-thresholds-such-as-50-80-100-percent",
+    "capacityReviewCadence": "replace-with-capacity-review-cadence",
+    "logRetentionReview": "replace-with-log-retention-review-cadence",
+    "storageBudget": "replace-with-storage-budget-for-database-logs-backups-and-artifacts",
+    "previewEnvironmentTtl": "replace-with-preview-ttl-or-not-applicable",
+    "thirdPartyCostReview": "replace-with-review-owner-and-cadence-for-ci-scanners-observability-and-future-vendors"
   }
 }

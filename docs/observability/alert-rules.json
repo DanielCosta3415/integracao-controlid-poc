@@ -128,6 +128,65 @@
       "script": "tools/contract-controlid-device.ps1",
       "severity": "medium",
       "action": "Executar com CONTROLID_DEVICE_URL, CONTROLID_USERNAME e CONTROLID_PASSWORD fora do Git antes de release com equipamento real."
+    },
+    {
+      "id": "FIN-001",
+      "name": "Storage local acima do budget",
+      "source": "metrics",
+      "metric": "controlid_runtime_disk_free_percent",
+      "operator": "<=",
+      "threshold": 20,
+      "window": "15m",
+      "severity": "high",
+      "action": "Revisar SQLite, logs, backups e artifacts; executar backup antes de expurgo confirmado."
+    },
+    {
+      "id": "FIN-002",
+      "name": "Volume de logs acima do budget",
+      "source": "metrics",
+      "metric": "controlid_runtime_storage_local_bytes",
+      "labelFilters": {
+        "scope": "logs"
+      },
+      "operator": ">",
+      "threshold": "256MB",
+      "severity": "medium",
+      "action": "Revisar nivel de log, rotacao, coletor externo e eventos ruidosos sem reduzir sinais de seguranca."
+    },
+    {
+      "id": "FIN-003",
+      "name": "SQLite local acima do budget",
+      "source": "metrics",
+      "metric": "controlid_runtime_storage_local_bytes",
+      "labelFilters": {
+        "scope": "sqlite"
+      },
+      "operator": ">",
+      "threshold": "512MB",
+      "severity": "high",
+      "action": "Revisar retencao de callbacks, Push, fotos e biometria; validar backup e expurgo com confirmacao humana."
+    },
+    {
+      "id": "FIN-004",
+      "name": "Custo operacional de timeouts Control iD",
+      "source": "metrics",
+      "metric": "controlid_official_api_invocations_total",
+      "labelFilters": {
+        "outcome": "timeout"
+      },
+      "operator": ">=",
+      "threshold": 3,
+      "window": "10m",
+      "severity": "medium",
+      "action": "Pausar chamadas repetidas, validar rede/equipamento e evitar retentativas manuais ruidosas."
+    },
+    {
+      "id": "FIN-005",
+      "name": "Checks caros fora de janela de release",
+      "source": "process",
+      "script": "tools/test-readiness-gates.ps1",
+      "severity": "low",
+      "action": "Rodar scanners externos, smoke completo e container build quando houver mudanca relevante ou release gate."
     }
   ]
 }

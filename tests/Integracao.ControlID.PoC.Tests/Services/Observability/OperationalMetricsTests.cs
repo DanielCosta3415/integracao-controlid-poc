@@ -1,5 +1,8 @@
 using Integracao.ControlID.PoC.Services.Observability;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Hosting;
 
 namespace Integracao.ControlID.PoC.Tests.Services.Observability;
 
@@ -66,5 +69,83 @@ public class OperationalMetricsTests
         Assert.DoesNotContain("user_id", prometheus, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("session", prometheus, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("password", prometheus, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void RuntimeCapacityMetrics_CaptureSafeStorageAndProcessGaugesWithoutPaths()
+    {
+        OperationalMetrics.ResetForTests();
+
+        var root = Directory.CreateTempSubdirectory("controlid-capacity-test-").FullName;
+        try
+        {
+            var databasePath = Path.Combine(root, "integracao_controlid.db");
+            File.WriteAllBytes(databasePath, new byte[] { 1, 2, 3 });
+            var logsDirectory = Directory.CreateDirectory(Path.Combine(root, "Logs")).FullName;
+            File.WriteAllText(Path.Combine(logsDirectory, "app_log.txt"), "safe log");
+
+            var configuration = new ConfigurationBuilder()
+                .AddInMemoryCollection(new Dictionary<string, string?>
+                {
+                    ["ConnectionStrings:DefaultConnection"] = $"Data Source={databasePath}",
+                    ["Logging:File:Path"] = logsDirectory
+                })
+                .Build();
+
+            RuntimeCapacityMetricsProvider.RecordSnapshot(new CapacityTestServiceProvider(
+                configuration,
+                new CapacityTestHostEnvironment(root)));
+
+            var prometheus = PrometheusMetricsWriter.Format(OperationalMetrics.CaptureSnapshot());
+
+            Assert.Contains("controlid_runtime_process_memory_bytes", prometheus);
+            Assert.Contains("controlid_runtime_managed_heap_bytes", prometheus);
+            Assert.Contains("controlid_runtime_storage_local_bytes{scope=\"sqlite\"}", prometheus);
+            Assert.Contains("controlid_runtime_storage_local_bytes{scope=\"logs\"}", prometheus);
+            Assert.Contains("controlid_runtime_disk_free_percent", prometheus);
+            Assert.DoesNotContain(root, prometheus, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("integracao_controlid.db", prometheus, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("app_log.txt", prometheus, StringComparison.OrdinalIgnoreCase);
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    private sealed class CapacityTestServiceProvider : IServiceProvider
+    {
+        private readonly IConfiguration _configuration;
+        private readonly IHostEnvironment _environment;
+
+        public CapacityTestServiceProvider(IConfiguration configuration, IHostEnvironment environment)
+        {
+            _configuration = configuration;
+            _environment = environment;
+        }
+
+        public object? GetService(Type serviceType)
+        {
+            if (serviceType == typeof(IConfiguration))
+                return _configuration;
+
+            if (serviceType == typeof(IHostEnvironment))
+                return _environment;
+
+            return null;
+        }
+    }
+
+    private sealed class CapacityTestHostEnvironment : IHostEnvironment
+    {
+        public CapacityTestHostEnvironment(string contentRootPath)
+        {
+            ContentRootPath = contentRootPath;
+        }
+
+        public string EnvironmentName { get; set; } = Environments.Development;
+        public string ApplicationName { get; set; } = "Integracao.ControlID.PoC.Tests";
+        public string ContentRootPath { get; set; }
+        public IFileProvider ContentRootFileProvider { get; set; } = new NullFileProvider();
     }
 }

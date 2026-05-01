@@ -27,6 +27,8 @@ public class DeploymentEnvironmentContractTests
         Assert.Contains("ControlIDApi__AllowedDeviceHosts__0: \"${ControlIDApi__AllowedDeviceHosts__0:?set ControlIDApi__AllowedDeviceHosts__0 in .env}\"", compose);
         Assert.Contains("CallbackSecurity__RequireSignedRequests: \"true\"", compose);
         Assert.Contains("OpenApi__Enabled: \"false\"", compose);
+        Assert.Contains("Serilog__WriteTo__1__Args__retainedFileCountLimit", compose);
+        Assert.Contains("Serilog__WriteTo__1__Args__fileSizeLimitBytes", compose);
         Assert.Contains("controlid-data:/app/data", compose);
         Assert.Contains("controlid-logs:/app/Logs", compose);
         Assert.Contains("/health/live", compose);

@@ -126,6 +126,50 @@
           "groupBy": [ "flow", "event", "status_group" ]
         }
       ]
+    },
+    {
+      "id": "finops-capacity",
+      "title": "FinOps e capacidade",
+      "panels": [
+        {
+          "title": "Uso de armazenamento local",
+          "source": "metrics",
+          "metric": "controlid_runtime_storage_local_bytes",
+          "groupBy": [ "scope" ]
+        },
+        {
+          "title": "Memoria do processo",
+          "source": "metrics",
+          "metric": "controlid_runtime_process_memory_bytes",
+          "groupBy": [ "scope" ]
+        },
+        {
+          "title": "Espaco livre em disco",
+          "source": "metrics",
+          "metric": "controlid_runtime_disk_free_percent",
+          "groupBy": [ "scope" ]
+        },
+        {
+          "title": "Custo de chamadas e retentativas",
+          "source": "metrics",
+          "metric": "controlid_official_api_invocations_total",
+          "filters": {
+            "outcome": [ "timeout", "blocked_circuit_open" ]
+          },
+          "groupBy": [ "endpoint_id", "outcome" ]
+        },
+        {
+          "title": "Volume de ingressos externos",
+          "source": "metrics",
+          "metric": "controlid_callback_ingress_total",
+          "groupBy": [ "event_family", "status_group" ]
+        },
+        {
+          "title": "Governanca de budget",
+          "source": "runbook",
+          "target": "docs/finops-capacity.md"
+        }
+      ]
     }
   ]
 }

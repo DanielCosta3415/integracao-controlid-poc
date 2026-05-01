@@ -26,6 +26,9 @@ public class ObservabilityEndpointContractTests
         Assert.Contains("\"controlid_official_api_invocations_total\"", dashboard);
         Assert.Contains("\"product-analytics\"", dashboard);
         Assert.Contains("\"controlid_product_flow_events_total\"", dashboard);
+        Assert.Contains("\"finops-capacity\"", dashboard);
+        Assert.Contains("\"controlid_runtime_storage_local_bytes\"", dashboard);
+        Assert.Contains("\"FIN-001\"", alerts);
         Assert.Contains("OfflineValidateOnly", script);
         Assert.Contains("RequireHardwareContract", script);
     }

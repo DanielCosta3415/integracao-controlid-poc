@@ -9,6 +9,7 @@ public static class PrometheusMetricsWriter
     public static async Task WriteAsync(HttpContext context)
     {
         context.Response.ContentType = "text/plain; version=0.0.4; charset=utf-8";
+        RuntimeCapacityMetricsProvider.RecordSnapshot(context.RequestServices);
         var payload = Format(OperationalMetrics.CaptureSnapshot());
         await context.Response.WriteAsync(payload, context.RequestAborted);
     }
@@ -53,6 +54,22 @@ public static class PrometheusMetricsWriter
                     .AppendLine(metric.Sum.ToString("0.###", CultureInfo.InvariantCulture));
                 builder.Append(prometheusName).Append("_max").Append(labels).Append(' ')
                     .AppendLine(metric.Max.ToString("0.###", CultureInfo.InvariantCulture));
+            }
+        }
+
+        foreach (var group in snapshot.Gauges.GroupBy(static metric => metric.Name, StringComparer.Ordinal))
+        {
+            var prometheusName = ToPrometheusName(group.Key);
+            builder.Append("# HELP ").Append(prometheusName).Append(" In-process gauge for ").Append(group.Key).AppendLine(".");
+            builder.Append("# TYPE ").Append(prometheusName).AppendLine(" gauge");
+
+            foreach (var metric in group)
+            {
+                builder
+                    .Append(prometheusName)
+                    .Append(FormatLabels(metric.Tags))
+                    .Append(' ')
+                    .AppendLine(metric.Value.ToString("0.###", CultureInfo.InvariantCulture));
             }
         }
 

@@ -22,6 +22,7 @@ public static class OperationalMetrics
     private static readonly Meter Meter = new(MeterName, "1.0.0");
     private static readonly ConcurrentDictionary<string, CounterAccumulator> CounterSnapshots = new(StringComparer.Ordinal);
     private static readonly ConcurrentDictionary<string, HistogramAccumulator> HistogramSnapshots = new(StringComparer.Ordinal);
+    private static readonly ConcurrentDictionary<string, GaugeAccumulator> GaugeSnapshots = new(StringComparer.Ordinal);
 
     private static readonly Counter<long> HttpRequests = Meter.CreateCounter<long>(
         HttpRequestsMetricName,
@@ -165,13 +166,28 @@ public static class OperationalMetrics
                 .Select(static accumulator => accumulator.Capture())
                 .OrderBy(static metric => metric.Name, StringComparer.Ordinal)
                 .ThenBy(static metric => BuildTagSignature(metric.Tags), StringComparer.Ordinal)
+                .ToArray(),
+            GaugeSnapshots.Values
+                .Select(static accumulator => accumulator.Capture())
+                .OrderBy(static metric => metric.Name, StringComparer.Ordinal)
+                .ThenBy(static metric => BuildTagSignature(metric.Tags), StringComparer.Ordinal)
                 .ToArray());
+    }
+
+    public static void RecordGauge(string name, double value, params (string Name, string Value)[] tags)
+    {
+        var normalizedTags = ToTagDictionary(CreateTags(
+            tags.Select(static tag => (tag.Name, NormalizeLabel(tag.Value))).ToArray()));
+        var key = BuildSnapshotKey(name, normalizedTags);
+        var accumulator = GaugeSnapshots.GetOrAdd(key, _ => new GaugeAccumulator(name, normalizedTags));
+        accumulator.Record(value);
     }
 
     public static void ResetForTests()
     {
         CounterSnapshots.Clear();
         HistogramSnapshots.Clear();
+        GaugeSnapshots.Clear();
     }
 
     private static void IncrementCounter(string name, TagList tags, long amount)
@@ -358,12 +374,44 @@ public static class OperationalMetrics
             }
         }
     }
+
+    private sealed class GaugeAccumulator
+    {
+        private readonly object _sync = new();
+        private double _value;
+
+        public GaugeAccumulator(string name, IReadOnlyDictionary<string, string> tags)
+        {
+            Name = name;
+            Tags = tags;
+        }
+
+        private string Name { get; }
+        private IReadOnlyDictionary<string, string> Tags { get; }
+
+        public void Record(double value)
+        {
+            lock (_sync)
+            {
+                _value = value;
+            }
+        }
+
+        public GaugeMetricSnapshot Capture()
+        {
+            lock (_sync)
+            {
+                return new GaugeMetricSnapshot(Name, Tags, _value);
+            }
+        }
+    }
 }
 
 public sealed record OperationalMetricsSnapshot(
     DateTimeOffset CollectedAtUtc,
     IReadOnlyList<CounterMetricSnapshot> Counters,
-    IReadOnlyList<HistogramMetricSnapshot> Histograms);
+    IReadOnlyList<HistogramMetricSnapshot> Histograms,
+    IReadOnlyList<GaugeMetricSnapshot> Gauges);
 
 public sealed record CounterMetricSnapshot(
     string Name,
@@ -376,3 +424,8 @@ public sealed record HistogramMetricSnapshot(
     long Count,
     double Sum,
     double Max);
+
+public sealed record GaugeMetricSnapshot(
+    string Name,
+    IReadOnlyDictionary<string, string> Tags,
+    double Value);
