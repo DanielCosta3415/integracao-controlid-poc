@@ -14,7 +14,7 @@
 - Headers HTTP reforcados com CSP sem `unsafe-inline`, Permissions-Policy, frame-ancestors, nosniff, COOP, Referrer-Policy e HSTS fora de `Development`.
 - `Referrer-Policy` usa `no-referrer` para reduzir vazamento acidental de URLs internas, inclusive quando a Access API exige `session` em query string.
 - Rate limit global por usuario autenticado ou IP cobre a UI e atua junto das politicas especificas de login local e ingressos externos.
-- Logs de request incluem usuario local e trace id; logs de push legado nao gravam corpo bruto; URLs oficiais exibidas/registradas mascaram `session`, tokens e segredos em query string.
+- Logs de request incluem referencias pseudonimizadas de usuario/IP e trace id; logs de push legado nao gravam corpo bruto; URLs oficiais exibidas/registradas mascaram `session`, tokens e segredos em query string.
 - Mensagens publicas de erro de API nao exibem corpo bruto retornado pelo equipamento.
 - Uploads administrativos validam allowlist de extensao, tamanho, content-type declarado e assinatura/conteudo quando aplicavel para PNG/JPG, MP4, WAV, PEM e OpenVPN.
 - Backups SQLite gerados por `tools/backup-sqlite.ps1` sao protegidos por DPAPI por padrao; o restore-smoke descriptografa copias protegidas para validar recuperacao.

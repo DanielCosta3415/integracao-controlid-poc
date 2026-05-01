@@ -67,7 +67,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Erro ao consultar detalhes do template biométrico {TemplateId}.", id.Value);
+                _logger.LogError(ex, "Erro ao consultar detalhes do template biométrico {TemplateRef}.", PrivacyLogHelper.PseudonymizeIdentifier(id.Value));
             }
 
             return NotFound();
@@ -134,7 +134,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Erro ao buscar template {TemplateId} para edição.", id.Value);
+                _logger.LogError(ex, "Erro ao buscar template {TemplateRef} para edição.", PrivacyLogHelper.PseudonymizeIdentifier(id.Value));
             }
 
             return NotFound();
@@ -179,7 +179,7 @@ namespace Integracao.ControlID.PoC.Controllers
             catch (Exception ex)
             {
                 ModelState.AddModelError(string.Empty, SecurityTextHelper.BuildSafeUserMessage("Erro ao atualizar template biométrico", ex));
-                _logger.LogError(ex, "Erro ao atualizar template biométrico {TemplateId}.", id);
+                _logger.LogError(ex, "Erro ao atualizar template biométrico {TemplateRef}.", PrivacyLogHelper.PseudonymizeIdentifier(id));
                 return View(model);
             }
         }
@@ -206,7 +206,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Erro ao buscar template {TemplateId} para exclusão.", id.Value);
+                _logger.LogError(ex, "Erro ao buscar template {TemplateRef} para exclusão.", PrivacyLogHelper.PseudonymizeIdentifier(id.Value));
             }
 
             return NotFound();
@@ -240,7 +240,7 @@ namespace Integracao.ControlID.PoC.Controllers
             {
                 TempData["StatusMessage"] = SecurityTextHelper.BuildSafeUserMessage("Erro ao excluir template biométrico", ex);
                 TempData["StatusType"] = "danger";
-                _logger.LogError(ex, "Erro ao excluir template biométrico {TemplateId}.", id);
+                _logger.LogError(ex, "Erro ao excluir template biométrico {TemplateRef}.", PrivacyLogHelper.PseudonymizeIdentifier(id));
             }
 
             return RedirectToAction(nameof(Index));

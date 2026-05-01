@@ -72,7 +72,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Erro ao consultar detalhes do cartão {CardId}.", id.Value);
+                _logger.LogError(ex, "Erro ao consultar detalhes do cartão {CardRef}.", PrivacyLogHelper.PseudonymizeIdentifier(id.Value));
             }
 
             return NotFound();
@@ -139,7 +139,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Erro ao buscar cartão {CardId} para edição.", id.Value);
+                _logger.LogError(ex, "Erro ao buscar cartão {CardRef} para edição.", PrivacyLogHelper.PseudonymizeIdentifier(id.Value));
             }
 
             return NotFound();
@@ -184,7 +184,7 @@ namespace Integracao.ControlID.PoC.Controllers
             catch (Exception ex)
             {
                 ModelState.AddModelError(string.Empty, SecurityTextHelper.BuildSafeUserMessage(UpdateCardErrorPrefix, ex));
-                _logger.LogError(ex, "Erro ao atualizar cartão {CardId}.", id);
+                _logger.LogError(ex, "Erro ao atualizar cartão {CardRef}.", PrivacyLogHelper.PseudonymizeIdentifier(id));
                 return View(model);
             }
         }
@@ -212,7 +212,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Erro ao buscar cartão {CardId} para exclusão.", id.Value);
+                _logger.LogError(ex, "Erro ao buscar cartão {CardRef} para exclusão.", PrivacyLogHelper.PseudonymizeIdentifier(id.Value));
             }
 
             return NotFound();
@@ -246,7 +246,7 @@ namespace Integracao.ControlID.PoC.Controllers
             {
                 TempData["StatusMessage"] = SecurityTextHelper.BuildSafeUserMessage(DeleteCardErrorPrefix, ex);
                 TempData["StatusType"] = "danger";
-                _logger.LogError(ex, "Erro ao excluir cartão {CardId}.", id);
+                _logger.LogError(ex, "Erro ao excluir cartão {CardRef}.", PrivacyLogHelper.PseudonymizeIdentifier(id));
             }
 
             return RedirectToAction(nameof(Index));

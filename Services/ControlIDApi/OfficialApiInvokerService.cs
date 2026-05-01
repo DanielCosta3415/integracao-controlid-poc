@@ -292,7 +292,7 @@ namespace Integracao.ControlID.PoC.Services.ControlIDApi
         private static string BuildMonitoringTarget(string deviceAddress)
         {
             return Uri.TryCreate(deviceAddress, UriKind.Absolute, out var uri)
-                ? $"{uri.Scheme}://{uri.Authority}"
+                ? PrivacyLogHelper.PseudonymizeEndpoint($"{uri.Scheme}://{uri.Authority}")
                 : "invalid-device-address";
         }
     }

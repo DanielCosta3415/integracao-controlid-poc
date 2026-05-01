@@ -62,7 +62,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Erro ao consultar detalhes do QRCode {QRCodeId}.", id);
+                _logger.LogError(ex, "Erro ao consultar detalhes do QRCode {QRCodeRef}.", PrivacyLogHelper.PseudonymizeIdentifier(id));
             }
 
             return NotFound();
@@ -143,7 +143,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Erro ao buscar QRCode {QRCodeId} para edição.", id);
+                _logger.LogError(ex, "Erro ao buscar QRCode {QRCodeRef} para edição.", PrivacyLogHelper.PseudonymizeIdentifier(id));
             }
 
             return NotFound();
@@ -188,7 +188,7 @@ namespace Integracao.ControlID.PoC.Controllers
             catch (Exception ex)
             {
                 ModelState.AddModelError(string.Empty, SecurityTextHelper.BuildSafeUserMessage("A operação não pôde ser concluída", ex));
-                _logger.LogError(ex, "Erro ao atualizar QRCode {QRCodeId}.", id);
+                _logger.LogError(ex, "Erro ao atualizar QRCode {QRCodeRef}.", PrivacyLogHelper.PseudonymizeIdentifier(id));
             }
 
             return View(model);
@@ -218,7 +218,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Erro ao buscar QRCode {QRCodeId} para exclusão.", id);
+                _logger.LogError(ex, "Erro ao buscar QRCode {QRCodeRef} para exclusão.", PrivacyLogHelper.PseudonymizeIdentifier(id));
             }
 
             return NotFound();
@@ -253,7 +253,7 @@ namespace Integracao.ControlID.PoC.Controllers
             {
                 TempData["StatusMessage"] = SecurityTextHelper.BuildSafeUserMessage("A operação não pôde ser concluída", ex);
                 TempData["StatusType"] = "danger";
-                _logger.LogError(ex, "Erro ao excluir QRCode {QRCodeId}.", id);
+                _logger.LogError(ex, "Erro ao excluir QRCode {QRCodeRef}.", PrivacyLogHelper.PseudonymizeIdentifier(id));
             }
 
             return RedirectToAction(nameof(Index));

@@ -1,0 +1,106 @@
+@model Integracao.ControlID.PoC.ViewModels.Privacy.PrivacySubjectRequestViewModel
+
+@{
+    ViewData["Title"] = "Privacidade e LGPD";
+    ViewData["Subtitle"] = "Relatorio minimizado para triagem de direitos do titular";
+}
+
+<section class="app-section">
+    <div class="app-section__header">
+        <div>
+            <h1>Privacidade e LGPD</h1>
+            <p>Localize categorias de dados associadas a um titular sem exibir payloads brutos, credenciais, biometria ou midia.</p>
+        </div>
+    </div>
+
+    <form asp-action="Index" method="get" class="app-panel mb-4">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-8">
+                <label asp-for="Identifier" class="form-label"></label>
+                <input asp-for="Identifier" class="form-control" autocomplete="off" placeholder="ID, matricula, usuario, e-mail ou telefone" />
+                <span asp-validation-for="Identifier" class="text-danger"></span>
+            </div>
+            <div class="col-md-4 d-flex gap-2">
+                <button type="submit" class="btn btn-primary">Gerar relatorio</button>
+                @if (Model.Report != null)
+                {
+                    <a asp-action="Export" asp-route-identifier="@Model.Identifier" class="btn btn-outline-secondary">Exportar JSON</a>
+                }
+            </div>
+        </div>
+    </form>
+
+    @if (Model.Report != null)
+    {
+        <div class="app-panel mb-4">
+            <div class="d-flex flex-wrap justify-content-between gap-3">
+                <div>
+                    <h2 class="h5 mb-1">Resumo minimizado</h2>
+                    <p class="mb-0">Referencia do titular: <code>@Model.Report.IdentifierRef</code></p>
+                    <p class="mb-0">Gerado em UTC: @Model.Report.GeneratedAtUtc.ToString("yyyy-MM-dd HH:mm:ss")</p>
+                </div>
+                <span class="badge @(Model.Report.HasMatches ? "text-bg-warning" : "text-bg-secondary") align-self-start">
+                    @(Model.Report.HasMatches ? "Dados localizados" : "Sem dados locais")
+                </span>
+            </div>
+        </div>
+
+        <div class="app-panel mb-4">
+            <h2 class="h5">Categorias encontradas</h2>
+            <div class="table-responsive">
+                <table class="table table-sm align-middle">
+                    <thead>
+                        <tr>
+                            <th>Area</th>
+                            <th>Classificacao</th>
+                            <th>Registros</th>
+                            <th>Retencao</th>
+                            <th>Orientacao</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var category in Model.Report.DataCategories)
+                        {
+                            <tr>
+                                <td>@category.Area</td>
+                                <td>@category.Classification</td>
+                                <td>@category.RecordCount</td>
+                                <td>@category.Retention</td>
+                                <td>@category.FulfillmentGuidance</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-6">
+                <div class="app-panel h-100">
+                    <h2 class="h5">Cobertura de direitos</h2>
+                    <ul class="mb-0">
+                        @foreach (var item in Model.Report.RightsCoverage)
+                        {
+                            <li>@item</li>
+                        }
+                    </ul>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="app-panel h-100">
+                    <h2 class="h5">Decisoes humanas obrigatorias</h2>
+                    <ul class="mb-0">
+                        @foreach (var item in Model.Report.RequiredHumanDecisions)
+                        {
+                            <li>@item</li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </div>
+    }
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

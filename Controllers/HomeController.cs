@@ -170,7 +170,10 @@ namespace Integracao.ControlID.PoC.Controllers
                 {
                     TempData["StatusMessage"] = BuildErrorMessage("Não foi possível conectar ao equipamento", result);
                     TempData["StatusType"] = "danger";
-                    _logger.LogWarning("Falha ao conectar no dispositivo Control iD em {BaseUrl}. Status: {StatusCode}", baseUrl, result.StatusCode);
+                    _logger.LogWarning(
+                        "Falha ao conectar no dispositivo Control iD em {DeviceRef}. Status: {StatusCode}",
+                        PrivacyLogHelper.PseudonymizeEndpoint(baseUrl),
+                        result.StatusCode);
                     return RedirectToLocal(connection.ReturnUrl);
                 }
 
@@ -179,8 +182,8 @@ namespace Integracao.ControlID.PoC.Controllers
                     TempData["StatusMessage"] = "Conexão realizada, mas não foi possível processar os dados do equipamento (resposta inválida da API).";
                     TempData["StatusType"] = "warning";
                     _logger.LogWarning(
-                        "Resposta inesperada ou invalida ao conectar no equipamento {BaseUrl}. Status: {StatusCode}. ResponseLength: {ResponseLength}.",
-                        baseUrl,
+                        "Resposta inesperada ou invalida ao conectar no equipamento {DeviceRef}. Status: {StatusCode}. ResponseLength: {ResponseLength}.",
+                        PrivacyLogHelper.PseudonymizeEndpoint(baseUrl),
                         result.StatusCode,
                         result.ResponseBody?.Length ?? 0);
                     return RedirectToLocal(connection.ReturnUrl);
@@ -211,26 +214,29 @@ namespace Integracao.ControlID.PoC.Controllers
 
                     TempData["StatusMessage"] = $"Conectado com sucesso ao equipamento: {deviceName} (Serial: {serial ?? "n/d"})";
                     TempData["StatusType"] = "success";
-                    _logger.LogInformation("Conexão bem-sucedida com o equipamento {DeviceName}, Serial: {Serial}, Firmware: {Version}", deviceName, serial, version);
+                    _logger.LogInformation(
+                        "Conexão bem-sucedida com o equipamento {DeviceRef}, Firmware: {Version}",
+                        PrivacyLogHelper.Pseudonymize(serial ?? baseUrl, "device:unknown"),
+                        version);
                 }
             }
             catch (HttpRequestException ex)
             {
                 TempData["StatusMessage"] = SecurityTextHelper.BuildSafeUserMessage("Falha de rede ao tentar conectar ao equipamento", ex);
                 TempData["StatusType"] = "danger";
-                _logger.LogError(ex, "Erro de rede ao conectar no dispositivo Control iD em {BaseAddress}", baseUrl);
+                _logger.LogError(ex, "Erro de rede ao conectar no dispositivo Control iD em {DeviceRef}", PrivacyLogHelper.PseudonymizeEndpoint(baseUrl));
             }
             catch (TaskCanceledException)
             {
                 TempData["StatusMessage"] = "Tempo de resposta excedido ao tentar conectar ao equipamento.";
                 TempData["StatusType"] = "danger";
-                _logger.LogWarning("Timeout ao conectar no dispositivo Control iD em {BaseAddress}", baseUrl);
+                _logger.LogWarning("Timeout ao conectar no dispositivo Control iD em {DeviceRef}", PrivacyLogHelper.PseudonymizeEndpoint(baseUrl));
             }
             catch (Exception ex)
             {
                 TempData["StatusMessage"] = SecurityTextHelper.BuildSafeUserMessage("Erro ao conectar ao equipamento", ex);
                 TempData["StatusType"] = "danger";
-                _logger.LogError(ex, "Erro inesperado ao conectar no dispositivo Control iD em {BaseAddress}", baseUrl);
+                _logger.LogError(ex, "Erro inesperado ao conectar no dispositivo Control iD em {DeviceRef}", PrivacyLogHelper.PseudonymizeEndpoint(baseUrl));
             }
 
             return RedirectToLocal(connection.ReturnUrl);
@@ -266,14 +272,14 @@ namespace Integracao.ControlID.PoC.Controllers
                     return RedirectToLocal(connection.ReturnUrl);
                 }
 
-                TempData["StatusMessage"] = $"Comunicação OK com {baseUrl}. Agora você pode conectar esse equipamento ao contexto da PoC.";
+                TempData["StatusMessage"] = "Comunicação OK com o equipamento informado. Agora você pode conectar esse equipamento ao contexto da PoC.";
                 TempData["StatusType"] = "success";
             }
             catch (Exception ex)
             {
                 TempData["StatusMessage"] = SecurityTextHelper.BuildSafeUserMessage("Falha ao testar comunicação com o equipamento", ex);
                 TempData["StatusType"] = "danger";
-                _logger.LogError(ex, "Erro ao testar comunicação com o equipamento {BaseAddress}.", baseUrl);
+                _logger.LogError(ex, "Erro ao testar comunicação com o equipamento {DeviceRef}.", PrivacyLogHelper.PseudonymizeEndpoint(baseUrl));
             }
 
             return RedirectToLocal(connection.ReturnUrl);

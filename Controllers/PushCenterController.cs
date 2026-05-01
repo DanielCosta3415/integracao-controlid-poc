@@ -96,8 +96,8 @@ namespace Integracao.ControlID.PoC.Controllers
             if (!ModelState.IsValid)
             {
                 _logger.LogWarning(
-                    "Rejected push queue request for device {DeviceId} and type {CommandType} because the model state is invalid.",
-                    model.DeviceId,
+                    "Rejected push queue request for device {DeviceRef} and type {CommandType} because the model state is invalid.",
+                    PrivacyLogHelper.PseudonymizeIdentifier(model.DeviceId),
                     model.CommandType);
 
                 return View(nameof(Index), await BuildIndexViewModelAsync(model, "Revise os dados do comando antes de enfileirar."));
@@ -116,8 +116,8 @@ namespace Integracao.ControlID.PoC.Controllers
             {
                 _logger.LogError(
                     ex,
-                    "Failed to queue push command for device {DeviceId}. Type {CommandType}.",
-                    model.DeviceId,
+                    "Failed to queue push command for device {DeviceRef}. Type {CommandType}.",
+                    PrivacyLogHelper.PseudonymizeIdentifier(model.DeviceId),
                     model.CommandType);
 
                 TempData["StatusMessage"] = "Nao foi possivel enfileirar o comando push.";
@@ -217,16 +217,16 @@ namespace Integracao.ControlID.PoC.Controllers
                     return Ok(new { });
 
                 _logger.LogInformation(
-                    "Push poll delivered command {CommandId} to device {DeviceId}. PayloadBytes {PayloadBytes}.",
+                    "Push poll delivered command {CommandId} to device {DeviceRef}. PayloadBytes {PayloadBytes}.",
                     command.CommandId,
-                    resolvedDeviceId,
+                    PrivacyLogHelper.PseudonymizeIdentifier(resolvedDeviceId),
                     Encoding.UTF8.GetByteCount(command.Payload ?? string.Empty));
 
                 return Content(string.IsNullOrWhiteSpace(command.Payload) ? "{}" : command.Payload, "application/json", Encoding.UTF8);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to deliver push command to device {DeviceId}.", resolvedDeviceId);
+                _logger.LogError(ex, "Failed to deliver push command to device {DeviceRef}.", PrivacyLogHelper.PseudonymizeIdentifier(resolvedDeviceId));
                 return StatusCode(StatusCodes.Status500InternalServerError, new { error = "Nao foi possivel consultar a fila push." });
             }
         }
@@ -269,16 +269,16 @@ namespace Integracao.ControlID.PoC.Controllers
                 if (!commandId.HasValue && resolvedCommandId.HasValue)
                 {
                     _logger.LogInformation(
-                        "Push result received with idempotency key resolved to command {CommandId}. Device {DeviceId}.",
+                        "Push result received with idempotency key resolved to command {CommandId}. Device {DeviceRef}.",
                         resolvedCommandId.Value,
-                        Request.Query["device_id"].ToString());
+                        PrivacyLogHelper.PseudonymizeIdentifier(Request.Query["device_id"].ToString()));
                 }
 
                 if (!resolvedCommandId.HasValue)
                 {
                     _logger.LogWarning(
-                        "Push result received without command_id. Device {DeviceId}. BodyBytes {BodyBytes}.",
-                        Request.Query["device_id"].ToString(),
+                        "Push result received without command_id. Device {DeviceRef}. BodyBytes {BodyBytes}.",
+                        PrivacyLogHelper.PseudonymizeIdentifier(Request.Query["device_id"].ToString()),
                         Encoding.UTF8.GetByteCount(body));
                 }
 
@@ -290,9 +290,9 @@ namespace Integracao.ControlID.PoC.Controllers
                     Request.Query["status"].ToString());
 
                 _logger.LogInformation(
-                    "Push result stored for command {CommandId}. Device {DeviceId}. Status {Status}. BodyBytes {BodyBytes}.",
+                    "Push result stored for command {CommandId}. Device {DeviceRef}. Status {Status}. BodyBytes {BodyBytes}.",
                     command.CommandId,
-                    command.DeviceId,
+                    PrivacyLogHelper.PseudonymizeIdentifier(command.DeviceId),
                     command.Status,
                     Encoding.UTF8.GetByteCount(body));
 
@@ -302,9 +302,9 @@ namespace Integracao.ControlID.PoC.Controllers
             {
                 _logger.LogError(
                     ex,
-                    "Failed to persist push result for command {CommandId}. Device {DeviceId}.",
+                    "Failed to persist push result for command {CommandId}. Device {DeviceRef}.",
                     commandId,
-                    Request.Query["device_id"].ToString());
+                    PrivacyLogHelper.PseudonymizeIdentifier(Request.Query["device_id"].ToString()));
 
                 return StatusCode(StatusCodes.Status500InternalServerError, new { error = "Nao foi possivel persistir o resultado push." });
             }

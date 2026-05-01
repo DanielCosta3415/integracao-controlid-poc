@@ -61,7 +61,7 @@ namespace Integracao.ControlID.PoC.Controllers
                 !CryptoHelper.VerifyPassword(model.Password, user.PasswordHash, user.Salt))
             {
                 ModelState.AddModelError(string.Empty, "Usuário local, e-mail ou senha inválidos.");
-                _logger.LogWarning("Falha de login local para identificador {Identifier}.", model.Username);
+                _logger.LogWarning("Falha de login local para identificador {IdentifierRef}.", PrivacyLogHelper.PseudonymizeUser(model.Username));
                 return View(model);
             }
 
@@ -92,7 +92,7 @@ namespace Integracao.ControlID.PoC.Controllers
 
             await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal, authProperties);
 
-            _logger.LogInformation("Login local realizado para {Username} com papel {Role}.", user.Username, role);
+            _logger.LogInformation("Login local realizado para {UserRef} com papel {Role}.", BuildUserRef(user), role);
             return RedirectToLocal(returnUrl);
         }
 
@@ -147,7 +147,10 @@ namespace Integracao.ControlID.PoC.Controllers
                 if (!result.Success)
                 {
                     ModelState.AddModelError(string.Empty, BuildErrorMessage("Falha ao autenticar no dispositivo", result));
-                    _logger.LogWarning("Falha de login no dispositivo Control iD {DeviceAddress}. Status: {StatusCode}", deviceAddress, result.StatusCode);
+                    _logger.LogWarning(
+                        "Falha de login no dispositivo Control iD {DeviceRef}. Status: {StatusCode}",
+                        PrivacyLogHelper.PseudonymizeEndpoint(deviceAddress),
+                        result.StatusCode);
                     return View(model);
                 }
 
@@ -155,8 +158,8 @@ namespace Integracao.ControlID.PoC.Controllers
                 {
                     ModelState.AddModelError(string.Empty, "A resposta do dispositivo não continha uma sessão válida.");
                     _logger.LogWarning(
-                        "Resposta inesperada no login do dispositivo {DeviceAddress}. Status: {StatusCode}. ResponseLength: {ResponseLength}.",
-                        deviceAddress,
+                        "Resposta inesperada no login do dispositivo {DeviceRef}. Status: {StatusCode}. ResponseLength: {ResponseLength}.",
+                        PrivacyLogHelper.PseudonymizeEndpoint(deviceAddress),
                         result.StatusCode,
                         result.ResponseBody?.Length ?? 0);
                     return View(model);
@@ -166,14 +169,17 @@ namespace Integracao.ControlID.PoC.Controllers
 
                 TempData["StatusMessage"] = "Login realizado com sucesso!";
                 TempData["StatusType"] = "success";
-                _logger.LogInformation("Login realizado no dispositivo {Device} para o usuário {User}", deviceAddress, model.Username);
+                _logger.LogInformation(
+                    "Login realizado no dispositivo {DeviceRef} para o usuário {UserRef}",
+                    PrivacyLogHelper.PseudonymizeEndpoint(deviceAddress),
+                    PrivacyLogHelper.PseudonymizeUser(model.Username));
 
                 return RedirectToAction("Index", "Home");
             }
             catch (Exception ex)
             {
                 ModelState.AddModelError(string.Empty, SecurityTextHelper.BuildSafeUserMessage("Erro ao autenticar", ex));
-                _logger.LogError(ex, "Erro ao fazer login no dispositivo Control iD em {DeviceAddress}", deviceAddress);
+                _logger.LogError(ex, "Erro ao fazer login no dispositivo Control iD em {DeviceRef}", PrivacyLogHelper.PseudonymizeEndpoint(deviceAddress));
                 return View(model);
             }
         }
@@ -221,20 +227,23 @@ namespace Integracao.ControlID.PoC.Controllers
                 {
                     TempData["StatusMessage"] = "Logout realizado com sucesso.";
                     TempData["StatusType"] = "success";
-                    _logger.LogInformation("Logout realizado do dispositivo {Device}", deviceAddress);
+                    _logger.LogInformation("Logout realizado do dispositivo {DeviceRef}", PrivacyLogHelper.PseudonymizeEndpoint(deviceAddress));
                 }
                 else
                 {
                     TempData["StatusMessage"] = BuildErrorMessage("Falha ao sair da sessão", result);
                     TempData["StatusType"] = "danger";
-                    _logger.LogWarning("Falha ao realizar logout no dispositivo {Device}, status: {StatusCode}", deviceAddress, result.StatusCode);
+                    _logger.LogWarning(
+                        "Falha ao realizar logout no dispositivo {DeviceRef}, status: {StatusCode}",
+                        PrivacyLogHelper.PseudonymizeEndpoint(deviceAddress),
+                        result.StatusCode);
                 }
             }
             catch (Exception ex)
             {
                 TempData["StatusMessage"] = SecurityTextHelper.BuildSafeUserMessage("Erro ao realizar logout", ex);
                 TempData["StatusType"] = "danger";
-                _logger.LogError(ex, "Erro ao realizar logout do dispositivo Control iD em {DeviceAddress}", deviceAddress);
+                _logger.LogError(ex, "Erro ao realizar logout do dispositivo Control iD em {DeviceRef}", PrivacyLogHelper.PseudonymizeEndpoint(deviceAddress));
             }
 
             HttpContext.Session.Remove(SessionSessionStringKey);
@@ -309,7 +318,7 @@ namespace Integracao.ControlID.PoC.Controllers
                 ? "Administrador local registrado com sucesso. Faça login local para operar a PoC."
                 : "Usuário local registrado com sucesso.";
             TempData["StatusType"] = "success";
-            _logger.LogInformation("Usuário local {Username} registrado com papel {Role}.", model.Username, user.Role);
+            _logger.LogInformation("Usuário local {UserRef} registrado com papel {Role}.", BuildUserRef(user), user.Role);
 
             return RedirectToAction(nameof(LocalLogin));
         }
@@ -361,7 +370,7 @@ namespace Integracao.ControlID.PoC.Controllers
 
             TempData["StatusMessage"] = "Senha local alterada com sucesso.";
             TempData["StatusType"] = "success";
-            _logger.LogInformation("Senha local atualizada para o usuário {Username}.", user.Username);
+            _logger.LogInformation("Senha local atualizada para o usuário {UserRef}.", BuildUserRef(user));
 
             return RedirectToAction(nameof(Status));
         }
@@ -369,6 +378,13 @@ namespace Integracao.ControlID.PoC.Controllers
         private static string BuildErrorMessage(string prefix, OfficialApiInvocationResult result)
         {
             return SecurityTextHelper.BuildApiFailureMessage(result, prefix);
+        }
+
+        private static string BuildUserRef(UserLocal user)
+        {
+            return PrivacyLogHelper.PseudonymizeUser(user.Id > 0
+                ? user.Id.ToString(System.Globalization.CultureInfo.InvariantCulture)
+                : user.Username);
         }
 
         private async Task<bool> CanRegisterLocalUserAsync()

@@ -128,12 +128,12 @@ namespace Integracao.ControlID.PoC.Controllers
             catch (IOException ioex)
             {
                 ModelState.AddModelError(string.Empty, "Erro de leitura do arquivo selecionado. Tente novamente.");
-                _logger.LogError(ioex, "Erro de IO ao enviar foto do usuário {UserId}.", model.UserId);
+                _logger.LogError(ioex, "Erro de IO ao enviar foto do usuário {UserRef}.", PrivacyLogHelper.PseudonymizeIdentifier(model.UserId));
             }
             catch (Exception ex)
             {
                 ModelState.AddModelError(string.Empty, SecurityTextHelper.BuildSafeUserMessage("Erro ao enviar foto", ex));
-                _logger.LogError(ex, "Erro ao enviar foto do usuário {UserId}.", model.UserId);
+                _logger.LogError(ex, "Erro ao enviar foto do usuário {UserRef}.", PrivacyLogHelper.PseudonymizeIdentifier(model.UserId));
             }
 
             return View(model);
@@ -151,11 +151,11 @@ namespace Integracao.ControlID.PoC.Controllers
             try
             {
                 var imageBytes = Convert.FromBase64String(result.ResponseBody);
-                return File(imageBytes, GetContentType(result.ResponseContentType, "image/jpeg"), BuildFileName(id.Value, result.ResponseContentType, "user"));
+                return File(imageBytes, GetContentType(result.ResponseContentType, "image/jpeg"), BuildFileName(result.ResponseContentType, "user-photo"));
             }
             catch (FormatException ex)
             {
-                _logger.LogError(ex, "Resposta inválida ao baixar foto do usuário {UserId}.", id.Value);
+                _logger.LogError(ex, "Resposta inválida ao baixar foto do usuário {UserRef}.", PrivacyLogHelper.PseudonymizeIdentifier(id.Value));
                 return NotFound();
             }
         }
@@ -201,7 +201,7 @@ namespace Integracao.ControlID.PoC.Controllers
             {
                 TempData["StatusMessage"] = SecurityTextHelper.BuildSafeUserMessage("Erro ao excluir foto", ex);
                 TempData["StatusType"] = "danger";
-                _logger.LogError(ex, "Erro ao excluir foto do usuário {UserId}.", id);
+                _logger.LogError(ex, "Erro ao excluir foto do usuário {UserRef}.", PrivacyLogHelper.PseudonymizeIdentifier(id));
             }
 
             return RedirectToAction(nameof(Index));
@@ -409,14 +409,14 @@ namespace Integracao.ControlID.PoC.Controllers
                     UserId = userId,
                     Base64Image = result.ResponseBody,
                     ContentType = GetContentType(result.ResponseContentType, "image/jpeg"),
-                    FileName = BuildFileName(userId, result.ResponseContentType, "user"),
+                    FileName = BuildFileName(result.ResponseContentType, "user-photo"),
                     Format = GetFileExtension(result.ResponseContentType, "jpg"),
                     HasImage = true
                 };
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Não foi possível obter a imagem do usuário {UserId}.", userId);
+                _logger.LogWarning(ex, "Não foi possível obter a imagem do usuário {UserRef}.", PrivacyLogHelper.PseudonymizeIdentifier(userId));
                 return null;
             }
         }
@@ -452,7 +452,7 @@ namespace Integracao.ControlID.PoC.Controllers
                 "Selecione um arquivo de foto para envio.",
                 MaxImageUploadBytes,
                 validation);
-            var safeFileName = validation.BuildSafeFileName(model.PhotoFile, $"user_{model.UserId}.jpg");
+            var safeFileName = BuildGenericPhotoFileName(model.PhotoFile.FileName);
 
             var payload = new
             {
@@ -548,7 +548,7 @@ namespace Integracao.ControlID.PoC.Controllers
             {
                 Id = userId,
                 UserId = userId,
-                FileName = $"user_{userId}.jpg",
+                FileName = "user-photo.jpg",
                 Format = "jpg",
                 ContentType = "image/jpeg",
                 HasImage = false
@@ -560,9 +560,17 @@ namespace Integracao.ControlID.PoC.Controllers
             return SecurityTextHelper.BuildApiFailureMessage(result, prefix);
         }
 
-        private static string BuildFileName(long id, string? contentType, string prefix)
+        private static string BuildFileName(string? contentType, string prefix)
         {
-            return $"{prefix}_{id}.{GetFileExtension(contentType, "jpg")}";
+            return $"{prefix}.{GetFileExtension(contentType, "jpg")}";
+        }
+
+        private static string BuildGenericPhotoFileName(string? originalFileName)
+        {
+            var extension = System.IO.Path.GetExtension(originalFileName);
+            return string.Equals(extension, ".png", StringComparison.OrdinalIgnoreCase)
+                ? "user-photo.png"
+                : "user-photo.jpg";
         }
 
         private static string GetFileExtension(string? contentType, string fallback)

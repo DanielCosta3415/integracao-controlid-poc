@@ -68,7 +68,10 @@ namespace Integracao.ControlID.PoC.Controllers
                 {
                     TempData["StatusMessage"] = BuildErrorMessage("Falha ao validar a sessão", result);
                     TempData["StatusType"] = "danger";
-                    _logger.LogWarning("Falha ao validar sessão no dispositivo {DeviceAddress}, status: {StatusCode}", deviceAddress, result.StatusCode);
+                    _logger.LogWarning(
+                        "Falha ao validar sessão no dispositivo {DeviceRef}, status: {StatusCode}",
+                        PrivacyLogHelper.PseudonymizeEndpoint(deviceAddress),
+                        result.StatusCode);
                     return RedirectToAction(nameof(Status));
                 }
 
@@ -89,7 +92,7 @@ namespace Integracao.ControlID.PoC.Controllers
             {
                 TempData["StatusMessage"] = SecurityTextHelper.BuildSafeUserMessage("Erro ao validar sessão", ex);
                 TempData["StatusType"] = "danger";
-                _logger.LogError(ex, "Erro ao validar sessão no dispositivo {DeviceAddress}", deviceAddress);
+                _logger.LogError(ex, "Erro ao validar sessão no dispositivo {DeviceRef}", PrivacyLogHelper.PseudonymizeEndpoint(deviceAddress));
             }
 
             return RedirectToAction(nameof(Status));

@@ -1,3 +1,4 @@
+using Integracao.ControlID.PoC.Helpers;
 using Integracao.ControlID.PoC.Models.Database;
 using Integracao.ControlID.PoC.Services.Database;
 using Microsoft.AspNetCore.Http;
@@ -107,11 +108,11 @@ namespace Integracao.ControlID.PoC.Services.Callbacks
             }
 
             _logger.LogInformation(
-                "Accepted callback request for {Path} as event {EventId}. EventFamily {EventFamily}. Device {DeviceId}.",
+                "Accepted callback request for {Path} as event {EventId}. EventFamily {EventFamily}. Device {DeviceRef}.",
                 path,
                 monitorEvent.EventId,
                 eventFamily,
-                monitorEvent.DeviceId);
+                PrivacyLogHelper.PseudonymizeIdentifier(monitorEvent.DeviceId));
 
             return CallbackIngressResult.Success(monitorEvent.EventId);
         }

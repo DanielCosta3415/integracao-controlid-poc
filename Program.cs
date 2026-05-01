@@ -9,6 +9,7 @@ using Integracao.ControlID.PoC.Services.DocumentedFeatures;
 using Integracao.ControlID.PoC.Services.Files;
 using Integracao.ControlID.PoC.Services.Navigation;
 using Integracao.ControlID.PoC.Services.OperationModes;
+using Integracao.ControlID.PoC.Services.Privacy;
 using Integracao.ControlID.PoC.Services.ProductSpecific;
 using Integracao.ControlID.PoC.Services.Push;
 using Integracao.ControlID.PoC.Services.Security;
@@ -194,6 +195,7 @@ builder.Services.AddScoped<OperationModesProfileResolver>();
 builder.Services.AddScoped<DocumentedFeaturesPayloadFactory>();
 builder.Services.AddScoped<PushCommandWorkflowService>();
 builder.Services.AddScoped<PushIdempotencyKeyResolver>();
+builder.Services.AddScoped<PrivacySubjectReportService>();
 
 // Repositórios de banco local
 builder.Services.AddScoped<UserRepository>();

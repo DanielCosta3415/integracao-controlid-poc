@@ -68,7 +68,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Erro ao consultar detalhes do dispositivo {DeviceId}.", id.Value);
+                _logger.LogError(ex, "Erro ao consultar detalhes do dispositivo {DeviceRef}.", PrivacyLogHelper.PseudonymizeIdentifier(id.Value));
             }
 
             return NotFound();
@@ -130,7 +130,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Erro ao buscar dispositivo {DeviceId} para edição.", id.Value);
+                _logger.LogError(ex, "Erro ao buscar dispositivo {DeviceRef} para edição.", PrivacyLogHelper.PseudonymizeIdentifier(id.Value));
             }
 
             return NotFound();
@@ -170,7 +170,7 @@ namespace Integracao.ControlID.PoC.Controllers
             catch (Exception ex)
             {
                 ModelState.AddModelError(string.Empty, SecurityTextHelper.BuildSafeUserMessage("A operação não pôde ser concluída", ex));
-                _logger.LogError(ex, "Erro ao atualizar dispositivo {DeviceId}.", id);
+                _logger.LogError(ex, "Erro ao atualizar dispositivo {DeviceRef}.", PrivacyLogHelper.PseudonymizeIdentifier(id));
                 return View(model);
             }
         }
@@ -197,7 +197,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Erro ao buscar dispositivo {DeviceId} para exclusão.", id.Value);
+                _logger.LogError(ex, "Erro ao buscar dispositivo {DeviceRef} para exclusão.", PrivacyLogHelper.PseudonymizeIdentifier(id.Value));
             }
 
             return NotFound();
@@ -231,7 +231,7 @@ namespace Integracao.ControlID.PoC.Controllers
             {
                 TempData["StatusMessage"] = SecurityTextHelper.BuildSafeUserMessage("Erro ao excluir dispositivo", ex);
                 TempData["StatusType"] = "danger";
-                _logger.LogError(ex, "Erro ao excluir dispositivo {DeviceId}.", id);
+                _logger.LogError(ex, "Erro ao excluir dispositivo {DeviceRef}.", PrivacyLogHelper.PseudonymizeIdentifier(id));
             }
 
             return RedirectToAction(nameof(Index));

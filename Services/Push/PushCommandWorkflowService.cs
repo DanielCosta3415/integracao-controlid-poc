@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Integracao.ControlID.PoC.Helpers;
 using Integracao.ControlID.PoC.Models.Database;
 using Integracao.ControlID.PoC.Services.Database;
 using Integracao.ControlID.PoC.ViewModels.Push;
@@ -43,8 +44,8 @@ public sealed class PushCommandWorkflowService
         if (!IsValidJsonPayload(model.Payload))
         {
             _logger.LogWarning(
-                "Rejected push queue request for device {DeviceId} and type {CommandType} because the payload is not valid JSON.",
-                model.DeviceId,
+                "Rejected push queue request for device {DeviceRef} and type {CommandType} because the payload is not valid JSON.",
+                PrivacyLogHelper.PseudonymizeIdentifier(model.DeviceId),
                 model.CommandType);
 
             return PushQueueResult.Invalid("Informe um payload JSON valido antes de enfileirar.");
@@ -65,9 +66,9 @@ public sealed class PushCommandWorkflowService
         await _pushCommandRepository.AddPushCommandAsync(command);
 
         _logger.LogInformation(
-            "Push command {CommandId} queued for device {DeviceId} with type {CommandType}.",
+            "Push command {CommandId} queued for device {DeviceRef} with type {CommandType}.",
             command.CommandId,
-            command.DeviceId,
+            PrivacyLogHelper.PseudonymizeIdentifier(command.DeviceId),
             command.CommandType);
 
         return PushQueueResult.Queued(command);
@@ -95,12 +96,12 @@ public sealed class PushCommandWorkflowService
 
     public async Task<PushCommandLocal?> DeliverNextAsync(string? deviceId)
     {
-        _logger.LogDebug("Push poll started for device {DeviceId}.", deviceId);
+        _logger.LogDebug("Push poll started for device {DeviceRef}.", PrivacyLogHelper.PseudonymizeIdentifier(deviceId));
 
         var command = await _pushCommandRepository.GetNextPendingCommandAsync(deviceId);
         if (command == null)
         {
-            _logger.LogDebug("Push poll found no pending command for device {DeviceId}.", deviceId);
+            _logger.LogDebug("Push poll found no pending command for device {DeviceRef}.", PrivacyLogHelper.PseudonymizeIdentifier(deviceId));
             return null;
         }
 
@@ -110,9 +111,9 @@ public sealed class PushCommandWorkflowService
         if (!persisted)
         {
             _logger.LogError(
-                "Push command {CommandId} was selected for delivery to device {DeviceId}, but status persistence failed.",
+                "Push command {CommandId} was selected for delivery to device {DeviceRef}, but status persistence failed.",
                 command.CommandId,
-                deviceId);
+                PrivacyLogHelper.PseudonymizeIdentifier(deviceId));
         }
 
         return command;

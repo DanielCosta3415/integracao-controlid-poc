@@ -1,6 +1,8 @@
 using System;
 using System.Diagnostics;
+using System.Security.Claims;
 using System.Threading.Tasks;
+using Integracao.ControlID.PoC.Helpers;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 
@@ -30,14 +32,16 @@ namespace Integracao.ControlID.PoC.Middlewares
                 var response = context.Response;
 
                 _logger.LogInformation(
-                    "[{Timestamp}] {Method} {Path} => {StatusCode} ({Elapsed} ms) IP:{IP} User:{User} Trace:{TraceId}",
+                    "[{Timestamp}] {Method} {Path} => {StatusCode} ({Elapsed} ms) IP:{IPRef} User:{UserRef} Trace:{TraceId}",
                     DateTime.UtcNow,
                     request.Method,
                     request.Path,
                     response.StatusCode,
                     sw.ElapsedMilliseconds,
-                    context.Connection.RemoteIpAddress?.ToString(),
-                    context.User.Identity?.IsAuthenticated == true ? context.User.Identity.Name : "anonymous",
+                    PrivacyLogHelper.PseudonymizeIp(context.Connection.RemoteIpAddress),
+                    context.User.Identity?.IsAuthenticated == true
+                        ? PrivacyLogHelper.PseudonymizeUser(context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? context.User.Identity.Name)
+                        : "anonymous",
                     context.TraceIdentifier
                 );
             }

@@ -183,6 +183,7 @@ namespace Integracao.ControlID.PoC.Services.Navigation
                         Module("observability", "Central push", "PU", "Fila persistida do push oficial e retorno operacional por POST /result.", "PushCenter", "Index", "push queue result", "timeline", "primary", "Essencial", 2),
                         Module("observability", "Logs de acesso", "LA", "Auditoria dos eventos de acesso sincronizados e persistidos localmente.", "AccessLogs", "Index", "logs access audit", "timeline", "primary", "Operação", 3),
                         Module("observability", "Logs de alteração", "LC", "Mudanças administrativas e trilha de alteração do equipamento.", "ChangeLogs", "Index", "change logs auditoria", "timeline", "primary", "Operação", 4),
+                        Module("observability", "Privacidade e LGPD", "LG", "Relatorio minimizado para triagem de direitos do titular e governanca de privacidade.", "Privacy", "Index", "privacidade lgpd titular dsar dpo ripd", "timeline", "primary", "Governanca", 5),
                         Module("observability", "Monitor compatível", "MC", "Visualização de compatibilidade para o fluxo legado de monitor push e webhook.", "Monitor", "Push", "monitor compat push webhook legado", "timeline", "secondary", "Compatibilidade", 20),
                         Module("observability", "Ocorrências internas", "ER", "Telas de erro e diagnóstico auxiliar para suporte interno da PoC.", "Errors", "Index", "errors falhas internas", "timeline", "secondary", "Apoio", 21, "Uso interno e troubleshooting")
                     ]

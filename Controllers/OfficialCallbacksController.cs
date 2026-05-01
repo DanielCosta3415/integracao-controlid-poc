@@ -1,3 +1,4 @@
+using Integracao.ControlID.PoC.Helpers;
 using Integracao.ControlID.PoC.Services.Callbacks;
 using Integracao.ControlID.PoC.Services.Database;
 using Microsoft.AspNetCore.Authorization;
@@ -94,12 +95,12 @@ namespace Integracao.ControlID.PoC.Controllers
             try
             {
                 var bytes = Convert.FromBase64String(photo.Base64Image);
-                var format = string.IsNullOrWhiteSpace(photo.Format) ? "jpeg" : photo.Format;
-                return File(bytes, $"image/{format}", photo.FileName ?? $"user_{userId}.{format}");
+                var format = NormalizeImageFormat(photo.Format);
+                return File(bytes, $"image/{format}", BuildPhotoFileName(format));
             }
             catch (FormatException ex)
             {
-                _logger.LogError(ex, "Imagem local inválida para o usuário {UserId}.", userId);
+                _logger.LogError(ex, "Imagem local inválida para o usuário {UserRef}.", PrivacyLogHelper.PseudonymizeIdentifier(userId));
                 return NotFound();
             }
         }
@@ -132,6 +133,29 @@ namespace Integracao.ControlID.PoC.Controllers
                 signatureResult.Message);
 
             return StatusCode(signatureResult.StatusCode, new { error = signatureResult.Message });
+        }
+
+        private static string NormalizeImageFormat(string? format)
+        {
+            var normalizedFormat = string.IsNullOrWhiteSpace(format)
+                ? "jpeg"
+                : format.Trim().TrimStart('.').ToLowerInvariant();
+
+            return normalizedFormat switch
+            {
+                "png" => "png",
+                "jpg" => "jpeg",
+                "jpeg" => "jpeg",
+                "bmp" => "bmp",
+                "gif" => "gif",
+                _ => "jpeg"
+            };
+        }
+
+        private static string BuildPhotoFileName(string format)
+        {
+            var normalizedFormat = NormalizeImageFormat(format);
+            return $"user-photo.{normalizedFormat}";
         }
 
     }

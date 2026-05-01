@@ -66,7 +66,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Erro ao consultar detalhes do usuário {UserId}.", id.Value);
+                _logger.LogError(ex, "Erro ao consultar detalhes do usuário {UserRef}.", PrivacyLogHelper.PseudonymizeIdentifier(id.Value));
             }
 
             return NotFound();
@@ -133,7 +133,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Erro ao buscar usuário {UserId} para edição.", id.Value);
+                _logger.LogError(ex, "Erro ao buscar usuário {UserRef} para edição.", PrivacyLogHelper.PseudonymizeIdentifier(id.Value));
             }
 
             return NotFound();
@@ -178,7 +178,7 @@ namespace Integracao.ControlID.PoC.Controllers
             catch (Exception ex)
             {
                 ModelState.AddModelError(string.Empty, SecurityTextHelper.BuildSafeUserMessage("Erro ao atualizar usuário", ex));
-                _logger.LogError(ex, "Erro ao atualizar usuário {UserId}.", id);
+                _logger.LogError(ex, "Erro ao atualizar usuário {UserRef}.", PrivacyLogHelper.PseudonymizeIdentifier(id));
                 return View(model);
             }
         }
@@ -206,7 +206,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Erro ao buscar usuário {UserId} para exclusão.", id.Value);
+                _logger.LogError(ex, "Erro ao buscar usuário {UserRef} para exclusão.", PrivacyLogHelper.PseudonymizeIdentifier(id.Value));
             }
 
             return NotFound();
@@ -240,7 +240,7 @@ namespace Integracao.ControlID.PoC.Controllers
             {
                 TempData["StatusMessage"] = SecurityTextHelper.BuildSafeUserMessage("Erro ao excluir usuário", ex);
                 TempData["StatusType"] = "danger";
-                _logger.LogError(ex, "Erro ao excluir usuário {UserId}.", id);
+                _logger.LogError(ex, "Erro ao excluir usuário {UserRef}.", PrivacyLogHelper.PseudonymizeIdentifier(id));
             }
 
             return RedirectToAction(nameof(Index));
