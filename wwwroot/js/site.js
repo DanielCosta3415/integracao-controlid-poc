@@ -96,7 +96,9 @@
   const homeRecentContainer = document.getElementById("homeRecentModules");
   const searchInput = document.getElementById("moduleSearchInput");
   const searchResults = document.getElementById("moduleSearchResults");
+  const searchStatus = document.getElementById("moduleSearchStatus");
   const favoriteButtons = Array.from(document.querySelectorAll("[data-favorite-toggle]"));
+  let activeSearchIndex = -1;
 
   const setSearchResultsVisibility = (isVisible) => {
     if (!searchResults) {
@@ -108,11 +110,42 @@
     body.classList.toggle("app-search-open", isVisible);
     if (searchInput) {
       searchInput.setAttribute("aria-expanded", String(isVisible));
+      if (!isVisible) {
+        searchInput.removeAttribute("aria-activedescendant");
+      }
     }
 
     if (isVisible && typeof closeTopMenus === "function") {
       closeTopMenus();
     }
+  };
+
+  const announceSearchStatus = (message) => {
+    if (searchStatus) {
+      searchStatus.textContent = message;
+    }
+  };
+
+  const getSearchResultOptions = () => Array.from(searchResults?.querySelectorAll(".command-result") || []);
+
+  const setActiveSearchResult = (index) => {
+    const options = getSearchResultOptions();
+    if (!options.length || !searchInput) {
+      activeSearchIndex = -1;
+      searchInput?.removeAttribute("aria-activedescendant");
+      return;
+    }
+
+    activeSearchIndex = (index + options.length) % options.length;
+    options.forEach((option, optionIndex) => {
+      const isActive = optionIndex === activeSearchIndex;
+      option.classList.toggle("is-active", isActive);
+      option.setAttribute("aria-selected", String(isActive));
+      if (isActive) {
+        searchInput.setAttribute("aria-activedescendant", option.id);
+        option.scrollIntoView({ block: "nearest" });
+      }
+    });
   };
 
   const createSafeModuleFragment = (item, includeShortLabel) => {
@@ -175,19 +208,19 @@
           return;
         }
 
-        let label = "";
         if ("labels" in element && element.labels?.length) {
-          label = normalizeUiText(Array.from(element.labels).map((item) => item.textContent || "").join(" "));
+          return;
         }
 
-        if (!label && element instanceof HTMLInputElement && ["submit", "button"].includes(element.type)) {
-          label = normalizeUiText(element.value);
+        if (normalizeUiText(element.textContent || "")) {
+          return;
         }
 
-        if (!label) {
-          label = normalizeUiText(element.getAttribute("title") || element.getAttribute("placeholder") || element.textContent || "");
+        if (element instanceof HTMLInputElement && ["submit", "button"].includes(element.type) && normalizeUiText(element.value)) {
+          return;
         }
 
+        let label = normalizeUiText(element.getAttribute("title") || element.getAttribute("placeholder") || "");
         if (!label) {
           const context = getContextLabel(element);
           const tagName = element.tagName.toLowerCase();
@@ -201,6 +234,27 @@
     } catch {
       // A11Y: o reforço de rótulos precisa falhar em silêncio para não
       // interromper a navegação caso algum nó legado fuja do contrato esperado.
+    }
+  };
+
+  const applyAlertAccessibilityFallbacks = () => {
+    try {
+      document.querySelectorAll(".alert").forEach((alertElement) => {
+        const isUrgent = alertElement.classList.contains("alert-danger") || alertElement.classList.contains("alert-warning");
+        if (!alertElement.hasAttribute("role")) {
+          alertElement.setAttribute("role", isUrgent ? "alert" : "status");
+        }
+
+        if (!alertElement.hasAttribute("aria-live")) {
+          alertElement.setAttribute("aria-live", isUrgent ? "assertive" : "polite");
+        }
+
+        if (!alertElement.hasAttribute("aria-atomic")) {
+          alertElement.setAttribute("aria-atomic", "true");
+        }
+      });
+    } catch {
+      // A11Y: alertas antigos continuam funcionais mesmo que o reforço falhe.
     }
   };
 
@@ -351,20 +405,34 @@
     lastSearchRenderToken = token;
 
     const fragment = document.createDocumentFragment();
+    activeSearchIndex = -1;
+    searchInput?.removeAttribute("aria-activedescendant");
 
     if (!items.length) {
       const empty = document.createElement("div");
       empty.className = "command-empty";
-      empty.textContent = "Nenhum módulo encontrado para a busca informada.";
+      empty.setAttribute("role", "option");
+      empty.setAttribute("aria-disabled", "true");
+      empty.setAttribute("aria-selected", "false");
+      empty.textContent = term
+        ? "Nenhum módulo encontrado para a busca informada."
+        : "Digite para buscar por domínio, módulo, API ou auditoria.";
       fragment.appendChild(empty);
+      announceSearchStatus(empty.textContent);
     } else {
-      items.forEach((item) => {
+      const resultLabel = items.length === 1 ? "1 resultado encontrado." : `${items.length} resultados encontrados.`;
+      announceSearchStatus(`${resultLabel} Use seta para baixo e seta para cima para navegar.`);
+      items.forEach((item, index) => {
         const anchor = document.createElement("a");
         anchor.className = "command-result";
+        anchor.id = `moduleSearchOption-${index}`;
         anchor.href = item.href;
         anchor.dataset.moduleKey = item.key;
+        anchor.dataset.searchResultIndex = String(index);
         anchor.setAttribute("role", "option");
+        anchor.setAttribute("aria-selected", "false");
         anchor.setAttribute("aria-label", `${item.label} no grupo ${item.group}`);
+        anchor.tabIndex = -1;
         anchor.appendChild(createSafeModuleFragment(item, false));
         fragment.appendChild(anchor);
       });
@@ -412,14 +480,58 @@
     searchInput.addEventListener("keydown", (event) => {
       if (event.key === "Escape") {
         setSearchResultsVisibility(false);
+        announceSearchStatus("Busca fechada.");
+        return;
+      }
+
+      if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+        event.preventDefault();
+        if (searchResults.hidden || !getSearchResultOptions().length) {
+          renderSearchResults(searchInput.value, true);
+        }
+
+        const options = getSearchResultOptions();
+        if (options.length) {
+          const nextIndex = event.key === "ArrowDown"
+            ? activeSearchIndex + 1
+            : activeSearchIndex - 1;
+          setActiveSearchResult(nextIndex);
+        }
+
+        return;
+      }
+
+      if ((event.key === "Home" || event.key === "End") && !searchResults.hidden) {
+        const options = getSearchResultOptions();
+        if (options.length) {
+          event.preventDefault();
+          setActiveSearchResult(event.key === "Home" ? 0 : options.length - 1);
+        }
+
+        return;
       }
 
       if (event.key === "Enter") {
-        const firstResult = searchResults.querySelector("a.command-result");
-        if (firstResult) {
-          event.preventDefault();
-          window.location.href = firstResult.href;
+        if (searchResults.hidden || !getSearchResultOptions().length) {
+          renderSearchResults(searchInput.value, true);
         }
+
+        const options = getSearchResultOptions();
+        const selectedResult = activeSearchIndex >= 0 ? options[activeSearchIndex] : options[0];
+        if (selectedResult) {
+          event.preventDefault();
+          window.location.href = selectedResult.href;
+        }
+      }
+    });
+
+    searchResults.addEventListener("mouseover", (event) => {
+      const option = event.target instanceof Element
+        ? event.target.closest(".command-result")
+        : null;
+      const index = Number(option?.getAttribute("data-search-result-index"));
+      if (Number.isInteger(index)) {
+        setActiveSearchResult(index);
       }
     });
   }
@@ -535,6 +647,7 @@
   document.querySelectorAll(".app-content pre:not(.app-code-panel)").forEach((pre) => pre.classList.add("app-code-panel"));
   applyTableAccessibilityFallbacks();
   applyInteractionAriaFallbacks();
+  applyAlertAccessibilityFallbacks();
 
   const topMenus = Array.from(document.querySelectorAll("[data-topnav-menu]"));
   if (!topMenus.length) {

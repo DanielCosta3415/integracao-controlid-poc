@@ -86,7 +86,7 @@
                                data-module-short="@item.ShortLabel"
                                aria-label="Abrir @moduleLabel no domínio @domainTitle"
                                aria-current="@(isActive ? "page" : null)">
-                                <span class="app-nav-module__icon">@item.ShortLabel</span>
+                                <span class="app-nav-module__icon" aria-hidden="true">@item.ShortLabel</span>
                                 <span class="app-nav-module__copy">
                                     <strong>@moduleLabel</strong>
                                     <small>@moduleDescription</small>

@@ -24,6 +24,7 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
 <body class="app-body" data-controller="@controller" data-action="@action">
+    <a class="skip-link" href="#mainContent">Ir para o conteúdo principal</a>
     <div class="app-shell">
         <header class="app-header">
             <div class="app-topbar">
@@ -48,14 +49,18 @@
                             <span class="app-command-palette__icon" aria-hidden="true">/</span>
                             <input id="moduleSearchInput"
                                    type="search"
+                                   role="combobox"
+                                   autocomplete="off"
                                    placeholder="Buscar domínio, módulo, API ou auditoria..."
                                    aria-label="Buscar módulos"
-                                   aria-describedby="moduleSearchHint"
+                                   aria-describedby="moduleSearchHint moduleSearchStatus"
                                    aria-controls="moduleSearchResults"
                                    aria-expanded="false"
+                                   aria-autocomplete="list"
                                    aria-haspopup="listbox" />
                         </label>
                         <span id="moduleSearchHint" class="visually-hidden">Digite para filtrar módulos por domínio, nome e tags operacionais.</span>
+                        <span id="moduleSearchStatus" class="visually-hidden" role="status" aria-live="polite" aria-atomic="true"></span>
                         <div class="app-command-palette__results"
                              id="moduleSearchResults"
                              role="listbox"
@@ -152,7 +157,7 @@
                 </div>
             </div>
 
-            <main class="app-content">
+            <main id="mainContent" class="app-content" tabindex="-1">
                 @RenderBody()
             </main>
 

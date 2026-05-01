@@ -108,7 +108,7 @@
                 <article class="domain-card">
                     <div class="domain-card__top">
                         <span class="app-chip app-chip--@domain.AccentTone">@domain.ShortTitle</span>
-                        <span class="domain-card__icon">@domain.Icon</span>
+                        <span class="domain-card__icon" aria-hidden="true">@domain.Icon</span>
                     </div>
                     <div class="app-stack-sm">
                         <h3>@domain.Title</h3>
@@ -138,7 +138,7 @@
                     @foreach (var activity in Model.RecentActivities)
                     {
                         <a class="activity-item" href="@activity.Href">
-                            <span class="activity-item__pill activity-item__pill--@activity.Tone"></span>
+                            <span class="activity-item__pill activity-item__pill--@activity.Tone" aria-hidden="true"></span>
                             <div>
                                 <strong>@activity.Title</strong>
                                 <span>@activity.Description</span>

@@ -201,6 +201,30 @@ body.sidebar-open {
   overflow: hidden;
 }
 
+.skip-link {
+  position: fixed;
+  top: var(--space-3);
+  left: var(--space-3);
+  z-index: 1000;
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  padding: 0.65rem 1rem;
+  border-radius: 999px;
+  background: var(--color-text-primary);
+  color: var(--color-text-inverse);
+  font-weight: 800;
+  box-shadow: var(--shadow-soft);
+  transform: translateY(calc(-100% - var(--space-5)));
+  transition: transform 0.16s ease;
+}
+
+.skip-link:focus,
+.skip-link:focus-visible {
+  color: var(--color-text-inverse);
+  transform: translateY(0);
+}
+
 a {
   color: var(--brand-red-700);
   text-decoration: none;
@@ -771,7 +795,9 @@ hr {
   color: var(--ink-900);
 }
 
-.command-result:hover {
+.command-result:hover,
+.command-result:focus-visible,
+.command-result.is-active {
   background: var(--brand-red-50);
   color: var(--ink-950);
 }
