@@ -82,6 +82,7 @@ public sealed class OperationalIndexMigrationTests
         "IX_Syncs_StartedAt",
         "IX_Syncs_Status_StartedAt",
         "IX_Users_Registration",
+        "IX_Users_Role",
         "IX_Users_Username",
     };
 }

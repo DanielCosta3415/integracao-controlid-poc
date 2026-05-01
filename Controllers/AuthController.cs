@@ -1,4 +1,5 @@
 using System;
+using System.Security.Claims;
 using System.Linq;
 using System.Text.Json;
 using Integracao.ControlID.PoC.Helpers;
@@ -6,9 +7,14 @@ using Integracao.ControlID.PoC.Models.ControlIDApi;
 using Integracao.ControlID.PoC.Models.Database;
 using Integracao.ControlID.PoC.Services.ControlIDApi;
 using Integracao.ControlID.PoC.Services.Database;
+using Integracao.ControlID.PoC.Services.Security;
 using Integracao.ControlID.PoC.ViewModels.Auth;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace Integracao.ControlID.PoC.Controllers
 {
@@ -25,6 +31,87 @@ namespace Integracao.ControlID.PoC.Controllers
             _officialApi = officialApi;
             _userRepository = userRepository;
             _logger = logger;
+        }
+
+        [HttpGet]
+        [AllowAnonymous]
+        public IActionResult LocalLogin(string? returnUrl = null)
+        {
+            if (User.Identity?.IsAuthenticated == true)
+                return RedirectToLocal(returnUrl);
+
+            ViewData["ReturnUrl"] = NormalizeLocalReturnUrl(returnUrl);
+            return View(new LoginViewModel());
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [AllowAnonymous]
+        [EnableRateLimiting("LocalAuth")]
+        public async Task<IActionResult> LocalLogin(LoginViewModel model, string? returnUrl = null)
+        {
+            ViewData["ReturnUrl"] = NormalizeLocalReturnUrl(returnUrl);
+
+            if (!ModelState.IsValid)
+                return View(model);
+
+            var user = await _userRepository.GetUserByUsernameOrEmailAsync(model.Username);
+            if (user == null ||
+                !string.Equals(user.Status, "active", StringComparison.OrdinalIgnoreCase) ||
+                !CryptoHelper.VerifyPassword(model.Password, user.PasswordHash, user.Salt))
+            {
+                ModelState.AddModelError(string.Empty, "Usuário local, e-mail ou senha inválidos.");
+                _logger.LogWarning("Falha de login local para identificador {Identifier}.", model.Username);
+                return View(model);
+            }
+
+            if (!CryptoHelper.IsPbkdf2Hash(user.PasswordHash))
+            {
+                user.PasswordHash = CryptoHelper.HashPassword(model.Password);
+                user.Salt = string.Empty;
+                await _userRepository.UpdateUserAsync(user);
+            }
+
+            var role = AppSecurityRoles.Normalize(user.Role);
+            var claims = new List<Claim>
+            {
+                new(ClaimTypes.NameIdentifier, user.Id.ToString(System.Globalization.CultureInfo.InvariantCulture)),
+                new(ClaimTypes.Name, user.Username),
+                new(ClaimTypes.Role, role),
+                new(ClaimTypes.Email, user.Email)
+            };
+
+            var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+            var principal = new ClaimsPrincipal(identity);
+            var authProperties = new AuthenticationProperties
+            {
+                IsPersistent = model.RememberMe,
+                AllowRefresh = true,
+                IssuedUtc = DateTimeOffset.UtcNow
+            };
+
+            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal, authProperties);
+
+            _logger.LogInformation("Login local realizado para {Username} com papel {Role}.", user.Username, role);
+            return RedirectToLocal(returnUrl);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> LocalLogout()
+        {
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            HttpContext.Session.Clear();
+            TempData["StatusMessage"] = "Sessão local encerrada com sucesso.";
+            TempData["StatusType"] = "success";
+            return RedirectToAction(nameof(LocalLogin));
+        }
+
+        [HttpGet]
+        [AllowAnonymous]
+        public IActionResult AccessDenied()
+        {
+            return View();
         }
 
         [HttpGet]
@@ -165,32 +252,39 @@ namespace Integracao.ControlID.PoC.Controllers
         }
 
         [HttpGet]
-        public IActionResult Register()
+        [AllowAnonymous]
+        public async Task<IActionResult> Register()
         {
+            if (!await CanRegisterLocalUserAsync())
+                return Forbid();
+
             return View(new RegisterViewModel());
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [AllowAnonymous]
         public async Task<IActionResult> Register(RegisterViewModel model)
         {
+            if (!await CanRegisterLocalUserAsync())
+                return Forbid();
+
             if (!ModelState.IsValid)
                 return View(model);
 
-            var existingUsers = await _userRepository.GetAllUsersAsync();
-            if (existingUsers.Any(user => user.Username.Equals(model.Username, StringComparison.OrdinalIgnoreCase)))
+            if (await _userRepository.GetUserByUsernameOrEmailAsync(model.Username) != null)
             {
                 ModelState.AddModelError(nameof(model.Username), "Já existe um usuário local com esse identificador.");
                 return View(model);
             }
 
-            if (existingUsers.Any(user => user.Email.Equals(model.Email, StringComparison.OrdinalIgnoreCase)))
+            if (await _userRepository.GetUserByUsernameOrEmailAsync(model.Email) != null)
             {
                 ModelState.AddModelError(nameof(model.Email), "Já existe um usuário local com esse e-mail.");
                 return View(model);
             }
 
-            var salt = CryptoHelper.GenerateSalt();
+            var isBootstrapAdmin = await _userRepository.CountUsersAsync() == 0;
             var user = new UserLocal
             {
                 Name = model.Name,
@@ -198,24 +292,30 @@ namespace Integracao.ControlID.PoC.Controllers
                 Username = model.Username,
                 Email = model.Email,
                 Phone = model.Phone,
-                PasswordHash = CryptoHelper.ComputeSha256Hash(model.Password, salt),
-                Salt = salt,
-                Status = "active"
+                PasswordHash = CryptoHelper.HashPassword(model.Password),
+                Salt = string.Empty,
+                Status = "active",
+                Role = isBootstrapAdmin ? AppSecurityRoles.Administrator : AppSecurityRoles.Operator
             };
 
             await _userRepository.AddUserAsync(user);
 
-            TempData["StatusMessage"] = "Usuário local registrado com sucesso. Agora você pode voltar ao login do dispositivo.";
+            TempData["StatusMessage"] = isBootstrapAdmin
+                ? "Administrador local registrado com sucesso. Faça login local para operar a PoC."
+                : "Usuário local registrado com sucesso.";
             TempData["StatusType"] = "success";
-            _logger.LogInformation("Usuário local {Username} registrado com sucesso para a PoC.", model.Username);
+            _logger.LogInformation("Usuário local {Username} registrado com papel {Role}.", model.Username, user.Role);
 
-            return RedirectToAction(nameof(Login));
+            return RedirectToAction(nameof(LocalLogin));
         }
 
         [HttpGet]
         public IActionResult ChangePassword()
         {
-            return View(new ChangePasswordViewModel());
+            return View(new ChangePasswordViewModel
+            {
+                Username = User.Identity?.Name ?? string.Empty
+            });
         }
 
         [HttpPost]
@@ -225,24 +325,27 @@ namespace Integracao.ControlID.PoC.Controllers
             if (!ModelState.IsValid)
                 return View(model);
 
-            var users = await _userRepository.GetAllUsersAsync();
-            var user = users.FirstOrDefault(item => item.Username.Equals(model.Username, StringComparison.OrdinalIgnoreCase));
+            if (!User.IsInRole(AppSecurityRoles.Administrator) &&
+                !string.Equals(User.Identity?.Name, model.Username, StringComparison.OrdinalIgnoreCase))
+            {
+                return Forbid();
+            }
+
+            var user = await _userRepository.GetUserByUsernameOrEmailAsync(model.Username);
             if (user == null)
             {
                 ModelState.AddModelError(nameof(model.Username), "Usuário local não encontrado.");
                 return View(model);
             }
 
-            if (!CryptoHelper.VerifySha256Hash(model.CurrentPassword, user.PasswordHash, user.Salt))
+            if (!CryptoHelper.VerifyPassword(model.CurrentPassword, user.PasswordHash, user.Salt))
             {
                 ModelState.AddModelError(nameof(model.CurrentPassword), "A senha atual informada é inválida.");
                 return View(model);
             }
 
-            var newSalt = CryptoHelper.GenerateSalt();
-            user.Salt = newSalt;
-            user.PasswordHash = CryptoHelper.ComputeSha256Hash(model.NewPassword, newSalt);
-            user.UpdatedAt = DateTime.UtcNow;
+            user.Salt = string.Empty;
+            user.PasswordHash = CryptoHelper.HashPassword(model.NewPassword);
 
             var updated = await _userRepository.UpdateUserAsync(user);
             if (!updated)
@@ -267,6 +370,26 @@ namespace Integracao.ControlID.PoC.Controllers
                 return $"{prefix}: {SecurityTextHelper.NormalizeForDisplay(result.ResponseBody)}";
 
             return $"{prefix} (status: {result.StatusCode}).";
+        }
+
+        private async Task<bool> CanRegisterLocalUserAsync()
+        {
+            if (await _userRepository.CountUsersAsync() == 0)
+                return true;
+
+            return User.Identity?.IsAuthenticated == true &&
+                   User.IsInRole(AppSecurityRoles.Administrator);
+        }
+
+        private IActionResult RedirectToLocal(string? returnUrl)
+        {
+            var normalizedReturnUrl = NormalizeLocalReturnUrl(returnUrl);
+            return LocalRedirect(normalizedReturnUrl);
+        }
+
+        private string NormalizeLocalReturnUrl(string? returnUrl)
+        {
+            return Url.IsLocalUrl(returnUrl) ? returnUrl! : Url.Action("Index", "Home") ?? "/";
         }
 
         private static bool IsSameOriginNavigation(HttpRequest request)

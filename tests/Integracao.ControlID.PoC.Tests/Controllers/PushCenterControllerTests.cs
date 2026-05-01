@@ -230,6 +230,7 @@ public class PushCenterControllerTests
         return new PushCenterController(
             CreateWorkflowService(database),
             new CallbackSecurityEvaluator(Microsoft.Extensions.Options.Options.Create(options)),
+            new CallbackSignatureValidator(Microsoft.Extensions.Options.Options.Create(options), NullLogger<CallbackSignatureValidator>.Instance),
             new CallbackRequestBodyReader(Microsoft.Extensions.Options.Options.Create(options)),
             new PushIdempotencyKeyResolver(),
             NullLogger<PushCenterController>.Instance)

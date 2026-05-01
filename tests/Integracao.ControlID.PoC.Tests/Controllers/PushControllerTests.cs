@@ -96,6 +96,7 @@ public class PushControllerTests
         return new PushController(
             NullLogger<PushController>.Instance,
             new CallbackSecurityEvaluator(Microsoft.Extensions.Options.Options.Create(options)),
+            new CallbackSignatureValidator(Microsoft.Extensions.Options.Options.Create(options), NullLogger<CallbackSignatureValidator>.Instance),
             CreateWorkflowService(database),
             new CallbackRequestBodyReader(Microsoft.Extensions.Options.Options.Create(options)),
             new PushIdempotencyKeyResolver())

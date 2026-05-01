@@ -4,12 +4,15 @@ using System.Text.Json;
 using Integracao.ControlID.PoC.Models.ControlIDApi;
 using Integracao.ControlID.PoC.Services.ControlIDApi;
 using Integracao.ControlID.PoC.Services.Files;
+using Integracao.ControlID.PoC.Services.Security;
 using Integracao.ControlID.PoC.ViewModels.Media;
 using Integracao.ControlID.PoC.Helpers;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Integracao.ControlID.PoC.Controllers
 {
+    [Authorize(Roles = AppSecurityRoles.Administrator)]
     public class MediaController : Controller
     {
         private const long MaxImageUploadBytes = 2L * 1024 * 1024;

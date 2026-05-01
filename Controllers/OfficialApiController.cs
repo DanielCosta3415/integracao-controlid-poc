@@ -1,6 +1,8 @@
 using Integracao.ControlID.PoC.Models.ControlIDApi;
 using Integracao.ControlID.PoC.Services.ControlIDApi;
+using Integracao.ControlID.PoC.Services.Security;
 using Integracao.ControlID.PoC.ViewModels.OfficialApi;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -87,6 +89,7 @@ namespace Integracao.ControlID.PoC.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = AppSecurityRoles.Administrator)]
         public async Task<IActionResult> Invoke(OfficialApiInvokeViewModel model)
         {
             var endpoint = _catalogService.GetById(model.EndpointId);

@@ -30,13 +30,15 @@ namespace Integracao.ControlID.PoC.Middlewares
                 var response = context.Response;
 
                 _logger.LogInformation(
-                    "[{Timestamp}] {Method} {Path} => {StatusCode} ({Elapsed} ms) IP:{IP}",
+                    "[{Timestamp}] {Method} {Path} => {StatusCode} ({Elapsed} ms) IP:{IP} User:{User} Trace:{TraceId}",
                     DateTime.UtcNow,
                     request.Method,
                     request.Path,
                     response.StatusCode,
                     sw.ElapsedMilliseconds,
-                    context.Connection.RemoteIpAddress?.ToString()
+                    context.Connection.RemoteIpAddress?.ToString(),
+                    context.User.Identity?.IsAuthenticated == true ? context.User.Identity.Name : "anonymous",
+                    context.TraceIdentifier
                 );
             }
             catch (Exception ex)

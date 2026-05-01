@@ -372,12 +372,13 @@ Quando um fluxo espera JSON estruturado e o equipamento retorna corpo nao parsea
 | Sem secret scanner dedicado | `tools/scan-secrets.ps1` roda localmente e na CI |
 | Sem check contra equipamento real | `tools/contract-controlid-device.ps1` valida contrato real de forma opt-in, sem credenciais versionadas |
 | Sem rate limit para ingressos | Policy `CallbackIngress` limita callbacks e push por IP remoto |
+| Ingressos sem autenticidade criptografica | `CallbackSignatureValidator` exige HMAC/timestamp/nonce quando configurado e `ControlIdCallbackSigningProxy` assina equipamentos sem HMAC nativo |
+| UI sem autorizacao por perfil | Cookie auth global e RBAC por papel protegem operacoes administrativas e dados sensiveis |
 
-## Riscos residuais
+## Riscos controlados e limites externos
 
-| Risco | Prioridade | Observacao |
+| Item | Prioridade | Controle |
 | --- | --- | --- |
-| `/push` nao idempotente por natureza do contrato de polling | Alta | A entrega muda `pending` para `delivered`; nao foi alterado para evitar replay perigoso de operacoes fisicas |
-| Sem retry/backoff outbound | Media | Mantido intencionalmente para evitar repetir operacoes oficiais nao idempotentes; circuit breaker cobre protecao contra falhas repetidas |
-| Sem RBAC na UI | Alta | Fora do escopo seguro desta correcao porque exigiria mudanca funcional ampla de autenticacao/autorizacao |
-| Contratos oficiais dependem de firmware/modelo/licenca | Alta | Check opt-in real foi criado, mas validacao final exige equipamento fisico e credenciais fora do Git |
+| `/push` altera estado por natureza do contrato de polling | Alta | Mantido sem retry automatico para evitar replay de operacoes fisicas; resultados usam idempotency key quando o equipamento envia ou quando a PoC deriva chave segura |
+| Operacoes oficiais outbound podem nao ser idempotentes | Media | Sem retry automatico generico; timeout e circuit breaker reduzem repeticao perigosa e falhas em cascata |
+| Contratos oficiais dependem de firmware/modelo/licenca | Alta | Check opt-in real existe em `tools/contract-controlid-device.ps1`; validacao final exige equipamento fisico e credenciais fora do Git |

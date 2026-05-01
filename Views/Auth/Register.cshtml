@@ -10,7 +10,7 @@
         BadgeTone = "info",
         Actions = new[]
         {
-            new PageHeaderActionViewModel { Label = "Ir para login", Href = Url.Action("Login")!, ButtonClass = "btn btn-outline-secondary" }
+            new PageHeaderActionViewModel { Label = "Ir para login local", Href = Url.Action("LocalLogin")!, ButtonClass = "btn btn-outline-secondary" }
         }
     };
 }
@@ -65,7 +65,7 @@
 
                     <div class="form-actions">
                         <button type="submit" class="btn btn-primary">Registrar usuário</button>
-                        <a asp-action="Login" class="btn btn-outline-secondary">Já possui conta</a>
+                        <a asp-action="LocalLogin" class="btn btn-outline-secondary">Já possui conta</a>
                     </div>
                 </form>
             </section>

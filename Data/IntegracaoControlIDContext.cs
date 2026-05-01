@@ -178,6 +178,10 @@ namespace Integracao.ControlID.PoC.Data
             modelBuilder.Entity<UserLocal>()
                 .HasIndex(item => item.Username)
                 .HasDatabaseName("IX_Users_Username");
+
+            modelBuilder.Entity<UserLocal>()
+                .HasIndex(item => item.Role)
+                .HasDatabaseName("IX_Users_Role");
         }
     }
 }

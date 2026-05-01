@@ -3,6 +3,8 @@ using System.Threading.Tasks;
 using Integracao.ControlID.PoC.Helpers;
 using Integracao.ControlID.PoC.Services.Callbacks;
 using Integracao.ControlID.PoC.Services.Database;
+using Integracao.ControlID.PoC.Services.Security;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Integracao.ControlID.PoC.Controllers
@@ -37,6 +39,7 @@ namespace Integracao.ControlID.PoC.Controllers
         // POST: /MonitorWebhook/Receive
         [HttpPost]
         [Route("MonitorWebhook/Receive")]
+        [AllowAnonymous]
         public async Task<IActionResult> Receive(CancellationToken cancellationToken)
         {
             var result = await _callbackIngressService.PersistAsync(HttpContext, "legacy-webhook", cancellationToken);
@@ -49,6 +52,7 @@ namespace Integracao.ControlID.PoC.Controllers
         // POST: /MonitorWebhook/Clear
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = AppSecurityRoles.Administrator)]
         public async Task<IActionResult> Clear(string confirmationPhrase)
         {
             if (!HighImpactOperationGuard.IsConfirmed(confirmationPhrase, HighImpactOperationGuard.ConfirmClearMonitorEvents))

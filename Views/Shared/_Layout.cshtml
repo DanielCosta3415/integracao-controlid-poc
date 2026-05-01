@@ -74,6 +74,25 @@
                 </div>
 
                 <div class="app-topbar__right">
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        <span class="app-chip app-chip--neutral" aria-label="Conta local autenticada">
+                            @User.Identity.Name
+                        </span>
+                        <form asp-controller="Auth" asp-action="LocalLogout" method="post" class="d-inline">
+                            <button type="submit" class="app-topbar__link border-0 bg-transparent p-0">
+                                Sair
+                            </button>
+                        </form>
+                    }
+                    else
+                    {
+                        <a class="app-topbar__link"
+                           href="@Url.Action("LocalLogin", "Auth")"
+                           aria-label="Entrar com conta local da PoC">
+                            Login local
+                        </a>
+                    }
                     <a class="app-topbar__link"
                        href="@Url.Action("Index", "Workspace")"
                        aria-label="Abrir o mapa funcional da PoC">

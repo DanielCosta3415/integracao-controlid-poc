@@ -10,5 +10,11 @@ namespace Integracao.ControlID.PoC.Options
         public string SharedKey { get; set; } = string.Empty;
         public bool AllowLoopback { get; set; } = true;
         public List<string> AllowedRemoteIps { get; set; } = new();
+        public bool RequireSignedRequests { get; set; }
+        public string SignatureHeaderName { get; set; } = "X-ControlID-Signature";
+        public string TimestampHeaderName { get; set; } = "X-ControlID-Timestamp";
+        public string NonceHeaderName { get; set; } = "X-ControlID-Nonce";
+        public int MaxClockSkewSeconds { get; set; } = 300;
+        public int NonceTtlSeconds { get; set; } = 600;
     }
 }

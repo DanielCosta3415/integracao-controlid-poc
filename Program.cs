@@ -12,8 +12,11 @@ using Integracao.ControlID.PoC.Services.OperationModes;
 using Integracao.ControlID.PoC.Services.ProductSpecific;
 using Integracao.ControlID.PoC.Services.Push;
 using Integracao.ControlID.PoC.Services.Security;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
@@ -37,7 +40,13 @@ builder.Services.AddDbContext<IntegracaoControlIDContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Add services MVC
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews(options =>
+{
+    var authenticatedUserPolicy = new AuthorizationPolicyBuilder()
+        .RequireAuthenticatedUser()
+        .Build();
+    options.Filters.Add(new AuthorizeFilter(authenticatedUserPolicy));
+});
 builder.Services.AddRazorPages();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
@@ -65,6 +74,10 @@ builder.Services.Configure<BrotliCompressionProviderOptions>(options => options.
 builder.Services.Configure<GzipCompressionProviderOptions>(options => options.Level = CompressionLevel.Fastest);
 var callbackRateLimitPermitLimit = Math.Max(1, builder.Configuration.GetValue<int?>("CallbackSecurity:RateLimit:PermitLimit") ?? 120);
 var callbackRateLimitWindowSeconds = Math.Clamp(builder.Configuration.GetValue<int?>("CallbackSecurity:RateLimit:WindowSeconds") ?? 60, 1, 3600);
+var localAuthRateLimitPermitLimit = Math.Max(1, builder.Configuration.GetValue<int?>("Auth:RateLimit:PermitLimit") ?? 10);
+var localAuthRateLimitWindowSeconds = Math.Clamp(builder.Configuration.GetValue<int?>("Auth:RateLimit:WindowSeconds") ?? 300, 30, 3600);
+var interactiveRateLimitPermitLimit = Math.Max(1, builder.Configuration.GetValue<int?>("Security:InteractiveRateLimit:PermitLimit") ?? 600);
+var interactiveRateLimitWindowSeconds = Math.Clamp(builder.Configuration.GetValue<int?>("Security:InteractiveRateLimit:WindowSeconds") ?? 60, 1, 3600);
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
@@ -78,6 +91,48 @@ builder.Services.AddRateLimiter(options =>
                 QueueLimit = 0,
                 QueueProcessingOrder = QueueProcessingOrder.OldestFirst
             }));
+    options.AddPolicy("LocalAuth", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = localAuthRateLimitPermitLimit,
+                Window = TimeSpan.FromSeconds(localAuthRateLimitWindowSeconds),
+                QueueLimit = 0,
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst
+            }));
+    options.AddPolicy("InteractiveUi", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            httpContext.User.Identity?.Name ?? httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = interactiveRateLimitPermitLimit,
+                Window = TimeSpan.FromSeconds(interactiveRateLimitWindowSeconds),
+                QueueLimit = 0,
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst
+            }));
+});
+
+builder.Services
+    .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.Cookie.Name = builder.Configuration["Auth:CookieName"] ?? ".IntegracaoControlID.Auth";
+        options.Cookie.HttpOnly = true;
+        options.Cookie.SameSite = SameSiteMode.Lax;
+        options.Cookie.IsEssential = true;
+        options.Cookie.SecurePolicy = builder.Environment.IsDevelopment()
+            ? CookieSecurePolicy.SameAsRequest
+            : CookieSecurePolicy.Always;
+        options.LoginPath = "/Auth/LocalLogin";
+        options.AccessDeniedPath = "/Auth/AccessDenied";
+        options.SlidingExpiration = true;
+        options.ExpireTimeSpan = TimeSpan.FromMinutes(Math.Clamp(builder.Configuration.GetValue<int?>("Auth:IdleTimeoutMinutes") ?? 60, 5, 1440));
+    });
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("AdministratorOnly", policy => policy.RequireRole(AppSecurityRoles.Administrator));
 });
 
 // Sessão ASP.NET Core (30 min timeout, seguro)
@@ -96,8 +151,10 @@ builder.Services.AddSession(options =>
 // Registro da camada oficial Control iD (injeção de dependência)
 builder.Services.AddHttpClient(); // HttpClientFactory
 builder.Services.Configure<CallbackSecurityOptions>(builder.Configuration.GetSection("CallbackSecurity"));
+builder.Services.Configure<ControlIdEgressOptions>(builder.Configuration.GetSection("ControlIDApi"));
 builder.Services.Configure<ControlIdCircuitBreakerOptions>(builder.Configuration.GetSection("ControlIDApi:CircuitBreaker"));
 builder.Services.AddScoped<CallbackSecurityEvaluator>();
+builder.Services.AddSingleton<CallbackSignatureValidator>();
 builder.Services.AddScoped<CallbackRequestBodyReader>();
 builder.Services.AddScoped<CallbackIngressService>();
 builder.Services.AddSingleton<OfficialApiCircuitBreaker>();
@@ -155,6 +212,11 @@ var app = builder.Build();
 
 ValidateRuntimeSecurity(app);
 
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHsts();
+}
+
 // Middlewares customizados (ordem: tratamento de erro → logging de request → sessão → session API)
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseMiddleware<RequestLoggingMiddleware>();
@@ -166,7 +228,7 @@ app.UseStaticFiles();
 app.UseRouting();
 app.UseRateLimiter();
 
-if (app.Environment.IsDevelopment() || app.Configuration.GetValue<bool>("OpenApi:Enabled"))
+if (app.Environment.IsDevelopment() && app.Configuration.GetValue<bool>("OpenApi:Enabled"))
 {
     app.UseSwagger();
     app.UseSwaggerUI(options =>
@@ -178,6 +240,8 @@ if (app.Environment.IsDevelopment() || app.Configuration.GetValue<bool>("OpenApi
 
 // Sessão ASP.NET Core (deve vir antes de endpoints)
 app.UseSession();
+app.UseAuthentication();
+app.UseAuthorization();
 app.UseMiddleware<ApiSessionMiddleware>();
 
 // Roda as migrações automáticas (opcional: apenas para desenvolvimento)
@@ -261,5 +325,31 @@ static void ValidateRuntimeSecurity(WebApplication app)
     {
         throw new InvalidOperationException(
             "CallbackSecurity:SharedKey must be configured for non-Development environments.");
+    }
+
+    if (!callbackSecurityOptions.RequireSignedRequests)
+    {
+        throw new InvalidOperationException(
+            "CallbackSecurity:RequireSignedRequests must be true for non-Development environments.");
+    }
+
+    if (app.Configuration.GetValue<bool>("OpenApi:Enabled"))
+    {
+        throw new InvalidOperationException(
+            "OpenApi:Enabled must be false for non-Development environments.");
+    }
+
+    var egressOptions = app.Services.GetRequiredService<IOptions<ControlIdEgressOptions>>().Value;
+    var allowedDeviceHosts = egressOptions.AllowedDeviceHosts
+        .Where(static host => !string.IsNullOrWhiteSpace(host))
+        .Select(static host => host.Trim())
+        .ToArray();
+
+    if (!egressOptions.RequireAllowedDeviceHosts ||
+        allowedDeviceHosts.Length == 0 ||
+        allowedDeviceHosts.Any(static host => host == "*"))
+    {
+        throw new InvalidOperationException(
+            "ControlIDApi:RequireAllowedDeviceHosts must be true and ControlIDApi:AllowedDeviceHosts must list allowed device hosts for non-Development environments.");
     }
 }

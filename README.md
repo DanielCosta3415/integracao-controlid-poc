@@ -33,6 +33,7 @@ Documentações funcionais de implementação:
 - `docs/operation-modes-implementation.md`
 - `docs/monitor-implementation.md`
 - `docs/push-implementation.md`
+- `docs/security-hardening.md`
 
 ## Requisitos
 
@@ -46,6 +47,7 @@ Documentações funcionais de implementação:
 
 ```powershell
 dotnet restore .\Integracao.ControlID.PoC.sln
+dotnet restore .\tools\ControlIdCallbackSigningProxy\ControlIdCallbackSigningProxy.csproj --locked-mode
 ```
 
 2. Configure segredos e dados sensíveis fora do repositório. Para desenvolvimento local, prefira variáveis de ambiente ou User Secrets:
@@ -55,6 +57,18 @@ dotnet user-secrets set "ControlIDApi:DefaultDeviceUrl" "http://<equipamento-ou-
 dotnet user-secrets set "ControlIDApi:DefaultUsername" "<usuário>"
 dotnet user-secrets set "ControlIDApi:DefaultPassword" "<senha>"
 dotnet user-secrets set "CallbackSecurity:SharedKey" "<segredo-local>"
+dotnet user-secrets set "CallbackSecurity:RequireSharedKey" "true"
+dotnet user-secrets set "CallbackSecurity:RequireSignedRequests" "true"
+dotnet user-secrets set "ControlIDApi:RequireAllowedDeviceHosts" "true"
+dotnet user-secrets set "ControlIDApi:AllowedDeviceHosts:0" "<equipamento-ou-host>"
+```
+
+Para equipamentos sem assinatura HMAC nativa, use o proxy assinador local:
+
+```powershell
+dotnet user-secrets set --project .\tools\ControlIdCallbackSigningProxy\ControlIdCallbackSigningProxy.csproj "Proxy:SharedKey" "<mesmo-segredo-da-poc>"
+dotnet user-secrets set --project .\tools\ControlIdCallbackSigningProxy\ControlIdCallbackSigningProxy.csproj "Proxy:AllowedRemoteIps:0" "<ip-do-equipamento>"
+dotnet run --project .\tools\ControlIdCallbackSigningProxy\ControlIdCallbackSigningProxy.csproj --urls http://localhost:6700
 ```
 
 3. Compile a solução:
@@ -96,6 +110,7 @@ A configuração segue o padrão nativo do ASP.NET Core (`Secao__Chave`). Use as
 | `Session__CookieName` | `.IntegracaoControlID.Session` | Nome do cookie de sessão. |
 | `CallbackSecurity__MaxBodyBytes` | `1048576` | Limite máximo de payload aceito em callbacks/monitor. |
 | `CallbackSecurity__RequireSharedKey` | `true` | Exige chave compartilhada para entrada de callbacks. |
+| `CallbackSecurity__RequireSignedRequests` | `true` | Exige assinatura HMAC com timestamp e nonce nos ingressos externos. |
 | `CallbackSecurity__SharedKeyHeaderName` | `X-ControlID-Callback-Key` | Header esperado para a chave compartilhada. |
 | `CallbackSecurity__SharedKey` | `<segredo>` | Segredo usado para validar callbacks. Deve ficar fora do repositório. |
 | `CallbackSecurity__AllowLoopback` | `true` | Permite callbacks locais mesmo com restrição de IP. |
@@ -121,6 +136,7 @@ Observações:
 
 - Antes de validar mudancas de schema em um banco local importante, gere backup com `powershell -ExecutionPolicy Bypass -File .\tools\backup-sqlite.ps1`.
 - Para validar recuperacao sem sobrescrever dados reais, rode o smoke em copia restaurada com `powershell -ExecutionPolicy Bypass -File .\tools\restore-smoke-sqlite.ps1`.
+- Backups novos sao protegidos por DPAPI por padrao. Use `powershell -ExecutionPolicy Bypass -File .\tools\harden-local-state.ps1` para restringir permissoes locais de SQLite, logs e backups no host.
 
 ## Testes automatizados
 
@@ -232,6 +248,7 @@ Checklist recomendado para debug operacional:
 
 - `docs/database-and-runtime-state.md`: estado local, comandos seguros e requisitos de runtime
 - `docs/data-model-and-recovery.md`: modelo de dados local, indices, migrations, backup e restore
+- `docs/security-hardening.md`: controles de autenticação local, RBAC, assinatura HMAC, proxy assinador, backup protegido, allowlist de egress e headers
 - `docs/integration-contracts.md`: inventario de integracoes, contratos, payloads e riscos
 - `docs/privacy-and-data-retention.md`: regras de privacidade, dados sensíveis e retenção local
 - `docs/product-acceptance-criteria.md`: critérios de aceite funcionais para os fluxos críticos

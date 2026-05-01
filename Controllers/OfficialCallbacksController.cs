@@ -1,24 +1,32 @@
 using Integracao.ControlID.PoC.Services.Callbacks;
 using Integracao.ControlID.PoC.Services.Database;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 
 namespace Integracao.ControlID.PoC.Controllers
 {
     [ApiController]
+    [AllowAnonymous]
     [EnableRateLimiting("CallbackIngress")]
     public class OfficialCallbacksController : ControllerBase
     {
         private readonly CallbackIngressService _callbackIngressService;
+        private readonly CallbackSecurityEvaluator _securityEvaluator;
+        private readonly CallbackSignatureValidator _signatureValidator;
         private readonly PhotoRepository _photoRepository;
         private readonly ILogger<OfficialCallbacksController> _logger;
 
         public OfficialCallbacksController(
             CallbackIngressService callbackIngressService,
+            CallbackSecurityEvaluator securityEvaluator,
+            CallbackSignatureValidator signatureValidator,
             PhotoRepository photoRepository,
             ILogger<OfficialCallbacksController> logger)
         {
             _callbackIngressService = callbackIngressService;
+            _securityEvaluator = securityEvaluator;
+            _signatureValidator = signatureValidator;
             _photoRepository = photoRepository;
             _logger = logger;
         }
@@ -69,6 +77,14 @@ namespace Integracao.ControlID.PoC.Controllers
         [HttpGet("/user_get_image.fcgi")]
         public async Task<IActionResult> GetUserImage([FromQuery(Name = "user_id")] long userId)
         {
+            var ingressRejection = ValidateIngressRequest();
+            if (ingressRejection != null)
+                return ingressRejection;
+
+            var signatureRejection = ValidateSignature(string.Empty);
+            if (signatureRejection != null)
+                return signatureRejection;
+
             var photos = await _photoRepository.SearchPhotosAsync(userId: userId);
             var photo = photos.OrderByDescending(item => item.CreatedAt).FirstOrDefault();
 
@@ -86,6 +102,36 @@ namespace Integracao.ControlID.PoC.Controllers
                 _logger.LogError(ex, "Imagem local inválida para o usuário {UserId}.", userId);
                 return NotFound();
             }
+        }
+
+        private IActionResult? ValidateIngressRequest()
+        {
+            var securityResult = _securityEvaluator.Evaluate(HttpContext);
+            if (securityResult.IsAllowed)
+                return null;
+
+            _logger.LogWarning(
+                "Blocked callback file request for {Path}. Status {StatusCode}. Reason: {Reason}",
+                Request.Path,
+                securityResult.StatusCode,
+                securityResult.Message);
+
+            return StatusCode(securityResult.StatusCode, new { error = securityResult.Message });
+        }
+
+        private IActionResult? ValidateSignature(string body)
+        {
+            var signatureResult = _signatureValidator.Validate(Request, body);
+            if (signatureResult.IsAllowed)
+                return null;
+
+            _logger.LogWarning(
+                "Blocked callback file signature for {Path}. Status {StatusCode}. Reason: {Reason}",
+                Request.Path,
+                signatureResult.StatusCode,
+                signatureResult.Message);
+
+            return StatusCode(signatureResult.StatusCode, new { error = signatureResult.Message });
         }
 
     }

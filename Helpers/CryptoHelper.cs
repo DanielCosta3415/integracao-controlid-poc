@@ -6,6 +6,11 @@ namespace Integracao.ControlID.PoC.Helpers
 {
     public static class CryptoHelper
     {
+        private const int Pbkdf2SaltBytes = 16;
+        private const int Pbkdf2HashBytes = 32;
+        private const int Pbkdf2Iterations = 210_000;
+        private const string Pbkdf2Prefix = "PBKDF2";
+
         /// <summary>
         /// Gera hash SHA256 para uma string, com salt opcional.
         /// </summary>
@@ -35,6 +40,66 @@ namespace Integracao.ControlID.PoC.Helpers
         {
             var computedHash = ComputeSha256Hash(rawData, salt);
             return string.Equals(computedHash, hash, StringComparison.OrdinalIgnoreCase);
+        }
+
+        public static string HashPassword(string password)
+        {
+            ArgumentNullException.ThrowIfNull(password);
+
+            var salt = RandomNumberGenerator.GetBytes(Pbkdf2SaltBytes);
+            var hash = Rfc2898DeriveBytes.Pbkdf2(
+                password,
+                salt,
+                Pbkdf2Iterations,
+                HashAlgorithmName.SHA256,
+                Pbkdf2HashBytes);
+
+            return string.Join(
+                "$",
+                Pbkdf2Prefix,
+                Pbkdf2Iterations.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                Convert.ToBase64String(salt),
+                Convert.ToBase64String(hash));
+        }
+
+        public static bool VerifyPassword(string password, string storedHash, string? legacySalt = null)
+        {
+            if (string.IsNullOrWhiteSpace(storedHash))
+                return false;
+
+            if (!IsPbkdf2Hash(storedHash))
+                return VerifySha256Hash(password, storedHash, legacySalt);
+
+            var parts = storedHash.Split('$');
+            if (parts.Length != 4 ||
+                !int.TryParse(parts[1], out var iterations) ||
+                iterations <= 0)
+            {
+                return false;
+            }
+
+            try
+            {
+                var salt = Convert.FromBase64String(parts[2]);
+                var expectedHash = Convert.FromBase64String(parts[3]);
+                var actualHash = Rfc2898DeriveBytes.Pbkdf2(
+                    password,
+                    salt,
+                    iterations,
+                    HashAlgorithmName.SHA256,
+                    expectedHash.Length);
+
+                return CryptographicOperations.FixedTimeEquals(actualHash, expectedHash);
+            }
+            catch (FormatException)
+            {
+                return false;
+            }
+        }
+
+        public static bool IsPbkdf2Hash(string? storedHash)
+        {
+            return storedHash?.StartsWith(Pbkdf2Prefix + "$", StringComparison.Ordinal) == true;
         }
 
         /// <summary>

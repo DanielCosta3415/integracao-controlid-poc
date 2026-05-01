@@ -763,6 +763,10 @@ namespace Integracao.ControlID.PoC.Data.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Salt")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -782,6 +786,9 @@ namespace Integracao.ControlID.PoC.Data.Migrations
 
                     b.HasIndex("Registration")
                         .HasDatabaseName("IX_Users_Registration");
+
+                    b.HasIndex("Role")
+                        .HasDatabaseName("IX_Users_Role");
 
                     b.HasIndex("Username")
                         .HasDatabaseName("IX_Users_Username");

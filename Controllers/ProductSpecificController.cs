@@ -1,11 +1,14 @@
 using Integracao.ControlID.PoC.Services.ControlIDApi;
 using Integracao.ControlID.PoC.Services.ProductSpecific;
+using Integracao.ControlID.PoC.Services.Security;
 using Integracao.ControlID.PoC.ViewModels.ProductSpecific;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Integracao.ControlID.PoC.Controllers;
 
 // Keep MVC concerns here and push API workflows into dedicated services for easier testing.
+[Authorize(Roles = AppSecurityRoles.Administrator)]
 public class ProductSpecificController : Controller
 {
     private readonly IOfficialControlIdApiService _apiService;

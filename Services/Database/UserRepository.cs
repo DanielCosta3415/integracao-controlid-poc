@@ -47,6 +47,22 @@ namespace Integracao.ControlID.PoC.Services.Database
             return await _dbContext.Users.FindAsync(id);
         }
 
+        public async Task<int> CountUsersAsync()
+        {
+            return await _dbContext.Users.CountAsync();
+        }
+
+        public async Task<UserLocal?> GetUserByUsernameOrEmailAsync(string usernameOrEmail)
+        {
+            var normalized = usernameOrEmail.Trim();
+            var normalizedLower = normalized.ToLowerInvariant();
+            return await _dbContext.Users
+                .OrderBy(u => u.Id)
+                .FirstOrDefaultAsync(u =>
+                    u.Username.ToLower() == normalizedLower ||
+                    u.Email.ToLower() == normalizedLower);
+        }
+
         /// <summary>
         /// Busca todos os usuários locais.
         /// </summary>
@@ -65,6 +81,7 @@ namespace Integracao.ControlID.PoC.Services.Database
         {
             try
             {
+                user.UpdatedAt = DateTime.UtcNow;
                 _dbContext.Users.Update(user);
                 await _dbContext.SaveChangesAsync();
                 return true;

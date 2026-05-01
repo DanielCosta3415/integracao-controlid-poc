@@ -2,12 +2,15 @@ using System;
 using System.Text.Json;
 using Integracao.ControlID.PoC.Models.ControlIDApi;
 using Integracao.ControlID.PoC.Services.ControlIDApi;
+using Integracao.ControlID.PoC.Services.Security;
 using Integracao.ControlID.PoC.ViewModels.Groups;
 using Integracao.ControlID.PoC.Helpers;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Integracao.ControlID.PoC.Controllers
 {
+    [Authorize(Roles = AppSecurityRoles.Administrator)]
     public class GroupsController : Controller
     {
         private readonly OfficialControlIdApiService _apiService;

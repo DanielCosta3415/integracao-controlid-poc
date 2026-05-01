@@ -2,13 +2,16 @@ using System.Text.Json;
 using Integracao.ControlID.PoC.Models.ControlIDApi;
 using Integracao.ControlID.PoC.Services.ControlIDApi;
 using Integracao.ControlID.PoC.Services.Files;
+using Integracao.ControlID.PoC.Services.Security;
 using Integracao.ControlID.PoC.ViewModels.AdvancedOfficial;
 using Integracao.ControlID.PoC.Helpers;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Integracao.ControlID.PoC.Controllers
 {
+    [Authorize(Roles = AppSecurityRoles.Administrator)]
     public class AdvancedOfficialController : Controller
     {
         private const long MaxFacialImageBytes = 5L * 1024 * 1024;

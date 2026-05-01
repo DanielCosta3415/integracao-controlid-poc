@@ -7,7 +7,9 @@ using Integracao.ControlID.PoC.Models.Database;
 using Integracao.ControlID.PoC.Services.ControlIDApi;
 using Integracao.ControlID.PoC.Services.Database;
 using Integracao.ControlID.PoC.Services.OperationModes;
+using Integracao.ControlID.PoC.Services.Security;
 using Integracao.ControlID.PoC.ViewModels.OperationModes;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Integracao.ControlID.PoC.Controllers
@@ -16,6 +18,7 @@ namespace Integracao.ControlID.PoC.Controllers
     /// Orquestra a experiencia de Standalone, Pro e Enterprise, combinando leitura
     /// de configuracao oficial, aplicacao de perfis, licencas e sinais de callbacks.
     /// </summary>
+    [Authorize(Roles = AppSecurityRoles.Administrator)]
     public class OperationModesController : Controller
     {
         private static readonly string[] RelevantCallbackPaths =

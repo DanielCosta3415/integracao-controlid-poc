@@ -7,17 +7,20 @@ namespace Integracao.ControlID.PoC.Services.Callbacks
     public class CallbackIngressService
     {
         private readonly CallbackSecurityEvaluator _securityEvaluator;
+        private readonly CallbackSignatureValidator _signatureValidator;
         private readonly CallbackRequestBodyReader _bodyReader;
         private readonly MonitorEventRepository _monitorEventRepository;
         private readonly ILogger<CallbackIngressService> _logger;
 
         public CallbackIngressService(
             CallbackSecurityEvaluator securityEvaluator,
+            CallbackSignatureValidator signatureValidator,
             CallbackRequestBodyReader bodyReader,
             MonitorEventRepository monitorEventRepository,
             ILogger<CallbackIngressService> logger)
         {
             _securityEvaluator = securityEvaluator;
+            _signatureValidator = signatureValidator;
             _bodyReader = bodyReader;
             _monitorEventRepository = monitorEventRepository;
             _logger = logger;
@@ -57,6 +60,18 @@ namespace Integracao.ControlID.PoC.Services.Callbacks
                     bodyResult.Message);
 
                 return CallbackIngressResult.Rejected(bodyResult.StatusCode, bodyResult.Message);
+            }
+
+            var signatureResult = _signatureValidator.Validate(httpContext.Request, bodyResult.Body);
+            if (!signatureResult.IsAllowed)
+            {
+                _logger.LogWarning(
+                    "Rejected callback signature for {Path}. Status {StatusCode}. Reason: {Reason}",
+                    httpContext.Request.Path,
+                    signatureResult.StatusCode,
+                    signatureResult.Message);
+
+                return CallbackIngressResult.Rejected(signatureResult.StatusCode, signatureResult.Message);
             }
 
             var path = httpContext.Request.Path.Value ?? string.Empty;

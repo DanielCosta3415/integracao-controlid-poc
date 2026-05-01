@@ -7,6 +7,8 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using Integracao.ControlID.PoC.Models.ControlIDApi;
+using Integracao.ControlID.PoC.Options;
+using Microsoft.Extensions.Options;
 
 namespace Integracao.ControlID.PoC.Services.Security
 {
@@ -17,6 +19,17 @@ namespace Integracao.ControlID.PoC.Services.Security
         private const int MaxQueryLength = 4096;
         private const int MaxFormValueLength = 4096;
         private const int MaxBinaryPayloadBytes = 25 * 1024 * 1024;
+        private readonly ControlIdEgressOptions _egressOptions;
+
+        public ControlIdInputSanitizer()
+            : this(Microsoft.Extensions.Options.Options.Create(new ControlIdEgressOptions()))
+        {
+        }
+
+        public ControlIdInputSanitizer(IOptions<ControlIdEgressOptions> egressOptions)
+        {
+            _egressOptions = egressOptions.Value;
+        }
 
         public bool TryNormalizeBaseAddress(string? hostOrUrl, string? scheme, int? port, out string baseAddress, out string errorMessage)
         {
@@ -57,6 +70,12 @@ namespace Integracao.ControlID.PoC.Services.Security
             if (!string.IsNullOrWhiteSpace(parsedUri.UserInfo) || !string.IsNullOrWhiteSpace(parsedUri.Fragment))
             {
                 errorMessage = "A URL do equipamento não pode conter credenciais embutidas ou fragmentos.";
+                return false;
+            }
+
+            if (!IsAllowedDeviceHost(parsedUri.Host))
+            {
+                errorMessage = "O host informado não está na allowlist de equipamentos Control iD.";
                 return false;
             }
 
@@ -318,6 +337,38 @@ namespace Integracao.ControlID.PoC.Services.Security
         {
             return string.Equals(scheme, Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase) ||
                    string.Equals(scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase);
+        }
+
+        private bool IsAllowedDeviceHost(string host)
+        {
+            var allowedHosts = _egressOptions.AllowedDeviceHosts
+                .Where(static value => !string.IsNullOrWhiteSpace(value))
+                .Select(static value => value.Trim())
+                .ToList();
+
+            if (!_egressOptions.RequireAllowedDeviceHosts && allowedHosts.Count == 0)
+                return true;
+
+            if (string.IsNullOrWhiteSpace(host) || allowedHosts.Count == 0)
+                return false;
+
+            foreach (var allowedHost in allowedHosts)
+            {
+                if (allowedHost == "*")
+                    continue;
+
+                if (string.Equals(host, allowedHost, StringComparison.OrdinalIgnoreCase))
+                    return true;
+
+                if (allowedHost.StartsWith("*.", StringComparison.Ordinal) &&
+                    host.EndsWith(allowedHost[1..], StringComparison.OrdinalIgnoreCase) &&
+                    host.Length > allowedHost.Length - 1)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private static string ConvertElementToString(JsonElement element)

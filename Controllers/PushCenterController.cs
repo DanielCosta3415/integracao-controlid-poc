@@ -4,7 +4,9 @@ using Integracao.ControlID.PoC.Models.Database;
 using Integracao.ControlID.PoC.Services.Callbacks;
 using Integracao.ControlID.PoC.Services.Database;
 using Integracao.ControlID.PoC.Services.Push;
+using Integracao.ControlID.PoC.Services.Security;
 using Integracao.ControlID.PoC.ViewModels.Push;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Logging;
@@ -20,6 +22,7 @@ namespace Integracao.ControlID.PoC.Controllers
         private const int EventListLimit = LocalDataQueryLimits.DefaultListLimit;
         private readonly PushCommandWorkflowService _pushWorkflowService;
         private readonly CallbackSecurityEvaluator _securityEvaluator;
+        private readonly CallbackSignatureValidator _signatureValidator;
         private readonly CallbackRequestBodyReader _bodyReader;
         private readonly PushIdempotencyKeyResolver _idempotencyKeyResolver;
         private readonly ILogger<PushCenterController> _logger;
@@ -27,12 +30,14 @@ namespace Integracao.ControlID.PoC.Controllers
         public PushCenterController(
             PushCommandWorkflowService pushWorkflowService,
             CallbackSecurityEvaluator securityEvaluator,
+            CallbackSignatureValidator signatureValidator,
             CallbackRequestBodyReader bodyReader,
             PushIdempotencyKeyResolver idempotencyKeyResolver,
             ILogger<PushCenterController> logger)
         {
             _pushWorkflowService = pushWorkflowService;
             _securityEvaluator = securityEvaluator;
+            _signatureValidator = signatureValidator;
             _bodyReader = bodyReader;
             _idempotencyKeyResolver = idempotencyKeyResolver;
             _logger = logger;
@@ -59,6 +64,7 @@ namespace Integracao.ControlID.PoC.Controllers
         /// </summary>
         /// <param name="id">Identificador local do comando Push.</param>
         /// <returns>View de detalhes ou NotFound quando o item não existe.</returns>
+        [Authorize(Roles = AppSecurityRoles.Administrator)]
         public async Task<IActionResult> Details(Guid? id)
         {
             if (id == null)
@@ -84,6 +90,7 @@ namespace Integracao.ControlID.PoC.Controllers
         /// <returns>Redirecionamento para a central com mensagem de sucesso ou erro de validação.</returns>
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = AppSecurityRoles.Administrator)]
         public async Task<IActionResult> Queue([Bind(Prefix = nameof(PushEventListViewModel.QueueCommand))] PushQueueCommandViewModel model)
         {
             if (!ModelState.IsValid)
@@ -126,6 +133,7 @@ namespace Integracao.ControlID.PoC.Controllers
         /// <returns>Redirecionamento para a central Push com o resultado da limpeza.</returns>
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = AppSecurityRoles.Administrator)]
         public async Task<IActionResult> Clear(string confirmationPhrase)
         {
             if (!HighImpactOperationGuard.IsConfirmed(confirmationPhrase, HighImpactOperationGuard.ConfirmClearPushQueue))
@@ -153,6 +161,7 @@ namespace Integracao.ControlID.PoC.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = AppSecurityRoles.Administrator)]
         public async Task<IActionResult> Purge(int retentionDays, string confirmationPhrase)
         {
             if (!HighImpactOperationGuard.IsConfirmed(confirmationPhrase, HighImpactOperationGuard.ConfirmPurgePushQueue))
@@ -188,12 +197,17 @@ namespace Integracao.ControlID.PoC.Controllers
         /// <param name="legacyDeviceId">Identificador legado aceito por compatibilidade.</param>
         /// <returns>Payload JSON do comando pendente ou objeto vazio quando não houver trabalho disponível.</returns>
         [HttpGet("/push")]
+        [AllowAnonymous]
         [EnableRateLimiting("CallbackIngress")]
         public async Task<IActionResult> Poll([FromQuery(Name = "device_id")] string? deviceId, [FromQuery(Name = "deviceid")] string? legacyDeviceId)
         {
             var ingressRejection = ValidateIngressRequest();
             if (ingressRejection != null)
                 return ingressRejection;
+
+            var signatureRejection = ValidateSignature(string.Empty);
+            if (signatureRejection != null)
+                return signatureRejection;
 
             var resolvedDeviceId = string.IsNullOrWhiteSpace(deviceId) ? legacyDeviceId : deviceId;
             try
@@ -223,6 +237,7 @@ namespace Integracao.ControlID.PoC.Controllers
         /// <param name="commandId">Identificador do comando entregue previamente, quando informado pelo equipamento.</param>
         /// <returns>OK quando o resultado foi persistido; erro 500 quando a persistência falha.</returns>
         [HttpPost("/result")]
+        [AllowAnonymous]
         [EnableRateLimiting("CallbackIngress")]
         public async Task<IActionResult> Result([FromQuery(Name = "command_id")] Guid? commandId)
         {
@@ -243,6 +258,9 @@ namespace Integracao.ControlID.PoC.Controllers
             }
 
             var body = bodyResult.Body;
+            var signatureRejection = ValidateSignature(body);
+            if (signatureRejection != null)
+                return signatureRejection;
 
             try
             {
@@ -305,6 +323,21 @@ namespace Integracao.ControlID.PoC.Controllers
                 securityResult.Message);
 
             return StatusCode(securityResult.StatusCode, new { error = securityResult.Message });
+        }
+
+        private IActionResult? ValidateSignature(string body)
+        {
+            var signatureResult = _signatureValidator.Validate(Request, body);
+            if (signatureResult.IsAllowed)
+                return null;
+
+            _logger.LogWarning(
+                "Blocked push ingress signature for {Path}. Status {StatusCode}. Reason: {Reason}",
+                Request.Path,
+                signatureResult.StatusCode,
+                signatureResult.Message);
+
+            return StatusCode(signatureResult.StatusCode, new { error = signatureResult.Message });
         }
 
         private async Task<PushEventListViewModel> BuildIndexViewModelAsync(PushQueueCommandViewModel queueCommand, string errorMessage)

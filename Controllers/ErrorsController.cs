@@ -2,11 +2,13 @@ using System.Diagnostics;
 using Integracao.ControlID.PoC.Helpers;
 using Integracao.ControlID.PoC.ViewModels.Errors;
 using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
 namespace Integracao.ControlID.PoC.Controllers
 {
+    [AllowAnonymous]
     public class ErrorsController : Controller
     {
         private readonly ILogger<ErrorsController> _logger;

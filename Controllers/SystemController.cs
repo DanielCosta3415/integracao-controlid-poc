@@ -5,12 +5,15 @@ using System.IO;
 using Integracao.ControlID.PoC.Models.ControlIDApi;
 using Integracao.ControlID.PoC.Services.ControlIDApi;
 using Integracao.ControlID.PoC.Services.Files;
+using Integracao.ControlID.PoC.Services.Security;
 using Integracao.ControlID.PoC.ViewModels.System;
 using Integracao.ControlID.PoC.Helpers;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Integracao.ControlID.PoC.Controllers
 {
+    [Authorize(Roles = AppSecurityRoles.Administrator)]
     public class SystemController : Controller
     {
         private readonly OfficialControlIdApiService _apiService;

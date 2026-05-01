@@ -1,8 +1,11 @@
 using System;
+using System.Text;
 using System.Threading.Tasks;
 using Integracao.ControlID.PoC.Helpers;
 using Integracao.ControlID.PoC.Services.Callbacks;
 using Integracao.ControlID.PoC.Services.Push;
+using Integracao.ControlID.PoC.Services.Security;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Logging;
@@ -13,6 +16,7 @@ namespace Integracao.ControlID.PoC.Controllers
     {
         private readonly ILogger<PushController> _logger;
         private readonly CallbackSecurityEvaluator _securityEvaluator;
+        private readonly CallbackSignatureValidator _signatureValidator;
         private readonly PushCommandWorkflowService _pushWorkflowService;
         private readonly CallbackRequestBodyReader _bodyReader;
         private readonly PushIdempotencyKeyResolver _idempotencyKeyResolver;
@@ -20,12 +24,14 @@ namespace Integracao.ControlID.PoC.Controllers
         public PushController(
             ILogger<PushController> logger,
             CallbackSecurityEvaluator securityEvaluator,
+            CallbackSignatureValidator signatureValidator,
             PushCommandWorkflowService pushWorkflowService,
             CallbackRequestBodyReader bodyReader,
             PushIdempotencyKeyResolver idempotencyKeyResolver)
         {
             _logger = logger;
             _securityEvaluator = securityEvaluator;
+            _signatureValidator = signatureValidator;
             _pushWorkflowService = pushWorkflowService;
             _bodyReader = bodyReader;
             _idempotencyKeyResolver = idempotencyKeyResolver;
@@ -48,6 +54,7 @@ namespace Integracao.ControlID.PoC.Controllers
         // POST: /Push/Receive
         [HttpPost]
         [Route("Push/Receive")]
+        [AllowAnonymous]
         [EnableRateLimiting("CallbackIngress")]
         public async Task<IActionResult> Receive()
         {
@@ -63,18 +70,28 @@ namespace Integracao.ControlID.PoC.Controllers
                     return StatusCode(bodyResult.StatusCode, bodyResult.Message);
 
                 body = bodyResult.Body;
+                var signatureRejection = ValidateSignature(body);
+                if (signatureRejection != null)
+                    return signatureRejection;
+
                 var command = await _pushWorkflowService.StoreLegacyEventAsync(
                     body,
                     _idempotencyKeyResolver.Resolve(Request));
 
-                _logger.LogInformation("Evento Push legado recebido em {Time}: {Summary}",
-                    command.ReceivedAt, Truncate(body, 500));
+                _logger.LogInformation(
+                    "Evento Push legado recebido em {Time}. Command {CommandId}. BodyBytes {BodyBytes}.",
+                    command.ReceivedAt,
+                    command.CommandId,
+                    Encoding.UTF8.GetByteCount(body));
 
                 return Ok(new { status = "received", eventId = command.CommandId });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Falha ao processar evento Push legado. Body (trunc): {Body}", Truncate(body, 500));
+                _logger.LogError(
+                    ex,
+                    "Falha ao processar evento Push legado. BodyBytes {BodyBytes}.",
+                    string.IsNullOrEmpty(body) ? 0 : Encoding.UTF8.GetByteCount(body));
                 return StatusCode(500, "Erro ao processar evento Push");
             }
         }
@@ -82,6 +99,7 @@ namespace Integracao.ControlID.PoC.Controllers
         // POST: /Push/Clear
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = AppSecurityRoles.Administrator)]
         public async Task<IActionResult> Clear(string confirmationPhrase)
         {
             if (!HighImpactOperationGuard.IsConfirmed(confirmationPhrase, HighImpactOperationGuard.ConfirmClearPushQueue))
@@ -112,13 +130,19 @@ namespace Integracao.ControlID.PoC.Controllers
             return StatusCode(securityResult.StatusCode, new { error = securityResult.Message });
         }
 
-        /// <summary>
-        /// Trunca texto longo para logs.
-        /// </summary>
-        private static string Truncate(string? value, int maxLength)
+        private IActionResult? ValidateSignature(string body)
         {
-            if (string.IsNullOrEmpty(value)) return string.Empty;
-            return value.Length <= maxLength ? value : value.Substring(0, maxLength) + "...";
+            var signatureResult = _signatureValidator.Validate(Request, body);
+            if (signatureResult.IsAllowed)
+                return null;
+
+            _logger.LogWarning(
+                "Blocked legacy push signature for {Path}. Status {StatusCode}. Reason: {Reason}",
+                Request.Path,
+                signatureResult.StatusCode,
+                signatureResult.Message);
+
+            return StatusCode(signatureResult.StatusCode, new { error = signatureResult.Message });
         }
     }
 }

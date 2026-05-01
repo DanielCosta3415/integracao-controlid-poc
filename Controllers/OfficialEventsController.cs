@@ -1,7 +1,9 @@
 using Integracao.ControlID.PoC.Helpers;
 using Integracao.ControlID.PoC.Models.Database;
 using Integracao.ControlID.PoC.Services.Database;
+using Integracao.ControlID.PoC.Services.Security;
 using Integracao.ControlID.PoC.ViewModels.Monitor;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Integracao.ControlID.PoC.Controllers
@@ -27,6 +29,7 @@ namespace Integracao.ControlID.PoC.Controllers
             });
         }
 
+        [Authorize(Roles = AppSecurityRoles.Administrator)]
         public async Task<IActionResult> Details(Guid? id)
         {
             if (id == null)
@@ -38,6 +41,7 @@ namespace Integracao.ControlID.PoC.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = AppSecurityRoles.Administrator)]
         public async Task<IActionResult> Clear(string confirmationPhrase)
         {
             if (!HighImpactOperationGuard.IsConfirmed(confirmationPhrase, HighImpactOperationGuard.ConfirmClearMonitorEvents))
@@ -54,6 +58,7 @@ namespace Integracao.ControlID.PoC.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = AppSecurityRoles.Administrator)]
         public async Task<IActionResult> Purge(int retentionDays, string confirmationPhrase)
         {
             if (!HighImpactOperationGuard.IsConfirmed(confirmationPhrase, HighImpactOperationGuard.ConfirmPurgeMonitorEvents))

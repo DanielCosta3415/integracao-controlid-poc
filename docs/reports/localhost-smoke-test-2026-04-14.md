@@ -1,22 +1,28 @@
 ﻿# Smoke test localhost da PoC Control iD
 
-Data: 2026-04-30 11:11:00 -03:00
+Data: 2026-04-30 20:48:18 -03:00
 
 ## Resumo
 
-- Total: 390
-- PASS: 383
+- Total: 443
+- PASS: 388
 - FAIL: 0
-- SKIP: 7
+- SKIP: 55
 
 ## Bootstrap
 
+- [PASS] Auth/Register bootstrap: POST 200
+- [PASS] Auth/LocalLogin: POST 200
+- [PASS] Auth/LocalLogin verification: Sessao local autenticada.
 - [PASS] /: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local nao e executado durante o smoke para preservar a autenticacao.
 - [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
 - [PASS] /Auth/Login: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local nao e executado durante o smoke para preservar a autenticacao.
 - [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
 - [PASS] http://localhost:5000/Auth/Login: POST 200
 - [PASS] /Session/Status: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local nao e executado durante o smoke para preservar a autenticacao.
 - [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
 - [PASS] http://localhost:5000/Session/Validate: POST 200
 - [SKIP] http://localhost:5000/Session/Clear: Sessao nao e limpa durante o smoke para preservar o contexto dos demais fluxos.
@@ -58,125 +64,164 @@ Data: 2026-04-30 11:11:00 -03:00
 ## Forms
 
 - [PASS] /Users/Create: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local nao e executado durante o smoke para preservar a autenticacao.
 - [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
 - [PASS] http://localhost:5000/Users/Create: POST 200
 - [PASS] /Users/Edit/1: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local nao e executado durante o smoke para preservar a autenticacao.
 - [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
 - [PASS] http://localhost:5000/Users/Edit/1: POST 200
 - [PASS] /Users/Delete/1: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local nao e executado durante o smoke para preservar a autenticacao.
 - [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
 - [PASS] http://localhost:5000/Users/Delete/1: POST 200
 - [PASS] /Groups/Create: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local nao e executado durante o smoke para preservar a autenticacao.
 - [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
 - [PASS] http://localhost:5000/Groups/Create: POST 200
 - [PASS] /Groups/Edit/1: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local nao e executado durante o smoke para preservar a autenticacao.
 - [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
 - [PASS] http://localhost:5000/Groups/Edit/1: POST 200
 - [PASS] /Groups/Delete/1: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local nao e executado durante o smoke para preservar a autenticacao.
 - [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
 - [PASS] http://localhost:5000/Groups/Delete/1: POST 200
 - [PASS] /Cards/Create: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local nao e executado durante o smoke para preservar a autenticacao.
 - [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
 - [PASS] http://localhost:5000/Cards/Create: POST 200
 - [PASS] /Cards/Edit/1: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local nao e executado durante o smoke para preservar a autenticacao.
 - [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
 - [PASS] http://localhost:5000/Cards/Edit/1: POST 200
 - [PASS] /Cards/Delete/1: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local nao e executado durante o smoke para preservar a autenticacao.
 - [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
 - [PASS] http://localhost:5000/Cards/Delete/1: POST 200
 - [PASS] /BiometricTemplates/Create: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local nao e executado durante o smoke para preservar a autenticacao.
 - [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
 - [PASS] http://localhost:5000/BiometricTemplates/Create: POST 200
 - [PASS] /BiometricTemplates/Edit/1: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local nao e executado durante o smoke para preservar a autenticacao.
 - [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
 - [PASS] http://localhost:5000/BiometricTemplates/Edit/1: POST 200
 - [PASS] /BiometricTemplates/Delete/1: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local nao e executado durante o smoke para preservar a autenticacao.
 - [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
 - [PASS] http://localhost:5000/BiometricTemplates/Delete/1: POST 200
 - [PASS] /QRCodes/Create: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local nao e executado durante o smoke para preservar a autenticacao.
 - [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
 - [PASS] http://localhost:5000/QRCodes/Create: POST 200
 - [PASS] /QRCodes/Edit/1: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local nao e executado durante o smoke para preservar a autenticacao.
 - [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
 - [PASS] http://localhost:5000/QRCodes/Edit/1: POST 200
 - [PASS] /QRCodes/Delete/1: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local nao e executado durante o smoke para preservar a autenticacao.
 - [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
 - [PASS] http://localhost:5000/QRCodes/Delete/1: POST 200
 - [PASS] /Devices/Create: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local nao e executado durante o smoke para preservar a autenticacao.
 - [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
 - [PASS] http://localhost:5000/Devices/Create: POST 200
 - [PASS] /Devices/Edit/1: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local nao e executado durante o smoke para preservar a autenticacao.
 - [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
 - [PASS] http://localhost:5000/Devices/Edit/1: POST 200
 - [PASS] /Devices/Delete/1: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local nao e executado durante o smoke para preservar a autenticacao.
 - [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
 - [PASS] http://localhost:5000/Devices/Delete/1: POST 200
 - [PASS] /AccessRules/Create: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local nao e executado durante o smoke para preservar a autenticacao.
 - [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
 - [PASS] http://localhost:5000/AccessRules/Create: POST 200
 - [PASS] /AccessRules/Edit/1: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local nao e executado durante o smoke para preservar a autenticacao.
 - [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
 - [PASS] http://localhost:5000/AccessRules/Edit/1: POST 200
 - [PASS] /AccessRules/Delete/1: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local nao e executado durante o smoke para preservar a autenticacao.
 - [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
 - [PASS] http://localhost:5000/AccessRules/Delete/1: POST 200
 - [PASS] /Config/Create: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local nao e executado durante o smoke para preservar a autenticacao.
 - [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
 - [PASS] http://localhost:5000/Config/Create: POST 200
 - [PASS] /Config/Edit/1: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local nao e executado durante o smoke para preservar a autenticacao.
 - [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
 - [PASS] http://localhost:5000/Config/Edit/1: POST 200
 - [PASS] /Config/Delete/1: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local nao e executado durante o smoke para preservar a autenticacao.
 - [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
 - [PASS] http://localhost:5000/Config/Delete/1: POST 200
 - [PASS] /Config/Diagnostics: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local nao e executado durante o smoke para preservar a autenticacao.
 - [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
 - [PASS] http://localhost:5000/Config/ConnectionTest: POST 200
 - [PASS] http://localhost:5000/Config/PingTest: POST 200
 - [PASS] http://localhost:5000/Config/NslookupTest: POST 200
 - [PASS] /Config/Official: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local nao e executado durante o smoke para preservar a autenticacao.
 - [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
 - [PASS] http://localhost:5000/Config/GetOfficial: POST 200
 - [PASS] http://localhost:5000/Config/SetOfficial: POST 200
 - [PASS] /Hardware/Gpio: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local nao e executado durante o smoke para preservar a autenticacao.
 - [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
 - [PASS] /Hardware/DoorState: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local nao e executado durante o smoke para preservar a autenticacao.
 - [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
 - [PASS] /Hardware/RelayAction: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local nao e executado durante o smoke para preservar a autenticacao.
 - [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
 - [PASS] http://localhost:5000/Hardware/RelayAction: POST 200
 - [PASS] /System/HashPassword: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local nao e executado durante o smoke para preservar a autenticacao.
 - [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
 - [PASS] http://localhost:5000/System/HashPassword: POST 200
 - [PASS] /System/LoginCredentials: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local nao e executado durante o smoke para preservar a autenticacao.
 - [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
 - [PASS] http://localhost:5000/System/LoginCredentials: POST 200
 - [PASS] /System/Network: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local nao e executado durante o smoke para preservar a autenticacao.
 - [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
 - [PASS] http://localhost:5000/System/Network: POST 200
 - [SKIP] /System/Network: Formulario com upload binario foi coberto pela trilha do catalogo oficial.
 - [PASS] /System/Vpn: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local nao e executado durante o smoke para preservar a autenticacao.
 - [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
 - [PASS] http://localhost:5000/System/Vpn: POST 200
 - [SKIP] /System/Vpn: Formulario com upload binario foi coberto pela trilha do catalogo oficial.
 - [PASS] /AdvancedOfficial/ExportObjects: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local nao e executado durante o smoke para preservar a autenticacao.
 - [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
 - [PASS] http://localhost:5000/AdvancedOfficial/ExportObjects: POST 200
 - [PASS] /AdvancedOfficial/NetworkInterlock: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local nao e executado durante o smoke para preservar a autenticacao.
 - [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
 - [PASS] http://localhost:5000/AdvancedOfficial/NetworkInterlock: POST 200
 - [PASS] /AdvancedOfficial/CameraCapture: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local nao e executado durante o smoke para preservar a autenticacao.
 - [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
 - [PASS] http://localhost:5000/AdvancedOfficial/CameraCapture: POST 200
 - [PASS] /AdvancedOfficial/FacialEnroll: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local nao e executado durante o smoke para preservar a autenticacao.
 - [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
 - [PASS] http://localhost:5000/AdvancedOfficial/GetImageList: POST 200
 - [SKIP] /AdvancedOfficial/FacialEnroll: Formulario com upload binario foi coberto pela trilha do catalogo oficial.
 - [SKIP] /AdvancedOfficial/FacialEnroll: Formulario com upload binario foi coberto pela trilha do catalogo oficial.
 - [PASS] /AdvancedOfficial/RemoteLedControl: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local nao e executado durante o smoke para preservar a autenticacao.
 - [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
 - [PASS] http://localhost:5000/AdvancedOfficial/RemoteLedControl: POST 200
 - [PASS] /DocumentedFeatures: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local nao e executado durante o smoke para preservar a autenticacao.
 - [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
 - [PASS] http://localhost:5000/DocumentedFeatures/Attendance: POST 200
 - [PASS] http://localhost:5000/DocumentedFeatures/OnlineMode: POST 200
@@ -188,6 +233,7 @@ Data: 2026-04-30 11:11:00 -03:00
 - [PASS] http://localhost:5000/DocumentedFeatures/ExportAfd: POST 200
 - [PASS] http://localhost:5000/DocumentedFeatures/ExportAuditLogs: POST 200
 - [PASS] /OfficialObjects: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local nao e executado durante o smoke para preservar a autenticacao.
 - [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
 - [PASS] http://localhost:5000/OfficialObjects/SelectObject: POST 200
 - [PASS] http://localhost:5000/OfficialObjects/Load: POST 200
@@ -196,6 +242,7 @@ Data: 2026-04-30 11:11:00 -03:00
 - [PASS] http://localhost:5000/OfficialObjects/Modify: POST 200
 - [PASS] http://localhost:5000/OfficialObjects/Destroy: POST 200
 - [PASS] /ProductSpecific: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local nao e executado durante o smoke para preservar a autenticacao.
 - [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
 - [PASS] http://localhost:5000/ProductSpecific/UpgradeIdFace: POST 200
 - [PASS] http://localhost:5000/ProductSpecific/UpgradeEnterprise: POST 200
@@ -217,18 +264,24 @@ Data: 2026-04-30 11:11:00 -03:00
 - [PASS] http://localhost:5000/ProductSpecific/Signals: POST 200
 - [PASS] http://localhost:5000/ProductSpecific/RefreshLeds: POST 200
 - [PASS] /RemoteActions/Authorization: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local nao e executado durante o smoke para preservar a autenticacao.
 - [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
 - [PASS] http://localhost:5000/RemoteActions/Authorization: POST 200
 - [PASS] /RemoteActions/Enroll: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local nao e executado durante o smoke para preservar a autenticacao.
 - [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
 - [PASS] http://localhost:5000/RemoteActions/Enroll: POST 200
 - [PASS] /PushCenter: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local nao e executado durante o smoke para preservar a autenticacao.
 - [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
 - [PASS] http://localhost:5000/PushCenter/Queue: POST 200
 - [PASS] http://localhost:5000/PushCenter/Clear: POST 200
+- [PASS] http://localhost:5000/PushCenter/Purge: POST 200
 - [PASS] /OfficialEvents: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local nao e executado durante o smoke para preservar a autenticacao.
 - [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
 - [PASS] http://localhost:5000/OfficialEvents/Clear: POST 200
+- [PASS] http://localhost:5000/OfficialEvents/Purge: POST 200
 
 ## OfficialApi
 

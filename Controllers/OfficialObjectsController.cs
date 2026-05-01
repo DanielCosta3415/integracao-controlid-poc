@@ -1,8 +1,10 @@
 using System.Text.Json;
 using Integracao.ControlID.PoC.Models.ControlIDApi;
 using Integracao.ControlID.PoC.Services.ControlIDApi;
+using Integracao.ControlID.PoC.Services.Security;
 using Integracao.ControlID.PoC.ViewModels.OfficialObjects;
 using Integracao.ControlID.PoC.Helpers;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Integracao.ControlID.PoC.Controllers
@@ -93,6 +95,7 @@ namespace Integracao.ControlID.PoC.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = AppSecurityRoles.Administrator)]
         public async Task<IActionResult> Create(OfficialObjectsViewModel model)
         {
             model.ActiveSection = "create";
@@ -128,6 +131,7 @@ namespace Integracao.ControlID.PoC.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = AppSecurityRoles.Administrator)]
         public async Task<IActionResult> CreateOrModify(OfficialObjectsViewModel model)
         {
             model.ActiveSection = "upsert";
@@ -163,6 +167,7 @@ namespace Integracao.ControlID.PoC.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = AppSecurityRoles.Administrator)]
         public async Task<IActionResult> Modify(OfficialObjectsViewModel model)
         {
             model.ActiveSection = "modify";
@@ -200,6 +205,7 @@ namespace Integracao.ControlID.PoC.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = AppSecurityRoles.Administrator)]
         public async Task<IActionResult> Destroy(OfficialObjectsViewModel model)
         {
             model.ActiveSection = "destroy";

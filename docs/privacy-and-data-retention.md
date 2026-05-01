@@ -17,7 +17,8 @@ Esta PoC manipula dados operacionais da Access API da Control iD. Trate os dados
 - Validar `AllowedHosts`, shared key e IPs permitidos antes de expor a PoC fora de localhost.
 - Limpar `MonitorEvents` e `PushCommands` apenas por acao manual confirmada na UI.
 - Preferir expurgo por retencao (`EXPURGAR EVENTOS` ou `EXPURGAR PUSH`) a limpeza total quando o objetivo for reduzir historico.
-- Tratar backups SQLite em `artifacts/backups/` como dados sensiveis; nao versionar nem compartilhar esses arquivos.
+- Tratar backups SQLite em `artifacts/backups/` como dados sensiveis; backups novos sao protegidos por DPAPI por padrao, mas ainda nao devem ser versionados nem compartilhados.
+- Rodar `tools/harden-local-state.ps1` no host local para restringir permissoes de SQLite, logs, backups e copias temporarias de restore.
 
 ## Retencao recomendada
 

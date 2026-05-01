@@ -97,11 +97,14 @@ powershell -ExecutionPolicy Bypass -File .\tools\backup-sqlite.ps1
 
 O script copia o arquivo `.db` e, se existirem, os arquivos `-wal` e `-shm` para `artifacts/backups/sqlite-<timestamp>/`, junto com um manifesto. Ele nao altera o banco de origem.
 
+Backups novos sao protegidos por DPAPI por padrao e recebem extensao `.protected`. Use `-Unprotected` apenas para interoperabilidade local temporaria e registre a justificativa. O manifesto informa `Protected`, `Protection` e `ProtectionScope`.
+
 Recomendacoes:
 
 - Pare a aplicacao antes do backup quando possivel, para reduzir risco de copia parcial.
 - Se o banco estiver em WAL mode, preserve sempre `.db`, `-wal` e `-shm` juntos.
 - Proteja backups como dados sensiveis; eles podem conter usuarios, sessoes, fotos, biometria, logs e payloads brutos.
+- Restrinja permissoes locais de SQLite, logs e backups com `powershell -ExecutionPolicy Bypass -File .\tools\harden-local-state.ps1`.
 - Nao versionar backups.
 
 ## Restore
@@ -110,9 +113,10 @@ Restore sobrescreve estado local e exige confirmacao humana. Procedimento recome
 
 1. Parar a aplicacao e qualquer processo que esteja usando o SQLite.
 2. Fazer backup do estado atual com `tools/backup-sqlite.ps1`.
-3. Copiar do backup escolhido o `.db` e, se existirem, `-wal` e `-shm` para o caminho configurado em `ConnectionStrings:DefaultConnection`.
-4. Rodar `dotnet build .\Integracao.ControlID.PoC.sln --no-restore -v:minimal`.
-5. Subir a aplicacao em ambiente local controlado e validar os fluxos afetados.
+3. Validar o backup escolhido com `tools/restore-smoke-sqlite.ps1`.
+4. Com confirmacao humana, copiar a copia restaurada validada para o caminho configurado em `ConnectionStrings:DefaultConnection`, preservando tambem `-wal` e `-shm` quando existirem.
+5. Rodar `dotnet build .\Integracao.ControlID.PoC.sln --no-restore -v:minimal`.
+6. Subir a aplicacao em ambiente local controlado e validar os fluxos afetados.
 
 RTO/RPO nao estao garantidos para producao. Esta PoC possui apenas procedimento local documentado; restore periodico ainda nao foi automatizado nem homologado.
 
@@ -124,14 +128,14 @@ Para validar que um backup pode ser aberto e receber migrations sem sobrescrever
 powershell -ExecutionPolicy Bypass -File .\tools\restore-smoke-sqlite.ps1
 ```
 
-Sem parametro, o script usa o backup mais recente em `artifacts/backups/`. Ele copia o backup para `artifacts/restore-smoke/`, executa `dotnet ef database update --no-build --connection ...` sobre essa copia e grava um manifesto do teste.
+Sem parametro, o script usa o backup mais recente em `artifacts/backups/`. Ele copia ou descriptografa o backup para `artifacts/restore-smoke/`, executa `dotnet ef database update --no-build --connection ...` sobre essa copia e grava um manifesto do teste.
 
-## Riscos residuais
+## Riscos controlados e acompanhamento
 
-| Severidade | Risco | Mitigacao atual | Proxima acao |
+| Severidade | Item | Controle implementado | Acompanhamento |
 | --- | --- | --- | --- |
-| Alta | Dados sensiveis podem existir em SQLite, logs e backups locais | `.gitignore`, docs de privacidade, backup fora do Git, expurgo confirmado de monitor/push | Revisar mascaramento em logs a cada novo fluxo. |
-| Alta | Restore nao testado periodicamente | Procedimento documentado e smoke de restore em copia temporaria | Executar smoke regularmente antes de mudancas de schema. |
+| Media | Dados sensiveis podem existir em SQLite, logs e backups locais | `.gitignore`, backups DPAPI por padrao, hardening de permissoes locais, docs de privacidade e expurgo confirmado de monitor/push | Executar `tools/harden-local-state.ps1` no host alvo e revisar mascaramento em logs a cada novo fluxo. |
+| Baixa | Restore precisa ser exercitado de forma recorrente | Procedimento documentado e smoke de restore em copia temporaria, incluindo backups `.protected` | Executar smoke regularmente antes de mudancas de schema e em preparacoes de release. |
 | Media | Sem foreign keys entre tabelas locais | Preserva compatibilidade com IDs remotos | Definir contrato relacional antes de constraints. |
 | Media | Consultas de listagem ainda podem carregar muitos registros | Indices adicionados, limite padrao em repositorios e aviso de listagem truncada em monitor/push | Avaliar paginacao por tela quando houver volume real. |
 | Media | `Ip` e `IpAddress` duplicam finalidade em `Devices` | Campo preservado para compatibilidade, consultas novas usam `Ip`, ambos ficam indexados | Planejar consolidacao versionada sem drop destrutivo. |

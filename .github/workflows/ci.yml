@@ -28,17 +28,26 @@ jobs:
       - name: Restore device stub
         run: dotnet restore .\tools\ControlIdDeviceStub\ControlIdDeviceStub.csproj --locked-mode
 
+      - name: Restore signing proxy
+        run: dotnet restore .\tools\ControlIdCallbackSigningProxy\ControlIdCallbackSigningProxy.csproj --locked-mode
+
       - name: Build
         run: dotnet build .\Integracao.ControlID.PoC.sln --no-restore -v:minimal
 
       - name: Build device stub
         run: dotnet build .\tools\ControlIdDeviceStub\ControlIdDeviceStub.csproj --no-restore -v:minimal
 
+      - name: Build signing proxy
+        run: dotnet build .\tools\ControlIdCallbackSigningProxy\ControlIdCallbackSigningProxy.csproj --no-restore -v:minimal
+
       - name: Test
         run: dotnet test .\Integracao.ControlID.PoC.sln --no-build -v:minimal
 
       - name: Format check
         run: dotnet format .\Integracao.ControlID.PoC.sln --verify-no-changes --no-restore -v:minimal
+
+      - name: Format signing proxy check
+        run: dotnet format .\tools\ControlIdCallbackSigningProxy\ControlIdCallbackSigningProxy.csproj --verify-no-changes --no-restore -v:minimal
 
       - name: Secret scan
         shell: pwsh
@@ -47,14 +56,22 @@ jobs:
       - name: Vulnerability audit
         shell: pwsh
         run: |
-          $audit = dotnet list .\Integracao.ControlID.PoC.sln package --vulnerable --include-transitive 2>&1
-          $audit | Write-Output
-          if ($LASTEXITCODE -ne 0) {
-            exit $LASTEXITCODE
-          }
+          $targets = @(
+            ".\Integracao.ControlID.PoC.sln",
+            ".\tools\ControlIdDeviceStub\ControlIdDeviceStub.csproj",
+            ".\tools\ControlIdCallbackSigningProxy\ControlIdCallbackSigningProxy.csproj"
+          )
 
-          $auditText = $audit -join "`n"
-          if ($auditText -match '(?m)^\s*>\s+\S+\s+\S+\s+\S+') {
-            Write-Error "Vulnerable NuGet packages were found."
-            exit 1
+          foreach ($target in $targets) {
+            $audit = dotnet list $target package --vulnerable --include-transitive 2>&1
+            $audit | Write-Output
+            if ($LASTEXITCODE -ne 0) {
+              exit $LASTEXITCODE
+            }
+
+            $auditText = $audit -join "`n"
+            if ($auditText -match '(?m)^\s*>\s+\S+\s+\S+\s+\S+') {
+              Write-Error "Vulnerable NuGet packages were found in $target."
+              exit 1
+            }
           }

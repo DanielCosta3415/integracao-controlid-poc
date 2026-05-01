@@ -53,6 +53,11 @@ namespace Integracao.ControlID.PoC.Models.Database
         public string Status { get; set; } = string.Empty;
 
         /// <summary>
+        /// Papel local da PoC usado para autorizar operações administrativas.
+        /// </summary>
+        public string Role { get; set; } = "Operator";
+
+        /// <summary>
         /// Data/hora de criação do usuário no sistema.
         /// </summary>
         public DateTime CreatedAt { get; set; }

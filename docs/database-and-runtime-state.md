@@ -65,7 +65,15 @@ powershell -ExecutionPolicy Bypass -File .\tools\restore-smoke-sqlite.ps1
 
 O script copia `integracao_controlid.db` e, quando existirem, `integracao_controlid.db-wal` e `integracao_controlid.db-shm` para `artifacts/backups/`. Backups podem conter dados pessoais, sessoes, logs e payloads brutos; nao versione nem compartilhe esses arquivos.
 
-O smoke de restore aplica migrations apenas sobre uma copia temporaria do backup mais recente. O mapa completo de tabelas, indices, riscos de integridade e procedimento de restore esta em `docs/data-model-and-recovery.md`.
+Backups novos sao protegidos por DPAPI por padrao e recebem extensao `.protected`. O smoke de restore descriptografa uma copia temporaria, aplica migrations apenas nessa copia e nao sobrescreve o banco real.
+
+Restrinja permissoes locais de SQLite, logs e backups no host com:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\tools\harden-local-state.ps1
+```
+
+O mapa completo de tabelas, indices, riscos de integridade e procedimento de restore esta em `docs/data-model-and-recovery.md`.
 
 ## Requisitos para ambientes nao Development
 

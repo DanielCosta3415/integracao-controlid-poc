@@ -15,9 +15,10 @@ Trate o projeto como uma PoC operacional com pontos sensiveis de seguranca, dado
 - Framework: ASP.NET Core MVC/Razor.
 - Banco: SQLite via Entity Framework Core.
 - Logs: Serilog em console e arquivo.
-- OpenAPI/Swagger: Swashbuckle habilitado em Development ou via `OpenApi:Enabled=true`.
+- OpenAPI/Swagger: Swashbuckle habilitado apenas em `Development` quando `OpenApi:Enabled=true`.
 - Testes: xUnit.
 - Smoke/E2E local: PowerShell + stub em `tools/ControlIdDeviceStub`.
+- Proxy assinador: `tools/ControlIdCallbackSigningProxy` para equipamentos sem HMAC nativo.
 - CI: GitHub Actions em `.github/workflows/ci.yml`.
 - Package manager: NuGet com `packages.lock.json`.
 
@@ -46,6 +47,7 @@ Execute comandos a partir da raiz do repositorio, em PowerShell.
 ```powershell
 dotnet restore .\Integracao.ControlID.PoC.sln --locked-mode
 dotnet restore .\tools\ControlIdDeviceStub\ControlIdDeviceStub.csproj --locked-mode
+dotnet restore .\tools\ControlIdCallbackSigningProxy\ControlIdCallbackSigningProxy.csproj --locked-mode
 ```
 
 Para desenvolvimento local, configure segredos fora do repositorio, usando placeholders:
@@ -55,6 +57,17 @@ dotnet user-secrets set "ControlIDApi:DefaultDeviceUrl" "http://<equipamento-ou-
 dotnet user-secrets set "ControlIDApi:DefaultUsername" "<usuario>"
 dotnet user-secrets set "ControlIDApi:DefaultPassword" "<senha>"
 dotnet user-secrets set "CallbackSecurity:SharedKey" "<segredo-local>"
+dotnet user-secrets set "CallbackSecurity:RequireSharedKey" "true"
+dotnet user-secrets set "CallbackSecurity:RequireSignedRequests" "true"
+dotnet user-secrets set "ControlIDApi:RequireAllowedDeviceHosts" "true"
+dotnet user-secrets set "ControlIDApi:AllowedDeviceHosts:0" "<equipamento-ou-host>"
+```
+
+Para equipamentos sem assinatura HMAC nativa, configure o proxy assinador com segredos fora do repositorio:
+
+```powershell
+dotnet user-secrets set --project .\tools\ControlIdCallbackSigningProxy\ControlIdCallbackSigningProxy.csproj "Proxy:SharedKey" "<mesmo-segredo-da-poc>"
+dotnet run --project .\tools\ControlIdCallbackSigningProxy\ControlIdCallbackSigningProxy.csproj --urls http://localhost:6700
 ```
 
 ### Execucao local
@@ -62,6 +75,7 @@ dotnet user-secrets set "CallbackSecurity:SharedKey" "<segredo-local>"
 ```powershell
 dotnet run --project .\Integracao.ControlID.PoC.csproj
 dotnet run --project .\tools\ControlIdDeviceStub\ControlIdDeviceStub.csproj --no-launch-profile
+dotnet run --project .\tools\ControlIdCallbackSigningProxy\ControlIdCallbackSigningProxy.csproj --urls http://localhost:6700
 ```
 
 O smoke test tambem sobe app e stub localmente:
@@ -75,6 +89,7 @@ Backup local nao destrutivo do SQLite:
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\tools\backup-sqlite.ps1
 powershell -ExecutionPolicy Bypass -File .\tools\restore-smoke-sqlite.ps1
+powershell -ExecutionPolicy Bypass -File .\tools\harden-local-state.ps1
 ```
 
 ### Build, lint, format, typecheck, testes e auditoria
@@ -82,9 +97,12 @@ powershell -ExecutionPolicy Bypass -File .\tools\restore-smoke-sqlite.ps1
 ```powershell
 dotnet build .\Integracao.ControlID.PoC.sln --no-restore -v:minimal
 dotnet build .\tools\ControlIdDeviceStub\ControlIdDeviceStub.csproj --no-restore -v:minimal
+dotnet build .\tools\ControlIdCallbackSigningProxy\ControlIdCallbackSigningProxy.csproj --no-restore -v:minimal
 dotnet format .\Integracao.ControlID.PoC.sln --verify-no-changes --no-restore -v:minimal
+dotnet format .\tools\ControlIdCallbackSigningProxy\ControlIdCallbackSigningProxy.csproj --verify-no-changes --no-restore -v:minimal
 dotnet test .\Integracao.ControlID.PoC.sln --no-build -v:minimal
 dotnet list .\Integracao.ControlID.PoC.sln package --vulnerable --include-transitive
+dotnet list .\tools\ControlIdCallbackSigningProxy\ControlIdCallbackSigningProxy.csproj package --vulnerable --include-transitive
 powershell -ExecutionPolicy Bypass -File .\tools\scan-secrets.ps1
 git diff --check
 ```
@@ -132,6 +150,7 @@ Notas:
 - Trate a Access API Control iD como contrato externo. Nao renomeie endpoints, campos ou rotas `.fcgi` sem evidencia.
 - Preserve compatibilidade de callbacks oficiais e endpoints push (`/push`, `/result`, `Push/Receive`).
 - Normalize entradas de URL, query, body e arquivo usando utilitarios existentes quando disponiveis.
+- Quando usar `ControlIdCallbackSigningProxy`, mantenha allowlist de IP, limite de body e remocao/reassinatura de headers sensiveis antes do encaminhamento.
 
 ### Banco de dados
 
@@ -143,8 +162,8 @@ Notas:
 
 ### Seguranca
 
-- Fora de `Development`, `AllowedHosts` nao pode ser `*`, `CallbackSecurity:RequireSharedKey` deve ser `true` e `SharedKey` deve existir.
-- Preserve validacao de callbacks e push via `CallbackSecurityEvaluator`.
+- Fora de `Development`, `AllowedHosts` nao pode ser `*`, `OpenApi:Enabled` deve ser `false`, `CallbackSecurity:RequireSharedKey` e `CallbackSecurity:RequireSignedRequests` devem ser `true`, `SharedKey` deve existir e `ControlIDApi:RequireAllowedDeviceHosts` deve listar hosts permitidos.
+- Preserve validacao de callbacks, push e `user_get_image.fcgi` via `CallbackSecurityEvaluator` e `CallbackSignatureValidator`.
 - Nao enfraqueca headers de seguranca, validacao antiforgery ou sanitizacao sem justificativa forte.
 
 ### LGPD e privacidade
@@ -201,6 +220,7 @@ Notas:
 
 - A CI deve permanecer capaz de rodar restore locked, build, teste, format check e auditoria.
 - Release local minima exige build limpo, testes passando, format check limpo, auditoria sem vulnerabilidades conhecidas e riscos residuais documentados.
+- Mudancas em `tools/ControlIdCallbackSigningProxy` exigem restore locked, build e format check do projeto do proxy.
 - Nao publique release sem smoke quando a mudanca tocar callbacks, push, catalogo oficial, autenticacao ou banco.
 
 ## Definition of Done tecnica

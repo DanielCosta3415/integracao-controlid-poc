@@ -85,6 +85,7 @@ public class CallbackIngressServiceTests
 
         return new CallbackIngressService(
             new CallbackSecurityEvaluator(optionsMonitor),
+            new CallbackSignatureValidator(optionsMonitor, NullLogger<CallbackSignatureValidator>.Instance),
             new CallbackRequestBodyReader(optionsMonitor),
             CreateRepository(database),
             NullLogger<CallbackIngressService>.Instance);

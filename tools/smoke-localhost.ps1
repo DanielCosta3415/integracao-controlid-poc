@@ -327,6 +327,11 @@ function Submit-FormsFromPage {
             continue
         }
 
+        if ($targetUrl -like "$AppUrl/Auth/LocalLogout*") {
+            Add-Result $Phase $targetUrl "SKIP" "Logout local nao e executado durante o smoke para preservar a autenticacao."
+            continue
+        }
+
         try {
             $postResponse = Invoke-WebRequest -Uri $targetUrl -WebSession $webSession -Method Post -Body $payload -UseBasicParsing
             Add-Result $Phase $targetUrl "PASS" "POST $($postResponse.StatusCode)"
@@ -334,6 +339,71 @@ function Submit-FormsFromPage {
         catch {
             Add-Result $Phase $targetUrl "FAIL" $_.Exception.Message
         }
+    }
+}
+
+function Submit-PreferredPostForm {
+    param(
+        [string]$Path,
+        [string]$Phase,
+        [string]$FieldName,
+        [string]$ActionPattern,
+        [string]$TargetLabel
+    )
+
+    $pageUrl = [Uri]::new([Uri]$AppUrl, $Path).AbsoluteUri
+    $response = Invoke-WebRequest -Uri $pageUrl -WebSession $webSession -Method Get -UseBasicParsing
+    $forms = Get-HtmlForms $response.Content
+    $form = Select-PreferredForm -Forms $forms -FieldName $FieldName -ActionPattern $ActionPattern
+
+    if ($null -eq $form -or $form.Method -ne "POST") {
+        Add-Result $Phase $TargetLabel "FAIL" "Formulario POST nao encontrado em $Path."
+        return $false
+    }
+
+    $context = New-SmokeContext
+    $payload = @{}
+    foreach ($field in $form.Fields) {
+        $payload[$field.Name] = Get-SmokeFieldValue -Field $field -Context $context
+    }
+
+    $targetUrl = Resolve-ActionUrl -PageUrl $pageUrl -Action $form.Action
+    $postResponse = Invoke-WebRequest -Uri $targetUrl -WebSession $webSession -Method Post -Body $payload -UseBasicParsing
+    Add-Result $Phase $TargetLabel "PASS" "POST $($postResponse.StatusCode)"
+    return $true
+}
+
+function Ensure-LocalAuthentication {
+    try {
+        Submit-PreferredPostForm `
+            -Path "/Auth/Register" `
+            -Phase "Bootstrap" `
+            -FieldName "Email" `
+            -ActionPattern "/Auth/Register" `
+            -TargetLabel "Auth/Register bootstrap" | Out-Null
+    }
+    catch {
+        Add-Result "Bootstrap" "Auth/Register bootstrap" "SKIP" "Registro local nao executado; conta pode ja existir ou requerer administrador."
+    }
+
+    try {
+        Submit-PreferredPostForm `
+            -Path "/Auth/LocalLogin" `
+            -Phase "Bootstrap" `
+            -FieldName "Username" `
+            -ActionPattern "/Auth/LocalLogin" `
+            -TargetLabel "Auth/LocalLogin" | Out-Null
+
+        $homePage = Invoke-WebRequest -Uri ([Uri]::new([Uri]$AppUrl, "/").AbsoluteUri) -WebSession $webSession -Method Get -UseBasicParsing
+        if ($homePage.Content -match 'Entrar na PoC' -or $homePage.Content -match 'Login local') {
+            Add-Result "Bootstrap" "Auth/LocalLogin verification" "FAIL" "Sessao local nao foi estabelecida."
+        }
+        else {
+            Add-Result "Bootstrap" "Auth/LocalLogin verification" "PASS" "Sessao local autenticada."
+        }
+    }
+    catch {
+        Add-Result "Bootstrap" "Auth/LocalLogin" "FAIL" $_.Exception.Message
     }
 }
 
@@ -490,7 +560,10 @@ function Invoke-EdgeCases {
 
         try {
             $response = Invoke-WebRequest -Uri $targetUrl -WebSession $webSession -Method Post -Body $payload -UseBasicParsing
-            $status = if ($response.Content -match 'Revise os dados informados' -or $response.Content -match 'Endereço do equipamento') { "PASS" } else { "FAIL" }
+            $status = if ($response.Content -match 'Revise os dados informados' -or
+                $response.Content -match 'Endereço do equipamento' -or
+                $response.Content -match 'Informe o IP' -or
+                $response.Content -match 'host informado') { "PASS" } else { "FAIL" }
             Add-Result "EdgeCases" "OfficialApi/Invoke sem endereco" $status "Validacao tratou endereco vazio sem quebra."
         }
         catch {
@@ -608,6 +681,8 @@ try {
     $appProcess = Start-Process dotnet -ArgumentList $appArguments -WorkingDirectory $root -RedirectStandardOutput $appStdOut -RedirectStandardError $appStdErr -PassThru
     $processes.Add($appProcess)
     Wait-HttpEndpoint -Url "$AppUrl/"
+
+    Ensure-LocalAuthentication
 
     Submit-FormsFromPage -Path "/" -Phase "Bootstrap"
     Submit-FormsFromPage -Path "/Auth/Login" -Phase "Bootstrap"
