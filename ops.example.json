@@ -1,0 +1,68 @@
+{
+  "version": 1,
+  "contacts": {
+    "incidentCommander": {
+      "name": "replace-with-person-or-team",
+      "roleOrTeam": "replace-with-incident-command-role",
+      "escalationChannel": "replace-with-private-channel-or-phonebook-entry"
+    },
+    "srePrimary": {
+      "name": "replace-with-person-or-team",
+      "roleOrTeam": "replace-with-sre-or-operations-role",
+      "escalationChannel": "replace-with-private-channel-or-phonebook-entry"
+    },
+    "techLead": {
+      "name": "replace-with-person-or-team",
+      "roleOrTeam": "replace-with-maintainer-role",
+      "escalationChannel": "replace-with-private-channel-or-phonebook-entry"
+    },
+    "releaseEngineer": {
+      "name": "replace-with-person-or-team",
+      "roleOrTeam": "replace-with-release-role",
+      "escalationChannel": "replace-with-private-channel-or-phonebook-entry"
+    },
+    "dpoOrPrivacyOwner": {
+      "name": "replace-with-person-or-team",
+      "roleOrTeam": "replace-with-dpo-or-privacy-role",
+      "escalationChannel": "replace-with-private-channel-or-phonebook-entry"
+    },
+    "businessOwner": {
+      "name": "replace-with-person-or-team",
+      "roleOrTeam": "replace-with-business-owner-role",
+      "escalationChannel": "replace-with-private-channel-or-phonebook-entry"
+    }
+  },
+  "communication": {
+    "incidentChannel": "replace-with-private-incident-channel",
+    "statusCadence": "replace-with-update-cadence",
+    "stakeholderList": "replace-with-restricted-stakeholder-list-location"
+  },
+  "evidence": {
+    "repository": "replace-with-restricted-evidence-location",
+    "retention": "replace-with-evidence-retention-policy"
+  },
+  "backup": {
+    "externalBackupTarget": "replace-with-secure-off-host-target-description",
+    "restoreTestCadence": "replace-with-restore-test-cadence",
+    "retentionPolicy": "replace-with-backup-retention-policy",
+    "encryptionOwner": "replace-with-owner-of-backup-keys-or-platform"
+  },
+  "rtoRpo": {
+    "validationStatus": "pending-validation",
+    "applicationRestartRto": "replace-with-validated-rto",
+    "sqliteRestoreRto": "replace-with-validated-rto",
+    "sqliteBackupRpo": "replace-with-validated-rpo",
+    "lastValidationDate": "replace-with-yyyy-mm-dd"
+  },
+  "equipment": {
+    "manualAccessProcedureOwner": "replace-with-physical-operations-owner",
+    "fallbackProcedureLocation": "replace-with-approved-manual-access-runbook-location",
+    "vendorSupportChannel": "replace-with-controlid-or-local-support-channel",
+    "testCadence": "replace-with-equipment-contingency-test-cadence"
+  },
+  "securityIncident": {
+    "evidenceRepository": "replace-with-restricted-security-evidence-location",
+    "dpoEscalation": "replace-with-dpo-escalation-path",
+    "secretRotationOwner": "replace-with-secret-rotation-owner"
+  }
+}

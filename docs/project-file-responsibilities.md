@@ -22,6 +22,7 @@ Observações de escopo:
 | `docker-compose.yml` | Executa a PoC em container com volumes persistentes, healthcheck e variáveis obrigatórias. |
 | `.editorconfig` | Padroniza convenções básicas de edição, formatação e estilo entre IDEs. |
 | `.gitignore` | Define arquivos e pastas que não devem ser versionados, como builds, logs e artefatos locais. |
+| `ops.example.json` | Exemplo versionado de configuracao operacional para incidentes, on-call, backup externo, RTO/RPO e contingencia fisica. |
 | `Directory.Build.props` | Centraliza propriedades comuns de build para os projetos .NET da solução. |
 | `Integracao.ControlID.PoC.csproj` | Define o projeto ASP.NET Core MVC principal, dependências NuGet e configurações de compilação. |
 | `Integracao.ControlID.PoC.sln` | Agrupa o projeto principal, testes e utilitários em uma única solução. |
@@ -533,6 +534,8 @@ As views Razor compõem a interface web da PoC. Em geral, cada pasta espelha um 
 | `docs/changelog-2026-04-14.md` | Registro resumido de evolucoes relevantes realizadas na PoC. |
 | `docs/changelog-2026-04-15.md` | Registro resumido das atualizacoes de documentação, comentarios inline e observabilidade. |
 | `docs/deployment-runbook.md` | Mapeia ambientes, container, variaveis obrigatorias, deploy, rollback e riscos de infraestrutura. |
+| `docs/equipment-contingency-runbook.md` | Define contingencia operacional do equipamento Control iD, fallback manual e validacao de bancada. |
+| `docs/incident-response-and-dr.md` | Define matriz SEV, runbooks de incidentes, continuidade, backup/restore operacional, DR, comunicacao e postmortem. |
 | `docs/monitor-implementation.md` | Documenta a implementação da funcionalidade Monitor, callbacks oficiais, segurança e persistência local. |
 | `docs/observability-runbook.md` | Define health, metricas, alertas, dashboards e resposta a incidentes operacionais. |
 | `docs/observability/alert-rules.json` | Regras versionadas de alerta para o monitor local e ferramentas externas. |
@@ -590,6 +593,8 @@ As views Razor compõem a interface web da PoC. Em geral, cada pasta espelha um 
 | Arquivo/Pasta | Responsabilidade |
 | --- | --- |
 | `tools/observability-check.ps1` | Valida artefatos de observabilidade, health checks, metricas e contrato fisico opcional. |
+| `tools/operational-readiness-check.ps1` | Valida runbooks operacionais, `ops.example.json` e, em release, `ops.local.json` sem placeholders. |
+| `tools/backup-sqlite-operational.ps1` | Orquestra backup SQLite protegido, espelhamento opcional, restore-smoke e retencao confirmada. |
 | `tools/test-readiness-gates.ps1` | Orquestra build, testes, format, secret scan, observabilidade offline, cobertura, smoke, auditoria, contrato fisico, scanners externos e modo estrito `-ReleaseGate`. |
 | `tools/smoke-localhost.ps1` | Script PowerShell que executa smoke test local, sobe stub e percorre fluxos criticos da PoC. |
 | `tools/ControlIdDeviceStub/ControlIdDeviceStub.csproj` | Projeto .NET do stub local que simula respostas de um equipamento Control iD. |

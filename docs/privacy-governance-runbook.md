@@ -21,6 +21,10 @@ Campos pendentes para preencher antes de uso real:
 - SLA interno:
 - Repositorio de evidencias:
 
+Para release operacional, esses responsaveis e canais devem estar tambem em
+`ops.local.json`, criado a partir de `ops.example.json` fora do Git, e validados
+por `tools/operational-readiness-check.ps1 -RequireConfig`.
+
 ## Registro de bases legais
 
 Preencha e aprove antes de usar dados reais.

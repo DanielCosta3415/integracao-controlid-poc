@@ -18,6 +18,7 @@ integracao_controlid.db-wal
 .env
 .env.*
 !.env.example
+ops.local.json
 
 # Local logs and temporary reports
 *.log

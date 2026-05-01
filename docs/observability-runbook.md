@@ -137,6 +137,10 @@ Nunca registrar:
 
 ## Procedimento de incidente
 
+Runbooks detalhados por cenario, matriz SEV, continuidade, DR e template de
+postmortem ficam em `docs/incident-response-and-dr.md`. Use a sequencia abaixo
+como triagem inicial e escale para o runbook dedicado quando houver alerta real.
+
 1. Copiar o `X-Correlation-ID` da resposta, log ou tela de erro.
 2. Buscar o correlation id em `Logs/app_log.txt` ou no coletor externo.
 3. Identificar rota, status, duracao, usuario/IP pseudonimizados e evento operacional.

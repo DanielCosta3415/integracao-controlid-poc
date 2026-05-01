@@ -97,6 +97,15 @@ powershell -ExecutionPolicy Bypass -File .\tools\backup-sqlite.ps1
 
 O script copia o arquivo `.db` e, se existirem, os arquivos `-wal` e `-shm` para `artifacts/backups/sqlite-<timestamp>/`, junto com um manifesto. Ele nao altera o banco de origem.
 
+Para operacao real, prefira o wrapper operacional, que pode espelhar o backup
+para destino fora do host, executar restore-smoke e aplicar retencao somente com
+confirmacao textual:
+
+```powershell
+$env:CONTROLID_BACKUP_MIRROR_DIRECTORY = "\\servidor-seguro\backups\controlid-poc"
+powershell -ExecutionPolicy Bypass -File .\tools\backup-sqlite-operational.ps1 -RunRestoreSmoke
+```
+
 Backups novos sao protegidos por DPAPI por padrao e recebem extensao `.protected`. Use `-Unprotected` apenas para interoperabilidade local temporaria e registre a justificativa. O manifesto informa `Protected`, `Protection` e `ProtectionScope`.
 
 Recomendacoes:

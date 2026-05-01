@@ -6,6 +6,7 @@ param(
     [switch]$RunContainerBuild,
     [switch]$RunObservabilityOnline,
     [switch]$RequireObservabilityMetrics,
+    [switch]$RequireOperationalConfig,
     [switch]$RequireHardwareContract,
     [switch]$RequireExternalScanners,
     [switch]$ReleaseGate,
@@ -25,6 +26,7 @@ if ($ReleaseGate) {
     $RunContainerBuild = $true
     $RunObservabilityOnline = $true
     $RequireObservabilityMetrics = $true
+    $RequireOperationalConfig = $true
     $RequireHardwareContract = $true
     $RequireExternalScanners = $true
 }
@@ -76,6 +78,19 @@ try {
 
     Invoke-Step "observability-offline" {
         powershell -ExecutionPolicy Bypass -File ".\tools\observability-check.ps1" -OfflineValidateOnly
+    }
+
+    Invoke-Step "operational-readiness" {
+        $arguments = @(
+            "-ExecutionPolicy", "Bypass",
+            "-File", ".\tools\operational-readiness-check.ps1"
+        )
+
+        if ($RequireOperationalConfig) {
+            $arguments += "-RequireConfig"
+        }
+
+        powershell @arguments
     }
 
     if ($RunObservabilityOnline -or $RequireObservabilityMetrics) {

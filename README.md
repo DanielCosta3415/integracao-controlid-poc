@@ -213,6 +213,9 @@ powershell -ExecutionPolicy Bypass -File .\tools\contract-controlid-device.ps1
 ## Observabilidade e monitoramento
 
 Runbook detalhado: `docs/observability-runbook.md`.
+Incidentes, continuidade, backup/restore operacional e DR:
+`docs/incident-response-and-dr.md`.
+Contingencia fisica do equipamento: `docs/equipment-contingency-runbook.md`.
 
 A PoC já sai preparada para monitoramento básico local:
 
@@ -223,6 +226,8 @@ A PoC já sai preparada para monitoramento básico local:
 - monitor local em `tools/observability-check.ps1`;
 - gate de readiness em `tools/test-readiness-gates.ps1`, com validacao offline de observabilidade por padrao e modo online autenticado para `/metrics`;
 - modo estrito de release com `tools/test-readiness-gates.ps1 -ReleaseGate`, que falha se contrato fisico, metricas online ou scanners externos exigidos nao estiverem disponiveis;
+- gate operacional em `tools/operational-readiness-check.ps1`; para release, crie `ops.local.json` a partir de `ops.example.json` fora do Git e use `-RequireOperationalConfig`;
+- backup operacional com espelhamento opcional em `tools/backup-sqlite-operational.ps1`, usando `CONTROLID_BACKUP_MIRROR_DIRECTORY` ou `-MirrorDirectory`;
 - log de requisições HTTP no middleware `RequestLoggingMiddleware`;
 - log estruturado de invocação oficial da Access API, incluindo endpoint, target, status e duração;
 - log de entrada de callbacks com aceite, bloqueio e falha de persistência;
@@ -286,6 +291,8 @@ Checklist recomendado para debug operacional:
 
 - `docs/database-and-runtime-state.md`: estado local, comandos seguros e requisitos de runtime
 - `docs/data-model-and-recovery.md`: modelo de dados local, indices, migrations, backup e restore
+- `docs/incident-response-and-dr.md`: matriz SEV, runbooks de incidentes, continuidade, RTO/RPO e postmortem
+- `docs/equipment-contingency-runbook.md`: contingencia operacional do equipamento Control iD e fallback manual aprovado
 - `docs/security-hardening.md`: controles de autenticação local, RBAC, assinatura HMAC, proxy assinador, backup protegido, allowlist de egress e headers
 - `docs/integration-contracts.md`: inventario de integracoes, contratos, payloads e riscos
 - `docs/privacy-and-data-retention.md`: regras de privacidade, dados sensíveis e retenção local

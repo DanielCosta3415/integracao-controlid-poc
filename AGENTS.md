@@ -88,6 +88,7 @@ Backup local nao destrutivo do SQLite:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\tools\backup-sqlite.ps1
+powershell -ExecutionPolicy Bypass -File .\tools\backup-sqlite-operational.ps1 -RunRestoreSmoke
 powershell -ExecutionPolicy Bypass -File .\tools\restore-smoke-sqlite.ps1
 powershell -ExecutionPolicy Bypass -File .\tools\harden-local-state.ps1
 ```
@@ -107,6 +108,7 @@ powershell -ExecutionPolicy Bypass -File .\tools\audit-supply-chain.ps1
 powershell -ExecutionPolicy Bypass -File .\tools\scan-secrets.ps1
 powershell -ExecutionPolicy Bypass -File .\tools\generate-sbom.ps1
 powershell -ExecutionPolicy Bypass -File .\tools\observability-check.ps1 -OfflineValidateOnly
+powershell -ExecutionPolicy Bypass -File .\tools\operational-readiness-check.ps1
 powershell -ExecutionPolicy Bypass -File .\tools\test-readiness-gates.ps1 -RunCoverage
 powershell -ExecutionPolicy Bypass -File .\tools\test-readiness-gates.ps1 -RunContainerBuild
 powershell -ExecutionPolicy Bypass -File .\tools\test-readiness-gates.ps1 -RunObservabilityOnline -RequireObservabilityMetrics
@@ -123,7 +125,8 @@ Notas:
 - Para corrigir formatacao, use `dotnet format .\Integracao.ControlID.PoC.sln -v:minimal` e registre o efeito mecanico.
 - O smoke test escreve em `docs/reports/`, `artifacts/`, `Logs/` e no SQLite local.
 - O gate `test-readiness-gates.ps1` executa observabilidade offline por padrao; contra app rodando, use `OBSERVABILITY_BASE_URL` e credencial local para `/metrics` quando necessario.
-- `test-readiness-gates.ps1 -ReleaseGate` e o modo estrito para release: exige smoke, cobertura, supply chain, container build, observabilidade online, contrato fisico e scanners externos.
+- `ops.example.json` define o contrato de ownership, on-call, backup externo, RTO/RPO e contingencia fisica. Copie para `ops.local.json` fora do Git para releases reais; `-ReleaseGate` exige essa configuracao sem placeholders.
+- `test-readiness-gates.ps1 -ReleaseGate` e o modo estrito para release: exige smoke, cobertura, supply chain, container build, observabilidade online, configuracao operacional, contrato fisico e scanners externos.
 - Docker/Compose sao artefatos de execucao reproduzivel local/container; nao fazem deploy automatico nem configuram provedor cloud.
 - O contrato contra equipamento real e opt-in e exige variaveis `CONTROLID_DEVICE_URL`, `CONTROLID_USERNAME` e `CONTROLID_PASSWORD`: `powershell -ExecutionPolicy Bypass -File .\tools\contract-controlid-device.ps1`.
 
@@ -218,6 +221,7 @@ Notas:
 ### Infraestrutura
 
 - Dockerfile/Compose existem para execucao reproduzivel e validacao de container; mantenha usuario nao root, porta 8080, volumes `/app/data` e `/app/Logs`, e healthcheck em `/health/live`.
+- Nao versione `ops.local.json`; ele pode conter nomes, canais privados, local de evidencias e detalhes operacionais.
 - Nao crie deploy automatico, DNS real ou provedor cloud sem pedido explicito.
 - Fora de `Development`, nao use `AllowedHosts=*`, shared key placeholder, OpenAPI habilitado, metrics anonimo ou forwarded headers sem proxy conhecido.
 - Mudancas em CI devem refletir comandos reais locais.
@@ -234,6 +238,7 @@ Notas:
 
 - A CI deve permanecer capaz de rodar restore locked, build, teste, format check e auditoria.
 - Release local minima exige build limpo, testes passando, format check limpo, auditoria sem vulnerabilidades conhecidas e riscos residuais documentados.
+- Release operacional real exige `tools/test-readiness-gates.ps1 -ReleaseGate`, `ops.local.json` preenchido, backup externo validado, RTO/RPO aprovado e contingencia do equipamento testada.
 - Mudancas em `tools/ControlIdCallbackSigningProxy` exigem restore locked, build e format check do projeto do proxy.
 - Nao publique release sem smoke quando a mudanca tocar callbacks, push, catalogo oficial, autenticacao ou banco.
 

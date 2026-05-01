@@ -113,7 +113,15 @@ powershell -ExecutionPolicy Bypass -File .\tools\observability-check.ps1
 powershell -ExecutionPolicy Bypass -File .\tools\test-readiness-gates.ps1 -ReleaseGate
 ```
 
+O `-ReleaseGate` exige tambem `ops.local.json` preenchido fora do Git, baseado em
+`ops.example.json`, para bloquear release sem ownership, on-call, RTO/RPO,
+backup externo e contingencia fisica validados.
+
 ## Rollback tecnico
+
+Para incidentes ativos, use tambem `docs/incident-response-and-dr.md`, que define
+severidade, comunicacao, escalonamento, preservacao de evidencias e validacao
+pos-rollback.
 
 1. Preservar volume `/app/data` antes de trocar versao.
 2. Manter a imagem anterior tagueada, por exemplo `integracao-controlid-poc:<versao-anterior>`.
@@ -123,6 +131,13 @@ powershell -ExecutionPolicy Bypass -File .\tools\test-readiness-gates.ps1 -Relea
 6. Se a falha envolver schema SQLite, restaurar copia apenas em ambiente controlado
    usando `tools/restore-smoke-sqlite.ps1`; nao sobrescreva dados reais sem
    confirmacao humana.
+
+Para preparacao operacional, gere backup com restore-smoke e espelhamento:
+
+```powershell
+$env:CONTROLID_BACKUP_MIRROR_DIRECTORY = "\\servidor-seguro\backups\controlid-poc"
+powershell -ExecutionPolicy Bypass -File .\tools\backup-sqlite-operational.ps1 -RunRestoreSmoke
+```
 
 ## Riscos de ambiente
 

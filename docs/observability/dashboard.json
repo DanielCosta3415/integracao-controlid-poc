@@ -1,6 +1,7 @@
 {
   "version": 1,
   "runbook": "docs/observability-runbook.md",
+  "incidentRunbook": "docs/incident-response-and-dr.md",
   "dashboards": [
     {
       "id": "process-health",
