@@ -305,6 +305,8 @@ Use `tools/contract-controlid-stub.ps1` para validar contrato sem hardware.
 - `docs/security-hardening.md`: hardening, HMAC, RBAC, headers e secrets.
 - `docs/privacy-and-data-retention.md`: LGPD, dados pessoais e retencao.
 - `docs/testing-strategy.md`: estrategia de testes e gates.
+- `docs/ci-cd-quality-gates.md`: GitHub Actions, quality gates, artefatos e
+  branch protection recomendada.
 - `docs/observability-runbook.md`: logs, metricas, alertas e dashboards.
 - `docs/deployment-runbook.md`: ambientes, deploy, rollback e container.
 - `docs/incident-response-and-dr.md`: incidentes, DR e postmortem.

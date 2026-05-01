@@ -9,9 +9,14 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build-test-audit:
     runs-on: windows-latest
+    timeout-minutes: 30
 
     steps:
       - name: Checkout
@@ -21,6 +26,12 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           global-json-file: global.json
+          cache: true
+          cache-dependency-path: |
+            packages.lock.json
+            tests/Integracao.ControlID.PoC.Tests/packages.lock.json
+            tools/ControlIdDeviceStub/packages.lock.json
+            tools/ControlIdCallbackSigningProxy/packages.lock.json
 
       - name: Restore
         run: dotnet restore .\Integracao.ControlID.PoC.sln --locked-mode
@@ -47,11 +58,18 @@ jobs:
         shell: pwsh
         run: .\tools\smoke-localhost.ps1 -ReportPath .\artifacts\smoke\localhost-smoke-ci.md
 
+      - name: Simulated device contract
+        shell: pwsh
+        run: .\tools\contract-controlid-stub.ps1
+
       - name: Format check
         run: dotnet format .\Integracao.ControlID.PoC.sln --verify-no-changes --no-restore -v:minimal
 
       - name: Format signing proxy check
         run: dotnet format .\tools\ControlIdCallbackSigningProxy\ControlIdCallbackSigningProxy.csproj --verify-no-changes --no-restore -v:minimal
+
+      - name: Whitespace check
+        run: git diff --check
 
       - name: Secret scan
         shell: pwsh
@@ -72,6 +90,10 @@ jobs:
       - name: Supply-chain audit
         shell: pwsh
         run: .\tools\audit-supply-chain.ps1
+
+      - name: External scanner inventory
+        shell: pwsh
+        run: .\tools\external-security-scans.ps1 -InventoryOnly
 
       - name: Vulnerability audit
         shell: pwsh
@@ -96,12 +118,35 @@ jobs:
             }
           }
 
+      - name: Upload CI diagnostic artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-diagnostics
+          if-no-files-found: ignore
+          retention-days: 14
+          path: |
+            artifacts/smoke/**/*.md
+            artifacts/observability/**/*.md
+            artifacts/operational-readiness/**/*.md
+            artifacts/finops-capacity/**/*.md
+            artifacts/reports/**/*.md
+            artifacts/sbom/**/*.json
+
   container-build:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Docker Compose config
+        env:
+          AllowedHosts: poc.example.internal
+          ControlIDApi__AllowedDeviceHosts__0: controlid-device.local
+          CallbackSecurity__SharedKey: placeholder-shared-key-32-characters-minimum
+        run: docker compose config
 
       - name: Docker build
         run: docker build --pull -t integracao-controlid-poc:ci .

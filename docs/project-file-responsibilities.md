@@ -539,6 +539,7 @@ As views Razor compõem a interface web da PoC. Em geral, cada pasta espelha um 
 | `docs/changelog-2026-04-14.md` | Registro resumido de evolucoes relevantes realizadas na PoC. |
 | `docs/changelog-2026-04-15.md` | Registro resumido das atualizacoes de documentação, comentarios inline e observabilidade. |
 | `docs/changelog-2026-05-01.md` | Registro da rodada de documentacao, onboarding e ADRs. |
+| `docs/ci-cd-quality-gates.md` | Documenta GitHub Actions, quality gates, artefatos, branch protection recomendada e reproducao local. |
 | `docs/developer-onboarding.md` | Guia de setup, execucao, desenvolvimento, diagnostico e entrega segura para novos contribuidores. |
 | `docs/deployment-runbook.md` | Mapeia ambientes, container, variaveis obrigatorias, deploy, rollback e riscos de infraestrutura. |
 | `docs/documentation-audit-2026-05-01.md` | Auditoria de documentacao, achados, consistencia e lacunas restantes. |

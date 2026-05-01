@@ -11,6 +11,7 @@ agentes de codigo no uso seguro da PoC `Integracao.ControlID.PoC`.
 | Maintainer | `AGENTS.md`, `docs/adrs/`, `docs/testing-strategy.md`, `docs/changelog-2026-05-01.md` |
 | QA/SDET | `docs/product-acceptance-criteria.md`, `docs/testing-strategy.md`, `docs/external-validation-runbook.md` |
 | SRE/Operacao | `docs/observability-runbook.md`, `docs/deployment-runbook.md`, `docs/incident-response-and-dr.md` |
+| DevOps/Platform | `docs/ci-cd-quality-gates.md`, `.github/workflows/ci.yml`, `docs/deployment-runbook.md` |
 | Security/AppSec | `docs/security-hardening.md`, `docs/integration-contracts.md`, `docs/external-validation-runbook.md` |
 | DPO/Privacidade | `docs/privacy-and-data-retention.md`, `docs/privacy-governance-runbook.md` |
 | Data/DB | `docs/data-model-and-recovery.md`, `docs/database-and-runtime-state.md` |
@@ -64,6 +65,8 @@ agentes de codigo no uso seguro da PoC `Integracao.ControlID.PoC`.
 ## Operacao, release e continuidade
 
 - `docs/testing-strategy.md`: testes, coverage, gates e validacao externa.
+- `docs/ci-cd-quality-gates.md`: GitHub Actions, gates obrigatorios,
+  artefatos, branch protection recomendada e reproducao local.
 - `docs/observability-runbook.md`: logs, metricas, tracing, health checks,
   alertas e dashboards.
 - `docs/deployment-runbook.md`: ambientes, Docker/Compose, deploy e rollback.
