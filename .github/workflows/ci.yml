@@ -87,3 +87,13 @@ jobs:
               exit 1
             }
           }
+
+  container-build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Docker build
+        run: docker build --pull -t integracao-controlid-poc:ci .

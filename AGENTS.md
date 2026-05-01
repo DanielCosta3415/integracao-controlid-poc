@@ -108,8 +108,11 @@ powershell -ExecutionPolicy Bypass -File .\tools\scan-secrets.ps1
 powershell -ExecutionPolicy Bypass -File .\tools\generate-sbom.ps1
 powershell -ExecutionPolicy Bypass -File .\tools\observability-check.ps1 -OfflineValidateOnly
 powershell -ExecutionPolicy Bypass -File .\tools\test-readiness-gates.ps1 -RunCoverage
+powershell -ExecutionPolicy Bypass -File .\tools\test-readiness-gates.ps1 -RunContainerBuild
 powershell -ExecutionPolicy Bypass -File .\tools\test-readiness-gates.ps1 -RunObservabilityOnline -RequireObservabilityMetrics
 powershell -ExecutionPolicy Bypass -File .\tools\test-readiness-gates.ps1 -ReleaseGate
+docker build -t integracao-controlid-poc:local .
+docker compose config
 git diff --check
 ```
 
@@ -120,15 +123,15 @@ Notas:
 - Para corrigir formatacao, use `dotnet format .\Integracao.ControlID.PoC.sln -v:minimal` e registre o efeito mecanico.
 - O smoke test escreve em `docs/reports/`, `artifacts/`, `Logs/` e no SQLite local.
 - O gate `test-readiness-gates.ps1` executa observabilidade offline por padrao; contra app rodando, use `OBSERVABILITY_BASE_URL` e credencial local para `/metrics` quando necessario.
-- `test-readiness-gates.ps1 -ReleaseGate` e o modo estrito para release: exige smoke, cobertura, supply chain, observabilidade online, contrato fisico e scanners externos.
+- `test-readiness-gates.ps1 -ReleaseGate` e o modo estrito para release: exige smoke, cobertura, supply chain, container build, observabilidade online, contrato fisico e scanners externos.
+- Docker/Compose sao artefatos de execucao reproduzivel local/container; nao fazem deploy automatico nem configuram provedor cloud.
 - O contrato contra equipamento real e opt-in e exige variaveis `CONTROLID_DEVICE_URL`, `CONTROLID_USERNAME` e `CONTROLID_PASSWORD`: `powershell -ExecutionPolicy Bypass -File .\tools\contract-controlid-device.ps1`.
 
 ### Comandos indisponiveis ou nao padronizados
 
 - `npm`, `pnpm`, `yarn`: nao ha frontend package manager configurado.
-- Docker/Compose: nao ha Dockerfile ou compose.
 - Migrations CLI destrutivas: nao ha fluxo documentado; nao execute sem aprovacao humana.
-- Deploy: nao ha provedor/manifesto de hospedagem versionado.
+- Deploy automatico/provedor cloud: nao ha provedor/manifesto de hospedagem versionado.
 
 ## Regras obrigatorias
 
@@ -214,7 +217,9 @@ Notas:
 
 ### Infraestrutura
 
-- Nao invente Docker, deploy ou provedor sem pedido explicito.
+- Dockerfile/Compose existem para execucao reproduzivel e validacao de container; mantenha usuario nao root, porta 8080, volumes `/app/data` e `/app/Logs`, e healthcheck em `/health/live`.
+- Nao crie deploy automatico, DNS real ou provedor cloud sem pedido explicito.
+- Fora de `Development`, nao use `AllowedHosts=*`, shared key placeholder, OpenAPI habilitado, metrics anonimo ou forwarded headers sem proxy conhecido.
 - Mudancas em CI devem refletir comandos reais locais.
 - Artefatos `bin/`, `obj/`, `Logs/`, `artifacts/` e banco local devem permanecer fora do Git.
 

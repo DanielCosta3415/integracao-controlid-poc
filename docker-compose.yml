@@ -1,0 +1,49 @@
+services:
+  integracao-controlid-poc:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: integracao-controlid-poc:local
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-8080}:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: "${ASPNETCORE_ENVIRONMENT:-Production}"
+      ASPNETCORE_URLS: "http://+:8080"
+      AllowedHosts: "${AllowedHosts:?set AllowedHosts in .env}"
+      Host__ShutdownTimeoutSeconds: "${Host__ShutdownTimeoutSeconds:-30}"
+      ConnectionStrings__DefaultConnection: "${ConnectionStrings__DefaultConnection:-Data Source=/app/data/integracao_controlid.db}"
+      ForwardedHeaders__Enabled: "${ForwardedHeaders__Enabled:-false}"
+      ForwardedHeaders__ForwardLimit: "${ForwardedHeaders__ForwardLimit:-1}"
+      ForwardedHeaders__KnownProxies__0: "${ForwardedHeaders__KnownProxies__0:-}"
+      OpenApi__Enabled: "false"
+      Observability__Metrics__Enabled: "${Observability__Metrics__Enabled:-true}"
+      Observability__Metrics__AllowAnonymous: "false"
+      ControlIDApi__DefaultDeviceUrl: "${ControlIDApi__DefaultDeviceUrl:-}"
+      ControlIDApi__DefaultUsername: "${ControlIDApi__DefaultUsername:-}"
+      ControlIDApi__DefaultPassword: "${ControlIDApi__DefaultPassword:-}"
+      ControlIDApi__ConnectionTimeoutSeconds: "${ControlIDApi__ConnectionTimeoutSeconds:-10}"
+      ControlIDApi__RequireAllowedDeviceHosts: "true"
+      ControlIDApi__AllowedDeviceHosts__0: "${ControlIDApi__AllowedDeviceHosts__0:?set ControlIDApi__AllowedDeviceHosts__0 in .env}"
+      ControlIDApi__CircuitBreaker__Enabled: "${ControlIDApi__CircuitBreaker__Enabled:-true}"
+      ControlIDApi__CircuitBreaker__FailureThreshold: "${ControlIDApi__CircuitBreaker__FailureThreshold:-5}"
+      ControlIDApi__CircuitBreaker__BreakDurationSeconds: "${ControlIDApi__CircuitBreaker__BreakDurationSeconds:-30}"
+      CallbackSecurity__MaxBodyBytes: "${CallbackSecurity__MaxBodyBytes:-1048576}"
+      CallbackSecurity__RequireSharedKey: "true"
+      CallbackSecurity__SharedKey: "${CallbackSecurity__SharedKey:?set CallbackSecurity__SharedKey in .env}"
+      CallbackSecurity__RequireSignedRequests: "true"
+      CallbackSecurity__AllowLoopback: "false"
+      CallbackSecurity__AllowedRemoteIps__0: "${CallbackSecurity__AllowedRemoteIps__0:-}"
+    volumes:
+      - controlid-data:/app/data
+      - controlid-logs:/app/Logs
+    healthcheck:
+      test: [ "CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/health/live" ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+volumes:
+  controlid-data:
+  controlid-logs:

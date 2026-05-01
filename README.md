@@ -14,6 +14,7 @@ PoC web em ASP.NET Core 8 para exploração operacional e técnica da Access API
 - Serilog para logs em console e arquivo
 - xUnit para testes unitários
 - Smoke test local em PowerShell com stub de equipamento
+- Docker/Compose para execucao reproduzivel em container
 
 Pastas principais:
 
@@ -120,6 +121,10 @@ A configuração segue o padrão nativo do ASP.NET Core (`Secao__Chave`). Use as
 | `Serilog__MinimumLevel__Default` | `Information` | Nível mínimo do Serilog. |
 | `Logging__File__Path` | `Logs/app_log.txt` | Caminho esperado para logs em arquivo. |
 | `Logging__File__RetainedFileCountLimit` | `14` | Quantidade de arquivos de log mantidos. |
+| `AllowedHosts` | `poc.example.internal` | Hosts aceitos fora de `Development`; nao use `*` em Staging/Production. |
+| `ForwardedHeaders__Enabled` | `false` | Habilita suporte a proxy reverso confiavel. |
+| `ForwardedHeaders__KnownProxies__0` | `10.0.0.10` | IP do proxy/load balancer confiavel quando forwarded headers estiverem ativos. |
+| `Host__ShutdownTimeoutSeconds` | `30` | Janela de graceful shutdown, normalizada entre 5 e 120 segundos. |
 
 Observações:
 
@@ -128,6 +133,29 @@ Observações:
 - `ControlIDApi__ConnectionTimeoutSeconds` controla o timeout real das chamadas oficiais;
 - `CallbackSecurity__SharedKey` é obrigatória quando `CallbackSecurity__RequireSharedKey=true` fora de ambiente controlado.
 - para validar callbacks reais, a URL da PoC precisa estar acessível pelo equipamento Control iD.
+
+## Ambientes, container e deploy
+
+Runbook detalhado: `docs/deployment-runbook.md`.
+
+Artefatos versionados:
+
+- `Dockerfile`: build multi-stage .NET 8, runtime nao root, porta `8080` e healthcheck em `/health/live`;
+- `.dockerignore`: remove Git, logs, artefatos, SQLite local e `.env` do contexto;
+- `docker-compose.yml`: execucao local/container com volumes para `/app/data` e `/app/Logs`;
+- `.env.example`: placeholders seguros para criar `.env` fora do Git;
+- `appsettings.Staging.json` e `appsettings.Production.json`: defaults seguros sem segredos.
+
+Comandos basicos:
+
+```powershell
+docker build -t integracao-controlid-poc:local .
+docker compose config
+docker compose up --build
+```
+
+Fora de `Development`, o startup falha se `AllowedHosts`, shared key, assinatura
+HMAC e allowlist de egress do equipamento nao estiverem configurados corretamente.
 
 ## Banco local e dados da PoC
 

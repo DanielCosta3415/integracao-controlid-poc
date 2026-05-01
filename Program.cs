@@ -20,6 +20,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.ResponseCompression;
@@ -32,12 +33,42 @@ using Microsoft.OpenApi.Models;
 using Serilog;
 using System;
 using System.IO.Compression;
+using System.Net;
 using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Configura Serilog
 SeriLogConfiguration.ConfigureSerilog(builder.Host, builder.Configuration);
+
+builder.Services.Configure<HostOptions>(options =>
+{
+    var shutdownSeconds = builder.Configuration.GetValue<int?>("Host:ShutdownTimeoutSeconds") ?? 30;
+    options.ShutdownTimeout = TimeSpan.FromSeconds(Math.Clamp(shutdownSeconds, 5, 120));
+});
+
+var forwardedHeadersEnabled = builder.Configuration.GetValue<bool>("ForwardedHeaders:Enabled");
+if (forwardedHeadersEnabled)
+{
+    builder.Services.Configure<ForwardedHeadersOptions>(options =>
+    {
+        options.ForwardedHeaders =
+            ForwardedHeaders.XForwardedFor |
+            ForwardedHeaders.XForwardedProto |
+            ForwardedHeaders.XForwardedHost;
+        options.ForwardLimit = Math.Clamp(builder.Configuration.GetValue<int?>("ForwardedHeaders:ForwardLimit") ?? 1, 1, 10);
+
+        var knownProxies = builder.Configuration
+            .GetSection("ForwardedHeaders:KnownProxies")
+            .Get<string[]>() ?? [];
+
+        foreach (var proxy in knownProxies)
+        {
+            if (IPAddress.TryParse(proxy, out var address))
+                options.KnownProxies.Add(address);
+        }
+    });
+}
 
 // Configura contexto do banco de dados SQLite
 builder.Services.AddDbContext<IntegracaoControlIDContext>(options =>
@@ -239,6 +270,11 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
+if (forwardedHeadersEnabled)
+{
+    app.UseForwardedHeaders();
+}
+
 // Middlewares customizados (ordem: correlacao -> tratamento de erro -> logging de request -> sessao -> session API)
 app.UseMiddleware<CorrelationIdMiddleware>();
 app.UseMiddleware<ExceptionHandlingMiddleware>();
@@ -374,6 +410,12 @@ static void ValidateRuntimeSecurity(WebApplication app)
             "AllowedHosts must be explicitly configured for non-Development environments.");
     }
 
+    if (configuredHosts.Any(IsPlaceholderValue))
+    {
+        throw new InvalidOperationException(
+            "AllowedHosts must not contain placeholder values for non-Development environments.");
+    }
+
     var callbackSecurityOptions = app.Services.GetRequiredService<IOptions<CallbackSecurityOptions>>().Value;
     if (!callbackSecurityOptions.RequireSharedKey)
     {
@@ -385,6 +427,12 @@ static void ValidateRuntimeSecurity(WebApplication app)
     {
         throw new InvalidOperationException(
             "CallbackSecurity:SharedKey must be configured for non-Development environments.");
+    }
+
+    if (callbackSecurityOptions.SharedKey.Trim().Length < 32 || IsPlaceholderValue(callbackSecurityOptions.SharedKey))
+    {
+        throw new InvalidOperationException(
+            "CallbackSecurity:SharedKey must be a non-placeholder value with at least 32 characters for non-Development environments.");
     }
 
     if (!callbackSecurityOptions.RequireSignedRequests)
@@ -405,6 +453,19 @@ static void ValidateRuntimeSecurity(WebApplication app)
             "Observability:Metrics:AllowAnonymous must be false for non-Development environments.");
     }
 
+    if (app.Configuration.GetValue<bool>("ForwardedHeaders:Enabled"))
+    {
+        var knownProxies = app.Configuration
+            .GetSection("ForwardedHeaders:KnownProxies")
+            .Get<string[]>() ?? [];
+
+        if (knownProxies.Length == 0 || knownProxies.Any(IsPlaceholderValue))
+        {
+            throw new InvalidOperationException(
+                "ForwardedHeaders:KnownProxies must list trusted reverse proxy IPs when ForwardedHeaders:Enabled is true outside Development.");
+        }
+    }
+
     var egressOptions = app.Services.GetRequiredService<IOptions<ControlIdEgressOptions>>().Value;
     var allowedDeviceHosts = egressOptions.AllowedDeviceHosts
         .Where(static host => !string.IsNullOrWhiteSpace(host))
@@ -418,4 +479,25 @@ static void ValidateRuntimeSecurity(WebApplication app)
         throw new InvalidOperationException(
             "ControlIDApi:RequireAllowedDeviceHosts must be true and ControlIDApi:AllowedDeviceHosts must list allowed device hosts for non-Development environments.");
     }
+
+    if (allowedDeviceHosts.Any(IsPlaceholderValue))
+    {
+        throw new InvalidOperationException(
+            "ControlIDApi:AllowedDeviceHosts must not contain placeholder values for non-Development environments.");
+    }
+}
+
+static bool IsPlaceholderValue(string? value)
+{
+    if (string.IsNullOrWhiteSpace(value))
+        return true;
+
+    var normalized = value.Trim();
+    return normalized.Contains('<', StringComparison.Ordinal) ||
+           normalized.Contains('>', StringComparison.Ordinal) ||
+           normalized.Contains("placeholder", StringComparison.OrdinalIgnoreCase) ||
+           normalized.Contains("changeme", StringComparison.OrdinalIgnoreCase) ||
+           normalized.Contains("replace", StringComparison.OrdinalIgnoreCase) ||
+           normalized.Contains("example", StringComparison.OrdinalIgnoreCase) ||
+           normalized.Contains("localhost", StringComparison.OrdinalIgnoreCase);
 }

@@ -194,5 +194,5 @@ O relatorio padrao fica em `artifacts/observability/`, fora do Git.
   observabilidade por padrao e pode bloquear a coleta online de `/metrics` com
   `-RunObservabilityOnline -RequireObservabilityMetrics`.
 - O modo `tools/test-readiness-gates.ps1 -ReleaseGate` torna essa validacao
-  obrigatoria junto com smoke, cobertura, supply chain, contrato fisico e
-  scanners externos.
+  obrigatoria junto com smoke, cobertura, supply chain, container build, contrato
+  fisico e scanners externos.

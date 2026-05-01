@@ -11,6 +11,8 @@ public class ReadinessGateContractTests
         Assert.Contains("observability-check.ps1\" -OfflineValidateOnly", script, StringComparison.Ordinal);
         Assert.Contains("RunObservabilityOnline", script, StringComparison.Ordinal);
         Assert.Contains("RequireObservabilityMetrics", script, StringComparison.Ordinal);
+        Assert.Contains("RunContainerBuild", script, StringComparison.Ordinal);
+        Assert.Contains("docker build --pull", script, StringComparison.Ordinal);
         Assert.Contains("ReleaseGate", script, StringComparison.Ordinal);
         Assert.Contains("$RequireExternalScanners = $true", script, StringComparison.Ordinal);
     }

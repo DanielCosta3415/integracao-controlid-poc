@@ -3,6 +3,7 @@ param(
     [switch]$RunCoverage,
     [switch]$RunSupplyChainAudit,
     [switch]$RunSmoke,
+    [switch]$RunContainerBuild,
     [switch]$RunObservabilityOnline,
     [switch]$RequireObservabilityMetrics,
     [switch]$RequireHardwareContract,
@@ -21,6 +22,7 @@ if ($ReleaseGate) {
     $RunCoverage = $true
     $RunSupplyChainAudit = $true
     $RunSmoke = $true
+    $RunContainerBuild = $true
     $RunObservabilityOnline = $true
     $RequireObservabilityMetrics = $true
     $RequireHardwareContract = $true
@@ -123,6 +125,16 @@ try {
     if ($RunSmoke) {
         Invoke-Step "localhost-smoke" {
             powershell -ExecutionPolicy Bypass -File ".\tools\smoke-localhost.ps1" -ReportPath ".\artifacts\smoke\localhost-smoke-readiness.md"
+        }
+    }
+
+    if ($RunContainerBuild) {
+        if (-not (Test-CommandAvailable "docker")) {
+            throw "Docker is required for -RunContainerBuild."
+        }
+
+        Invoke-Step "container-build" {
+            docker build --pull -t "integracao-controlid-poc:readiness" "."
         }
     }
 

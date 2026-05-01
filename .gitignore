@@ -15,6 +15,9 @@ artifacts/
 integracao_controlid.db
 integracao_controlid.db-shm
 integracao_controlid.db-wal
+.env
+.env.*
+!.env.example
 
 # Local logs and temporary reports
 *.log

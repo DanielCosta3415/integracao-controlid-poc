@@ -14,6 +14,12 @@ Observações de escopo:
 
 | Arquivo | Responsabilidade |
 | --- | --- |
+| `.dockerignore` | Remove segredos, banco local, logs e artefatos do contexto de build Docker. |
+| `.env.example` | Lista variáveis de ambiente seguras para criar `.env` local sem versionar secrets. |
+| `Dockerfile` | Define build multi-stage e runtime não root para execução containerizada da PoC. |
+| `appsettings.Staging.json` | Defaults seguros sem segredos para validação em staging. |
+| `appsettings.Production.json` | Defaults seguros sem segredos para produção; exige variáveis reais no ambiente. |
+| `docker-compose.yml` | Executa a PoC em container com volumes persistentes, healthcheck e variáveis obrigatórias. |
 | `.editorconfig` | Padroniza convenções básicas de edição, formatação e estilo entre IDEs. |
 | `.gitignore` | Define arquivos e pastas que não devem ser versionados, como builds, logs e artefatos locais. |
 | `Directory.Build.props` | Centraliza propriedades comuns de build para os projetos .NET da solução. |
@@ -526,6 +532,7 @@ As views Razor compõem a interface web da PoC. Em geral, cada pasta espelha um 
 | --- | --- |
 | `docs/changelog-2026-04-14.md` | Registro resumido de evolucoes relevantes realizadas na PoC. |
 | `docs/changelog-2026-04-15.md` | Registro resumido das atualizacoes de documentação, comentarios inline e observabilidade. |
+| `docs/deployment-runbook.md` | Mapeia ambientes, container, variaveis obrigatorias, deploy, rollback e riscos de infraestrutura. |
 | `docs/monitor-implementation.md` | Documenta a implementação da funcionalidade Monitor, callbacks oficiais, segurança e persistência local. |
 | `docs/observability-runbook.md` | Define health, metricas, alertas, dashboards e resposta a incidentes operacionais. |
 | `docs/observability/alert-rules.json` | Regras versionadas de alerta para o monitor local e ferramentas externas. |
