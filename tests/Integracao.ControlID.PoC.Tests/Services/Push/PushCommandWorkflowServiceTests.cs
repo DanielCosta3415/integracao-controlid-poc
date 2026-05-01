@@ -1,4 +1,5 @@
 using Integracao.ControlID.PoC.Services.Database;
+using Integracao.ControlID.PoC.Models.Database;
 using Integracao.ControlID.PoC.Services.Push;
 using Integracao.ControlID.PoC.Tests.TestSupport;
 using Integracao.ControlID.PoC.ViewModels.Push;
@@ -73,6 +74,53 @@ public class PushCommandWorkflowServiceTests
         Assert.Equal(PushCommandStatuses.Completed, result.Status);
         Assert.Equal("{\"ok\":true}", result.Payload);
         Assert.NotNull(result.UpdatedAt);
+    }
+
+    [Fact]
+    public async Task DeliverNextAsync_ClaimsSinglePendingCommandOnceAcrossConcurrentPolls()
+    {
+        using var database = new FileSqliteTestDatabase();
+        var commandId = Guid.NewGuid();
+        await using (var setupContext = database.CreateContext())
+        {
+            var repository = new PushCommandRepository(setupContext, NullLogger<PushCommandRepository>.Instance);
+            await repository.AddPushCommandAsync(new PushCommandLocal
+            {
+                CommandId = commandId,
+                CommandType = "custom",
+                DeviceId = "device-1",
+                UserId = string.Empty,
+                Payload = "{\"open\":true}",
+                RawJson = "{\"open\":true}",
+                Status = PushCommandStatuses.Pending,
+                CreatedAt = DateTime.UtcNow.AddMinutes(-1)
+            });
+        }
+
+        var pollTasks = Enumerable.Range(0, 8)
+            .Select(_ => Task.Run(async () =>
+            {
+                await using var context = database.CreateContext();
+                var service = new PushCommandWorkflowService(
+                    new PushCommandRepository(context, NullLogger<PushCommandRepository>.Instance),
+                    NullLogger<PushCommandWorkflowService>.Instance);
+
+                return await service.DeliverNextAsync("device-1");
+            }))
+            .ToArray();
+
+        var results = await Task.WhenAll(pollTasks);
+
+        var delivered = Assert.Single(results, result => result != null);
+        Assert.Equal(commandId, delivered!.CommandId);
+        Assert.Equal(PushCommandStatuses.Delivered, delivered.Status);
+
+        await using var verificationContext = database.CreateContext();
+        var verificationRepository = new PushCommandRepository(verificationContext, NullLogger<PushCommandRepository>.Instance);
+        var persisted = await verificationRepository.GetPushCommandByIdAsync(commandId);
+        Assert.NotNull(persisted);
+        Assert.Equal(PushCommandStatuses.Delivered, persisted.Status);
+        Assert.Equal(0, await verificationRepository.CountPendingPushCommandsAsync());
     }
 
     private static PushCommandWorkflowService CreateService(SqliteTestDatabase database)

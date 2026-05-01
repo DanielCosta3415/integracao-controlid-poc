@@ -106,6 +106,7 @@ dotnet list .\tools\ControlIdCallbackSigningProxy\ControlIdCallbackSigningProxy.
 powershell -ExecutionPolicy Bypass -File .\tools\audit-supply-chain.ps1
 powershell -ExecutionPolicy Bypass -File .\tools\scan-secrets.ps1
 powershell -ExecutionPolicy Bypass -File .\tools\generate-sbom.ps1
+powershell -ExecutionPolicy Bypass -File .\tools\test-readiness-gates.ps1 -RunCoverage
 git diff --check
 ```
 

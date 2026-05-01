@@ -1,5 +1,6 @@
 using Integracao.ControlID.PoC.Models.Database;
 using Integracao.ControlID.PoC.Services.Database;
+using Integracao.ControlID.PoC.Services.Push;
 using Integracao.ControlID.PoC.Tests.TestSupport;
 using Microsoft.Extensions.Logging.Abstractions;
 
@@ -41,6 +42,23 @@ public class PushCommandRepositoryTests
 
         Assert.NotNull(result);
         Assert.Equal(pending.CommandId, result.CommandId);
+    }
+
+    [Fact]
+    public async Task ClaimNextPendingCommandForDeliveryAsync_AtomicallyMarksClaimedCommandAsDelivered()
+    {
+        using var database = new SqliteTestDatabase();
+        var repository = CreateRepository(database);
+        var command = await repository.AddPushCommandAsync(CreateCommand("pending", "device-1", DateTime.UtcNow.AddMinutes(-5), "pending"));
+
+        var result = await repository.ClaimNextPendingCommandForDeliveryAsync("device-1");
+        var secondResult = await repository.ClaimNextPendingCommandForDeliveryAsync("device-1");
+
+        Assert.NotNull(result);
+        Assert.Equal(command.CommandId, result.CommandId);
+        Assert.Equal(PushCommandStatuses.Delivered, result.Status);
+        Assert.NotNull(result.UpdatedAt);
+        Assert.Null(secondResult);
     }
 
     [Fact]

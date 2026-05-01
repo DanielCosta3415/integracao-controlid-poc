@@ -97,6 +97,50 @@ namespace Integracao.ControlID.PoC.Services.Database
                 .FirstOrDefaultAsync();
         }
 
+        public async Task<PushCommandLocal?> ClaimNextPendingCommandForDeliveryAsync(string? deviceId)
+        {
+            while (true)
+            {
+                var query = _dbContext.PushCommands
+                    .AsNoTracking()
+                    .Where(command => command.Status == PushCommandStatuses.Pending);
+
+                if (!string.IsNullOrWhiteSpace(deviceId))
+                {
+                    query = query.Where(command => command.DeviceId == deviceId || string.IsNullOrEmpty(command.DeviceId));
+                }
+
+                var candidateId = await query
+                    .OrderBy(command => command.CreatedAt)
+                    .Select(command => (Guid?)command.CommandId)
+                    .FirstOrDefaultAsync();
+
+                if (!candidateId.HasValue)
+                    return null;
+
+                var now = DateTime.UtcNow;
+                var updatedRows = await _dbContext.PushCommands
+                    .Where(command => command.CommandId == candidateId.Value && command.Status == PushCommandStatuses.Pending)
+                    .ExecuteUpdateAsync(setters => setters
+                        .SetProperty(command => command.Status, PushCommandStatuses.Delivered)
+                        .SetProperty(command => command.UpdatedAt, now));
+
+                if (updatedRows == 1)
+                {
+                    var trackedEntry = _dbContext.ChangeTracker
+                        .Entries<PushCommandLocal>()
+                        .FirstOrDefault(entry => entry.Entity.CommandId == candidateId.Value);
+
+                    if (trackedEntry != null)
+                    {
+                        trackedEntry.State = EntityState.Detached;
+                    }
+
+                    return await GetPushCommandByIdAsync(candidateId.Value);
+                }
+            }
+        }
+
         /// <summary>
         /// Atualiza dados de um comando Push local.
         /// </summary>
@@ -150,7 +194,7 @@ namespace Integracao.ControlID.PoC.Services.Database
         }
 
         /// <summary>
-        /// Busca comandos Push locais por tipo, status, usuário ou período.
+        /// Busca comandos Push locais por tipo, status, usuÃ¡rio ou perÃ­odo.
         /// </summary>
         public async Task<List<PushCommandLocal>> SearchPushCommandsAsync(
             string? commandType = null,

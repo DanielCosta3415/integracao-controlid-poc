@@ -98,22 +98,11 @@ public sealed class PushCommandWorkflowService
     {
         _logger.LogDebug("Push poll started for device {DeviceRef}.", PrivacyLogHelper.PseudonymizeIdentifier(deviceId));
 
-        var command = await _pushCommandRepository.GetNextPendingCommandAsync(deviceId);
+        var command = await _pushCommandRepository.ClaimNextPendingCommandForDeliveryAsync(deviceId);
         if (command == null)
         {
             _logger.LogDebug("Push poll found no pending command for device {DeviceRef}.", PrivacyLogHelper.PseudonymizeIdentifier(deviceId));
             return null;
-        }
-
-        command.Status = PushCommandStatuses.Delivered;
-        command.UpdatedAt = DateTime.UtcNow;
-        var persisted = await _pushCommandRepository.UpdatePushCommandAsync(command);
-        if (!persisted)
-        {
-            _logger.LogError(
-                "Push command {CommandId} was selected for delivery to device {DeviceRef}, but status persistence failed.",
-                command.CommandId,
-                PrivacyLogHelper.PseudonymizeIdentifier(deviceId));
         }
 
         return command;
