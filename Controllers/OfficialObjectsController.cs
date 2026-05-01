@@ -338,7 +338,7 @@ namespace Integracao.ControlID.PoC.Controllers
                 throw new InvalidOperationException($"{message}: {result.ErrorMessage}");
 
             if (!string.IsNullOrWhiteSpace(result.ResponseBody) && !result.ResponseBodyIsBase64)
-                throw new InvalidOperationException($"{message}: {result.ResponseBody}");
+                throw new InvalidOperationException($"{message} (status HTTP {result.StatusCode}; corpo de resposta omitido por segurança).");
 
             throw new InvalidOperationException($"{message} (status HTTP {result.StatusCode}).");
         }

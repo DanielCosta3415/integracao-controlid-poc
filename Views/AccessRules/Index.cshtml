@@ -61,7 +61,7 @@
                             <td>
                                 <a asp-action="Details" asp-route-id="@rule.Id" class="btn btn-sm btn-info">Detalhes</a>
                                 <a asp-action="Edit" asp-route-id="@rule.Id" class="btn btn-sm btn-primary">Editar</a>
-                                <a asp-action="Delete" asp-route-id="@rule.Id" class="btn btn-sm btn-danger" onclick="return confirm('Deseja excluir esta regra?');">Excluir</a>
+                                <a asp-action="Delete" asp-route-id="@rule.Id" class="btn btn-sm btn-danger" data-confirm="Deseja excluir esta regra?">Excluir</a>
                             </td>
                         </tr>
                     }

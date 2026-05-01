@@ -43,6 +43,10 @@ jobs:
       - name: Test
         run: dotnet test .\Integracao.ControlID.PoC.sln --no-build -v:minimal
 
+      - name: Localhost smoke test
+        shell: pwsh
+        run: .\tools\smoke-localhost.ps1 -ReportPath .\artifacts\smoke\localhost-smoke-ci.md
+
       - name: Format check
         run: dotnet format .\Integracao.ControlID.PoC.sln --verify-no-changes --no-restore -v:minimal
 

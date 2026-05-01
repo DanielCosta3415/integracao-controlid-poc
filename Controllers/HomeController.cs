@@ -178,7 +178,11 @@ namespace Integracao.ControlID.PoC.Controllers
                 {
                     TempData["StatusMessage"] = "Conexão realizada, mas não foi possível processar os dados do equipamento (resposta inválida da API).";
                     TempData["StatusType"] = "warning";
-                    _logger.LogWarning("Resposta inesperada ou inválida ao conectar no equipamento {BaseUrl}: {ResponseBody}", baseUrl, result.ResponseBody);
+                    _logger.LogWarning(
+                        "Resposta inesperada ou invalida ao conectar no equipamento {BaseUrl}. Status: {StatusCode}. ResponseLength: {ResponseLength}.",
+                        baseUrl,
+                        result.StatusCode,
+                        result.ResponseBody?.Length ?? 0);
                     return RedirectToLocal(connection.ReturnUrl);
                 }
 
@@ -190,7 +194,10 @@ namespace Integracao.ControlID.PoC.Controllers
                 {
                     TempData["StatusMessage"] = "Conexão realizada, mas não foi possível identificar o equipamento (número de série ausente).";
                     TempData["StatusType"] = "warning";
-                    _logger.LogWarning("Conexão ao equipamento retornou resposta inesperada: {Content}", result.ResponseBody);
+                    _logger.LogWarning(
+                        "Conexao ao equipamento retornou resposta inesperada. Status: {StatusCode}. ResponseLength: {ResponseLength}.",
+                        result.StatusCode,
+                        result.ResponseBody?.Length ?? 0);
                 }
                 else
                 {
@@ -274,13 +281,7 @@ namespace Integracao.ControlID.PoC.Controllers
 
         private static string BuildErrorMessage(string prefix, OfficialApiInvocationResult result)
         {
-            if (!string.IsNullOrWhiteSpace(result.ErrorMessage))
-                return $"{prefix}: {SecurityTextHelper.NormalizeForDisplay(result.ErrorMessage)}";
-
-            if (!string.IsNullOrWhiteSpace(result.ResponseBody) && !result.ResponseBodyIsBase64)
-                return $"{prefix}: {SecurityTextHelper.NormalizeForDisplay(result.ResponseBody)}";
-
-            return $"{prefix} (status: {result.StatusCode}).";
+            return SecurityTextHelper.BuildApiFailureMessage(result, prefix);
         }
 
         private static string? GetString(JsonElement element, params string[] propertyNames)

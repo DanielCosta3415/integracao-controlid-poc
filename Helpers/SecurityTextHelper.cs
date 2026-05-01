@@ -119,7 +119,7 @@ namespace Integracao.ControlID.PoC.Helpers
 
             if (!string.IsNullOrWhiteSpace(result.ResponseBody))
             {
-                return $"{errorPrefix}: {NormalizeForDisplay(result.ResponseBody)}";
+                return $"{errorPrefix} (status HTTP {result.StatusCode}; corpo de resposta omitido por segurança).";
             }
 
             return $"{errorPrefix} (status HTTP {result.StatusCode}).";

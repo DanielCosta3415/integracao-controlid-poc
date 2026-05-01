@@ -3629,7 +3629,31 @@ body.app-search-open .app-command-palette__results {
 }
 
 .contract-table__path {
-  padding-left: calc(0.75rem + (var(--depth, 0) * 0.85rem));
+  padding-left: 0.75rem;
+}
+
+.contract-table__path--depth-1 {
+  padding-left: 1.6rem;
+}
+
+.contract-table__path--depth-2 {
+  padding-left: 2.45rem;
+}
+
+.contract-table__path--depth-3 {
+  padding-left: 3.3rem;
+}
+
+.contract-table__path--depth-4 {
+  padding-left: 4.15rem;
+}
+
+.contract-table__path--depth-5 {
+  padding-left: 5rem;
+}
+
+.contract-table__path--depth-6 {
+  padding-left: 5.85rem;
 }
 
 .app-empty--compact {

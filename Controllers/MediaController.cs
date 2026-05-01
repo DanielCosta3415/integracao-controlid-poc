@@ -105,7 +105,7 @@ namespace Integracao.ControlID.PoC.Controllers
                 return View(model);
             }
 
-            if (!model.PhotoFile.ContentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase) || model.PhotoFile.Length > 2 * 1024 * 1024)
+            if (model.PhotoFile.Length > MaxImageUploadBytes)
             {
                 ModelState.AddModelError(string.Empty, "Apenas arquivos de imagem até 2MB são permitidos.");
                 return View(model);
@@ -242,10 +242,11 @@ namespace Integracao.ControlID.PoC.Controllers
 
             try
             {
-                var videoBytes = await _fileEncoder.ReadBytesAsync(
+                var videoBytes = await _fileEncoder.ReadValidatedBytesAsync(
                     model.VideoFile,
                     "Selecione um arquivo MP4 valido para envio.",
-                    MaxAdVideoBytes);
+                    MaxAdVideoBytes,
+                    UploadedFileValidation.Mp4("Envie um arquivo MP4 valido de ate 256 MB."));
                 var chunkSize = model.ChunkSizeKb * 1024;
                 var totalChunks = (int)Math.Ceiling(videoBytes.Length / (double)chunkSize);
 
@@ -445,10 +446,13 @@ namespace Integracao.ControlID.PoC.Controllers
 
         private async Task<string> BuildPhotoMultipartPayloadAsync(PhotoUploadViewModel model)
         {
-            var base64Photo = await _fileEncoder.EncodeAsync(
+            var validation = UploadedFileValidation.JpegOrPng("Apenas arquivos JPG ou PNG validos de ate 2 MB sao permitidos.");
+            var base64Photo = await _fileEncoder.EncodeValidatedAsync(
                 model.PhotoFile,
                 "Selecione um arquivo de foto para envio.",
-                MaxImageUploadBytes);
+                MaxImageUploadBytes,
+                validation);
+            var safeFileName = validation.BuildSafeFileName(model.PhotoFile, $"user_{model.UserId}.jpg");
 
             var payload = new
             {
@@ -461,8 +465,8 @@ namespace Integracao.ControlID.PoC.Controllers
                     new
                     {
                         name = "image",
-                        fileName = string.IsNullOrWhiteSpace(model.PhotoFile.FileName) ? $"user_{model.UserId}.jpg" : model.PhotoFile.FileName,
-                        contentType = string.IsNullOrWhiteSpace(model.PhotoFile.ContentType) ? "image/jpeg" : model.PhotoFile.ContentType,
+                        fileName = safeFileName,
+                        contentType = GetUploadImageContentType(safeFileName),
                         base64Content = base64Photo
                     }
                 }
@@ -553,13 +557,7 @@ namespace Integracao.ControlID.PoC.Controllers
 
         private static string BuildErrorMessage(string prefix, OfficialApiInvocationResult result)
         {
-            if (!string.IsNullOrWhiteSpace(result.ErrorMessage))
-                return SecurityTextHelper.BuildApiFailureMessage(result, prefix);
-
-            if (!string.IsNullOrWhiteSpace(result.ResponseBody) && !result.ResponseBodyIsBase64)
-                return SecurityTextHelper.BuildApiFailureMessage(result, prefix);
-
-            return $"{prefix} (status: {result.StatusCode}).";
+            return SecurityTextHelper.BuildApiFailureMessage(result, prefix);
         }
 
         private static string BuildFileName(long id, string? contentType, string prefix)
@@ -590,6 +588,13 @@ namespace Integracao.ControlID.PoC.Controllers
         private static string GetContentType(string? contentType, string fallback)
         {
             return string.IsNullOrWhiteSpace(contentType) ? fallback : contentType;
+        }
+
+        private static string GetUploadImageContentType(string fileName)
+        {
+            return fileName.EndsWith(".png", StringComparison.OrdinalIgnoreCase)
+                ? "image/png"
+                : "image/jpeg";
         }
 
         private static bool? TryExtractCustomVideoEnabled(JsonElement? root)

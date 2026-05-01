@@ -39,4 +39,19 @@ public class OfficialApiBinaryFileResultFactoryTests
         Assert.Equal("text/plain", fileResult.ContentType);
         Assert.Equal(Encoding.UTF8.GetBytes("ok"), fileResult.FileContents);
     }
+
+    [Fact]
+    public void Create_UsesFallbackContentType_WhenDeviceContentTypeIsInvalid()
+    {
+        var factory = new OfficialApiBinaryFileResultFactory();
+        var result = new OfficialApiInvocationResult
+        {
+            ResponseBody = "ok",
+            ResponseContentType = "text/plain\r\nX-Injected: true"
+        };
+
+        var fileResult = factory.Create(result, "report.txt", "text/plain");
+
+        Assert.Equal("text/plain", fileResult.ContentType);
+    }
 }

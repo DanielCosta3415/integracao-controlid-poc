@@ -4,7 +4,7 @@ Proxy local para equipamentos Control iD que nao conseguem gerar assinatura HMAC
 
 O proxy recebe chamadas do equipamento em uma interface de rede restrita, valida IP remoto e chave opcional de entrada, assina a requisicao com `X-ControlID-Signature`, `X-ControlID-Timestamp` e `X-ControlID-Nonce`, injeta a shared key esperada pela PoC e encaminha para a aplicacao.
 
-Antes de encaminhar, o proxy remove headers sensiveis recebidos do cliente e insere uma assinatura nova. Assim a PoC continua exigindo `CallbackSecurity:RequireSignedRequests=true` mesmo quando o equipamento nao sabe assinar.
+Antes de encaminhar, o proxy remove headers sensiveis recebidos do cliente e insere uma assinatura nova. Assim a PoC continua exigindo `CallbackSecurity:RequireSignedRequests=true` mesmo quando o equipamento nao sabe assinar. Respostas acima de `Proxy:MaxResponseBytes` sao bloqueadas para reduzir risco de consumo excessivo de memoria.
 
 ## Execucao
 

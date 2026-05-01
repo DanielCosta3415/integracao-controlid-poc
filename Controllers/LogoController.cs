@@ -86,11 +86,8 @@ namespace Integracao.ControlID.PoC.Controllers
                 return View(model);
             }
 
-            var fileName = model.LogoFile.FileName ?? string.Empty;
-            var isPng = model.LogoFile.ContentType.Contains("png", StringComparison.OrdinalIgnoreCase) ||
-                        fileName.EndsWith(".png", StringComparison.OrdinalIgnoreCase);
-
-            if (!isPng || model.LogoFile.Length > 2 * 1024 * 1024)
+            var logoValidation = UploadedFileValidation.Png("Envie um arquivo PNG valido de ate 2 MB.");
+            if (model.LogoFile.Length > 2 * 1024 * 1024)
             {
                 ModelState.AddModelError(string.Empty, "Envie um arquivo PNG de até 2MB.");
                 return View(model);
@@ -98,10 +95,11 @@ namespace Integracao.ControlID.PoC.Controllers
 
             try
             {
-                var base64Logo = await _fileEncoder.EncodeAsync(
+                var base64Logo = await _fileEncoder.EncodeValidatedAsync(
                     model.LogoFile,
                     "Selecione um arquivo PNG de logo para enviar.",
-                    2L * 1024 * 1024);
+                    2L * 1024 * 1024,
+                    logoValidation);
 
                 var result = await _officialApi.InvokeAsync(
                     "logo-change",
@@ -250,13 +248,7 @@ namespace Integracao.ControlID.PoC.Controllers
 
         private static string BuildErrorMessage(string prefix, OfficialApiInvocationResult result)
         {
-            if (!string.IsNullOrWhiteSpace(result.ErrorMessage))
-                return SecurityTextHelper.BuildApiFailureMessage(result, prefix);
-
-            if (!string.IsNullOrWhiteSpace(result.ResponseBody) && !result.ResponseBodyIsBase64)
-                return SecurityTextHelper.BuildApiFailureMessage(result, prefix);
-
-            return $"{prefix} (status: {result.StatusCode}).";
+            return SecurityTextHelper.BuildApiFailureMessage(result, prefix);
         }
 
         private static string GetFileExtension(string? contentType)

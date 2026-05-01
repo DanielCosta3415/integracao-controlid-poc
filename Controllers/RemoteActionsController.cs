@@ -268,13 +268,7 @@ namespace Integracao.ControlID.PoC.Controllers
 
         private static string BuildErrorMessage(OfficialApiInvocationResult result)
         {
-            if (!string.IsNullOrWhiteSpace(result.ErrorMessage))
-                return result.ErrorMessage;
-
-            if (!string.IsNullOrWhiteSpace(result.ResponseBody))
-                return result.ResponseBody;
-
-            return $"Falha HTTP {result.StatusCode}.";
+            return SecurityTextHelper.BuildApiFailureMessage(result, "Falha ao executar a acao remota");
         }
     }
 }

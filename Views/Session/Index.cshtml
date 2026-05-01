@@ -61,7 +61,7 @@
                             </td>
                             <td>
                                 <form asp-action="Delete" asp-route-id="@session.Id" method="post" class="app-inline-form">
-                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Deseja encerrar esta sessão?');">Encerrar</button>
+                                    <button type="submit" class="btn btn-sm btn-danger" data-confirm="Deseja encerrar esta sessão?">Encerrar</button>
                                 </form>
                             </td>
                         </tr>

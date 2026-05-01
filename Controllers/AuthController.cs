@@ -154,7 +154,11 @@ namespace Integracao.ControlID.PoC.Controllers
                 if (document == null || !TryGetString(document.RootElement, out var sessionString, "session"))
                 {
                     ModelState.AddModelError(string.Empty, "A resposta do dispositivo não continha uma sessão válida.");
-                    _logger.LogWarning("Resposta inesperada no login do dispositivo {DeviceAddress}: {ResponseBody}", deviceAddress, result.ResponseBody);
+                    _logger.LogWarning(
+                        "Resposta inesperada no login do dispositivo {DeviceAddress}. Status: {StatusCode}. ResponseLength: {ResponseLength}.",
+                        deviceAddress,
+                        result.StatusCode,
+                        result.ResponseBody?.Length ?? 0);
                     return View(model);
                 }
 
@@ -264,6 +268,7 @@ namespace Integracao.ControlID.PoC.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [AllowAnonymous]
+        [EnableRateLimiting("LocalAuth")]
         public async Task<IActionResult> Register(RegisterViewModel model)
         {
             if (!await CanRegisterLocalUserAsync())
@@ -363,13 +368,7 @@ namespace Integracao.ControlID.PoC.Controllers
 
         private static string BuildErrorMessage(string prefix, OfficialApiInvocationResult result)
         {
-            if (!string.IsNullOrWhiteSpace(result.ErrorMessage))
-                return $"{prefix}: {SecurityTextHelper.NormalizeForDisplay(result.ErrorMessage)}";
-
-            if (!string.IsNullOrWhiteSpace(result.ResponseBody) && !result.ResponseBodyIsBase64)
-                return $"{prefix}: {SecurityTextHelper.NormalizeForDisplay(result.ResponseBody)}";
-
-            return $"{prefix} (status: {result.StatusCode}).";
+            return SecurityTextHelper.BuildApiFailureMessage(result, prefix);
         }
 
         private async Task<bool> CanRegisterLocalUserAsync()

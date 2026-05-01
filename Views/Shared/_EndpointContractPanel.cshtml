@@ -88,7 +88,7 @@
                         @foreach (var parameter in Model.BodyParameters)
                         {
                             <tr>
-                                <td class="contract-table__path" style="--depth:@parameter.Depth"><code>@parameter.Path</code></td>
+                                <td class="contract-table__path contract-table__path--depth-@(Math.Clamp(parameter.Depth, 0, 6))"><code>@parameter.Path</code></td>
                                 <td>@parameter.TypeLabel</td>
                                 <td>@parameter.RequirementLabel</td>
                                 <td><code>@parameter.Example</code></td>

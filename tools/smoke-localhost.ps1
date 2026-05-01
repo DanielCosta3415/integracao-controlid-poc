@@ -28,7 +28,7 @@ $sampleBinPath = Join-Path $artifactsDir "sample.bin"
 
 [IO.File]::WriteAllBytes($samplePngPath, [Convert]::FromBase64String("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aR8kAAAAASUVORK5CYII="))
 [IO.File]::WriteAllBytes($sampleWavPath, [Text.Encoding]::ASCII.GetBytes("RIFFSTUBWAVEfmt data"))
-[IO.File]::WriteAllBytes($sampleMp4Path, [Text.Encoding]::UTF8.GetBytes("FAKE-MP4-DATA"))
+[IO.File]::WriteAllBytes($sampleMp4Path, [byte[]]@(0, 0, 0, 24, 102, 116, 121, 112, 105, 115, 111, 109, 0, 0, 2, 0, 105, 115, 111, 109, 105, 115, 111, 50))
 [IO.File]::WriteAllText($samplePemPath, "-----BEGIN CERTIFICATE-----`nU1RVQi1DRVJULURBVEE=`n-----END CERTIFICATE-----`n")
 [IO.File]::WriteAllBytes($sampleBinPath, [Text.Encoding]::UTF8.GetBytes("stub-biometry"))
 

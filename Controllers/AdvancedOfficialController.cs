@@ -147,7 +147,7 @@ namespace Integracao.ControlID.PoC.Controllers
                 if (result.ResponseBodyIsBase64)
                 {
                     model.Base64Image = result.ResponseBody;
-                    model.ImageContentType = GetContentType(result.ResponseContentType, "image/png");
+                    model.ImageContentType = GetSafeImageContentType(result.ResponseContentType);
                     model.ResponseJson = $"Imagem retornada em {model.ImageContentType}.";
                 }
                 else
@@ -222,16 +222,16 @@ namespace Integracao.ControlID.PoC.Controllers
                 for (var index = 0; index < model.BatchFiles.Count; index++)
                 {
                     var file = model.BatchFiles[index];
-                    EnsureSupportedImageFile(file);
 
                     userImages.Add(new
                     {
                         user_id = userIds[index],
                         timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
-                        image = await _fileEncoder.EncodeAsync(
+                        image = await _fileEncoder.EncodeValidatedAsync(
                             file,
                             "Selecione arquivos JPG ou PNG validos para o cadastro em lote.",
-                            MaxFacialImageBytes)
+                            MaxFacialImageBytes,
+                            UploadedFileValidation.JpegOrPng("Envie apenas arquivos JPG ou PNG validos para este fluxo."))
                     });
                 }
 
@@ -272,11 +272,11 @@ namespace Integracao.ControlID.PoC.Controllers
 
             try
             {
-                EnsureSupportedImageFile(model.TestFile);
-                var base64Image = await _fileEncoder.EncodeAsync(
+                var base64Image = await _fileEncoder.EncodeValidatedAsync(
                     model.TestFile,
                     "Selecione um arquivo JPG ou PNG para teste.",
-                    MaxFacialImageBytes);
+                    MaxFacialImageBytes,
+                    UploadedFileValidation.JpegOrPng("Envie apenas arquivos JPG ou PNG validos para este fluxo."));
 
                 var (result, document) = await _apiService.InvokeJsonAsync("user-test-image", base64Image);
                 if (!result.Success)
@@ -407,26 +407,19 @@ namespace Integracao.ControlID.PoC.Controllers
             return string.IsNullOrWhiteSpace(contentType) ? fallback : contentType;
         }
 
-        private static void EnsureSupportedImageFile(IFormFile? file)
+        private static string GetSafeImageContentType(string contentType)
         {
-            if (file == null || file.Length == 0)
-                throw new InvalidOperationException("Selecione um arquivo JPG ou PNG valido.");
-
-            if (file.Length > MaxFacialImageBytes)
-                throw new InvalidOperationException("Envie um arquivo JPG ou PNG de ate 5 MB.");
-
-            var fileName = file.FileName ?? string.Empty;
-            var contentType = file.ContentType ?? string.Empty;
-            var isSupported =
-                contentType.Equals("image/jpeg", StringComparison.OrdinalIgnoreCase) ||
+            if (contentType.Equals("image/jpeg", StringComparison.OrdinalIgnoreCase) ||
                 contentType.Equals("image/png", StringComparison.OrdinalIgnoreCase) ||
-                fileName.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase) ||
-                fileName.EndsWith(".jpeg", StringComparison.OrdinalIgnoreCase) ||
-                fileName.EndsWith(".png", StringComparison.OrdinalIgnoreCase);
+                contentType.Equals("image/bmp", StringComparison.OrdinalIgnoreCase) ||
+                contentType.Equals("image/gif", StringComparison.OrdinalIgnoreCase))
+            {
+                return contentType.ToLowerInvariant();
+            }
 
-            if (!isSupported)
-                throw new InvalidOperationException("Envie apenas arquivos JPG ou PNG para este fluxo.");
+            return "image/png";
         }
+
     }
 }
 

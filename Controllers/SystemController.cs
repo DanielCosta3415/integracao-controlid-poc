@@ -16,6 +16,9 @@ namespace Integracao.ControlID.PoC.Controllers
     [Authorize(Roles = AppSecurityRoles.Administrator)]
     public class SystemController : Controller
     {
+        private const long MaxCertificateBytes = 256L * 1024;
+        private const long MaxVpnFileBytes = 10L * 1024 * 1024;
+
         private readonly OfficialControlIdApiService _apiService;
         private readonly UploadedFileBase64Encoder _fileEncoder;
         private readonly ILogger<SystemController> _logger;
@@ -395,7 +398,11 @@ namespace Integracao.ControlID.PoC.Controllers
 
             try
             {
-                var base64Certificate = await _fileEncoder.EncodeAsync(model.CertificateFile, "Selecione um certificado SSL para enviar.");
+                var base64Certificate = await _fileEncoder.EncodeValidatedAsync(
+                    model.CertificateFile,
+                    "Selecione um certificado SSL para enviar.",
+                    MaxCertificateBytes,
+                    UploadedFileValidation.PemCertificate("Envie um certificado PEM publico valido de ate 256 KB."));
                 var result = await _apiService.InvokeAsync("ssl-certificate-change", base64Certificate);
                 if (!result.Success)
                     throw new InvalidOperationException(BuildErrorMessage(result, "Erro ao enviar certificado SSL"));
@@ -481,9 +488,14 @@ namespace Integracao.ControlID.PoC.Controllers
 
             try
             {
-                var fileName = model.VpnFile.FileName ?? string.Empty;
-                var fileType = fileName.EndsWith(".zip", StringComparison.OrdinalIgnoreCase) ? "zip" : "config";
-                var base64VpnFile = await _fileEncoder.EncodeAsync(model.VpnFile, "Selecione um arquivo OpenVPN para enviar.");
+                var vpnValidation = UploadedFileValidation.OpenVpn("Envie um arquivo OpenVPN .conf, .ovpn ou .zip valido de ate 10 MB.");
+                var safeFileName = vpnValidation.BuildSafeFileName(model.VpnFile, "openvpn.conf");
+                var fileType = safeFileName.EndsWith(".zip", StringComparison.OrdinalIgnoreCase) ? "zip" : "config";
+                var base64VpnFile = await _fileEncoder.EncodeValidatedAsync(
+                    model.VpnFile,
+                    "Selecione um arquivo OpenVPN para enviar.",
+                    MaxVpnFileBytes,
+                    vpnValidation);
 
                 var result = await _apiService.InvokeAsync(
                     "set-vpn-file",

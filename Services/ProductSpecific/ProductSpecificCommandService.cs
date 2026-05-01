@@ -9,6 +9,8 @@ namespace Integracao.ControlID.PoC.Services.ProductSpecific;
 
 public sealed class ProductSpecificCommandService
 {
+    private const long MaxAudioUploadBytes = 10L * 1024 * 1024;
+
     private readonly IOfficialControlIdApiService _apiService;
     private readonly ProductSpecificConfigurationPayloadFactory _payloadFactory;
     private readonly ProductSpecificSnapshotService _snapshotService;
@@ -161,7 +163,11 @@ public sealed class ProductSpecificCommandService
 
         try
         {
-            var base64 = await _fileEncoder.EncodeAsync(model.SipAudioFile, "Selecione um arquivo WAV para o toque SIP.");
+            var base64 = await _fileEncoder.EncodeValidatedAsync(
+                model.SipAudioFile,
+                "Selecione um arquivo WAV para o toque SIP.",
+                MaxAudioUploadBytes,
+                UploadedFileValidation.Wav("Envie um arquivo WAV valido de ate 10 MB."));
             var result = await _apiService.InvokeAsync("set-pjsip-audio-message", base64, $"current={model.SipAudioCurrent}&total={model.SipAudioTotal}");
             _resultPresentationService.EnsureSuccess(result, "Erro ao enviar áudio customizado do SIP");
             await _snapshotService.PopulateSipAudioAsync(model);
@@ -220,7 +226,11 @@ public sealed class ProductSpecificCommandService
 
         try
         {
-            var base64 = await _fileEncoder.EncodeAsync(model.AccessAudioFile, "Selecione um arquivo WAV para o evento de acesso.");
+            var base64 = await _fileEncoder.EncodeValidatedAsync(
+                model.AccessAudioFile,
+                "Selecione um arquivo WAV para o evento de acesso.",
+                MaxAudioUploadBytes,
+                UploadedFileValidation.Wav("Envie um arquivo WAV valido de ate 10 MB."));
             var result = await _apiService.InvokeAsync(
                 "set-audio-access-message",
                 base64,

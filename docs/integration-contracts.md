@@ -58,7 +58,7 @@ Nao ha loader `.env` configurado. Use `appsettings.json`, User Secrets ou variav
 - Ponto de chamada: `OfficialApiInvokerService` via `OfficialControlIdApiService`.
 - Endpoints: catalogados em `OfficialApiCatalogService` como paths `.fcgi`, por exemplo `/login.fcgi`, `/load_objects.fcgi`, `/set_configuration.fcgi`, `/reboot.fcgi`.
 - Metodo: definido por endpoint (`GET` ou `POST`).
-- Headers: `Content-Type` conforme `OfficialApiEndpointDefinition.ContentType`; session vai na query `session=...` quando requerida.
+- Headers: `Content-Type` conforme `OfficialApiEndpointDefinition.ContentType`; session vai na query real `session=...` quando requerida, mas URLs exibidas em tela/logs devem mascarar esse valor.
 - Autenticacao: login oficial retorna `session`; endpoints com `RequiresSession=true` exigem sessao ativa.
 - Request: JSON, multipart, binario/base64 ou vazio, conforme `BodyKind`.
 - Response: texto/JSON ou binario preservado em Base64 quando Content-Type nao parece texto/json/xml.
@@ -80,7 +80,7 @@ Nao ha loader `.env` configurado. Use `appsettings.json`, User Secrets ou variav
 - Ponto de chamada: `OfficialApiController`, `OfficialApiCatalogService`, `OfficialApiContractDocumentationService`.
 - Metodo: MVC `GET` para catalogo/detalhe e `POST` para invocacao.
 - Headers: cookie de sessao ASP.NET e antiforgery em formularios.
-- Autenticacao/autorizacao: sessao da PoC; nao ha RBAC documentado.
+- Autenticacao/autorizacao: sessao da PoC e RBAC por papel; invocacao assistida exige perfil autorizado conforme controller.
 - Request: ViewModels de `ViewModels/OfficialApi/*`.
 - Response: views Razor com resposta oficial formatada.
 - Status codes: MVC padrao; erros aparecem em tela.
@@ -189,13 +189,13 @@ Nao ha loader `.env` configurado. Use `appsettings.json`, User Secrets ou variav
 - Tipo: autenticacao/estado.
 - Finalidade: guardar device address e session string oficial para chamadas autenticadas.
 - Chaves: `ControlID_DeviceAddress`, `ControlID_SessionString`.
-- Cookie: `Session:CookieName`, HttpOnly, SameSite Lax, Secure Always fora de Development.
+- Cookie: `Session:CookieName`, HttpOnly, SameSite Strict, Secure Always fora de Development.
 - Request/response: MVC com antiforgery nos POSTs.
 - Timeout: `Session:IdleTimeout`.
 - Retry/backoff: nao aplicavel.
 - Idempotencia: logout/clear sao tolerantes a ausencia de sessao.
 - Dados sensiveis: session string oficial; nao logar.
-- Risco: nao ha RBAC por papel; uso esperado e laboratorio/operador tecnico.
+- Controle: auth local global com RBAC por papel; session string oficial deve aparecer apenas mascarada em URLs de diagnostico.
 
 ### INT-009 - Observabilidade Serilog
 
@@ -221,7 +221,7 @@ Nao ha loader `.env` configurado. Use `appsettings.json`, User Secrets ou variav
 - Ponto de chamada: `tools/contract-controlid-device.ps1`.
 - Finalidade: validar `login.fcgi`, `session_is_valid.fcgi` e `system_information.fcgi` contra equipamento real sem versionar credenciais.
 - Ambiente: local/laboratorio; exige `CONTROLID_DEVICE_URL`, `CONTROLID_USERNAME` e `CONTROLID_PASSWORD`.
-- Persistencia: gera relatorio em `docs/reports/controlid-device-contract-latest.md` quando executado.
+- Persistencia: gera relatorio em `artifacts/reports/controlid-device-contract-latest.md` por padrao, fora do Git, omitindo host real, credenciais e session.
 - Restricao: nao roda na CI porque depende de equipamento fisico e credenciais reais.
 
 ## Exemplos de payloads

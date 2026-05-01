@@ -83,7 +83,10 @@ app.MapMethods(
             .CreateClient("forwarder")
             .SendAsync(forwardRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
 
-        var responseBody = await response.Content.ReadAsByteArrayAsync(cancellationToken);
+        var responseBody = await ReadResponseBodyAsync(response.Content, options.MaxResponseBytes, cancellationToken);
+        if (responseBody == null)
+            return Results.StatusCode(StatusCodes.Status502BadGateway);
+
         return new ProxyResponseResult(
             (int)response.StatusCode,
             response.Content.Headers.ContentType?.ToString(),
@@ -116,6 +119,28 @@ static async Task<byte[]?> ReadBodyAsync(HttpRequest request, int maxBodyBytes, 
     return memoryStream.ToArray();
 }
 
+static async Task<byte[]?> ReadResponseBodyAsync(HttpContent content, int maxBodyBytes, CancellationToken cancellationToken)
+{
+    if (content.Headers.ContentLength > maxBodyBytes)
+        return null;
+
+    await using var stream = await content.ReadAsStreamAsync(cancellationToken);
+    using var memoryStream = new MemoryStream();
+    var buffer = new byte[81920];
+    var totalBytes = 0;
+    int read;
+    while ((read = await stream.ReadAsync(buffer, cancellationToken)) > 0)
+    {
+        totalBytes += read;
+        if (totalBytes > maxBodyBytes)
+            return null;
+
+        await memoryStream.WriteAsync(buffer.AsMemory(0, read), cancellationToken);
+    }
+
+    return memoryStream.ToArray();
+}
+
 static bool RequestHasBody(string method)
 {
     return HttpMethods.IsPost(method) || HttpMethods.IsPut(method) || HttpMethods.IsPatch(method);
@@ -127,7 +152,10 @@ static void CopySafeHeaders(HttpRequest request, HttpRequestMessage forwardReque
     {
         if (header.Key.Equals("Host", StringComparison.OrdinalIgnoreCase) ||
             header.Key.Equals("Content-Length", StringComparison.OrdinalIgnoreCase) ||
-            header.Key.Equals("Connection", StringComparison.OrdinalIgnoreCase))
+            header.Key.Equals("Connection", StringComparison.OrdinalIgnoreCase) ||
+            header.Key.Equals("Authorization", StringComparison.OrdinalIgnoreCase) ||
+            header.Key.Equals("Cookie", StringComparison.OrdinalIgnoreCase) ||
+            header.Key.Equals("Set-Cookie", StringComparison.OrdinalIgnoreCase))
         {
             continue;
         }
@@ -183,6 +211,7 @@ internal sealed class SigningProxyOptions
     public string InboundSharedKey { get; private init; } = string.Empty;
     public string InboundSharedKeyHeaderName { get; private init; } = "X-ControlID-Proxy-Key";
     public int MaxBodyBytes { get; private init; } = 1024 * 1024;
+    public int MaxResponseBytes { get; private init; } = 5 * 1024 * 1024;
     public bool AllowLoopback { get; private init; } = true;
     public IReadOnlyList<string> AllowedRemoteIps { get; private init; } = [];
     public IReadOnlyList<string> AllowedPathPrefixes { get; private init; } = DefaultAllowedPathPrefixes;
@@ -228,6 +257,7 @@ internal sealed class SigningProxyOptions
             InboundSharedKey = ReadConfigValue(configuration, "Proxy:InboundSharedKey"),
             InboundSharedKeyHeaderName = configuration["Proxy:InboundSharedKeyHeaderName"] ?? "X-ControlID-Proxy-Key",
             MaxBodyBytes = Math.Clamp(configuration.GetValue<int?>("Proxy:MaxBodyBytes") ?? 1024 * 1024, 1024, 10 * 1024 * 1024),
+            MaxResponseBytes = Math.Clamp(configuration.GetValue<int?>("Proxy:MaxResponseBytes") ?? 5 * 1024 * 1024, 1024, 25 * 1024 * 1024),
             AllowLoopback = configuration.GetValue<bool?>("Proxy:AllowLoopback") ?? true,
             AllowedRemoteIps = configuration
                 .GetSection("Proxy:AllowedRemoteIps")
@@ -247,6 +277,14 @@ internal sealed class SigningProxyOptions
     {
         if (string.IsNullOrWhiteSpace(SharedKey))
             throw new InvalidOperationException("Proxy:SharedKey must be configured outside the repository.");
+
+        if (!ForwardBaseUrl.IsAbsoluteUri ||
+            (ForwardBaseUrl.Scheme != Uri.UriSchemeHttp && ForwardBaseUrl.Scheme != Uri.UriSchemeHttps) ||
+            !string.IsNullOrWhiteSpace(ForwardBaseUrl.UserInfo) ||
+            !string.IsNullOrWhiteSpace(ForwardBaseUrl.Query))
+        {
+            throw new InvalidOperationException("Proxy:ForwardBaseUrl must be an absolute HTTP(S) URL without credentials or query string.");
+        }
 
         if (AllowedPathPrefixes.Count == 0)
             throw new InvalidOperationException("Proxy:AllowedPathPrefixes must not be empty.");

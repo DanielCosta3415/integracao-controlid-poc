@@ -11,11 +11,15 @@
 - `user_get_image.fcgi` agora usa a mesma avaliacao de seguranca e assinatura dos ingressos externos antes de retornar foto local.
 - Egress para equipamentos pode ser limitado por allowlist em `ControlIDApi:AllowedDeviceHosts`.
 - Fora de `Development`, a aplicacao exige `AllowedHosts` explicito, shared key de callback, assinatura HMAC, OpenAPI desabilitado e allowlist de equipamentos habilitada.
-- Headers HTTP reforcados com CSP, Permissions-Policy, frame-ancestors, nosniff, COOP, Referrer-Policy e HSTS fora de `Development`.
-- Logs de request incluem usuario local e trace id; logs de push legado nao gravam corpo bruto.
+- Headers HTTP reforcados com CSP sem `unsafe-inline`, Permissions-Policy, frame-ancestors, nosniff, COOP, Referrer-Policy e HSTS fora de `Development`.
+- `Referrer-Policy` usa `no-referrer` para reduzir vazamento acidental de URLs internas, inclusive quando a Access API exige `session` em query string.
+- Rate limit global por usuario autenticado ou IP cobre a UI e atua junto das politicas especificas de login local e ingressos externos.
+- Logs de request incluem usuario local e trace id; logs de push legado nao gravam corpo bruto; URLs oficiais exibidas/registradas mascaram `session`, tokens e segredos em query string.
+- Mensagens publicas de erro de API nao exibem corpo bruto retornado pelo equipamento.
+- Uploads administrativos validam allowlist de extensao, tamanho, content-type declarado e assinatura/conteudo quando aplicavel para PNG/JPG, MP4, WAV, PEM e OpenVPN.
 - Backups SQLite gerados por `tools/backup-sqlite.ps1` sao protegidos por DPAPI por padrao; o restore-smoke descriptografa copias protegidas para validar recuperacao.
 - `tools/harden-local-state.ps1` restringe permissoes locais de SQLite, logs e backups para o usuario atual, Administrators e SYSTEM no Windows.
-- `tools/ControlIdCallbackSigningProxy` fornece uma ponte assinadora para equipamentos que nao conseguem gerar HMAC nativamente.
+- `tools/ControlIdCallbackSigningProxy` fornece uma ponte assinadora para equipamentos que nao conseguem gerar HMAC nativamente, com allowlist de paths, bloqueio de headers sensiveis encaminhados e limite de resposta.
 
 ## Configuracao de producao ou ambiente exposto
 
@@ -87,6 +91,19 @@ powershell -ExecutionPolicy Bypass -File .\tools\harden-local-state.ps1
 
 Esses controles nao substituem isolamento de rede e governanca de acesso ao host, mas deixam o repositorio com implementacoes reproduziveis para assinatura, backup protegido, restore validavel e restricao de arquivos locais.
 
+## Validacao com equipamento fisico
+
+A validacao real do hardware nao deve usar credenciais versionadas. Configure as variaveis apenas no terminal local ou no cofre do ambiente:
+
+```powershell
+$env:CONTROLID_DEVICE_URL = "http://<ip-ou-host-do-equipamento>:8080"
+$env:CONTROLID_USERNAME = "<usuario>"
+$env:CONTROLID_PASSWORD = "<senha>"
+powershell -ExecutionPolicy Bypass -File .\tools\contract-controlid-device.ps1
+```
+
+O script executa apenas operacoes de leitura/sessao: `system_information.fcgi`, `login.fcgi`, `session_is_valid.fcgi` e `logout.fcgi`. O valor da sessao nao e exibido e o relatorio padrao fica em `artifacts/`, fora do Git. Sem equipamento e credenciais reais, esta validacao permanece bloqueada por ambiente, nao por codigo.
+
 ## Checks especificos
 
 ```powershell
@@ -94,4 +111,5 @@ dotnet restore .\tools\ControlIdCallbackSigningProxy\ControlIdCallbackSigningPro
 dotnet build .\tools\ControlIdCallbackSigningProxy\ControlIdCallbackSigningProxy.csproj --no-restore -v:minimal
 dotnet format .\tools\ControlIdCallbackSigningProxy\ControlIdCallbackSigningProxy.csproj --verify-no-changes --no-restore -v:minimal
 powershell -ExecutionPolicy Bypass -File .\tools\scan-secrets.ps1
+powershell -ExecutionPolicy Bypass -File .\tools\smoke-localhost.ps1 -ReportPath .\artifacts\smoke\localhost-smoke-ci.md
 ```

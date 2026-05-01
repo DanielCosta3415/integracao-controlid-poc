@@ -81,6 +81,19 @@ var interactiveRateLimitWindowSeconds = Math.Clamp(builder.Configuration.GetValu
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            httpContext.User.Identity?.IsAuthenticated == true &&
+            !string.IsNullOrWhiteSpace(httpContext.User.Identity.Name)
+                ? $"user:{httpContext.User.Identity.Name}"
+                : $"ip:{httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown"}",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = interactiveRateLimitPermitLimit,
+                Window = TimeSpan.FromSeconds(interactiveRateLimitWindowSeconds),
+                QueueLimit = 0,
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst
+            }));
     options.AddPolicy("CallbackIngress", httpContext =>
         RateLimitPartition.GetFixedWindowLimiter(
             httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
@@ -119,7 +132,7 @@ builder.Services
     {
         options.Cookie.Name = builder.Configuration["Auth:CookieName"] ?? ".IntegracaoControlID.Auth";
         options.Cookie.HttpOnly = true;
-        options.Cookie.SameSite = SameSiteMode.Lax;
+        options.Cookie.SameSite = SameSiteMode.Strict;
         options.Cookie.IsEssential = true;
         options.Cookie.SecurePolicy = builder.Environment.IsDevelopment()
             ? CookieSecurePolicy.SameAsRequest
@@ -140,7 +153,7 @@ builder.Services.AddSession(options =>
 {
     options.Cookie.Name = builder.Configuration["Session:CookieName"] ?? ".IntegracaoControlID.Session";
     options.Cookie.HttpOnly = true;
-    options.Cookie.SameSite = Microsoft.AspNetCore.Http.SameSiteMode.Lax;
+    options.Cookie.SameSite = Microsoft.AspNetCore.Http.SameSiteMode.Strict;
     options.Cookie.IsEssential = true;
     options.Cookie.SecurePolicy = builder.Environment.IsDevelopment()
         ? Microsoft.AspNetCore.Http.CookieSecurePolicy.SameAsRequest
@@ -226,7 +239,6 @@ app.UseMiddleware<SecurityHeadersMiddleware>();
 app.UseResponseCompression();
 app.UseStaticFiles();
 app.UseRouting();
-app.UseRateLimiter();
 
 if (app.Environment.IsDevelopment() && app.Configuration.GetValue<bool>("OpenApi:Enabled"))
 {
@@ -241,6 +253,7 @@ if (app.Environment.IsDevelopment() && app.Configuration.GetValue<bool>("OpenApi
 // Sessão ASP.NET Core (deve vir antes de endpoints)
 app.UseSession();
 app.UseAuthentication();
+app.UseRateLimiter();
 app.UseAuthorization();
 app.UseMiddleware<ApiSessionMiddleware>();
 

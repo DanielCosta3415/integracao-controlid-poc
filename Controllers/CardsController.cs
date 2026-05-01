@@ -341,13 +341,7 @@ namespace Integracao.ControlID.PoC.Controllers
 
         private static string BuildErrorMessage(string prefix, OfficialApiInvocationResult result)
         {
-            if (!string.IsNullOrWhiteSpace(result.ErrorMessage))
-                return SecurityTextHelper.BuildApiFailureMessage(result, prefix);
-
-            if (!string.IsNullOrWhiteSpace(result.ResponseBody) && !result.ResponseBodyIsBase64)
-                return SecurityTextHelper.BuildApiFailureMessage(result, prefix);
-
-            return $"{prefix} (status: {result.StatusCode}).";
+            return SecurityTextHelper.BuildApiFailureMessage(result, prefix);
         }
 
         private static string? GetString(JsonElement element, params string[] propertyNames)

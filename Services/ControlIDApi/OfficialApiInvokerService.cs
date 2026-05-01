@@ -112,7 +112,7 @@ namespace Integracao.ControlID.PoC.Services.ControlIDApi
                     Content = _inputSanitizer.BuildSanitizedContent(endpoint, requestBody)
                 };
 
-                result.RequestUrl = requestUrl;
+                result.RequestUrl = BuildSafeDisplayUrl(requestUrl);
 
                 using var response = await client.SendAsync(request);
                 var responseBytes = await response.Content.ReadAsByteArrayAsync();
@@ -188,11 +188,10 @@ namespace Integracao.ControlID.PoC.Services.ControlIDApi
                 _circuitBreaker.RecordFailure(endpoint.Id, deviceTarget);
                 _logger.LogError(
                     ex,
-                    "Unexpected failure while invoking official endpoint {EndpointId} after {ElapsedMs} ms. Target {DeviceTarget}. Url {RequestUrl}.",
+                    "Unexpected failure while invoking official endpoint {EndpointId} after {ElapsedMs} ms. Target {DeviceTarget}.",
                     endpoint.Id,
                     stopwatch.ElapsedMilliseconds,
-                    deviceTarget,
-                    requestUrl);
+                    deviceTarget);
 
                 result.ErrorMessage = SecurityTextHelper.BuildSafeUserMessage("Falha ao invocar o endpoint oficial", ex);
                 return result;
@@ -223,6 +222,49 @@ namespace Integracao.ControlID.PoC.Services.ControlIDApi
 
             var queryString = queryItems.Count == 0 ? string.Empty : $"?{string.Join("&", queryItems)}";
             return $"{deviceAddress.TrimEnd('/')}{path}{queryString}";
+        }
+
+        private static string BuildSafeDisplayUrl(string requestUrl)
+        {
+            if (!Uri.TryCreate(requestUrl, UriKind.Absolute, out var uri))
+                return SecurityTextHelper.NormalizeForDisplay(requestUrl);
+
+            var builder = new UriBuilder(uri)
+            {
+                Query = MaskSensitiveQuery(uri.Query)
+            };
+
+            return builder.Uri.ToString();
+        }
+
+        private static string MaskSensitiveQuery(string queryString)
+        {
+            var query = queryString.TrimStart('?');
+            if (string.IsNullOrWhiteSpace(query))
+                return string.Empty;
+
+            var sensitiveNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            {
+                "session",
+                "password",
+                "token",
+                "secret",
+                "sharedkey",
+                "api_key"
+            };
+
+            var maskedItems = query
+                .Split('&', StringSplitOptions.RemoveEmptyEntries)
+                .Select(item =>
+                {
+                    var separator = item.IndexOf('=');
+                    var name = separator >= 0 ? item[..separator] : item;
+                    return sensitiveNames.Contains(Uri.UnescapeDataString(name))
+                        ? $"{name}=***"
+                        : item;
+                });
+
+            return string.Join("&", maskedItems);
         }
 
         /// <summary>

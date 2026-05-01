@@ -4,7 +4,7 @@ param(
     [string]$Username = $env:CONTROLID_USERNAME,
     [string]$Password = $env:CONTROLID_PASSWORD,
     [int]$TimeoutSec = 10,
-    [string]$ReportPath = ".\docs\reports\controlid-device-contract-latest.md"
+    [string]$ReportPath = ".\artifacts\reports\controlid-device-contract-latest.md"
 )
 
 Set-StrictMode -Version Latest
@@ -18,6 +18,7 @@ else {
 }
 $root = Split-Path -Parent $scriptRoot
 $results = [System.Collections.Generic.List[object]]::new()
+$deviceBaseUri = $null
 
 function Add-Result {
     param(
@@ -42,10 +43,27 @@ function Assert-Configured {
     }
 }
 
+function Get-ControlIdBaseUri {
+    param([string]$RawUrl)
+
+    $uri = [Uri]($RawUrl.Trim())
+    if (-not $uri.IsAbsoluteUri -or ($uri.Scheme -ne "http" -and $uri.Scheme -ne "https")) {
+        throw "CONTROLID_DEVICE_URL deve ser uma URL absoluta http/https."
+    }
+
+    if (-not [string]::IsNullOrWhiteSpace($uri.UserInfo) -or
+        -not [string]::IsNullOrWhiteSpace($uri.Query) -or
+        -not [string]::IsNullOrWhiteSpace($uri.Fragment)) {
+        throw "CONTROLID_DEVICE_URL nao deve conter credenciais, query string ou fragmento."
+    }
+
+    return [Uri]($uri.GetLeftPart([UriPartial]::Authority).TrimEnd("/") + "/")
+}
+
 function Resolve-DeviceUri {
     param([string]$Path)
 
-    return ([Uri]::new([Uri]($DeviceUrl.TrimEnd("/") + "/"), $Path.TrimStart("/"))).AbsoluteUri
+    return ([Uri]::new($deviceBaseUri, $Path.TrimStart("/"))).AbsoluteUri
 }
 
 function Invoke-ControlIdPost {
@@ -57,7 +75,9 @@ function Invoke-ControlIdPost {
 
     $uri = Resolve-DeviceUri $Path
     if (-not [string]::IsNullOrWhiteSpace($Session)) {
-        $uri = "${uri}?session=$([Uri]::EscapeDataString($Session))"
+        $builder = [UriBuilder]$uri
+        $builder.Query = "session=$([Uri]::EscapeDataString($Session))"
+        $uri = $builder.Uri.AbsoluteUri
     }
 
     if ($null -eq $Body) {
@@ -78,7 +98,7 @@ function Write-Report {
     $lines.Add("# Control iD device contract check")
     $lines.Add("")
     $lines.Add("Data: $(Get-Date -Format "yyyy-MM-dd HH:mm:ss zzz")")
-    $lines.Add("DeviceUrl: $DeviceUrl")
+    $lines.Add("DeviceUrl: configurado; host omitido por seguranca.")
     $lines.Add("")
     foreach ($result in $results) {
         $lines.Add("- [$($result.Status)] $($result.Name): $($result.Detail)")
@@ -89,6 +109,7 @@ function Write-Report {
 }
 
 Assert-Configured
+$deviceBaseUri = Get-ControlIdBaseUri -RawUrl $DeviceUrl
 
 $session = ""
 try {
@@ -102,8 +123,8 @@ try {
 
     Add-Result "login.fcgi" "PASS" "Sessao retornada sem expor credencial."
 
-    $sessionValidation = Invoke-ControlIdPost -Path "/session_is_valid.fcgi" -Session $session
-    Add-Result "session_is_valid.fcgi" "PASS" "Contrato respondeu: $($sessionValidation | ConvertTo-Json -Compress -Depth 5)"
+    Invoke-ControlIdPost -Path "/session_is_valid.fcgi" -Session $session | Out-Null
+    Add-Result "session_is_valid.fcgi" "PASS" "Contrato respondeu sem expor session."
 
     $systemInformation = Invoke-ControlIdPost -Path "/system_information.fcgi"
     Add-Result "system_information.fcgi" "PASS" "Contrato respondeu com propriedades: $((($systemInformation | Get-Member -MemberType NoteProperty).Name) -join ', ')"

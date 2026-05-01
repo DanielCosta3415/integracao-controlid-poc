@@ -430,6 +430,16 @@
       return;
     }
 
+    const confirmElement = target.closest("[data-confirm]");
+    if (confirmElement) {
+      const message = normalizeUiText(confirmElement.getAttribute("data-confirm") || "Confirmar operação?");
+      if (!window.confirm(message)) {
+        event.preventDefault();
+        event.stopPropagation();
+        return;
+      }
+    }
+
     const moduleLink = target.closest("a[data-module-key][href]");
     if (moduleLink) {
       rememberModule(moduleLink.dataset.moduleKey || moduleLink.getAttribute("href"));

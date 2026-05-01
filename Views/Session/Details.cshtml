@@ -32,7 +32,7 @@
         </dl>
 
         <form asp-action="Delete" asp-route-id="@Model.Id" method="post" class="app-action-row">
-            <button type="submit" class="btn btn-danger" onclick="return confirm('Deseja realmente encerrar esta sessão?');">Encerrar sessão</button>
+            <button type="submit" class="btn btn-danger" data-confirm="Deseja realmente encerrar esta sessão?">Encerrar sessão</button>
             <a asp-action="Index" class="btn btn-outline-secondary">Voltar</a>
         </form>
     </section>
