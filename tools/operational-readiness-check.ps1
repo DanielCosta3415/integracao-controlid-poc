@@ -140,6 +140,36 @@ function Assert-OperationalConfig {
         "securityIncident.evidenceRepository",
         "securityIncident.dpoEscalation",
         "securityIncident.secretRotationOwner",
+        "deployment.provider",
+        "deployment.productionHost",
+        "deployment.dnsOwner",
+        "deployment.tlsTerminationOwner",
+        "deployment.tlsCertificateRenewal",
+        "deployment.dnsTlsValidationStatus",
+        "deployment.capacitySizingBasis",
+        "deployment.capacitySizingValidationStatus",
+        "deployment.rollbackOwner",
+        "deployment.productionApprovalStatus",
+        "privacy.legalBasisApprovalStatus",
+        "privacy.dpaReviewStatus",
+        "privacy.ripdStatus",
+        "privacy.dataSubjectChannel",
+        "privacy.dpoApprovalEvidence",
+        "privacy.incidentNotificationOwner",
+        "externalValidation.validationStatus",
+        "externalValidation.scannerToolOwner",
+        "externalValidation.sastStatus",
+        "externalValidation.osvStatus",
+        "externalValidation.dastStatus",
+        "externalValidation.accessibilityStatus",
+        "externalValidation.lastScanDate",
+        "externalValidation.reportLocation",
+        "hardwareContract.validationStatus",
+        "hardwareContract.deviceOwner",
+        "hardwareContract.firmwareVersionSource",
+        "hardwareContract.labNetworkOwner",
+        "hardwareContract.lastValidationDate",
+        "hardwareContract.reportLocation",
         "finops.costOwner",
         "finops.monthlyBudget",
         "finops.billingDashboard",
@@ -161,9 +191,42 @@ function Assert-OperationalConfig {
     }
 
     if (-not $AllowPlaceholders) {
-        $status = (Get-RequiredValue -Object $Config -Path "rtoRpo.validationStatus").Trim().ToLowerInvariant()
-        if ($status -notin @("validated", "validado", "approved", "aprovado", "homologated", "homologado")) {
-            throw "rtoRpo.validationStatus precisa indicar validacao/aprovacao real para release."
+        $approvedStatuses = @(
+            "validated",
+            "validado",
+            "approved",
+            "aprovado",
+            "homologated",
+            "homologado",
+            "accepted",
+            "aceito",
+            "not-applicable",
+            "nao-aplicavel",
+            "not applicable",
+            "n/a"
+        )
+
+        $statusFields = @(
+            "rtoRpo.validationStatus",
+            "deployment.dnsTlsValidationStatus",
+            "deployment.capacitySizingValidationStatus",
+            "deployment.productionApprovalStatus",
+            "privacy.legalBasisApprovalStatus",
+            "privacy.dpaReviewStatus",
+            "privacy.ripdStatus",
+            "externalValidation.validationStatus",
+            "externalValidation.sastStatus",
+            "externalValidation.osvStatus",
+            "externalValidation.dastStatus",
+            "externalValidation.accessibilityStatus",
+            "hardwareContract.validationStatus"
+        )
+
+        foreach ($field in $statusFields) {
+            $status = (Get-RequiredValue -Object $Config -Path $field).Trim().ToLowerInvariant()
+            if ($status -notin $approvedStatuses) {
+                throw "$field precisa indicar validacao/aprovacao real, ou not-applicable com justificativa externa registrada, para release."
+            }
         }
     }
 }

@@ -13,6 +13,10 @@ public static class RuntimeCapacityMetricsProvider
     private const string DiskFreeMetric = "controlid.runtime.disk.free.bytes";
     private const string DiskFreePercentMetric = "controlid.runtime.disk.free.percent";
 
+    /// <summary>
+    /// Records coarse local capacity gauges without exposing host names, file paths,
+    /// connection strings or artifact names in metric labels.
+    /// </summary>
     public static void RecordSnapshot(IServiceProvider services)
     {
         var configuration = services.GetService(typeof(IConfiguration)) as IConfiguration;

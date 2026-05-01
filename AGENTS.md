@@ -236,6 +236,10 @@ Notas:
 ### Documentacao
 
 - Atualize README/docs quando mudar setup, comando, seguranca, banco, contrato externo, FinOps/capacidade ou fluxo operacional.
+- Atualize `docs/README.md` quando criar, remover ou renomear documento tecnico.
+- Registre decisao estrutural em `docs/adrs/` quando alterar padrao de arquitetura, persistencia, seguranca, observabilidade, release ou provedor.
+- Atualize `docs/changelog-YYYY-MM-DD.md` ou `docs/pr-summary-YYYY-MM-DD.md` em rodadas amplas de governanca/documentacao.
+- Atualize `docs/residual-risk-closure.md` quando uma lacuna externa virar gate, aprovacao, excecao ou risco aceito.
 - Atualize `docs/product-acceptance-criteria.md` quando um fluxo critico ganhar, perder ou mudar criterio verificavel.
 - Relatorios em `docs/reports/` podem ser gerados por smoke/auditoria; registre data e resultado.
 - Nao documente comandos que nao existem no repositorio.
@@ -244,7 +248,7 @@ Notas:
 
 - A CI deve permanecer capaz de rodar restore locked, build, teste, format check e auditoria.
 - Release local minima exige build limpo, testes passando, format check limpo, auditoria sem vulnerabilidades conhecidas e riscos residuais documentados.
-- Release operacional real exige `tools/test-readiness-gates.ps1 -ReleaseGate`, `ops.local.json` preenchido, backup externo validado, RTO/RPO aprovado, FinOps/capacidade sem warnings e contingencia do equipamento testada.
+- Release operacional real exige `tools/test-readiness-gates.ps1 -ReleaseGate`, `ops.local.json` preenchido, backup externo validado, RTO/RPO aprovado, FinOps/capacidade sem warnings, DPO/juridico quando aplicavel, scanners externos e contingencia do equipamento testada.
 - Mudancas em `tools/ControlIdCallbackSigningProxy` exigem restore locked, build e format check do projeto do proxy.
 - Nao publique release sem smoke quando a mudanca tocar callbacks, push, catalogo oficial, autenticacao ou banco.
 

@@ -48,6 +48,9 @@ powershell -ExecutionPolicy Bypass -File .\tools\test-readiness-gates.ps1 -RunEx
 ```
 
 O `-ReleaseGate` tambem ativa `-RunExternalScanners` e `-RequireExternalScanners`.
+Para release operacional, registre ownership, data, status e local restrito dos
+relatorios em `externalValidation.*` dentro de `ops.local.json`; o readiness
+operacional falha se os status permanecerem pendentes.
 
 ## Contrato de equipamento
 

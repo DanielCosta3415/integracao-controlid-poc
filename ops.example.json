@@ -65,6 +65,44 @@
     "dpoEscalation": "replace-with-dpo-escalation-path",
     "secretRotationOwner": "replace-with-secret-rotation-owner"
   },
+  "deployment": {
+    "provider": "replace-with-approved-provider-or-not-applicable",
+    "productionHost": "replace-with-approved-hostname-or-not-applicable",
+    "dnsOwner": "replace-with-dns-owner-or-not-applicable",
+    "tlsTerminationOwner": "replace-with-tls-owner-or-not-applicable",
+    "tlsCertificateRenewal": "replace-with-renewal-procedure-or-not-applicable",
+    "dnsTlsValidationStatus": "pending-validation",
+    "capacitySizingBasis": "replace-with-validated-sizing-basis",
+    "capacitySizingValidationStatus": "pending-validation",
+    "rollbackOwner": "replace-with-rollback-owner",
+    "productionApprovalStatus": "pending-approval"
+  },
+  "privacy": {
+    "legalBasisApprovalStatus": "pending-approval",
+    "dpaReviewStatus": "pending-review",
+    "ripdStatus": "pending-review",
+    "dataSubjectChannel": "replace-with-approved-data-subject-channel",
+    "dpoApprovalEvidence": "replace-with-restricted-dpo-approval-location",
+    "incidentNotificationOwner": "replace-with-privacy-incident-owner"
+  },
+  "externalValidation": {
+    "validationStatus": "pending-validation",
+    "scannerToolOwner": "replace-with-security-tool-owner",
+    "sastStatus": "pending-validation",
+    "osvStatus": "pending-validation",
+    "dastStatus": "pending-validation",
+    "accessibilityStatus": "pending-validation",
+    "lastScanDate": "replace-with-yyyy-mm-dd",
+    "reportLocation": "replace-with-restricted-report-location"
+  },
+  "hardwareContract": {
+    "validationStatus": "pending-validation",
+    "deviceOwner": "replace-with-equipment-owner",
+    "firmwareVersionSource": "replace-with-firmware-version-or-inventory-location",
+    "labNetworkOwner": "replace-with-lab-network-owner",
+    "lastValidationDate": "replace-with-yyyy-mm-dd",
+    "reportLocation": "replace-with-restricted-contract-report-location"
+  },
   "finops": {
     "costOwner": "replace-with-person-or-team",
     "monthlyBudget": "replace-with-approved-budget-or-cost-ceiling",

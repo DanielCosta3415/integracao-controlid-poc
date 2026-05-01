@@ -13,6 +13,8 @@ patrimonial ou validacao do fornecedor.
 | Local do procedimento manual aprovado | Preencher em `ops.local.json` como `equipment.fallbackProcedureLocation`. |
 | Canal de suporte Control iD/fornecedor | Preencher em `ops.local.json` como `equipment.vendorSupportChannel`. |
 | Cadencia de teste de contingencia | Preencher em `ops.local.json` como `equipment.testCadence`. |
+| Status do contrato fisico | Preencher em `ops.local.json` como `hardwareContract.validationStatus`. |
+| Evidencia do contrato fisico | Preencher em `ops.local.json` como `hardwareContract.reportLocation`. |
 
 ## Sinais de acionamento
 
@@ -74,3 +76,6 @@ Antes de uso real, executar em bancada:
 - Simular callback rejeitado por assinatura/IP e validar diagnostico.
 - Simular retorno do equipamento e reconciliacao de registros manuais.
 - Registrar evidencias minimizadas e atualizar `ops.local.json`.
+- Para release operacional, `tools/test-readiness-gates.ps1 -ReleaseGate` deve
+  executar o contrato fisico e `tools/operational-readiness-check.ps1 -RequireConfig`
+  deve validar os campos `hardwareContract.*`.

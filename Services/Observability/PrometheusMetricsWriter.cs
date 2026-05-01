@@ -6,6 +6,10 @@ namespace Integracao.ControlID.PoC.Services.Observability;
 
 public static class PrometheusMetricsWriter
 {
+    /// <summary>
+    /// Renders the current in-process metrics snapshot and refreshes local
+    /// capacity gauges at scrape time to avoid background jobs in the PoC.
+    /// </summary>
     public static async Task WriteAsync(HttpContext context)
     {
         context.Response.ContentType = "text/plain; version=0.0.4; charset=utf-8";
@@ -14,6 +18,10 @@ public static class PrometheusMetricsWriter
         await context.Response.WriteAsync(payload, context.RequestAborted);
     }
 
+    /// <summary>
+    /// Converts the sanitized in-memory metric snapshot to Prometheus text format.
+    /// Labels must remain low-cardinality and free of personal data or secrets.
+    /// </summary>
     public static string Format(OperationalMetricsSnapshot snapshot)
     {
         var builder = new StringBuilder();

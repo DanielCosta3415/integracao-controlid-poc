@@ -128,7 +128,7 @@ Restore sobrescreve estado local e exige confirmacao humana. Procedimento recome
 5. Rodar `dotnet build .\Integracao.ControlID.PoC.sln --no-restore -v:minimal`.
 6. Subir a aplicacao em ambiente local controlado e validar os fluxos afetados.
 
-RTO/RPO nao estao garantidos para producao. Esta PoC possui apenas procedimento local documentado; restore periodico ainda nao foi automatizado nem homologado.
+RTO/RPO nao estao garantidos para producao ate existir validacao em ambiente alvo. Para release operacional, `ops.local.json` deve registrar os valores aprovados e `tools/operational-readiness-check.ps1 -RequireConfig` bloqueia status pendente. O fechamento completo esta em `docs/residual-risk-closure.md`.
 
 ## Smoke de restore
 

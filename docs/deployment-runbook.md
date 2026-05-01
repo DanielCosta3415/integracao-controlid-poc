@@ -117,7 +117,10 @@ powershell -ExecutionPolicy Bypass -File .\tools\test-readiness-gates.ps1 -Relea
 
 O `-ReleaseGate` exige tambem `ops.local.json` preenchido fora do Git, baseado em
 `ops.example.json`, para bloquear release sem ownership, on-call, RTO/RPO,
-backup externo, FinOps/capacidade e contingencia fisica validados.
+backup externo, provedor/DNS/TLS/sizing, DPO/juridico quando aplicavel,
+scanners externos, FinOps/capacidade e contingencia fisica validados.
+
+O fechamento das lacunas externas fica em `docs/residual-risk-closure.md`.
 
 ## Rollback tecnico
 

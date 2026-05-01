@@ -22,7 +22,7 @@ Observações de escopo:
 | `docker-compose.yml` | Executa a PoC em container com volumes persistentes, healthcheck e variáveis obrigatórias. |
 | `.editorconfig` | Padroniza convenções básicas de edição, formatação e estilo entre IDEs. |
 | `.gitignore` | Define arquivos e pastas que não devem ser versionados, como builds, logs e artefatos locais. |
-| `ops.example.json` | Exemplo versionado de configuracao operacional para incidentes, on-call, backup externo, RTO/RPO e contingencia fisica. |
+| `ops.example.json` | Exemplo versionado de configuracao operacional para incidentes, on-call, backup externo, RTO/RPO, deploy, privacidade, validacao externa, contrato fisico e FinOps. |
 | `Directory.Build.props` | Centraliza propriedades comuns de build para os projetos .NET da solução. |
 | `Integracao.ControlID.PoC.csproj` | Define o projeto ASP.NET Core MVC principal, dependências NuGet e configurações de compilação. |
 | `Integracao.ControlID.PoC.sln` | Agrupa o projeto principal, testes e utilitários em uma única solução. |
@@ -533,9 +533,15 @@ As views Razor compõem a interface web da PoC. Em geral, cada pasta espelha um 
 
 | Arquivo/Pasta | Responsabilidade |
 | --- | --- |
+| `docs/README.md` | Indice central da documentacao tecnica por papel e por tema. |
+| `docs/adrs/` | Registros de decisoes arquiteturais aceitas e suas consequencias. |
+| `docs/architecture-overview.md` | Visao de camadas, fluxos criticos, dependencias, trust boundaries e contratos a preservar. |
 | `docs/changelog-2026-04-14.md` | Registro resumido de evolucoes relevantes realizadas na PoC. |
 | `docs/changelog-2026-04-15.md` | Registro resumido das atualizacoes de documentação, comentarios inline e observabilidade. |
+| `docs/changelog-2026-05-01.md` | Registro da rodada de documentacao, onboarding e ADRs. |
+| `docs/developer-onboarding.md` | Guia de setup, execucao, desenvolvimento, diagnostico e entrega segura para novos contribuidores. |
 | `docs/deployment-runbook.md` | Mapeia ambientes, container, variaveis obrigatorias, deploy, rollback e riscos de infraestrutura. |
+| `docs/documentation-audit-2026-05-01.md` | Auditoria de documentacao, achados, consistencia e lacunas restantes. |
 | `docs/equipment-contingency-runbook.md` | Define contingencia operacional do equipamento Control iD, fallback manual e validacao de bancada. |
 | `docs/external-validation-runbook.md` | Padroniza SAST, OSV, DAST, acessibilidade e contrato com stub/equipamento. |
 | `docs/finops-capacity.md` | Define inventario de custos, capacidade, limites, governanca FinOps e sustentabilidade operacional. |
@@ -546,8 +552,10 @@ As views Razor compõem a interface web da PoC. Em geral, cada pasta espelha um 
 | `docs/observability/dashboard.json` | Especificacao versionada de dashboards independente de fornecedor. |
 | `docs/operation-modes-implementation.md` | Documenta a implementação dos modos Standalone, Pro e Enterprise, incluindo payloads e transições. |
 | `docs/product-analytics.md` | Define objetivos, KPIs, funis, eventos, dashboards e restricoes de analytics privacy-aware. |
+| `docs/pr-summary-2026-05-01.md` | Resumo de PR/release notes da rodada documental. |
 | `docs/project-file-responsibilities.md` | Este inventário de responsabilidades por pasta e arquivo. |
 | `docs/push-implementation.md` | Documenta a implementação da funcionalidade Push, fila persistida, polling e retorno de resultados. |
+| `docs/residual-risk-closure.md` | Mapeia riscos residuais externos para campos obrigatorios, gates e evidencias de release. |
 | `docs/reports/controlid-api-audit-2026-04-13.md` | Auditoria tecnica da cobertura da API Control iD. |
 | `docs/reports/design-system-accessibility-audit-2026-04-14.md` | Auditoria de design system e acessibilidade da UI. |
 | `docs/reports/heuristic-ui-audit-2026-04-14.md` | Avaliacao heuristica inicial da interface. |

@@ -23,7 +23,9 @@ Campos pendentes para preencher antes de uso real:
 
 Para release operacional, esses responsaveis e canais devem estar tambem em
 `ops.local.json`, criado a partir de `ops.example.json` fora do Git, e validados
-por `tools/operational-readiness-check.ps1 -RequireConfig`.
+por `tools/operational-readiness-check.ps1 -RequireConfig`. O mesmo gate bloqueia
+release se `privacy.legalBasisApprovalStatus`, `privacy.dpaReviewStatus` ou
+`privacy.ripdStatus` permanecerem pendentes.
 
 ## Registro de bases legais
 

@@ -174,6 +174,10 @@ public static class OperationalMetrics
                 .ToArray());
     }
 
+    /// <summary>
+    /// Stores the latest value for an in-process gauge so `/metrics` can expose
+    /// local operational signals without requiring an external metrics SDK.
+    /// </summary>
     public static void RecordGauge(string name, double value, params (string Name, string Value)[] tags)
     {
         var normalizedTags = ToTagDictionary(CreateTags(

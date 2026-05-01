@@ -137,8 +137,8 @@ O relatorio gerado fica em `artifacts/finops-capacity/`, fora do Git.
 
 | Severidade | Risco residual | Proximo passo |
 | --- | --- | --- |
-| Alta | Sem provedor real ou billing real | Preencher `finops.billingDashboard` e `finops.actualSpendReviewSource` em `ops.local.json` antes de producao. |
-| Alta | RTO/RPO e retencao ainda dependem de `ops.local.json` e validacao humana | Preencher `ops.local.json`, executar backup/restore-smoke e aprovar politica. |
+| Alta | Sem provedor real ou billing real | Preencher `deployment.*` e `finops.*` em `ops.local.json`; `operational-readiness-check.ps1 -RequireConfig` bloqueia placeholders/status pendente. |
+| Alta | RTO/RPO e retencao ainda dependem de `ops.local.json` e validacao humana | Preencher `rtoRpo.*`, executar backup/restore-smoke e aprovar politica; ver `docs/residual-risk-closure.md`. |
 | Media | Thresholds de storage sao estimativas iniciais de PoC | Ajustar depois de baseline de volume real. |
 | Media | CPU continua dependente de monitoramento do host/provedor | Usar runtime metrics da app para memoria/storage e monitoramento externo para CPU/saturacao. |
 | Baixa | Sem custo de terceiros hoje, mas scanners/observabilidade futuros podem cobrar por uso | Exigir revisao FinOps antes de ativar qualquer fornecedor externo. |

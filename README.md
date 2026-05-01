@@ -1,62 +1,95 @@
 # Integracao.ControlID.PoC
 
-PoC web em ASP.NET Core 8 para exploração operacional e técnica da Access API da Control iD. O projeto reúne:
+PoC web em ASP.NET Core 8 MVC/Razor para exploracao operacional e tecnica da
+Access API da Control iD. A aplicacao ajuda um time tecnico a conectar um
+equipamento, autenticar, navegar pelo catalogo oficial, testar fluxos de
+hardware, receber callbacks, operar Push, persistir estado local em SQLite e
+validar readiness antes de evoluir a integracao.
 
-- um console operacional para conexão, autenticação, hardware, cadastros e auditoria;
-- um catálogo oficial de endpoints com documentação visual de contrato;
-- persistência local em SQLite para eventos, push, usuários e artefatos da PoC;
-- uma trilha de QA visual, smoke tests e hardening de segurança já aplicada.
+Trate este repositorio como uma PoC operacional: ele pode lidar com dados
+pessoais, credenciais, sessoes, fotos, biometria, cartoes, QR Codes, logs de
+acesso e payloads de callbacks. Use dados ficticios em desenvolvimento e mantenha
+segredos fora do Git.
 
-## Stack e arquitetura
+## Comece aqui
 
-- ASP.NET Core MVC + Razor
-- Entity Framework Core + SQLite
-- Serilog para logs em console e arquivo
-- xUnit para testes unitários
-- Smoke test local em PowerShell com stub de equipamento
-- Docker/Compose para execucao reproduzivel em container
+Leitura recomendada para um novo desenvolvedor:
 
-Pastas principais:
+1. `README.md`: resumo, setup, comandos e links principais.
+2. `AGENTS.md`: regras permanentes para agentes e contribuidores automatizados.
+3. `docs/README.md`: indice da documentacao tecnica.
+4. `docs/developer-onboarding.md`: trilha completa para configurar, executar,
+   testar, diagnosticar e entregar com seguranca.
+5. `docs/architecture-overview.md`: camadas, fluxos criticos e limites de
+   arquitetura.
+6. `docs/product-acceptance-criteria.md`: requisitos, criterios de aceite e
+   rastreabilidade.
+7. `docs/adrs/`: decisoes arquiteturais registradas.
 
-- `Controllers/`: fluxos MVC e endpoints auxiliares
-- `Services/`: integrações oficiais, segurança, navegação e fábricas
-- `Views/`: UI Razor da PoC
-- `tests/`: testes unitários
-- `tools/`: utilitários locais, incluindo smoke test e stub do equipamento
-- `docs/reports/`: relatórios técnicos gerados durante as validações
+## Stack
 
-Mapa detalhado de responsabilidades por pasta e arquivo:
+| Area | Tecnologia |
+| --- | --- |
+| Linguagens | C#, Razor, HTML, CSS, JavaScript e PowerShell |
+| Runtime/SDK | .NET 8, SDK pinado em `global.json` |
+| Web | ASP.NET Core MVC/Razor |
+| Banco | SQLite com Entity Framework Core |
+| Logs | Serilog em console e arquivo rolling |
+| Observabilidade | Health checks, `/metrics` Prometheus text e `System.Diagnostics.Metrics` |
+| Testes | xUnit |
+| Smoke/contrato | PowerShell com stub local em `tools/ControlIdDeviceStub` |
+| CI | GitHub Actions em `.github/workflows/ci.yml` |
+| Container | `Dockerfile` e `docker-compose.yml` |
+| Dependencias | NuGet com `packages.lock.json` |
 
-- `docs/project-file-responsibilities.md`
+Nao ha frontend package manager configurado. `npm`, `pnpm` e `yarn` nao fazem
+parte do fluxo do projeto.
 
-Documentações funcionais de implementação:
+## Estrutura
 
-- `docs/operation-modes-implementation.md`
-- `docs/monitor-implementation.md`
-- `docs/push-implementation.md`
-- `docs/security-hardening.md`
-- `docs/brand.md`
+| Caminho | Papel |
+| --- | --- |
+| `Program.cs` | Bootstrap da aplicacao, DI, middlewares, rotas, health checks, SQLite e validacoes de runtime |
+| `Controllers/` | Rotas MVC, callbacks, Push, catalogo oficial e fluxos operacionais |
+| `Services/` | Integracoes Control iD, regras reutilizaveis, repositorios, observabilidade, seguranca e factories |
+| `Data/` | `IntegracaoControlIDContext` e migrations EF Core |
+| `Models/` | Modelos da API Control iD e entidades locais |
+| `ViewModels/` | DTOs/ViewModels usados pelas views Razor |
+| `Views/` | Telas Razor e parciais compartilhadas |
+| `Middlewares/` | Correlation ID, tratamento de erro, headers, sessao e request logging |
+| `Options/` | Opcoes de configuracao tipadas |
+| `tests/` | Testes xUnit |
+| `tools/` | Scripts de smoke, readiness, auditoria, backup, scanners e stubs |
+| `docs/` | Documentacao tecnica, runbooks, ADRs, relatorios e changelogs |
+| `wwwroot/` | CSS/JS globais, assets e bibliotecas vendorizadas |
+
+Mapa detalhado: `docs/project-file-responsibilities.md`.
 
 ## Requisitos
 
-- .NET SDK 8
-- Windows PowerShell 5+ ou PowerShell 7+
-- Visual Studio 2022/2026 ou terminal com `dotnet`
+- .NET SDK 8 compativel com `global.json`.
+- Windows PowerShell 5+ ou PowerShell 7+.
+- Git.
+- Docker opcional para validar container.
+- Ferramentas externas opcionais para release estrito: Semgrep, OSV Scanner,
+  OWASP ZAP, axe e Docker.
 
-## Configuração rápida
+## Setup local
 
-1. Restaure as dependências:
+Restaure dependencias a partir da raiz:
 
 ```powershell
-dotnet restore .\Integracao.ControlID.PoC.sln
+dotnet restore .\Integracao.ControlID.PoC.sln --locked-mode
+dotnet restore .\tools\ControlIdDeviceStub\ControlIdDeviceStub.csproj --locked-mode
 dotnet restore .\tools\ControlIdCallbackSigningProxy\ControlIdCallbackSigningProxy.csproj --locked-mode
 ```
 
-2. Configure segredos e dados sensíveis fora do repositório. Para desenvolvimento local, prefira variáveis de ambiente ou User Secrets:
+Configure segredos fora do repositorio. Para desenvolvimento local, prefira User
+Secrets ou variaveis de ambiente:
 
 ```powershell
 dotnet user-secrets set "ControlIDApi:DefaultDeviceUrl" "http://<equipamento-ou-host>:8080"
-dotnet user-secrets set "ControlIDApi:DefaultUsername" "<usuário>"
+dotnet user-secrets set "ControlIDApi:DefaultUsername" "<usuario>"
 dotnet user-secrets set "ControlIDApi:DefaultPassword" "<senha>"
 dotnet user-secrets set "CallbackSecurity:SharedKey" "<segredo-local>"
 dotnet user-secrets set "CallbackSecurity:RequireSharedKey" "true"
@@ -73,82 +106,157 @@ dotnet user-secrets set --project .\tools\ControlIdCallbackSigningProxy\ControlI
 dotnet run --project .\tools\ControlIdCallbackSigningProxy\ControlIdCallbackSigningProxy.csproj --urls http://localhost:6700
 ```
 
-3. Compile a solução:
+## Execucao local
 
-```powershell
-dotnet build .\Integracao.ControlID.PoC.sln
-```
-
-4. Execute a PoC:
+Aplicacao principal:
 
 ```powershell
 dotnet run --project .\Integracao.ControlID.PoC.csproj
 ```
 
-5. Acesse a interface:
+Stub local do equipamento:
 
-- URL padrão local: `https://localhost:5001` ou a porta configurada pelo perfil de execução;
-- o shell principal já expõe atalhos para `Workspace`, `OfficialApi`, `OperationModes`, `OfficialObjects` e `PushCenter`.
-- em `Development`, a especificação OpenAPI fica disponível em `/swagger/v1/swagger.json` e a UI em `/swagger`.
+```powershell
+dotnet run --project .\tools\ControlIdDeviceStub\ControlIdDeviceStub.csproj --no-launch-profile
+```
 
-## Variáveis de ambiente úteis
+Smoke local com app e stub:
 
-A configuração segue o padrão nativo do ASP.NET Core (`Secao__Chave`). Use as variáveis abaixo para preparar execução local, integração com equipamento real e observabilidade.
+```powershell
+powershell -ExecutionPolicy Bypass -File .\tools\smoke-localhost.ps1
+```
 
-| Variável | Exemplo | Uso |
+Em `Development`, a especificacao OpenAPI fica disponivel em
+`/swagger/v1/swagger.json` e a UI em `/swagger` quando `OpenApi:Enabled=true`.
+
+## Comandos oficiais
+
+Build e testes:
+
+```powershell
+dotnet build .\Integracao.ControlID.PoC.sln --no-restore -v:minimal
+dotnet test .\Integracao.ControlID.PoC.sln --no-build -v:minimal
+```
+
+Format/lint/typecheck:
+
+```powershell
+dotnet format .\Integracao.ControlID.PoC.sln --verify-no-changes --no-restore -v:minimal
+git diff --check
+```
+
+Observacoes:
+
+- Lint separado nao existe; `dotnet build` com warnings como erro e
+  `dotnet format --verify-no-changes` sao os checks oficiais.
+- Typecheck separado nao existe; o typecheck e o build C#.
+- Para corrigir formatacao, use `dotnet format .\Integracao.ControlID.PoC.sln -v:minimal`
+  e registre o efeito mecanico.
+
+Auditorias e readiness:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\tools\scan-secrets.ps1
+powershell -ExecutionPolicy Bypass -File .\tools\audit-supply-chain.ps1
+powershell -ExecutionPolicy Bypass -File .\tools\observability-check.ps1 -OfflineValidateOnly
+powershell -ExecutionPolicy Bypass -File .\tools\operational-readiness-check.ps1
+powershell -ExecutionPolicy Bypass -File .\tools\finops-capacity-check.ps1
+powershell -ExecutionPolicy Bypass -File .\tools\contract-controlid-stub.ps1
+powershell -ExecutionPolicy Bypass -File .\tools\test-readiness-gates.ps1
+```
+
+Release gate estrito:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\tools\test-readiness-gates.ps1 -ReleaseGate
+```
+
+`-ReleaseGate` exige smoke, cobertura, auditoria de supply chain, container build,
+observabilidade online, `ops.local.json` preenchido fora do Git, FinOps/capacidade
+sem warnings, contrato com equipamento fisico e scanners externos. Se ambiente,
+credencial ou ferramenta estiver ausente, o gate deve falhar.
+
+## Variaveis de ambiente principais
+
+Configuracao segue o padrao nativo ASP.NET Core (`Secao__Chave`).
+
+| Variavel | Exemplo | Uso |
 | --- | --- | --- |
-| `ASPNETCORE_ENVIRONMENT` | `Development` | Define o ambiente de execução. |
-| `ASPNETCORE_URLS` | `https://localhost:5001` | Define a URL pública/local usada pela aplicação. |
-| `ConnectionStrings__DefaultConnection` | `Data Source=integracao_controlid.db` | Caminho do SQLite local. |
-| `ControlIDApi__DefaultDeviceUrl` | `http://<equipamento-ou-host>:8080` | Endereço padrão do equipamento Control iD. |
-| `ControlIDApi__DefaultUsername` | `<usuário>` | Usuário sugerido para autenticação local. |
-| `ControlIDApi__DefaultPassword` | `<senha>` | Senha sugerida para autenticação local. Não versione este valor. |
-| `ControlIDApi__ConnectionTimeoutSeconds` | `30` | Timeout das chamadas oficiais. A aplicação normaliza o valor entre 5 e 300 segundos. |
-| `ControlIDApi__CircuitBreaker__Enabled` | `true` | Habilita proteção contra falhas transitórias repetidas no equipamento. |
-| `ControlIDApi__CircuitBreaker__FailureThreshold` | `5` | Quantidade de falhas transitórias consecutivas antes de abrir o circuito por endpoint/equipamento. |
-| `ControlIDApi__CircuitBreaker__BreakDurationSeconds` | `30` | Tempo de bloqueio temporário após abertura do circuito. |
-| `OpenApi__Enabled` | `false` | Habilita Swagger/OpenAPI fora de Development quando explicitamente configurado. |
-| `Session__IdleTimeout` | `30` | Tempo de expiração da sessão ASP.NET Core em minutos. |
-| `Session__CookieName` | `.IntegracaoControlID.Session` | Nome do cookie de sessão. |
-| `CallbackSecurity__MaxBodyBytes` | `1048576` | Limite máximo de payload aceito em callbacks/monitor. |
-| `CallbackSecurity__RequireSharedKey` | `true` | Exige chave compartilhada para entrada de callbacks. |
-| `CallbackSecurity__RequireSignedRequests` | `true` | Exige assinatura HMAC com timestamp e nonce nos ingressos externos. |
-| `CallbackSecurity__SharedKeyHeaderName` | `X-ControlID-Callback-Key` | Header esperado para a chave compartilhada. |
-| `CallbackSecurity__SharedKey` | `<segredo>` | Segredo usado para validar callbacks. Deve ficar fora do repositório. |
-| `CallbackSecurity__AllowLoopback` | `true` | Permite callbacks locais mesmo com restrição de IP. |
-| `CallbackSecurity__AllowedRemoteIps__0` | `192.168.0.10` | Primeiro IP remoto permitido para callbacks. Use índices adicionais para mais IPs. |
-| `Logging__LogLevel__Default` | `Information` | Nível mínimo do logging padrão. |
-| `Serilog__MinimumLevel__Default` | `Information` | Nível mínimo do Serilog. |
-| `Serilog__WriteTo__1__Args__retainedFileCountLimit` | `14` | Quantidade de arquivos rolling mantidos no sink de arquivo. |
-| `Serilog__WriteTo__1__Args__fileSizeLimitBytes` | `10000000` | Limite de tamanho por arquivo de log Serilog. |
-| `Logging__File__Path` | `Logs/app_log.txt` | Caminho esperado para logs em arquivo. |
-| `Logging__File__RetainedFileCountLimit` | `14` | Quantidade de arquivos de log mantidos. |
-| `AllowedHosts` | `poc.example.internal` | Hosts aceitos fora de `Development`; nao use `*` em Staging/Production. |
-| `ForwardedHeaders__Enabled` | `false` | Habilita suporte a proxy reverso confiavel. |
-| `ForwardedHeaders__KnownProxies__0` | `10.0.0.10` | IP do proxy/load balancer confiavel quando forwarded headers estiverem ativos. |
-| `Host__ShutdownTimeoutSeconds` | `30` | Janela de graceful shutdown, normalizada entre 5 e 120 segundos. |
+| `ASPNETCORE_ENVIRONMENT` | `Development` | Ambiente de execucao |
+| `ASPNETCORE_URLS` | `https://localhost:5001` | URLs de binding da app |
+| `ConnectionStrings__DefaultConnection` | `Data Source=integracao_controlid.db` | SQLite local |
+| `AllowedHosts` | `poc.example.internal` | Hosts aceitos fora de `Development`; nao use `*` |
+| `ControlIDApi__DefaultDeviceUrl` | `http://<equipamento-ou-host>:8080` | Equipamento Control iD |
+| `ControlIDApi__ConnectionTimeoutSeconds` | `30` | Timeout das chamadas oficiais; normalizado entre 5 e 300 segundos |
+| `ControlIDApi__RequireAllowedDeviceHosts` | `true` | Exige allowlist de egress |
+| `ControlIDApi__AllowedDeviceHosts__0` | `<equipamento-ou-host>` | Primeiro host permitido do equipamento |
+| `CallbackSecurity__MaxBodyBytes` | `1048576` | Limite de payload para callbacks/monitor |
+| `CallbackSecurity__RequireSharedKey` | `true` | Exige chave compartilhada em ingressos externos |
+| `CallbackSecurity__SharedKey` | `<segredo>` | Segredo fora do Git |
+| `CallbackSecurity__RequireSignedRequests` | `true` | Exige assinatura HMAC com timestamp e nonce |
+| `CallbackSecurity__AllowedRemoteIps__0` | `192.168.0.10` | Primeiro IP permitido para callbacks |
+| `OpenApi__Enabled` | `false` | Swagger/OpenAPI fora de Development apenas com decisao explicita |
+| `Observability__Metrics__Enabled` | `true` | Habilita `/metrics` |
+| `Observability__Metrics__AllowAnonymous` | `false` | Deve ser `false` fora de Development |
+| `Serilog__WriteTo__1__Args__retainedFileCountLimit` | `14` | Retencao de arquivos rolling |
+| `Serilog__WriteTo__1__Args__fileSizeLimitBytes` | `10000000` | Limite por arquivo de log |
+| `ForwardedHeaders__Enabled` | `false` | Suporte a proxy reverso confiavel |
+| `ForwardedHeaders__KnownProxies__0` | `10.0.0.10` | Proxy/load balancer confiavel |
 
-Observações:
+Exemplo completo seguro: `.env.example`.
 
-- nunca versione credenciais reais;
-- prefira User Secrets ou variáveis de ambiente para valores sensíveis;
-- `ControlIDApi__ConnectionTimeoutSeconds` controla o timeout real das chamadas oficiais;
-- `CallbackSecurity__SharedKey` é obrigatória quando `CallbackSecurity__RequireSharedKey=true` fora de ambiente controlado.
-- para validar callbacks reais, a URL da PoC precisa estar acessível pelo equipamento Control iD.
+## Banco e estado local
 
-## Ambientes, container e deploy
+- SQLite padrao: `integracao_controlid.db`.
+- Arquivos `integracao_controlid.db*`, `Logs/`, `artifacts/`, `bin/` e `obj/`
+  nao devem ser versionados.
+- `Program.cs` aplica `Database.Migrate()` no startup e mantem compatibilidade
+  com tabelas auxiliares de monitoramento/push.
+- Dados locais podem conter informacao pessoal ou sensivel.
 
-Runbook detalhado: `docs/deployment-runbook.md`.
+Comandos seguros:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\tools\backup-sqlite.ps1
+powershell -ExecutionPolicy Bypass -File .\tools\backup-sqlite-operational.ps1 -RunRestoreSmoke
+powershell -ExecutionPolicy Bypass -File .\tools\restore-smoke-sqlite.ps1
+powershell -ExecutionPolicy Bypass -File .\tools\harden-local-state.ps1
+```
+
+Detalhes: `docs/data-model-and-recovery.md` e
+`docs/database-and-runtime-state.md`.
+
+## Observabilidade e operacao
+
+Endpoints operacionais:
+
+| Endpoint | Finalidade | Exposicao recomendada |
+| --- | --- | --- |
+| `GET /health/live` | Liveness do processo ASP.NET Core | Supervisor/load balancer |
+| `GET /health/ready` | Readiness do SQLite local | Readiness antes de trafego |
+| `GET /metrics` | Metricas Prometheus text | Administrador por padrao |
+
+Sinais disponiveis:
+
+- Correlation ID por request via `X-Correlation-ID`.
+- Logs Serilog com dados sensiveis mascarados ou pseudonimizados.
+- Metricas HTTP, Access API, callbacks, Push, auth local, analytics de produto e
+  capacidade runtime/FinOps.
+- Alertas e dashboards versionados em `docs/observability/`.
+- Runbooks em `docs/observability-runbook.md`,
+  `docs/incident-response-and-dr.md` e
+  `docs/equipment-contingency-runbook.md`.
+
+## Container e deploy
 
 Artefatos versionados:
 
-- `Dockerfile`: build multi-stage .NET 8, runtime nao root, porta `8080` e healthcheck em `/health/live`;
-- `.dockerignore`: remove Git, logs, artefatos, SQLite local e `.env` do contexto;
-- `docker-compose.yml`: execucao local/container com volumes para `/app/data` e `/app/Logs`;
-- `.env.example`: placeholders seguros para criar `.env` fora do Git;
-- `appsettings.Staging.json` e `appsettings.Production.json`: defaults seguros sem segredos.
+- `Dockerfile`: multi-stage .NET 8, runtime Alpine, usuario nao root, porta 8080
+  e healthcheck em `/health/live`.
+- `.dockerignore`: remove Git, logs, artefatos, SQLite local e `.env` do contexto.
+- `docker-compose.yml`: volumes persistentes para `/app/data` e `/app/Logs`.
 
-Comandos basicos:
+Comandos:
 
 ```powershell
 docker build -t integracao-controlid-poc:local .
@@ -156,54 +264,27 @@ docker compose config
 docker compose up --build
 ```
 
-Fora de `Development`, o startup falha se `AllowedHosts`, shared key, assinatura
-HMAC e allowlist de egress do equipamento nao estiverem configurados corretamente.
+Nao ha provedor cloud versionado. Qualquer Render, Azure, AWS, GCP, Fly.io, VPS
+ou Kubernetes exige decisao humana, segredos fora do Git e atualizacao da
+documentacao operacional.
 
-## Banco local e dados da PoC
+## Fluxos principais
 
-- O banco SQLite padrão fica em `integracao_controlid.db`.
-- As migrações são aplicadas automaticamente no startup.
-- A PoC também cria tabelas auxiliares de monitoramento local para callbacks e push.
+- `Home`: painel inicial.
+- `Workspace`: mapa funcional por dominio.
+- `Auth`/`Session`: login local, login no equipamento, status e logout.
+- `OfficialApi`: catalogo oficial e invocacao assistida.
+- `OfficialObjects`: exploracao/CRUD tecnico de objetos oficiais.
+- `OperationModes`: Standalone, Pro e Enterprise.
+- `ProductSpecific`: recursos por linha de equipamento.
+- `AdvancedOfficial`: camera, exportacao, intertravamento e recursos avancados.
+- `OfficialEvents`/`Monitor`: callbacks, monitoramento e eventos oficiais.
+- `PushCenter`: fila Push, polling e resultados.
+- `Privacy`: relatorio minimizado de atendimento a titular.
 
-- Antes de validar mudancas de schema em um banco local importante, gere backup com `powershell -ExecutionPolicy Bypass -File .\tools\backup-sqlite.ps1`.
-- Para validar recuperacao sem sobrescrever dados reais, rode o smoke em copia restaurada com `powershell -ExecutionPolicy Bypass -File .\tools\restore-smoke-sqlite.ps1`.
-- Backups novos sao protegidos por DPAPI por padrao. Use `powershell -ExecutionPolicy Bypass -File .\tools\harden-local-state.ps1` para restringir permissoes locais de SQLite, logs e backups no host.
+## Contrato com equipamento real
 
-## Testes automatizados
-
-### Testes unitários
-
-```powershell
-dotnet test .\Integracao.ControlID.PoC.sln
-```
-
-Para acelerar uma rodada local depois de um `build` já concluído:
-
-```powershell
-dotnet test .\Integracao.ControlID.PoC.sln --no-build
-```
-
-### Auditoria de secrets
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\tools\scan-secrets.ps1
-```
-
-### Smoke test funcional local
-
-O smoke test sobe o stub local, percorre os happy paths e os edge cases críticos e gera um relatório em `docs/reports/`.
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\tools\smoke-localhost.ps1
-```
-
-Relatório atual de referência:
-
-- `docs/reports/localhost-smoke-test-2026-04-14.md`
-
-### Contrato com equipamento real
-
-Este check é opt-in, não roda na CI e exige credenciais fora do Git:
+Opt-in, fora da CI e sem credenciais reais no Git:
 
 ```powershell
 $env:CONTROLID_DEVICE_URL = "http://<equipamento-ou-host>:8080"
@@ -212,125 +293,58 @@ $env:CONTROLID_PASSWORD = "<senha>"
 powershell -ExecutionPolicy Bypass -File .\tools\contract-controlid-device.ps1
 ```
 
-## Observabilidade e monitoramento
+Use `tools/contract-controlid-stub.ps1` para validar contrato sem hardware.
 
-Runbook detalhado: `docs/observability-runbook.md`.
-Incidentes, continuidade, backup/restore operacional e DR:
-`docs/incident-response-and-dr.md`.
-Contingencia fisica do equipamento: `docs/equipment-contingency-runbook.md`.
+## Documentacao principal
 
-A PoC já sai preparada para monitoramento básico local:
+- `docs/README.md`: indice de conhecimento.
+- `docs/developer-onboarding.md`: guia de desenvolvimento e diagnostico.
+- `docs/architecture-overview.md`: arquitetura e fluxos.
+- `docs/integration-contracts.md`: APIs, payloads e contratos.
+- `docs/data-model-and-recovery.md`: dados, migrations, indices, backup e restore.
+- `docs/security-hardening.md`: hardening, HMAC, RBAC, headers e secrets.
+- `docs/privacy-and-data-retention.md`: LGPD, dados pessoais e retencao.
+- `docs/testing-strategy.md`: estrategia de testes e gates.
+- `docs/observability-runbook.md`: logs, metricas, alertas e dashboards.
+- `docs/deployment-runbook.md`: ambientes, deploy, rollback e container.
+- `docs/incident-response-and-dr.md`: incidentes, DR e postmortem.
+- `docs/product-analytics.md`: KPIs e eventos sem tracking pessoal.
+- `docs/finops-capacity.md`: custos, capacidade e sustentabilidade operacional.
+- `docs/residual-risk-closure.md`: lacunas externas, gates bloqueantes e
+  evidencias exigidas para release sem excecoes.
+- `docs/adrs/`: decisoes arquiteturais.
 
-- correlation ID por request via `X-Correlation-ID`, retornado em toda resposta e propagado para chamadas outbound da Access API;
-- health checks seguros em `GET /health/live` e `GET /health/ready`;
-- metricas instrumentadas por `System.Diagnostics.Metrics` no meter `Integracao.ControlID.PoC.Operations` e expostas em `GET /metrics` para usuario administrador;
-- analytics de produto privacy-aware em `docs/product-analytics.md`, usando apenas eventos agregados por fluxo, sem usuario, IP, payload, query ou device real;
-- metricas FinOps/capacidade em `/metrics` para memoria de processo, heap, storage local e espaco livre de disco, sem expor paths locais;
-- alertas e dashboards versionados em `docs/observability/`;
-- monitor local em `tools/observability-check.ps1`;
-- gate de readiness em `tools/test-readiness-gates.ps1`, com validacao offline de observabilidade por padrao e modo online autenticado para `/metrics`;
-- gate de scanners externos em `tools/external-security-scans.ps1`, documentado em `docs/external-validation-runbook.md`;
-- gate FinOps/capacidade em `tools/finops-capacity-check.ps1`, documentado em `docs/finops-capacity.md`;
-- modo estrito de release com `tools/test-readiness-gates.ps1 -ReleaseGate`, que falha se contrato fisico, metricas online ou scanners externos exigidos nao estiverem disponiveis;
-- gate operacional em `tools/operational-readiness-check.ps1`; para release, crie `ops.local.json` a partir de `ops.example.json` fora do Git e use `-RequireOperationalConfig`;
-- backup operacional com espelhamento opcional em `tools/backup-sqlite-operational.ps1`, usando `CONTROLID_BACKUP_MIRROR_DIRECTORY` ou `-MirrorDirectory`;
-- log de requisições HTTP no middleware `RequestLoggingMiddleware`;
-- log estruturado de invocação oficial da Access API, incluindo endpoint, target, status e duração;
-- log de entrada de callbacks com aceite, bloqueio e falha de persistência;
-- log de modos de operação para aplicação de `Standalone`, `Pro`, `Enterprise`, upgrades e validação de sessão;
-- log de fila push para enfileiramento, entrega, polling e recebimento de resultados;
-- compressão de resposta habilitada para HTML, CSS, JS e JSON, reduzindo custo de rede em páginas e payloads técnicos.
+## Troubleshooting rapido
 
-Saídas de log:
+### A PoC nao conecta ao equipamento
 
-- console da aplicação;
-- arquivo rolling em `Logs/app_log.txt`.
+- Confira esquema, IP e porta no painel de conexao.
+- Valide `ControlIDApi__ConnectionTimeoutSeconds`.
+- Confira allowlist `ControlIDApi__AllowedDeviceHosts`.
+- Veja logs do `OfficialApiInvokerService` para timeout, status e target
+  pseudonimizado.
 
-Pontos recomendados para monitorar primeiro:
+### Callbacks nao aparecem
 
-- falhas de `OfficialApiInvokerService` por timeout, validação, endpoint inválido ou status HTTP inesperado;
-- eventos rejeitados em `CallbackIngressService`;
-- erros de persistência e entrega em `PushCenterController`;
-- falhas ao aplicar modos em `OperationModesController`;
-- alertas de segurança de `CallbackSecurity.RequireSharedKey` durante o startup;
-- exceções capturadas por `ExceptionHandlingMiddleware`.
+- Confira `CallbackSecurity__RequireSharedKey` e `CallbackSecurity__SharedKey`.
+- Valide assinatura HMAC quando `RequireSignedRequests=true`.
+- Valide IP remoto permitido.
+- Acompanhe logs de `CallbackIngressService`.
 
-Sinais práticos para alertas locais ou ferramentas externas:
+### Push nao entrega comandos
 
-| Sinal | Onde aparece | Ação sugerida |
-| --- | --- | --- |
-| Timeout em chamada oficial | `OfficialApiInvokerService` | Verificar rede, IP, porta, sessão e disponibilidade do equipamento. |
-| Callback bloqueado | `CallbackIngressService` ou `CallbackSecurityEvaluator` | Conferir chave compartilhada, IP permitido e tamanho do payload. |
-| Falha ao persistir Push | `PushCenterController` ou `PushCommandRepository` | Conferir SQLite, lock de arquivo e permissão de escrita. |
-| Resultado Push sem `command_id` | `PushCenterController` | Verificar se o equipamento está devolvendo o identificador correto. |
-| Modo não detectado | `OperationModesController` | Conferir resposta de `get-configuration` e sessão oficial. |
+- Confira se o equipamento consulta `GET /push`.
+- Valide se resultados chegam em `POST /result`.
+- Consulte `PushCenter` e logs de persistencia.
 
-Checklist recomendado para debug operacional:
+### `/metrics` nao responde
 
-1. Verifique se o equipamento configurado está acessível.
-2. Valide se a sessão foi aberta antes de chamar endpoints autenticados.
-3. Acompanhe `Logs/app_log.txt` durante callbacks, push e chamadas oficiais.
-4. Abra `OfficialApi` para confirmar contrato visual, payload e query.
-5. Rode o smoke test local antes de publicar mudanças sensíveis.
+- Confirme `Observability__Metrics__Enabled=true`.
+- Por padrao, autentique como administrador.
+- Fora de Development, `Observability__Metrics__AllowAnonymous=true` bloqueia startup.
 
-## Fluxos principais
+### O shell parece lento
 
-- `Home`: painel executivo-operacional da PoC
-- `Workspace`: mapa funcional por domínio
-- `OperationModes`: centro unificado para `Standalone`, `Pro` e `Enterprise`
-- `OfficialApi`: catálogo de endpoints oficiais e invocação assistida
-- `OfficialObjects`: CRUD técnico de objetos oficiais
-- `ProductSpecific`: particularidades por linha de equipamento, SIP, áudio, QR/TOTP e upgrades
-- `AdvancedOfficial`: recursos oficiais avançados, exportação, câmera e intertravamento
-- `OfficialEvents` e `PushCenter`: observabilidade, callbacks e fila push
-
-## Documentação complementar
-
-- `Services/ControlIDApi/README.md`: resumo da camada oficial de integração
-- `docs/reports/heuristic-ui-audit-2026-04-14.md`: auditoria heurística de UX/UI
-- `docs/reports/design-system-accessibility-audit-2026-04-14.md`: auditoria de design system e acessibilidade
-- `docs/reports/visual-inventory-2026-04-14.md`: inventário visual consolidado
-- `docs/reports/operation-modes-homologation-matrix-2026-04-14.md`: matriz de cobertura e homologação por linha de produto
-- `docs/reports/operation-modes-e2e-runbook-2026-04-14.md`: roteiro E2E de bancada para validar `Standalone`, `Pro` e `Enterprise`
-- `docs/changelog-2026-04-14.md`: resumo técnico do que mudou e por que mudou
-- `docs/changelog-2026-04-15.md`: changelog das atualizações de documentação, comentários e observabilidade
-
-- `docs/database-and-runtime-state.md`: estado local, comandos seguros e requisitos de runtime
-- `docs/data-model-and-recovery.md`: modelo de dados local, indices, migrations, backup e restore
-- `docs/incident-response-and-dr.md`: matriz SEV, runbooks de incidentes, continuidade, RTO/RPO e postmortem
-- `docs/equipment-contingency-runbook.md`: contingencia operacional do equipamento Control iD e fallback manual aprovado
-- `docs/external-validation-runbook.md`: execucao de SAST, OSV, DAST, acessibilidade e contrato com stub/equipamento
-- `docs/finops-capacity.md`: inventario de custos, capacidade, limites, governanca FinOps e sustentabilidade operacional
-- `docs/security-hardening.md`: controles de autenticação local, RBAC, assinatura HMAC, proxy assinador, backup protegido, allowlist de egress e headers
-- `docs/integration-contracts.md`: inventario de integracoes, contratos, payloads e riscos
-- `docs/privacy-and-data-retention.md`: regras de privacidade, dados sensíveis e retenção local
-- `docs/product-acceptance-criteria.md`: critérios de aceite funcionais para os fluxos críticos
-- `docs/product-analytics.md`: KPIs, funis, eventos e dashboards de produto sem tracking pessoal
-- `docs/brand.md`: identidade visual, tokens, contraste, diretrizes de componentes e uso do simbolo da PoC
-
-## Troubleshooting rápido
-
-### A PoC não conecta ao equipamento
-
-- confira esquema, IP e porta no painel de conexão;
-- valide `ControlIDApi__ConnectionTimeoutSeconds`;
-- veja os logs do `OfficialApiInvokerService` para timeout, status HTTP e target.
-
-### Callbacks não aparecem
-
-- confira `CallbackSecurity__RequireSharedKey` e `CallbackSecurity__SharedKey`;
-- valide o IP remoto permitido quando houver restrição;
-- acompanhe os logs de `CallbackIngressService`.
-
-### Push não entrega comandos
-
-- confira se o dispositivo está consultando `GET /push`;
-- valide se os resultados estão chegando em `POST /result`;
-- acompanhe os logs de `PushCenterController`.
-
-### O shell parece lento em páginas técnicas longas
-
-- valide se os assets estáticos estão sendo servidos normalmente;
-- confira se há compressão de resposta habilitada no ambiente;
-- use a página `OfficialApi` como referência para verificar se o catálogo está sendo carregado com os filtros esperados;
-- em ambiente local, evite extensões do navegador que injetem scripts pesados sobre o `localhost`.
+- Verifique se assets estaticos e compressao estao funcionando.
+- Use `OfficialApi` como referencia para carga do catalogo.
+- Valide tamanho de banco/logs com `tools/finops-capacity-check.ps1`.
