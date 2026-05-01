@@ -24,7 +24,7 @@ public class PrivacySubjectReportServiceTests
             CreatedAt = DateTime.UtcNow
         };
         database.Context.Users.Add(user);
-        await database.Context.SaveChangesAsync();
+        await database.Context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
         database.Context.Sessions.Add(new SessionLocal
         {
@@ -61,10 +61,10 @@ public class PrivacySubjectReportServiceTests
             CreatedAt = DateTime.UtcNow,
             ReceivedAt = DateTime.UtcNow
         });
-        await database.Context.SaveChangesAsync();
+        await database.Context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
         var service = new PrivacySubjectReportService(database.Context);
-        var report = await service.BuildReportAsync("maria@example.test");
+        var report = await service.BuildReportAsync("maria@example.test", TestContext.Current.CancellationToken);
         var serialized = JsonSerializer.Serialize(report);
 
         Assert.Equal(1, report.DataCategories.Single(item => item.Area == "Usuarios locais").RecordCount);
@@ -100,10 +100,10 @@ public class PrivacySubjectReportServiceTests
             Time = DateTime.UtcNow,
             CreatedAt = DateTime.UtcNow
         });
-        await database.Context.SaveChangesAsync();
+        await database.Context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
         var service = new PrivacySubjectReportService(database.Context);
-        var report = await service.BuildReportAsync("42");
+        var report = await service.BuildReportAsync("42", TestContext.Current.CancellationToken);
 
         Assert.Equal(1, report.DataCategories.Single(item => item.Area == "Logs de acesso locais").RecordCount);
         Assert.Contains(report.MatchedUserRefs, item => item.StartsWith("ref:", StringComparison.Ordinal));

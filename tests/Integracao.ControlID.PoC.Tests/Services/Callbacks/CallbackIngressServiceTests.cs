@@ -22,7 +22,7 @@ public class CallbackIngressServiceTests
             "{\"event\":14}",
             "?device_id=device-1&user_id=101");
 
-        var result = await service.PersistAsync(context, "identification");
+        var result = await service.PersistAsync(context, "identification", TestContext.Current.CancellationToken);
 
         Assert.True(result.Accepted);
         Assert.Equal(StatusCodes.Status200OK, result.StatusCode);
@@ -49,7 +49,7 @@ public class CallbackIngressServiceTests
         });
         var context = CreateHttpContext("/new_card.fcgi", "{\"card\":1}");
 
-        var result = await service.PersistAsync(context, "identification");
+        var result = await service.PersistAsync(context, "identification", TestContext.Current.CancellationToken);
 
         Assert.False(result.Accepted);
         Assert.Equal(StatusCodes.Status401Unauthorized, result.StatusCode);
@@ -66,7 +66,7 @@ public class CallbackIngressServiceTests
         var context = CreateHttpContext("/new_card.fcgi", "payload-too-large");
         context.Request.ContentLength = null;
 
-        var result = await service.PersistAsync(context, "identification");
+        var result = await service.PersistAsync(context, "identification", TestContext.Current.CancellationToken);
 
         Assert.False(result.Accepted);
         Assert.Equal(StatusCodes.Status413PayloadTooLarge, result.StatusCode);

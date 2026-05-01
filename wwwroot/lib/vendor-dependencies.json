@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "lastReviewed": "2026-05-01",
+  "allowedLicenses": [
+    "MIT",
+    "Apache-2.0"
+  ],
+  "dependencies": [
+    {
+      "id": "bootstrap",
+      "name": "Bootstrap",
+      "version": "5.1.0",
+      "minimumSafeVersion": "5.1.0",
+      "license": "MIT",
+      "supplier": "Bootstrap Authors",
+      "sourceUrl": "https://github.com/twbs/bootstrap",
+      "path": "wwwroot/lib/bootstrap",
+      "licensePath": "wwwroot/lib/bootstrap/LICENSE",
+      "versionFile": "wwwroot/lib/bootstrap/dist/css/bootstrap.css",
+      "versionPattern": "Bootstrap v(?<version>\\d+\\.\\d+\\.\\d+)",
+      "fileCount": 45,
+      "directorySha256": "20f1c0c126a1634c1474efa87b848470f97d13a20453d6f49cb05b242158ea7e",
+      "securityNotes": "Current 5.x vendor is outside reviewed Bootstrap advisories affecting 3.x/4.x lines."
+    },
+    {
+      "id": "jquery",
+      "name": "jQuery",
+      "version": "3.6.0",
+      "minimumSafeVersion": "3.5.0",
+      "license": "MIT",
+      "supplier": "OpenJS Foundation and jQuery contributors",
+      "sourceUrl": "https://github.com/jquery/jquery",
+      "path": "wwwroot/lib/jquery",
+      "licensePath": "wwwroot/lib/jquery/LICENSE.txt",
+      "versionFile": "wwwroot/lib/jquery/dist/jquery.js",
+      "versionPattern": "jQuery JavaScript Library v(?<version>\\d+\\.\\d+\\.\\d+)",
+      "fileCount": 4,
+      "directorySha256": "0d5333955cb94a5ff6d076b990cb7190916c0d1f47926aea4b84b3a45534b530",
+      "securityNotes": "Minimum safe version covers GHSA-gxr4-xjj5-5px2 and GHSA-jpcq-cgw6-v4j6."
+    },
+    {
+      "id": "jquery-validation",
+      "name": "jQuery Validation",
+      "version": "1.20.0",
+      "minimumSafeVersion": "1.20.0",
+      "license": "MIT",
+      "supplier": "jQuery Validation contributors",
+      "sourceUrl": "https://github.com/jquery-validation/jquery-validation",
+      "path": "wwwroot/lib/jquery-validation",
+      "licensePath": "wwwroot/lib/jquery-validation/LICENSE.md",
+      "versionFile": "wwwroot/lib/jquery-validation/dist/jquery.validate.js",
+      "versionPattern": "jQuery Validation Plugin v(?<version>\\d+\\.\\d+\\.\\d+)",
+      "fileCount": 5,
+      "directorySha256": "26eeed721efb0c539e8f8cbe92a352aefd659c25514f11d790dda610af5bd0ee",
+      "securityNotes": "Minimum safe version covers GHSA-rrj2-ph5q-jxw2 / CVE-2025-3573."
+    },
+    {
+      "id": "jquery-validation-unobtrusive",
+      "name": "jQuery Validation Unobtrusive",
+      "version": "4.0.0",
+      "minimumSafeVersion": "4.0.0",
+      "license": "Apache-2.0",
+      "supplier": ".NET Foundation",
+      "sourceUrl": "https://github.com/aspnet/jquery-validation-unobtrusive",
+      "path": "wwwroot/lib/jquery-validation-unobtrusive",
+      "licensePath": "wwwroot/lib/jquery-validation-unobtrusive/LICENSE.txt",
+      "versionFile": "wwwroot/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.js",
+      "versionPattern": "@version v(?<version>\\d+\\.\\d+\\.\\d+)",
+      "fileCount": 3,
+      "directorySha256": "2b6bdd4bbba541aa9abacd3885265a7bdf13d52768e2dd9b07853df7ddc7a67d",
+      "securityNotes": "Pinned vendor manifest prevents silent drift because there is no JavaScript package manager."
+    }
+  ]
+}

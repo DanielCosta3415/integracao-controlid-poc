@@ -57,6 +57,10 @@ jobs:
         shell: pwsh
         run: .\tools\scan-secrets.ps1
 
+      - name: Supply-chain audit
+        shell: pwsh
+        run: .\tools\audit-supply-chain.ps1
+
       - name: Vulnerability audit
         shell: pwsh
         run: |

@@ -14,7 +14,7 @@ public class CallbackRequestBodyReaderTests
         var reader = CreateReader();
         var request = CreateRequest("{\"ping\":true}", "application/json");
 
-        var result = await reader.ReadAsync(request);
+        var result = await reader.ReadAsync(request, TestContext.Current.CancellationToken);
 
         Assert.True(result.IsSuccessful);
         Assert.Equal("{\"ping\":true}", result.Body);
@@ -27,7 +27,7 @@ public class CallbackRequestBodyReaderTests
         var reader = CreateReader();
         var request = CreateBinaryRequest(new byte[] { 1, 2, 3, 4 }, "application/octet-stream");
 
-        var result = await reader.ReadAsync(request);
+        var result = await reader.ReadAsync(request, TestContext.Current.CancellationToken);
 
         Assert.True(result.IsSuccessful);
         Assert.Equal("AQIDBA==", result.Body);
@@ -40,7 +40,7 @@ public class CallbackRequestBodyReaderTests
         var request = CreateRequest("payload-too-large", "text/plain");
         request.ContentLength = null;
 
-        var result = await reader.ReadAsync(request);
+        var result = await reader.ReadAsync(request, TestContext.Current.CancellationToken);
 
         Assert.False(result.IsSuccessful);
         Assert.Equal(StatusCodes.Status413PayloadTooLarge, result.StatusCode);

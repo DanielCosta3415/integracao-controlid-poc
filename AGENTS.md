@@ -103,7 +103,9 @@ dotnet format .\tools\ControlIdCallbackSigningProxy\ControlIdCallbackSigningProx
 dotnet test .\Integracao.ControlID.PoC.sln --no-build -v:minimal
 dotnet list .\Integracao.ControlID.PoC.sln package --vulnerable --include-transitive
 dotnet list .\tools\ControlIdCallbackSigningProxy\ControlIdCallbackSigningProxy.csproj package --vulnerable --include-transitive
+powershell -ExecutionPolicy Bypass -File .\tools\audit-supply-chain.ps1
 powershell -ExecutionPolicy Bypass -File .\tools\scan-secrets.ps1
+powershell -ExecutionPolicy Bypass -File .\tools\generate-sbom.ps1
 git diff --check
 ```
 
@@ -176,7 +178,8 @@ Notas:
 ### Dependencias
 
 - Use NuGet lockfiles. A CI usa restore em modo locked.
-- Atualizacao de pacote exige build, testes, format check e auditoria de vulnerabilidade.
+- Atualizacao de pacote exige build, testes, format check e auditoria de supply chain.
+- Dependencias frontend vendorizadas em `wwwroot/lib` devem estar declaradas em `wwwroot/lib/vendor-dependencies.json` e validadas por `tools/audit-vendor-dependencies.ps1`.
 - Preferir patches compativeis com .NET 8 a upgrades amplos de major version.
 
 ### Performance
