@@ -245,6 +245,7 @@ Repositórios que encapsulam acesso ao SQLite local para cada entidade da PoC.
 | --- | --- |
 | `Services/DocumentedFeatures/DocumentedFeaturesPayloadFactory.cs` | Monta o payload/resumo de funcionalidades documentadas exibido na UI. |
 | `Services/Files/UploadedFileBase64Encoder.cs` | Converte arquivos enviados pela UI para Base64 antes de envio/persistência. |
+| `Services/Analytics/ProductAnalyticsEventClassifier.cs` | Classifica rotas allowlist em eventos agregados de produto sem identificadores pessoais. |
 | `Services/Navigation/NavigationCatalogService.cs` | Monta o catálogo de navegação das páginas e módulos da PoC. |
 | `Services/Navigation/PageShellService.cs` | Fornece metadados de shell, cabeçalho e breadcrumbs das páginas. |
 | `Services/Observability/HealthCheckResponseWriter.cs` | Serializa health checks sem expor excecoes, paths locais ou connection string. |
@@ -535,12 +536,14 @@ As views Razor compõem a interface web da PoC. Em geral, cada pasta espelha um 
 | `docs/changelog-2026-04-15.md` | Registro resumido das atualizacoes de documentação, comentarios inline e observabilidade. |
 | `docs/deployment-runbook.md` | Mapeia ambientes, container, variaveis obrigatorias, deploy, rollback e riscos de infraestrutura. |
 | `docs/equipment-contingency-runbook.md` | Define contingencia operacional do equipamento Control iD, fallback manual e validacao de bancada. |
+| `docs/external-validation-runbook.md` | Padroniza SAST, OSV, DAST, acessibilidade e contrato com stub/equipamento. |
 | `docs/incident-response-and-dr.md` | Define matriz SEV, runbooks de incidentes, continuidade, backup/restore operacional, DR, comunicacao e postmortem. |
 | `docs/monitor-implementation.md` | Documenta a implementação da funcionalidade Monitor, callbacks oficiais, segurança e persistência local. |
 | `docs/observability-runbook.md` | Define health, metricas, alertas, dashboards e resposta a incidentes operacionais. |
 | `docs/observability/alert-rules.json` | Regras versionadas de alerta para o monitor local e ferramentas externas. |
 | `docs/observability/dashboard.json` | Especificacao versionada de dashboards independente de fornecedor. |
 | `docs/operation-modes-implementation.md` | Documenta a implementação dos modos Standalone, Pro e Enterprise, incluindo payloads e transições. |
+| `docs/product-analytics.md` | Define objetivos, KPIs, funis, eventos, dashboards e restricoes de analytics privacy-aware. |
 | `docs/project-file-responsibilities.md` | Este inventário de responsabilidades por pasta e arquivo. |
 | `docs/push-implementation.md` | Documenta a implementação da funcionalidade Push, fila persistida, polling e retorno de resultados. |
 | `docs/reports/controlid-api-audit-2026-04-13.md` | Auditoria tecnica da cobertura da API Control iD. |
@@ -578,6 +581,7 @@ As views Razor compõem a interface web da PoC. Em geral, cada pasta espelha um 
 | `tests/Integracao.ControlID.PoC.Tests/Services/ControlIDApi/OfficialApiQueryParameterStrategyTests.cs` | Testa montagem de parâmetros via query string. |
 | `tests/Integracao.ControlID.PoC.Tests/Services/DocumentedFeatures/DocumentedFeaturesPayloadFactoryTests.cs` | Testa payload de funcionalidades documentadas. |
 | `tests/Integracao.ControlID.PoC.Tests/Services/Files/UploadedFileBase64EncoderTests.cs` | Testa conversão de uploads para Base64. |
+| `tests/Integracao.ControlID.PoC.Tests/Services/Analytics/ProductAnalyticsEventClassifierTests.cs` | Testa classificacao privacy-aware de eventos de produto por rota. |
 | `tests/Integracao.ControlID.PoC.Tests/Services/Navigation/NavigationCatalogServiceTests.cs` | Testa catálogo de navegação. |
 | `tests/Integracao.ControlID.PoC.Tests/Services/Navigation/PageShellServiceTests.cs` | Testa metadados de shell/cabeçalho das páginas. |
 | `tests/Integracao.ControlID.PoC.Tests/Services/OperationModes/OperationModesPayloadFactoryTests.cs` | Testa payloads dos modos de operação. |
@@ -595,6 +599,8 @@ As views Razor compõem a interface web da PoC. Em geral, cada pasta espelha um 
 | `tools/observability-check.ps1` | Valida artefatos de observabilidade, health checks, metricas e contrato fisico opcional. |
 | `tools/operational-readiness-check.ps1` | Valida runbooks operacionais, `ops.example.json` e, em release, `ops.local.json` sem placeholders. |
 | `tools/backup-sqlite-operational.ps1` | Orquestra backup SQLite protegido, espelhamento opcional, restore-smoke e retencao confirmada. |
+| `tools/contract-controlid-stub.ps1` | Sobe o stub local e valida contrato Control iD sem equipamento fisico ou credenciais reais. |
+| `tools/external-security-scans.ps1` | Orquestra inventario e execucao de Semgrep, OSV Scanner, ZAP baseline e axe quando disponiveis. |
 | `tools/test-readiness-gates.ps1` | Orquestra build, testes, format, secret scan, observabilidade offline, cobertura, smoke, auditoria, contrato fisico, scanners externos e modo estrito `-ReleaseGate`. |
 | `tools/smoke-localhost.ps1` | Script PowerShell que executa smoke test local, sobe stub e percorre fluxos criticos da PoC. |
 | `tools/ControlIdDeviceStub/ControlIdDeviceStub.csproj` | Projeto .NET do stub local que simula respostas de um equipamento Control iD. |

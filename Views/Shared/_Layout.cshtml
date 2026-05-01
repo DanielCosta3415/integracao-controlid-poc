@@ -126,7 +126,7 @@
                 <partial name="_ConnectionPanel" model="shellContext.ConnectionPanel" />
             </div>
 
-            <div class="app-page-context">
+            <section class="app-page-context" aria-label="Contexto da pagina">
                 <nav class="app-breadcrumbs" aria-label="Breadcrumb">
                     <ol class="app-breadcrumbs__list">
                         <li><a href="@Url.Action("Index", "Home")">PoC</a></li>
@@ -155,7 +155,7 @@
                         <small>@subtitle</small>
                     }
                 </div>
-            </div>
+            </section>
 
             <main id="mainContent" class="app-content" tabindex="-1">
                 @RenderBody()
@@ -168,7 +168,7 @@
         </div>
     </div>
 
-    <div class="visually-hidden" aria-hidden="true">
+    <div class="visually-hidden" hidden>
         <a href="@Url.Action("Index", "Workspace")" data-search-entry data-module-key="Workspace:Index" data-module-label="Mapa funcional" data-module-group="Exploração global" data-module-tags="mapa funcional modulos dominios explorer" data-module-short="MF"></a>
         @foreach (var domain in domains)
         {

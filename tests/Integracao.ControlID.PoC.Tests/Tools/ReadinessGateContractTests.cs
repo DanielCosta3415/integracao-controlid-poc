@@ -12,9 +12,33 @@ public class ReadinessGateContractTests
         Assert.Contains("RunObservabilityOnline", script, StringComparison.Ordinal);
         Assert.Contains("RequireObservabilityMetrics", script, StringComparison.Ordinal);
         Assert.Contains("RunContainerBuild", script, StringComparison.Ordinal);
+        Assert.Contains("RunExternalScanners", script, StringComparison.Ordinal);
+        Assert.Contains("simulated-device-contract", script, StringComparison.Ordinal);
+        Assert.Contains("contract-controlid-stub.ps1", script, StringComparison.Ordinal);
+        Assert.Contains("external-security-scans.ps1", script, StringComparison.Ordinal);
         Assert.Contains("docker build --pull", script, StringComparison.Ordinal);
         Assert.Contains("ReleaseGate", script, StringComparison.Ordinal);
         Assert.Contains("$RequireExternalScanners = $true", script, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ExternalValidationArtifacts_DefineScannerContracts()
+    {
+        var scannerScript = ReadRepoFile("tools", "external-security-scans.ps1");
+        var stubContractScript = ReadRepoFile("tools", "contract-controlid-stub.ps1");
+        var semgrepConfig = ReadRepoFile(".semgrep.yml");
+        var runbook = ReadRepoFile("docs", "external-validation-runbook.md");
+
+        Assert.Contains("semgrep", scannerScript, StringComparison.Ordinal);
+        Assert.Contains("osv-scanner", scannerScript, StringComparison.Ordinal);
+        Assert.Contains("zap-baseline.py", scannerScript, StringComparison.Ordinal);
+        Assert.Contains("axe", scannerScript, StringComparison.Ordinal);
+        Assert.Contains("EXTERNAL_SCAN_BASE_URL", scannerScript, StringComparison.Ordinal);
+        Assert.Contains("contract-controlid-device.ps1", stubContractScript, StringComparison.Ordinal);
+        Assert.Contains("stub-admin", stubContractScript, StringComparison.Ordinal);
+        Assert.Contains("controlid-sensitive-logging-keywords", semgrepConfig, StringComparison.Ordinal);
+        Assert.Contains("-RequireExternalScanners", runbook, StringComparison.Ordinal);
+        Assert.Contains("-RequireHardwareContract", runbook, StringComparison.Ordinal);
     }
 
     [Fact]

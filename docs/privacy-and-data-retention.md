@@ -21,6 +21,7 @@ Esta PoC ASP.NET Core MVC integra com equipamentos Control iD para autenticacao,
 | Cartoes, tags, QR codes, PINs | UI/API/SQLite | Pessoal/credencial de acesso | Condicional a controle de acesso | Tratar como credenciais de acesso fisico. |
 | Logs de acesso, monitoramento, callbacks e Push | Equipamento/API local | Pessoal, tecnico e possivelmente sensivel | Necessario para QA/diagnostico | Payload bruto pode conter dados pessoais. |
 | Cookies de autenticacao, antiforgery e sessao | ASP.NET Core | Tecnico identificavel/seguranca | Necessario para UI segura | Sem evidencia de cookies de analytics. |
+| Eventos agregados de produto | Middleware HTTP interno | Agregado nao pessoal | Medir uso de fluxos e qualidade sem tracking individual | Labels em allowlist; sem usuario, IP, query, body, payload ou device real. |
 | Dados financeiros, saude, geolocalizacao, scores | Nao encontrado | N/A | Nao aplicavel | Nao introduzir sem requisito e avaliacao. |
 | Criancas/adolescentes | Nao ha campo explicito de idade | Necessita validacao | Ambiguo | A base de usuarios do equipamento pode incluir menores; DPO deve validar contexto. |
 | Decisao automatizada/perfis | Nao encontrado | N/A | Nao aplicavel | Nao ha score ou decisao automatizada propria da PoC. |
@@ -74,7 +75,7 @@ Todas as bases acima sao hipoteses tecnicas. A definicao final depende do contro
 
 - Equipamento/firmware Control iD: recebe e retorna dados de usuarios, credenciais de acesso, fotos, biometria, eventos e configuracoes. Papel do terceiro, contrato, DPA e transferencia internacional: necessita validacao juridica/DPO.
 - GitHub Actions/NuGet: evidenciados para codigo, CI e dependencias; nao devem receber dados reais da PoC. Nao enviar logs, bancos ou artefatos com dados pessoais.
-- Sem evidencia de analytics, e-mail/SMS/push externo, gateway de pagamento, cache externo ou storage cloud de runtime.
+- Sem evidencia de analytics externo, e-mail/SMS/push externo, gateway de pagamento, cache externo ou storage cloud de runtime. Analytics de produto existe apenas como metricas internas agregadas em `/metrics`, conforme `docs/product-analytics.md`.
 - Callback signing proxy local e stub de equipamento sao ferramentas tecnicas; nao devem receber dados reais fora de ambiente controlado.
 
 ## Retencao, descarte e anonimizacao
@@ -112,6 +113,7 @@ Procedimento minimo recomendado para incidente:
 - Mensagem de sucesso do teste de conectividade deixou de exibir o endpoint bruto informado.
 - `Privacy/Index` gera relatorio minimizado de atendimento a direitos do titular por ID, matricula, usuario, e-mail ou telefone.
 - `Privacy/Export` exporta JSON minimizado sem foto Base64, biometria bruta, hashes, sessoes, payloads, cartoes ou QR codes.
+- Analytics de produto usa somente metricas agregadas por fluxo/evento allowlist, sem identificador pessoal, IP, session, query string, body ou payload bruto.
 - Testes unitarios cobrem estabilidade e nao exposicao de usuario, IP, endpoint e identificador pseudonimizados.
 - `docs/privacy-governance-runbook.md` define RACI, DSAR, RIPD, DPA, retencao e incidente como artefatos verificaveis para decisao humana.
 

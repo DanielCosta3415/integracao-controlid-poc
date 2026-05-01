@@ -1,0 +1,29 @@
+rules:
+  - id: controlid-empty-catch-block
+    languages:
+      - csharp
+    severity: WARNING
+    message: "Nao use catch vazio; registre contexto seguro ou trate a excecao."
+    patterns:
+      - pattern: |
+          catch ($EX) {
+          }
+    paths:
+      exclude:
+        - /tools/**
+        - /tests/**
+        - /bin/**
+        - /obj/**
+
+  - id: controlid-sensitive-logging-keywords
+    languages:
+      - csharp
+    severity: ERROR
+    message: "Revise log com palavra sensivel; nunca registre senha, token, session, shared key ou payload bruto."
+    pattern-regex: '(?is)\b_logger\.(LogTrace|LogDebug|LogInformation|LogWarning|LogError|LogCritical)\s*\([^;]*,\s*(password|senha|token|secret|sharedKey|sessionString|rawPayload|payload|requestBody)\b'
+    paths:
+      exclude:
+        - /tools/**
+        - /tests/**
+        - /bin/**
+        - /obj/**

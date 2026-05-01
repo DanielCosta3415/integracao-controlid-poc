@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Integracao.ControlID.PoC.Helpers;
+using Integracao.ControlID.PoC.Services.Analytics;
 using Integracao.ControlID.PoC.Services.Observability;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
@@ -38,6 +39,7 @@ namespace Integracao.ControlID.PoC.Middlewares
                     request.Path.Value ?? string.Empty,
                     response.StatusCode,
                     sw.Elapsed.TotalMilliseconds);
+                RecordProductAnalytics(request, response.StatusCode, sw.Elapsed.TotalMilliseconds);
 
                 _logger.Log(
                     response.StatusCode >= StatusCodes.Status500InternalServerError ? LogLevel.Warning : LogLevel.Information,
@@ -64,6 +66,7 @@ namespace Integracao.ControlID.PoC.Middlewares
                     context.Request.Path.Value ?? string.Empty,
                     StatusCodes.Status500InternalServerError,
                     sw.Elapsed.TotalMilliseconds);
+                RecordProductAnalytics(context.Request, StatusCodes.Status500InternalServerError, sw.Elapsed.TotalMilliseconds);
 
                 _logger.LogError(OperationalEventIds.RequestFailed, ex, "Erro durante o processamento da requisicao [{Method}] {Path}. Tempo decorrido: {Elapsed} ms. Correlation {CorrelationId}.",
                     context.Request.Method,
@@ -73,6 +76,19 @@ namespace Integracao.ControlID.PoC.Middlewares
                 );
                 throw;
             }
+        }
+
+        private static void RecordProductAnalytics(HttpRequest request, int statusCode, double elapsedMilliseconds)
+        {
+            if (!ProductAnalyticsEventClassifier.TryClassify(request.Method, request.Path.Value, out var productEvent))
+                return;
+
+            OperationalMetrics.RecordProductFlow(
+                productEvent.Flow,
+                productEvent.Name,
+                productEvent.Action,
+                statusCode,
+                elapsedMilliseconds);
         }
     }
 }

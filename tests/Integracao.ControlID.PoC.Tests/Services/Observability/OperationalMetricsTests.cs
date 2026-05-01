@@ -43,4 +43,28 @@ public class OperationalMetricsTests
         Assert.Contains("controlid_official_api_duration_milliseconds_count", prometheus);
         Assert.Contains("controlid_observability_snapshot_unix_time_seconds", prometheus);
     }
+
+    [Fact]
+    public void RecordProductFlow_CapturesPrivacySafeProductLabels()
+    {
+        OperationalMetrics.ResetForTests();
+
+        OperationalMetrics.RecordProductFlow(
+            "official_api",
+            "official_endpoint_invoked",
+            "submit",
+            StatusCodes.Status200OK,
+            42.5);
+
+        var prometheus = PrometheusMetricsWriter.Format(OperationalMetrics.CaptureSnapshot());
+
+        Assert.Contains("controlid_product_flow_events_total", prometheus);
+        Assert.Contains("event=\"official_endpoint_invoked\"", prometheus);
+        Assert.Contains("flow=\"official_api\"", prometheus);
+        Assert.Contains("outcome=\"success\"", prometheus);
+        Assert.Contains("controlid_product_flow_duration_milliseconds_count", prometheus);
+        Assert.DoesNotContain("user_id", prometheus, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("session", prometheus, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("password", prometheus, StringComparison.OrdinalIgnoreCase);
+    }
 }

@@ -66,6 +66,7 @@ Use flags adicionais conforme o ambiente permitir:
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\tools\test-readiness-gates.ps1 -RunCoverage -RunSupplyChainAudit -RunSmoke
 powershell -ExecutionPolicy Bypass -File .\tools\test-readiness-gates.ps1 -RunContainerBuild
+powershell -ExecutionPolicy Bypass -File .\tools\test-readiness-gates.ps1 -RunExternalScanners
 powershell -ExecutionPolicy Bypass -File .\tools\test-readiness-gates.ps1 -RunObservabilityOnline -RequireObservabilityMetrics
 powershell -ExecutionPolicy Bypass -File .\tools\test-readiness-gates.ps1 -RequireHardwareContract -RequireExternalScanners
 powershell -ExecutionPolicy Bypass -File .\tools\test-readiness-gates.ps1 -ReleaseGate
@@ -89,8 +90,9 @@ Threshold numerico ainda exige ferramenta de leitura/relatorio compativel com `.
 
 ## Gates de validacao externa
 
+- Contrato simulado com stub local roda por padrao via `tools/contract-controlid-stub.ps1`.
 - Homologacao com equipamento real, firmware e rede publica depende de ambiente e e bloqueada por `-RequireHardwareContract` quando exigida.
-- Auditoria formal WCAG/DAST/SAST externa depende de ferramentas fora do repo e e bloqueada por `-RequireExternalScanners` quando exigida.
+- Auditoria formal WCAG/DAST/SAST externa usa `tools/external-security-scans.ps1` e e bloqueada por `-RequireExternalScanners` quando exigida.
 - Validacao online de metricas depende de app rodando e credencial local de administrador; use `-RunObservabilityOnline -RequireObservabilityMetrics`.
 - Coverage numerico por percentual depende de parser/relatorio compativel; `-RunCoverage` bloqueia ausencia de artefato e qualquer threshold formal deve ser definido com ferramenta versionada antes de release regulado.
 - Para release sem excecoes, `-ReleaseGate` agrega smoke, cobertura, supply chain, container build, observabilidade online, contrato fisico e scanners externos; se ambiente/ferramenta estiver ausente, o gate falha.

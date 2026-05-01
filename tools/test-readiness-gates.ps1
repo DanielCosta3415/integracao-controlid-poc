@@ -4,13 +4,15 @@ param(
     [switch]$RunSupplyChainAudit,
     [switch]$RunSmoke,
     [switch]$RunContainerBuild,
+    [switch]$RunExternalScanners,
     [switch]$RunObservabilityOnline,
     [switch]$RequireObservabilityMetrics,
     [switch]$RequireOperationalConfig,
     [switch]$RequireHardwareContract,
     [switch]$RequireExternalScanners,
     [switch]$ReleaseGate,
-    [string]$ObservabilityBaseUrl = $env:OBSERVABILITY_BASE_URL
+    [string]$ObservabilityBaseUrl = $env:OBSERVABILITY_BASE_URL,
+    [string]$ExternalScanBaseUrl = $env:EXTERNAL_SCAN_BASE_URL
 )
 
 Set-StrictMode -Version Latest
@@ -24,6 +26,7 @@ if ($ReleaseGate) {
     $RunSupplyChainAudit = $true
     $RunSmoke = $true
     $RunContainerBuild = $true
+    $RunExternalScanners = $true
     $RunObservabilityOnline = $true
     $RequireObservabilityMetrics = $true
     $RequireOperationalConfig = $true
@@ -93,6 +96,10 @@ try {
         powershell @arguments
     }
 
+    Invoke-Step "simulated-device-contract" {
+        powershell -ExecutionPolicy Bypass -File ".\tools\contract-controlid-stub.ps1"
+    }
+
     if ($RunObservabilityOnline -or $RequireObservabilityMetrics) {
         Invoke-Step "observability-online" {
             $arguments = @(
@@ -153,6 +160,28 @@ try {
         }
     }
 
+    if ($RunExternalScanners -or $RequireExternalScanners) {
+        Invoke-Step "external-security-scans" {
+            $arguments = @(
+                "-ExecutionPolicy", "Bypass",
+                "-File", ".\tools\external-security-scans.ps1"
+            )
+
+            if (-not [string]::IsNullOrWhiteSpace($ExternalScanBaseUrl)) {
+                $arguments += @("-BaseUrl", $ExternalScanBaseUrl)
+            }
+
+            if ($RequireExternalScanners) {
+                $arguments += "-RequireTools"
+            }
+
+            powershell @arguments
+        }
+    }
+    else {
+        Write-Host "INFO external-security-scans: not requested. Use -RunExternalScanners or -RequireExternalScanners."
+    }
+
     if ($RequireHardwareContract) {
         Invoke-Step "physical-device-contract" {
             powershell -ExecutionPolicy Bypass -File ".\tools\contract-controlid-device.ps1"
@@ -164,30 +193,7 @@ try {
         }
     }
     else {
-        Write-Host "SKIP physical-device-contract: CONTROLID_DEVICE_URL, CONTROLID_USERNAME and CONTROLID_PASSWORD are not all configured."
-    }
-
-    $externalScanners = @(
-        [pscustomobject]@{ Name = "semgrep"; Purpose = "SAST" },
-        [pscustomobject]@{ Name = "osv-scanner"; Purpose = "OSV dependency scan" },
-        [pscustomobject]@{ Name = "zap-baseline.py"; Purpose = "DAST baseline" },
-        [pscustomobject]@{ Name = "axe"; Purpose = "accessibility CLI" }
-    )
-
-    $missingScanners = @()
-    foreach ($scanner in $externalScanners) {
-        if (Test-CommandAvailable $scanner.Name) {
-            Write-Host "FOUND $($scanner.Purpose): $($scanner.Name)"
-        }
-        else {
-            $missingScanners += $scanner
-            Write-Host "MISSING $($scanner.Purpose): $($scanner.Name)"
-        }
-    }
-
-    if ($RequireExternalScanners -and $missingScanners.Count -gt 0) {
-        $missingNames = ($missingScanners | ForEach-Object { $_.Name }) -join ", "
-        throw "External scanners required but not available: $missingNames."
+        Write-Host "INFO physical-device-contract: real hardware not configured; simulated-device-contract already ran. Use -RequireHardwareContract for lab release."
     }
 
     Write-Host "Test readiness gates completed."

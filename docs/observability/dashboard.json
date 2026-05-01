@@ -91,6 +91,41 @@
           "target": "Dados proibidos em logs"
         }
       ]
+    },
+    {
+      "id": "product-analytics",
+      "title": "Produto e experiencia",
+      "panels": [
+        {
+          "title": "Eventos por fluxo",
+          "source": "metrics",
+          "metric": "controlid_product_flow_events_total",
+          "groupBy": [ "flow", "event", "outcome" ]
+        },
+        {
+          "title": "Funil de ativacao",
+          "source": "metrics",
+          "metric": "controlid_product_flow_events_total",
+          "filters": {
+            "event": [ "local_login_viewed", "local_login_submitted", "device_login_viewed", "device_login_submitted" ]
+          }
+        },
+        {
+          "title": "Duracao por fluxo",
+          "source": "metrics",
+          "metric": "controlid_product_flow_duration_milliseconds",
+          "series": [ "count", "sum", "max" ]
+        },
+        {
+          "title": "Erros por fluxo",
+          "source": "metrics",
+          "metric": "controlid_product_flow_events_total",
+          "filters": {
+            "outcome": [ "blocked_or_invalid", "server_error" ]
+          },
+          "groupBy": [ "flow", "event", "status_group" ]
+        }
+      ]
     }
   ]
 }

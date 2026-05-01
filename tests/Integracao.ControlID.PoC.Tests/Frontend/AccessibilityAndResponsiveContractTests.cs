@@ -11,7 +11,9 @@ public class AccessibilityAndResponsiveContractTests
 
         Assert.Contains("class=\"skip-link\"", layout);
         Assert.Contains("href=\"#mainContent\"", layout);
+        Assert.Contains("<section class=\"app-page-context\" aria-label=\"Contexto da pagina\">", layout);
         Assert.Contains("<main id=\"mainContent\" class=\"app-content\" tabindex=\"-1\">", layout);
+        Assert.Contains("<div class=\"visually-hidden\" hidden>", layout);
         Assert.Contains("role=\"combobox\"", layout);
         Assert.Contains("autocomplete=\"off\"", layout);
         Assert.Contains("aria-autocomplete=\"list\"", layout);

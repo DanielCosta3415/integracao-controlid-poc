@@ -16,6 +16,8 @@ public static class OperationalMetrics
     private const string OfficialApiDurationMetricName = "controlid.official_api.duration";
     private const string CallbackIngressMetricName = "controlid.callback.ingress";
     private const string PushOperationsMetricName = "controlid.push.operations";
+    private const string ProductFlowEventsMetricName = "controlid.product.flow.events";
+    private const string ProductFlowDurationMetricName = "controlid.product.flow.duration";
 
     private static readonly Meter Meter = new(MeterName, "1.0.0");
     private static readonly ConcurrentDictionary<string, CounterAccumulator> CounterSnapshots = new(StringComparer.Ordinal);
@@ -55,6 +57,16 @@ public static class OperationalMetrics
         PushOperationsMetricName,
         unit: "{operation}",
         description: "Push queue operations by operation and outcome.");
+
+    private static readonly Counter<long> ProductFlowEvents = Meter.CreateCounter<long>(
+        ProductFlowEventsMetricName,
+        unit: "{event}",
+        description: "Privacy-safe product flow events by flow, event, action and outcome.");
+
+    private static readonly Histogram<double> ProductFlowDurationMs = Meter.CreateHistogram<double>(
+        ProductFlowDurationMetricName,
+        unit: "ms",
+        description: "Privacy-safe product flow request duration in milliseconds.");
 
     public static void RecordHttpRequest(string method, string path, int statusCode, double elapsedMilliseconds)
     {
@@ -118,6 +130,26 @@ public static class OperationalMetrics
 
         PushOperations.Add(1, tags);
         IncrementCounter(PushOperationsMetricName, tags, 1);
+    }
+
+    public static void RecordProductFlow(
+        string flow,
+        string eventName,
+        string action,
+        int statusCode,
+        double elapsedMilliseconds)
+    {
+        var tags = CreateTags(
+            ("flow", NormalizeLabel(flow)),
+            ("event", NormalizeLabel(eventName)),
+            ("action", NormalizeLabel(action)),
+            ("outcome", BuildProductOutcome(statusCode)),
+            ("status_group", BuildStatusGroup(statusCode)));
+
+        ProductFlowEvents.Add(1, tags);
+        ProductFlowDurationMs.Record(elapsedMilliseconds, tags);
+        IncrementCounter(ProductFlowEventsMetricName, tags, 1);
+        RecordHistogram(ProductFlowDurationMetricName, tags, elapsedMilliseconds);
     }
 
     public static OperationalMetricsSnapshot CaptureSnapshot()
@@ -196,6 +228,23 @@ public static class OperationalMetrics
             return "unknown";
 
         return $"{statusCode / 100}xx";
+    }
+
+    private static string BuildProductOutcome(int statusCode)
+    {
+        if (statusCode is >= 200 and <= 299)
+            return "success";
+
+        if (statusCode is >= 300 and <= 399)
+            return "redirect";
+
+        if (statusCode is >= 400 and <= 499)
+            return "blocked_or_invalid";
+
+        if (statusCode is >= 500 and <= 599)
+            return "server_error";
+
+        return "unknown";
     }
 
     private static string NormalizePath(string? value)

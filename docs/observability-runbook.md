@@ -67,6 +67,12 @@ claro.
 | `controlid.official_api.duration` | Histogram | `endpoint_id`, `method`, `outcome`, `status_group` | Latencia de equipamento/firmware/rede |
 | `controlid.callback.ingress` | Counter | `event_family`, `path`, `outcome`, `status_group` | Aceite/rejeicao de callbacks, monitor e push ingress |
 | `controlid.push.operations` | Counter | `operation`, `outcome` | Fila push, polling, resultado, clear e purge |
+| `controlid.product.flow.events` | Counter | `flow`, `event`, `action`, `outcome`, `status_group` | Uso privacy-aware de fluxos de produto sem usuario, IP, query, body ou payload |
+| `controlid.product.flow.duration` | Histogram | `flow`, `event`, `action`, `outcome`, `status_group` | Tempo percebido por fluxo de produto |
+
+O catalogo de eventos, KPIs e propriedades permitidas fica versionado em
+`docs/product-analytics.md`. Nao adicione labels livres, identificadores reais
+ou propriedades de analytics sem revisao de privacidade.
 
 ## Alertas recomendados
 

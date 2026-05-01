@@ -24,6 +24,8 @@ public class ObservabilityEndpointContractTests
         Assert.Contains("\"hardware-contract\"", alerts);
         Assert.Contains("\"process-health\"", dashboard);
         Assert.Contains("\"controlid_official_api_invocations_total\"", dashboard);
+        Assert.Contains("\"product-analytics\"", dashboard);
+        Assert.Contains("\"controlid_product_flow_events_total\"", dashboard);
         Assert.Contains("OfflineValidateOnly", script);
         Assert.Contains("RequireHardwareContract", script);
     }

@@ -109,9 +109,12 @@ powershell -ExecutionPolicy Bypass -File .\tools\scan-secrets.ps1
 powershell -ExecutionPolicy Bypass -File .\tools\generate-sbom.ps1
 powershell -ExecutionPolicy Bypass -File .\tools\observability-check.ps1 -OfflineValidateOnly
 powershell -ExecutionPolicy Bypass -File .\tools\operational-readiness-check.ps1
+powershell -ExecutionPolicy Bypass -File .\tools\contract-controlid-stub.ps1
+powershell -ExecutionPolicy Bypass -File .\tools\external-security-scans.ps1 -InventoryOnly
 powershell -ExecutionPolicy Bypass -File .\tools\test-readiness-gates.ps1 -RunCoverage
 powershell -ExecutionPolicy Bypass -File .\tools\test-readiness-gates.ps1 -RunContainerBuild
 powershell -ExecutionPolicy Bypass -File .\tools\test-readiness-gates.ps1 -RunObservabilityOnline -RequireObservabilityMetrics
+powershell -ExecutionPolicy Bypass -File .\tools\test-readiness-gates.ps1 -RunExternalScanners -RequireExternalScanners
 powershell -ExecutionPolicy Bypass -File .\tools\test-readiness-gates.ps1 -ReleaseGate
 docker build -t integracao-controlid-poc:local .
 docker compose config
@@ -128,6 +131,7 @@ Notas:
 - `ops.example.json` define o contrato de ownership, on-call, backup externo, RTO/RPO e contingencia fisica. Copie para `ops.local.json` fora do Git para releases reais; `-ReleaseGate` exige essa configuracao sem placeholders.
 - `test-readiness-gates.ps1 -ReleaseGate` e o modo estrito para release: exige smoke, cobertura, supply chain, container build, observabilidade online, configuracao operacional, contrato fisico e scanners externos.
 - Docker/Compose sao artefatos de execucao reproduzivel local/container; nao fazem deploy automatico nem configuram provedor cloud.
+- Scanners externos (`semgrep`, `osv-scanner`, `zap-baseline.py`, `axe`) sao orquestrados por `tools/external-security-scans.ps1`; a instalacao das CLIs fica no ambiente e deve ser justificada/registrada.
 - O contrato contra equipamento real e opt-in e exige variaveis `CONTROLID_DEVICE_URL`, `CONTROLID_USERNAME` e `CONTROLID_PASSWORD`: `powershell -ExecutionPolicy Bypass -File .\tools\contract-controlid-device.ps1`.
 
 ### Comandos indisponiveis ou nao padronizados

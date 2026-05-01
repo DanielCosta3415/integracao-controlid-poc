@@ -222,9 +222,11 @@ A PoC já sai preparada para monitoramento básico local:
 - correlation ID por request via `X-Correlation-ID`, retornado em toda resposta e propagado para chamadas outbound da Access API;
 - health checks seguros em `GET /health/live` e `GET /health/ready`;
 - metricas instrumentadas por `System.Diagnostics.Metrics` no meter `Integracao.ControlID.PoC.Operations` e expostas em `GET /metrics` para usuario administrador;
+- analytics de produto privacy-aware em `docs/product-analytics.md`, usando apenas eventos agregados por fluxo, sem usuario, IP, payload, query ou device real;
 - alertas e dashboards versionados em `docs/observability/`;
 - monitor local em `tools/observability-check.ps1`;
 - gate de readiness em `tools/test-readiness-gates.ps1`, com validacao offline de observabilidade por padrao e modo online autenticado para `/metrics`;
+- gate de scanners externos em `tools/external-security-scans.ps1`, documentado em `docs/external-validation-runbook.md`;
 - modo estrito de release com `tools/test-readiness-gates.ps1 -ReleaseGate`, que falha se contrato fisico, metricas online ou scanners externos exigidos nao estiverem disponiveis;
 - gate operacional em `tools/operational-readiness-check.ps1`; para release, crie `ops.local.json` a partir de `ops.example.json` fora do Git e use `-RequireOperationalConfig`;
 - backup operacional com espelhamento opcional em `tools/backup-sqlite-operational.ps1`, usando `CONTROLID_BACKUP_MIRROR_DIRECTORY` ou `-MirrorDirectory`;
@@ -293,10 +295,12 @@ Checklist recomendado para debug operacional:
 - `docs/data-model-and-recovery.md`: modelo de dados local, indices, migrations, backup e restore
 - `docs/incident-response-and-dr.md`: matriz SEV, runbooks de incidentes, continuidade, RTO/RPO e postmortem
 - `docs/equipment-contingency-runbook.md`: contingencia operacional do equipamento Control iD e fallback manual aprovado
+- `docs/external-validation-runbook.md`: execucao de SAST, OSV, DAST, acessibilidade e contrato com stub/equipamento
 - `docs/security-hardening.md`: controles de autenticação local, RBAC, assinatura HMAC, proxy assinador, backup protegido, allowlist de egress e headers
 - `docs/integration-contracts.md`: inventario de integracoes, contratos, payloads e riscos
 - `docs/privacy-and-data-retention.md`: regras de privacidade, dados sensíveis e retenção local
 - `docs/product-acceptance-criteria.md`: critérios de aceite funcionais para os fluxos críticos
+- `docs/product-analytics.md`: KPIs, funis, eventos e dashboards de produto sem tracking pessoal
 - `docs/brand.md`: identidade visual, tokens, contraste, diretrizes de componentes e uso do simbolo da PoC
 
 ## Troubleshooting rápido
