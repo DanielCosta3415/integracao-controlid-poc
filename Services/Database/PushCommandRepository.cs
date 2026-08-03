@@ -26,18 +26,10 @@ namespace Integracao.ControlID.PoC.Services.Database
         /// </summary>
         public async Task<PushCommandLocal> AddPushCommandAsync(PushCommandLocal pushCommand)
         {
-            try
-            {
-                pushCommand.ReceivedAt = DateTime.UtcNow;
-                _dbContext.PushCommands.Add(pushCommand);
-                await _dbContext.SaveChangesAsync();
-                return pushCommand;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Erro ao adicionar comando Push local.");
-                throw;
-            }
+            pushCommand.ReceivedAt = DateTime.UtcNow;
+            _dbContext.PushCommands.Add(pushCommand);
+            await _dbContext.SaveChangesAsync();
+            return pushCommand;
         }
 
         /// <summary>
@@ -146,17 +138,9 @@ namespace Integracao.ControlID.PoC.Services.Database
         /// </summary>
         public async Task<bool> UpdatePushCommandAsync(PushCommandLocal pushCommand)
         {
-            try
-            {
-                _dbContext.PushCommands.Update(pushCommand);
-                await _dbContext.SaveChangesAsync();
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Erro ao atualizar comando Push local {CommandId}.", pushCommand.CommandId);
-                return false;
-            }
+            _dbContext.PushCommands.Update(pushCommand);
+            await _dbContext.SaveChangesAsync();
+            return true;
         }
 
         /// <summary>
@@ -164,21 +148,13 @@ namespace Integracao.ControlID.PoC.Services.Database
         /// </summary>
         public async Task<bool> DeletePushCommandAsync(Guid id)
         {
-            try
-            {
-                var cmd = await _dbContext.PushCommands.FirstOrDefaultAsync(c => c.CommandId == id);
-                if (cmd == null)
-                    return false;
-
-                _dbContext.PushCommands.Remove(cmd);
-                await _dbContext.SaveChangesAsync();
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Erro ao remover comando Push local {id}.");
+            var cmd = await _dbContext.PushCommands.FirstOrDefaultAsync(c => c.CommandId == id);
+            if (cmd == null)
                 return false;
-            }
+
+            _dbContext.PushCommands.Remove(cmd);
+            await _dbContext.SaveChangesAsync();
+            return true;
         }
 
         public async Task<int> DeleteAllPushCommandsAsync()
@@ -194,7 +170,7 @@ namespace Integracao.ControlID.PoC.Services.Database
         }
 
         /// <summary>
-        /// Busca comandos Push locais por tipo, status, usuÃ¡rio ou perÃ­odo.
+        /// Busca comandos Push locais por tipo, status, usuario ou periodo.
         /// </summary>
         public async Task<List<PushCommandLocal>> SearchPushCommandsAsync(
             string? commandType = null,

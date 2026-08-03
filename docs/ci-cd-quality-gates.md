@@ -24,7 +24,12 @@ Arquivo: `.github/workflows/ci.yml`
 Disparos:
 
 - `push` em `main`;
-- `pull_request`.
+- `pull_request`;
+- agenda semanal, segunda-feira;
+- disparo manual por `workflow_dispatch`.
+
+O Dependabot em `.github/dependabot.yml` abre PRs semanais para NuGet e GitHub
+Actions, agrupando apenas atualizacoes patch/minor compativeis para revisao humana.
 
 Permissoes:
 

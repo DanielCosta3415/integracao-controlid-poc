@@ -25,18 +25,10 @@ namespace Integracao.ControlID.PoC.Services.Database
         /// </summary>
         public async Task<AccessLogLocal> AddAccessLogAsync(AccessLogLocal log)
         {
-            try
-            {
-                log.CreatedAt = DateTime.UtcNow;
-                _dbContext.AccessLogs.Add(log);
-                await _dbContext.SaveChangesAsync();
-                return log;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Erro ao adicionar log de acesso local.");
-                throw;
-            }
+            log.CreatedAt = DateTime.UtcNow;
+            _dbContext.AccessLogs.Add(log);
+            await _dbContext.SaveChangesAsync();
+            return log;
         }
 
         /// <summary>
@@ -63,17 +55,9 @@ namespace Integracao.ControlID.PoC.Services.Database
         /// </summary>
         public async Task<bool> UpdateAccessLogAsync(AccessLogLocal log)
         {
-            try
-            {
-                _dbContext.AccessLogs.Update(log);
-                await _dbContext.SaveChangesAsync();
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Erro ao atualizar log de acesso local {log.Id}.");
-                return false;
-            }
+            _dbContext.AccessLogs.Update(log);
+            await _dbContext.SaveChangesAsync();
+            return true;
         }
 
         /// <summary>
@@ -81,21 +65,13 @@ namespace Integracao.ControlID.PoC.Services.Database
         /// </summary>
         public async Task<bool> DeleteAccessLogAsync(long id)
         {
-            try
-            {
-                var log = await _dbContext.AccessLogs.FindAsync(id);
-                if (log == null)
-                    return false;
-
-                _dbContext.AccessLogs.Remove(log);
-                await _dbContext.SaveChangesAsync();
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Erro ao remover log de acesso local {id}.");
+            var log = await _dbContext.AccessLogs.FindAsync(id);
+            if (log == null)
                 return false;
-            }
+
+            _dbContext.AccessLogs.Remove(log);
+            await _dbContext.SaveChangesAsync();
+            return true;
         }
 
         /// <summary>

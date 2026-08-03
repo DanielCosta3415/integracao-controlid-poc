@@ -49,6 +49,7 @@ public class PushCommandWorkflowServiceTests
         Assert.Equal("device-1", command.DeviceId);
         Assert.Equal("42", command.UserId);
         Assert.Equal("{ \"door\": 1 }", command.Payload);
+        Assert.Contains("\"event\": \"door_open\"", command.RawJson, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -73,6 +74,7 @@ public class PushCommandWorkflowServiceTests
         Assert.Equal(queued.Command.CommandId, result.CommandId);
         Assert.Equal(PushCommandStatuses.Completed, result.Status);
         Assert.Equal("{\"ok\":true}", result.Payload);
+        Assert.Empty(result.RawJson);
         Assert.NotNull(result.UpdatedAt);
     }
 

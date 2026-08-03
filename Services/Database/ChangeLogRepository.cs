@@ -25,18 +25,10 @@ namespace Integracao.ControlID.PoC.Services.Database
         /// </summary>
         public async Task<ChangeLogLocal> AddChangeLogAsync(ChangeLogLocal log)
         {
-            try
-            {
-                log.Timestamp = DateTime.UtcNow;
-                _dbContext.ChangeLogs.Add(log);
-                await _dbContext.SaveChangesAsync();
-                return log;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Erro ao adicionar log de alteração local.");
-                throw;
-            }
+            log.Timestamp = DateTime.UtcNow;
+            _dbContext.ChangeLogs.Add(log);
+            await _dbContext.SaveChangesAsync();
+            return log;
         }
 
         /// <summary>
@@ -63,17 +55,9 @@ namespace Integracao.ControlID.PoC.Services.Database
         /// </summary>
         public async Task<bool> UpdateChangeLogAsync(ChangeLogLocal log)
         {
-            try
-            {
-                _dbContext.ChangeLogs.Update(log);
-                await _dbContext.SaveChangesAsync();
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Erro ao atualizar log de alteração local {log.Id}.");
-                return false;
-            }
+            _dbContext.ChangeLogs.Update(log);
+            await _dbContext.SaveChangesAsync();
+            return true;
         }
 
         /// <summary>
@@ -81,21 +65,13 @@ namespace Integracao.ControlID.PoC.Services.Database
         /// </summary>
         public async Task<bool> DeleteChangeLogAsync(long id)
         {
-            try
-            {
-                var log = await _dbContext.ChangeLogs.FindAsync(id);
-                if (log == null)
-                    return false;
-
-                _dbContext.ChangeLogs.Remove(log);
-                await _dbContext.SaveChangesAsync();
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Erro ao remover log de alteração local {id}.");
+            var log = await _dbContext.ChangeLogs.FindAsync(id);
+            if (log == null)
                 return false;
-            }
+
+            _dbContext.ChangeLogs.Remove(log);
+            await _dbContext.SaveChangesAsync();
+            return true;
         }
 
         /// <summary>

@@ -55,6 +55,7 @@ public class PushCenterControllerTests
         Assert.Equal("pending", command.Status);
         Assert.Equal("device-1", command.DeviceId);
         Assert.Equal("{\"actions\":[]}", command.Payload);
+        Assert.Empty(command.RawJson);
     }
 
     [Fact]
@@ -103,6 +104,7 @@ public class PushCenterControllerTests
         Assert.Equal("device-1", command.DeviceId);
         Assert.Equal("101", command.UserId);
         Assert.Equal("{\"ok\":true}", command.Payload);
+        Assert.Empty(command.RawJson);
     }
 
     [Fact]

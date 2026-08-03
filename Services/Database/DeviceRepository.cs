@@ -25,18 +25,10 @@ namespace Integracao.ControlID.PoC.Services.Database
         /// </summary>
         public async Task<DeviceLocal> AddDeviceAsync(DeviceLocal device)
         {
-            try
-            {
-                device.CreatedAt = DateTime.UtcNow;
-                _dbContext.Devices.Add(device);
-                await _dbContext.SaveChangesAsync();
-                return device;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Erro ao adicionar dispositivo local.");
-                throw;
-            }
+            device.CreatedAt = DateTime.UtcNow;
+            _dbContext.Devices.Add(device);
+            await _dbContext.SaveChangesAsync();
+            return device;
         }
 
         /// <summary>
@@ -63,17 +55,9 @@ namespace Integracao.ControlID.PoC.Services.Database
         /// </summary>
         public async Task<bool> UpdateDeviceAsync(DeviceLocal device)
         {
-            try
-            {
-                _dbContext.Devices.Update(device);
-                await _dbContext.SaveChangesAsync();
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Erro ao atualizar dispositivo local {device.Id}.");
-                return false;
-            }
+            _dbContext.Devices.Update(device);
+            await _dbContext.SaveChangesAsync();
+            return true;
         }
 
         /// <summary>
@@ -81,21 +65,13 @@ namespace Integracao.ControlID.PoC.Services.Database
         /// </summary>
         public async Task<bool> DeleteDeviceAsync(long id)
         {
-            try
-            {
-                var device = await _dbContext.Devices.FindAsync(id);
-                if (device == null)
-                    return false;
-
-                _dbContext.Devices.Remove(device);
-                await _dbContext.SaveChangesAsync();
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Erro ao remover dispositivo local {id}.");
+            var device = await _dbContext.Devices.FindAsync(id);
+            if (device == null)
                 return false;
-            }
+
+            _dbContext.Devices.Remove(device);
+            await _dbContext.SaveChangesAsync();
+            return true;
         }
 
         /// <summary>

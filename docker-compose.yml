@@ -13,6 +13,8 @@ services:
       AllowedHosts: "${AllowedHosts:?set AllowedHosts in .env}"
       Host__ShutdownTimeoutSeconds: "${Host__ShutdownTimeoutSeconds:-30}"
       ConnectionStrings__DefaultConnection: "${ConnectionStrings__DefaultConnection:-Data Source=/app/data/integracao_controlid.db}"
+      Database__ApplyMigrationsOnStartup: "${Database__ApplyMigrationsOnStartup:-false}"
+      Database__ExitAfterMigrations: "${Database__ExitAfterMigrations:-false}"
       ForwardedHeaders__Enabled: "${ForwardedHeaders__Enabled:-false}"
       ForwardedHeaders__ForwardLimit: "${ForwardedHeaders__ForwardLimit:-1}"
       ForwardedHeaders__KnownProxies__0: "${ForwardedHeaders__KnownProxies__0:-}"
@@ -26,12 +28,14 @@ services:
       ControlIDApi__DefaultUsername: "${ControlIDApi__DefaultUsername:-}"
       ControlIDApi__DefaultPassword: "${ControlIDApi__DefaultPassword:-}"
       ControlIDApi__ConnectionTimeoutSeconds: "${ControlIDApi__ConnectionTimeoutSeconds:-10}"
+      ControlIDApi__MaxResponseBodyBytes: "${ControlIDApi__MaxResponseBodyBytes:-16777216}"
       ControlIDApi__RequireAllowedDeviceHosts: "true"
       ControlIDApi__AllowedDeviceHosts__0: "${ControlIDApi__AllowedDeviceHosts__0:?set ControlIDApi__AllowedDeviceHosts__0 in .env}"
       ControlIDApi__CircuitBreaker__Enabled: "${ControlIDApi__CircuitBreaker__Enabled:-true}"
       ControlIDApi__CircuitBreaker__FailureThreshold: "${ControlIDApi__CircuitBreaker__FailureThreshold:-5}"
       ControlIDApi__CircuitBreaker__BreakDurationSeconds: "${ControlIDApi__CircuitBreaker__BreakDurationSeconds:-30}"
       CallbackSecurity__MaxBodyBytes: "${CallbackSecurity__MaxBodyBytes:-1048576}"
+      CallbackSecurity__MaxTrackedNonces: "${CallbackSecurity__MaxTrackedNonces:-10000}"
       CallbackSecurity__RequireSharedKey: "true"
       CallbackSecurity__SharedKey: "${CallbackSecurity__SharedKey:?set CallbackSecurity__SharedKey in .env}"
       CallbackSecurity__RequireSignedRequests: "true"
@@ -41,7 +45,7 @@ services:
       - controlid-data:/app/data
       - controlid-logs:/app/Logs
     healthcheck:
-      test: [ "CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/health/live" ]
+      test: [ "CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/health/ready" ]
       interval: 30s
       timeout: 5s
       retries: 3

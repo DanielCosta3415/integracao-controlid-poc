@@ -25,18 +25,10 @@ namespace Integracao.ControlID.PoC.Services.Database
         /// </summary>
         public async Task<LogLocal> AddLogAsync(LogLocal log)
         {
-            try
-            {
-                log.CreatedAt = DateTime.UtcNow;
-                _dbContext.Logs.Add(log);
-                await _dbContext.SaveChangesAsync();
-                return log;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Erro ao adicionar log local.");
-                throw;
-            }
+            log.CreatedAt = DateTime.UtcNow;
+            _dbContext.Logs.Add(log);
+            await _dbContext.SaveChangesAsync();
+            return log;
         }
 
         /// <summary>
@@ -63,17 +55,9 @@ namespace Integracao.ControlID.PoC.Services.Database
         /// </summary>
         public async Task<bool> UpdateLogAsync(LogLocal log)
         {
-            try
-            {
-                _dbContext.Logs.Update(log);
-                await _dbContext.SaveChangesAsync();
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Erro ao atualizar log local {log.Id}.");
-                return false;
-            }
+            _dbContext.Logs.Update(log);
+            await _dbContext.SaveChangesAsync();
+            return true;
         }
 
         /// <summary>
@@ -81,21 +65,13 @@ namespace Integracao.ControlID.PoC.Services.Database
         /// </summary>
         public async Task<bool> DeleteLogAsync(long id)
         {
-            try
-            {
-                var log = await _dbContext.Logs.FindAsync(id);
-                if (log == null)
-                    return false;
-
-                _dbContext.Logs.Remove(log);
-                await _dbContext.SaveChangesAsync();
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Erro ao remover log local {id}.");
+            var log = await _dbContext.Logs.FindAsync(id);
+            if (log == null)
                 return false;
-            }
+
+            _dbContext.Logs.Remove(log);
+            await _dbContext.SaveChangesAsync();
+            return true;
         }
 
         /// <summary>

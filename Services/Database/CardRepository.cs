@@ -25,18 +25,10 @@ namespace Integracao.ControlID.PoC.Services.Database
         /// </summary>
         public async Task<CardLocal> AddCardAsync(CardLocal card)
         {
-            try
-            {
-                card.CreatedAt = DateTime.UtcNow;
-                _dbContext.Cards.Add(card);
-                await _dbContext.SaveChangesAsync();
-                return card;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Erro ao adicionar cartão local.");
-                throw;
-            }
+            card.CreatedAt = DateTime.UtcNow;
+            _dbContext.Cards.Add(card);
+            await _dbContext.SaveChangesAsync();
+            return card;
         }
 
         /// <summary>
@@ -63,17 +55,9 @@ namespace Integracao.ControlID.PoC.Services.Database
         /// </summary>
         public async Task<bool> UpdateCardAsync(CardLocal card)
         {
-            try
-            {
-                _dbContext.Cards.Update(card);
-                await _dbContext.SaveChangesAsync();
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Erro ao atualizar cartão local {card.Id}.");
-                return false;
-            }
+            _dbContext.Cards.Update(card);
+            await _dbContext.SaveChangesAsync();
+            return true;
         }
 
         /// <summary>
@@ -81,21 +65,13 @@ namespace Integracao.ControlID.PoC.Services.Database
         /// </summary>
         public async Task<bool> DeleteCardAsync(long id)
         {
-            try
-            {
-                var card = await _dbContext.Cards.FindAsync(id);
-                if (card == null)
-                    return false;
-
-                _dbContext.Cards.Remove(card);
-                await _dbContext.SaveChangesAsync();
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Erro ao remover cartão local {id}.");
+            var card = await _dbContext.Cards.FindAsync(id);
+            if (card == null)
                 return false;
-            }
+
+            _dbContext.Cards.Remove(card);
+            await _dbContext.SaveChangesAsync();
+            return true;
         }
 
         /// <summary>

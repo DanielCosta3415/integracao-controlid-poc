@@ -49,7 +49,7 @@ Todas as bases acima sao hipoteses tecnicas. A definicao final depende do contro
 | --- | --- | --- |
 | Finalidade | Fluxos estao ligados a operacao Control iD e QA local | Formalizar finalidade por ambiente/projeto real. |
 | Adequacao | Dados se relacionam a controle de acesso e integracao | Confirmar adequacao com politica do controlador. |
-| Necessidade | Logs foram reduzidos para referencias pseudonimizadas; payloads brutos permanecem onde a PoC precisa depurar callbacks/Push | Definir se cada campo opcional e indispensavel em producao. |
+| Necessidade | Logs foram reduzidos para referencias pseudonimizadas; `RawJson` nao duplica `Payload` e so preserva envelope distinto em Push legado | Definir se cada payload remanescente e indispensavel em producao. |
 | Livre acesso | Nao ha portal DSAR/self-service | Criar procedimento manual ou automatizado. |
 | Qualidade | Dados refletem equipamento/API | Sem processo de correcao pelo titular. |
 | Transparencia | Documentacao tecnica existe | Aviso de privacidade e informativos ao titular nao estao versionados. |
@@ -114,6 +114,7 @@ Procedimento minimo recomendado para incidente:
 - `Privacy/Index` gera relatorio minimizado de atendimento a direitos do titular por ID, matricula, usuario, e-mail ou telefone.
 - `Privacy/Export` exporta JSON minimizado sem foto Base64, biometria bruta, hashes, sessoes, payloads, cartoes ou QR codes.
 - Analytics de produto usa somente metricas agregadas por fluxo/evento allowlist, sem identificador pessoal, IP, session, query string, body ou payload bruto.
+- Respostas dinamicas usam `Cache-Control: no-store`; assets estaticos versionados preservam cache proprio.
 - Testes unitarios cobrem estabilidade e nao exposicao de usuario, IP, endpoint e identificador pseudonimizados.
 - `docs/privacy-governance-runbook.md` define RACI, DSAR, RIPD, DPA, retencao e incidente como artefatos verificaveis para decisao humana.
 

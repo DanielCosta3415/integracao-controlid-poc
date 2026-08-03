@@ -25,18 +25,10 @@ namespace Integracao.ControlID.PoC.Services.Database
         /// </summary>
         public async Task<ConfigLocal> AddConfigAsync(ConfigLocal config)
         {
-            try
-            {
-                config.CreatedAt = DateTime.UtcNow;
-                _dbContext.Configs.Add(config);
-                await _dbContext.SaveChangesAsync();
-                return config;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Erro ao adicionar configuração local.");
-                throw;
-            }
+            config.CreatedAt = DateTime.UtcNow;
+            _dbContext.Configs.Add(config);
+            await _dbContext.SaveChangesAsync();
+            return config;
         }
 
         /// <summary>
@@ -63,17 +55,9 @@ namespace Integracao.ControlID.PoC.Services.Database
         /// </summary>
         public async Task<bool> UpdateConfigAsync(ConfigLocal config)
         {
-            try
-            {
-                _dbContext.Configs.Update(config);
-                await _dbContext.SaveChangesAsync();
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Erro ao atualizar configuração local {config.Id}.");
-                return false;
-            }
+            _dbContext.Configs.Update(config);
+            await _dbContext.SaveChangesAsync();
+            return true;
         }
 
         /// <summary>
@@ -81,21 +65,13 @@ namespace Integracao.ControlID.PoC.Services.Database
         /// </summary>
         public async Task<bool> DeleteConfigAsync(long id)
         {
-            try
-            {
-                var config = await _dbContext.Configs.FindAsync(id);
-                if (config == null)
-                    return false;
-
-                _dbContext.Configs.Remove(config);
-                await _dbContext.SaveChangesAsync();
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Erro ao remover configuração local {id}.");
+            var config = await _dbContext.Configs.FindAsync(id);
+            if (config == null)
                 return false;
-            }
+
+            _dbContext.Configs.Remove(config);
+            await _dbContext.SaveChangesAsync();
+            return true;
         }
 
         /// <summary>

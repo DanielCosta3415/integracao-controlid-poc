@@ -25,18 +25,10 @@ namespace Integracao.ControlID.PoC.Services.Database
         /// </summary>
         public async Task<PhotoLocal> AddPhotoAsync(PhotoLocal photo)
         {
-            try
-            {
-                photo.CreatedAt = DateTime.UtcNow;
-                _dbContext.Photos.Add(photo);
-                await _dbContext.SaveChangesAsync();
-                return photo;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Erro ao adicionar foto local.");
-                throw;
-            }
+            photo.CreatedAt = DateTime.UtcNow;
+            _dbContext.Photos.Add(photo);
+            await _dbContext.SaveChangesAsync();
+            return photo;
         }
 
         /// <summary>
@@ -63,17 +55,9 @@ namespace Integracao.ControlID.PoC.Services.Database
         /// </summary>
         public async Task<bool> UpdatePhotoAsync(PhotoLocal photo)
         {
-            try
-            {
-                _dbContext.Photos.Update(photo);
-                await _dbContext.SaveChangesAsync();
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Erro ao atualizar foto local {photo.Id}.");
-                return false;
-            }
+            _dbContext.Photos.Update(photo);
+            await _dbContext.SaveChangesAsync();
+            return true;
         }
 
         /// <summary>
@@ -81,21 +65,13 @@ namespace Integracao.ControlID.PoC.Services.Database
         /// </summary>
         public async Task<bool> DeletePhotoAsync(long id)
         {
-            try
-            {
-                var photo = await _dbContext.Photos.FindAsync(id);
-                if (photo == null)
-                    return false;
-
-                _dbContext.Photos.Remove(photo);
-                await _dbContext.SaveChangesAsync();
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Erro ao remover foto local {id}.");
+            var photo = await _dbContext.Photos.FindAsync(id);
+            if (photo == null)
                 return false;
-            }
+
+            _dbContext.Photos.Remove(photo);
+            await _dbContext.SaveChangesAsync();
+            return true;
         }
 
         /// <summary>

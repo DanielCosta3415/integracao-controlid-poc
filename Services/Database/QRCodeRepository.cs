@@ -25,18 +25,10 @@ namespace Integracao.ControlID.PoC.Services.Database
         /// </summary>
         public async Task<QRCodeLocal> AddQRCodeAsync(QRCodeLocal qrCode)
         {
-            try
-            {
-                qrCode.CreatedAt = DateTime.UtcNow;
-                _dbContext.QRCodes.Add(qrCode);
-                await _dbContext.SaveChangesAsync();
-                return qrCode;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Erro ao adicionar QR Code local.");
-                throw;
-            }
+            qrCode.CreatedAt = DateTime.UtcNow;
+            _dbContext.QRCodes.Add(qrCode);
+            await _dbContext.SaveChangesAsync();
+            return qrCode;
         }
 
         /// <summary>
@@ -63,17 +55,9 @@ namespace Integracao.ControlID.PoC.Services.Database
         /// </summary>
         public async Task<bool> UpdateQRCodeAsync(QRCodeLocal qrCode)
         {
-            try
-            {
-                _dbContext.QRCodes.Update(qrCode);
-                await _dbContext.SaveChangesAsync();
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Erro ao atualizar QR Code local {qrCode.Id}.");
-                return false;
-            }
+            _dbContext.QRCodes.Update(qrCode);
+            await _dbContext.SaveChangesAsync();
+            return true;
         }
 
         /// <summary>
@@ -81,21 +65,13 @@ namespace Integracao.ControlID.PoC.Services.Database
         /// </summary>
         public async Task<bool> DeleteQRCodeAsync(long id)
         {
-            try
-            {
-                var qrCode = await _dbContext.QRCodes.FindAsync(id);
-                if (qrCode == null)
-                    return false;
-
-                _dbContext.QRCodes.Remove(qrCode);
-                await _dbContext.SaveChangesAsync();
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Erro ao remover QR Code local {id}.");
+            var qrCode = await _dbContext.QRCodes.FindAsync(id);
+            if (qrCode == null)
                 return false;
-            }
+
+            _dbContext.QRCodes.Remove(qrCode);
+            await _dbContext.SaveChangesAsync();
+            return true;
         }
 
         /// <summary>

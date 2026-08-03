@@ -29,6 +29,8 @@ Variaveis minimas:
 - `AllowedHosts` com host real, sem `*`, `localhost` ou placeholders.
 - `ConnectionStrings__DefaultConnection=Data Source=/app/data/integracao_controlid.db`
   ou caminho de volume persistente equivalente.
+- `Database__ApplyMigrationsOnStartup=false` na instancia que atende trafego.
+- `Database__ExitAfterMigrations=false` na execucao normal.
 - `CallbackSecurity__RequireSharedKey=true`.
 - `CallbackSecurity__SharedKey` com valor real, nao placeholder, minimo de 32 caracteres.
 - `CallbackSecurity__RequireSignedRequests=true`.
@@ -53,7 +55,7 @@ Artefatos versionados:
 
 - `Dockerfile`: multi-stage build, imagem runtime Alpine, usuario nao root, porta
   `8080`, volume esperado para `/app/data` e `/app/Logs`, healthcheck em
-  `/health/live`.
+  `/health/ready`.
 - `.dockerignore`: remove Git, bin/obj, logs, artefatos, `.env` e SQLite local do
   contexto de build.
 - `docker-compose.yml`: execucao local/container com volumes nomeados, portas,
@@ -89,27 +91,34 @@ docker compose config
 docker build --pull -t integracao-controlid-poc:<versao> .
 ```
 
-5. Subir em Staging:
+5. Depois do backup, aplicar migrations em um processo unico que encerra ao
+   concluir. Nao execute este comando em paralelo:
+
+```powershell
+docker compose run --rm -e Database__ApplyMigrationsOnStartup=true -e Database__ExitAfterMigrations=true integracao-controlid-poc
+```
+
+6. Subir em Staging com `Database__ApplyMigrationsOnStartup=false`:
 
 ```powershell
 docker compose up --build
 ```
 
-6. Validar:
+7. Validar:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\tools\observability-check.ps1 -OfflineValidateOnly
 powershell -ExecutionPolicy Bypass -File .\tools\test-readiness-gates.ps1 -RunContainerBuild
 ```
 
-7. Contra ambiente rodando, validar health/readiness e metricas com credencial local:
+8. Contra ambiente rodando, validar health/readiness e metricas com credencial local:
 
 ```powershell
 $env:OBSERVABILITY_BASE_URL = "http://localhost:8080"
 powershell -ExecutionPolicy Bypass -File .\tools\observability-check.ps1
 ```
 
-8. Para release sem excecoes, rode o gate estrito em ambiente preparado:
+9. Para release sem excecoes, rode o gate estrito em ambiente preparado:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\tools\test-readiness-gates.ps1 -ReleaseGate

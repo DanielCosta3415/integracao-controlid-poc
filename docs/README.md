@@ -81,6 +81,7 @@ agentes de codigo no uso seguro da PoC `Integracao.ControlID.PoC`.
 - `docs/changelog-2026-04-14.md`: rodada inicial de evolucao tecnica.
 - `docs/changelog-2026-04-15.md`: comentarios e observabilidade.
 - `docs/changelog-2026-05-01.md`: documentacao, governanca e readiness.
+- `docs/changelog-2026-08-03.md`: fechamento dos 14 riscos full-stack.
 - `docs/pr-summary-2026-05-01.md`: resumo de PR/release notes da rodada.
 - `docs/documentation-audit-2026-05-01.md`: auditoria documental e lacunas.
 - `docs/reports/`: relatorios historicos de smoke, UX, design e auditorias. Use

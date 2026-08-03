@@ -1,4 +1,5 @@
 using Integracao.ControlID.PoC.Data;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 
@@ -23,9 +24,15 @@ public sealed class SqliteReadinessHealthCheck : IHealthCheck
             var dbContext = scope.ServiceProvider.GetRequiredService<IntegracaoControlIDContext>();
             var canConnect = await dbContext.Database.CanConnectAsync(cancellationToken);
 
-            return canConnect
-                ? HealthCheckResult.Healthy("SQLite runtime state is reachable.")
-                : HealthCheckResult.Unhealthy("SQLite runtime state is not reachable.");
+            if (!canConnect)
+                return HealthCheckResult.Unhealthy("SQLite runtime state is not reachable.");
+
+            var pendingMigrations = await dbContext.Database.GetPendingMigrationsAsync(cancellationToken);
+            var pendingMigrationNames = pendingMigrations.ToArray();
+            return pendingMigrationNames.Length == 0
+                ? HealthCheckResult.Healthy("SQLite runtime state is reachable and schema is current.")
+                : HealthCheckResult.Unhealthy(
+                    $"SQLite schema has {pendingMigrationNames.Length} pending migration(s).");
         }
         catch (Exception ex)
         {

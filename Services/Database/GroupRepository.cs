@@ -25,18 +25,10 @@ namespace Integracao.ControlID.PoC.Services.Database
         /// </summary>
         public async Task<GroupLocal> AddGroupAsync(GroupLocal group)
         {
-            try
-            {
-                group.CreatedAt = DateTime.UtcNow;
-                _dbContext.Groups.Add(group);
-                await _dbContext.SaveChangesAsync();
-                return group;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Erro ao adicionar grupo local.");
-                throw;
-            }
+            group.CreatedAt = DateTime.UtcNow;
+            _dbContext.Groups.Add(group);
+            await _dbContext.SaveChangesAsync();
+            return group;
         }
 
         /// <summary>
@@ -63,17 +55,9 @@ namespace Integracao.ControlID.PoC.Services.Database
         /// </summary>
         public async Task<bool> UpdateGroupAsync(GroupLocal group)
         {
-            try
-            {
-                _dbContext.Groups.Update(group);
-                await _dbContext.SaveChangesAsync();
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Erro ao atualizar grupo local {group.Id}.");
-                return false;
-            }
+            _dbContext.Groups.Update(group);
+            await _dbContext.SaveChangesAsync();
+            return true;
         }
 
         /// <summary>
@@ -81,21 +65,13 @@ namespace Integracao.ControlID.PoC.Services.Database
         /// </summary>
         public async Task<bool> DeleteGroupAsync(long id)
         {
-            try
-            {
-                var group = await _dbContext.Groups.FindAsync(id);
-                if (group == null)
-                    return false;
-
-                _dbContext.Groups.Remove(group);
-                await _dbContext.SaveChangesAsync();
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Erro ao remover grupo local {id}.");
+            var group = await _dbContext.Groups.FindAsync(id);
+            if (group == null)
                 return false;
-            }
+
+            _dbContext.Groups.Remove(group);
+            await _dbContext.SaveChangesAsync();
+            return true;
         }
 
         /// <summary>

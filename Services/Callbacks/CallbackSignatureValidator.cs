@@ -1,4 +1,3 @@
-using System.Collections.Concurrent;
 using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
@@ -13,7 +12,8 @@ namespace Integracao.ControlID.PoC.Services.Callbacks
     {
         private readonly CallbackSecurityOptions _options;
         private readonly ILogger<CallbackSignatureValidator> _logger;
-        private readonly ConcurrentDictionary<string, DateTimeOffset> _seenNonces = new(StringComparer.Ordinal);
+        private readonly Dictionary<string, DateTimeOffset> _seenNonces = new(StringComparer.Ordinal);
+        private readonly object _nonceGate = new();
 
         public CallbackSignatureValidator(
             IOptions<CallbackSecurityOptions> options,
@@ -24,6 +24,11 @@ namespace Integracao.ControlID.PoC.Services.Callbacks
         }
 
         public CallbackSignatureValidationResult Validate(HttpRequest request, string body)
+        {
+            return Validate(request, Encoding.UTF8.GetBytes(body ?? string.Empty));
+        }
+
+        public CallbackSignatureValidationResult Validate(HttpRequest request, ReadOnlySpan<byte> body)
         {
             if (!_options.RequireSignedRequests)
                 return CallbackSignatureValidationResult.Allow();
@@ -61,12 +66,25 @@ namespace Integracao.ControlID.PoC.Services.Callbacks
             if (!FixedTimeEquals(NormalizeSignature(signature), expectedSignature))
                 return CallbackSignatureValidationResult.Reject(StatusCodes.Status401Unauthorized, "Callback signature is invalid.");
 
-            RemoveExpiredNonces(now);
-            var replayKey = $"{request.Path}|{nonce}";
-            if (!_seenNonces.TryAdd(replayKey, now.AddSeconds(Math.Clamp(_options.NonceTtlSeconds, 60, 3600))))
+            lock (_nonceGate)
             {
-                _logger.LogWarning("Blocked replayed callback nonce for {Path}.", request.Path);
-                return CallbackSignatureValidationResult.Reject(StatusCodes.Status409Conflict, "Callback nonce was already used.");
+                RemoveExpiredNonces(now);
+                if (_seenNonces.ContainsKey(nonce))
+                {
+                    _logger.LogWarning("Blocked replayed callback nonce for {Path}.", request.Path);
+                    return CallbackSignatureValidationResult.Reject(StatusCodes.Status409Conflict, "Callback nonce was already used.");
+                }
+
+                var maxTrackedNonces = Math.Clamp(_options.MaxTrackedNonces, 100, 1_000_000);
+                if (_seenNonces.Count >= maxTrackedNonces)
+                {
+                    _logger.LogError("Callback nonce capacity reached. Rejecting signed callback for {Path}.", request.Path);
+                    return CallbackSignatureValidationResult.Reject(
+                        StatusCodes.Status503ServiceUnavailable,
+                        "Callback replay protection is temporarily unavailable.");
+                }
+
+                _seenNonces.Add(nonce, now.AddSeconds(Math.Clamp(_options.NonceTtlSeconds, 60, 3600)));
             }
 
             return CallbackSignatureValidationResult.Allow();
@@ -74,18 +92,19 @@ namespace Integracao.ControlID.PoC.Services.Callbacks
 
         public string ComputeSignature(HttpRequest request, string body, string timestamp, string nonce)
         {
-            var bodyHash = SHA256.HashData(Encoding.UTF8.GetBytes(body ?? string.Empty));
-            var canonical = string.Join(
-                "\n",
-                request.Method.ToUpperInvariant(),
+            return ComputeSignature(request, Encoding.UTF8.GetBytes(body ?? string.Empty), timestamp, nonce);
+        }
+
+        public string ComputeSignature(HttpRequest request, ReadOnlySpan<byte> body, string timestamp, string nonce)
+        {
+            return CallbackSignatureCanonicalizer.ComputeSignature(
+                _options.SharedKey,
+                request.Method,
                 request.Path.Value ?? string.Empty,
-                request.QueryString.HasValue ? request.QueryString.Value : string.Empty,
+                request.QueryString.HasValue ? request.QueryString.Value! : string.Empty,
                 timestamp,
                 nonce,
-                Convert.ToBase64String(bodyHash));
-
-            using var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(_options.SharedKey));
-            return Convert.ToBase64String(hmac.ComputeHash(Encoding.UTF8.GetBytes(canonical)));
+                body);
         }
 
         private static string GetHeaderName(string configuredHeaderName, string fallback)
@@ -138,11 +157,13 @@ namespace Integracao.ControlID.PoC.Services.Callbacks
 
         private void RemoveExpiredNonces(DateTimeOffset now)
         {
-            foreach (var item in _seenNonces)
-            {
-                if (item.Value <= now)
-                    _seenNonces.TryRemove(item.Key, out _);
-            }
+            var expiredNonces = _seenNonces
+                .Where(item => item.Value <= now)
+                .Select(item => item.Key)
+                .ToList();
+
+            foreach (var nonce in expiredNonces)
+                _seenNonces.Remove(nonce);
         }
     }
 

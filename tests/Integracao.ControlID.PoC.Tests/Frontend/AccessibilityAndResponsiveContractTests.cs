@@ -84,8 +84,11 @@ public class AccessibilityAndResponsiveContractTests
     [Fact]
     public void Css_ProvidesResponsiveBreakpointsAndTouchSafeNavigationContracts()
     {
-        var css = ReadRepoFile("wwwroot", "css", "site.css");
+        var layout = ReadRepoFile("Views", "Shared", "_Layout.cshtml");
+        var css = ReadRepoFile("wwwroot", "css", "site.css") +
+                  ReadRepoFile("wwwroot", "css", "site-shell-responsive.css");
 
+        Assert.Contains("~/css/site-shell-responsive.css", layout, StringComparison.Ordinal);
         Assert.Contains("@media (max-width: 1199px)", css);
         Assert.Contains("@media (max-width: 991px)", css);
         Assert.Contains("@media (max-width: 767px)", css);
@@ -95,6 +98,36 @@ public class AccessibilityAndResponsiveContractTests
         Assert.Contains("overflow-x: auto;", css);
         Assert.Contains(".app-nav-home,", css);
         Assert.Contains(".app-nav-domain__summary", css);
+        Assert.Contains(".app-header {\n    position: relative;", css.Replace("\r\n", "\n"), StringComparison.Ordinal);
+        Assert.Contains("grid-template-columns: auto minmax(0, 1fr);", css, StringComparison.Ordinal);
+        Assert.Contains(".app-topbar__right .app-topbar__link,", css, StringComparison.Ordinal);
+        Assert.Contains(".app-nav-shell::-webkit-scrollbar", css, StringComparison.Ordinal);
+        Assert.Contains("scrollbar-width: none;", css, StringComparison.Ordinal);
+        Assert.DoesNotContain("display: flex !important;", css, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void SuccessAlert_UsesDeterministicCheckmarkInsteadOfReplacementQuestionMark()
+    {
+        var css = ReadRepoFile("wwwroot", "css", "site.css");
+
+        Assert.Contains("content: \"\\2713\";", css, StringComparison.Ordinal);
+        Assert.DoesNotContain(".alert-success::before {\n  content: \"?\";", css.Replace("\r\n", "\n"), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void DestructiveForms_UseCspCompatibleConfirmationAndSemanticSectionHeadings()
+    {
+        var systemInfo = ReadRepoFile("Views", "System", "Info.cshtml");
+        var adMode = ReadRepoFile("Views", "Media", "AdMode.cshtml");
+        var home = ReadRepoFile("Views", "Home", "Index.cshtml");
+
+        Assert.DoesNotContain("onsubmit=", systemInfo, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("onsubmit=", adMode, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("data-confirm=", systemInfo, StringComparison.Ordinal);
+        Assert.Contains("data-confirm=", adMode, StringComparison.Ordinal);
+        Assert.Contains("<h2>Fluxos prioritários</h2>", home, StringComparison.Ordinal);
+        Assert.Contains("<h2 class=\"mt-3\">Comandos críticos do equipamento</h2>", systemInfo, StringComparison.Ordinal);
     }
 
     [Fact]

@@ -65,10 +65,55 @@ public class OfficialApiInvokerServiceTests
             "http://device.local",
             string.Empty,
             string.Empty,
-            string.Empty);
+            string.Empty,
+            TestContext.Current.CancellationToken);
 
         var request = Assert.Single(handler.Requests);
         Assert.True(request.Headers.TryGetValue(ObservabilityConstants.CorrelationIdHeaderName, out var correlationId));
         Assert.Equal("operator-flow-1", correlationId);
+    }
+
+    [Fact]
+    public async Task InvokeAsync_RejectsResponseLargerThanConfiguredLimit()
+    {
+        var handler = new RecordingHttpMessageHandler();
+        handler.EnqueueResponse(new HttpResponseMessage(System.Net.HttpStatusCode.OK)
+        {
+            Content = new ByteArrayContent(new byte[64 * 1024 + 1])
+        });
+        var httpContext = new DefaultHttpContext();
+        var invoker = new OfficialApiInvokerService(
+            new StaticHttpClientFactory(handler),
+            NullLogger<OfficialApiInvokerService>.Instance,
+            new ControlIdInputSanitizer(),
+            new OfficialApiCircuitBreaker(Microsoft.Extensions.Options.Options.Create(new ControlIdCircuitBreakerOptions
+            {
+                Enabled = false
+            })),
+            new HttpContextAccessor { HttpContext = httpContext },
+            new ConfigurationBuilder()
+                .AddInMemoryCollection(new Dictionary<string, string?>
+                {
+                    ["ControlIDApi:ConnectionTimeoutSeconds"] = "5",
+                    ["ControlIDApi:MaxResponseBodyBytes"] = (64 * 1024).ToString(System.Globalization.CultureInfo.InvariantCulture)
+                })
+                .Build());
+
+        var result = await invoker.InvokeAsync(
+            new OfficialApiEndpointDefinition
+            {
+                Id = "oversized-response",
+                Method = "GET",
+                Path = "/large.fcgi"
+            },
+            "http://device.local",
+            string.Empty,
+            string.Empty,
+            string.Empty,
+            TestContext.Current.CancellationToken);
+
+        Assert.False(result.Success);
+        Assert.Equal(StatusCodes.Status502BadGateway, result.StatusCode);
+        Assert.Contains("excedeu o limite", result.ErrorMessage, StringComparison.OrdinalIgnoreCase);
     }
 }

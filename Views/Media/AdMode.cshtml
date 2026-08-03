@@ -75,7 +75,7 @@
             <div class="detail-actions">
                 <form asp-action="ToggleAdVideo" method="post" class="app-inline-form"><input type="hidden" name="enabled" value="true" /><button type="submit" class="btn btn-success">Ativar</button></form>
                 <form asp-action="ToggleAdVideo" method="post" class="app-inline-form"><input type="hidden" name="enabled" value="false" /><button type="submit" class="btn btn-outline-warning">Desativar</button></form>
-                <form asp-action="RemoveAdVideo" method="post" class="app-inline-form" onsubmit="return confirm('Deseja remover o vídeo de propaganda do equipamento?');"><button type="submit" class="btn btn-outline-danger">Remover vídeo</button></form>
+                <form asp-action="RemoveAdVideo" method="post" class="app-inline-form" data-confirm="Deseja remover o vídeo de propaganda do equipamento?"><button type="submit" class="btn btn-outline-danger">Remover vídeo</button></form>
             </div>
         </section>
     </section>

@@ -25,18 +25,10 @@ namespace Integracao.ControlID.PoC.Services.Database
         /// </summary>
         public async Task<SyncLocal> AddSyncAsync(SyncLocal sync)
         {
-            try
-            {
-                sync.StartedAt = DateTime.UtcNow;
-                _dbContext.Syncs.Add(sync);
-                await _dbContext.SaveChangesAsync();
-                return sync;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Erro ao adicionar registro de sincronização local.");
-                throw;
-            }
+            sync.StartedAt = DateTime.UtcNow;
+            _dbContext.Syncs.Add(sync);
+            await _dbContext.SaveChangesAsync();
+            return sync;
         }
 
         /// <summary>
@@ -63,17 +55,9 @@ namespace Integracao.ControlID.PoC.Services.Database
         /// </summary>
         public async Task<bool> UpdateSyncAsync(SyncLocal sync)
         {
-            try
-            {
-                _dbContext.Syncs.Update(sync);
-                await _dbContext.SaveChangesAsync();
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Erro ao atualizar registro de sincronização local {sync.Id}.");
-                return false;
-            }
+            _dbContext.Syncs.Update(sync);
+            await _dbContext.SaveChangesAsync();
+            return true;
         }
 
         /// <summary>
@@ -81,21 +65,13 @@ namespace Integracao.ControlID.PoC.Services.Database
         /// </summary>
         public async Task<bool> DeleteSyncAsync(long id)
         {
-            try
-            {
-                var sync = await _dbContext.Syncs.FindAsync(id);
-                if (sync == null)
-                    return false;
-
-                _dbContext.Syncs.Remove(sync);
-                await _dbContext.SaveChangesAsync();
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Erro ao remover registro de sincronização local {id}.");
+            var sync = await _dbContext.Syncs.FindAsync(id);
+            if (sync == null)
                 return false;
-            }
+
+            _dbContext.Syncs.Remove(sync);
+            await _dbContext.SaveChangesAsync();
+            return true;
         }
 
         /// <summary>

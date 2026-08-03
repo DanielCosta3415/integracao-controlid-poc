@@ -17,6 +17,11 @@ public sealed class RecordingHttpMessageHandler : HttpMessageHandler
         });
     }
 
+    public void EnqueueResponse(HttpResponseMessage response)
+    {
+        _responses.Enqueue(response);
+    }
+
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
         var body = request.Content == null

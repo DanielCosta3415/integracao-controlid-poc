@@ -1124,7 +1124,7 @@ textarea.form-control {
 }
 
 .alert-success::before {
-  content: "?";
+  content: "\2713";
   background: var(--success-alpha-12);
 }
 
@@ -2400,6 +2400,11 @@ pre,
   font-size: 1.02rem;
 }
 
+.app-page-section__heading h2 {
+  margin: 0;
+  font-size: 1.12rem;
+}
+
 .app-mini-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -3667,100 +3672,6 @@ body.app-search-open .app-command-palette__results {
 
   .operation-signal {
     flex-direction: column;
-  }
-}
-
-@media (max-width: 767px) {
-  .app-topbar,
-  .app-main,
-  .app-nav-shell {
-    padding-left: 0.9rem;
-    padding-right: 0.9rem;
-  }
-
-  .app-topbar__right {
-    gap: 0.45rem;
-  }
-
-  .app-topbar__link,
-  .app-topbar .app-chip {
-    font-size: 0.74rem;
-  }
-
-  .app-nav-home,
-  .app-nav-domain__summary {
-    min-height: 2.9rem;
-    padding: 0.7rem 0.9rem;
-  }
-
-  .app-nav-domain__panel {
-    top: 8.8rem;
-  }
-
-  .app-nav-domain__panel-head,
-  .app-nav-domain__footer,
-  .app-page-context__meta,
-  .connection-rail__actions {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .domain-section--primary .module-grid,
-  .domain-section--secondary .module-directory-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .official-api-entry__footer {
-    align-items: stretch;
-  }
-
-  .official-api-entry__actions .btn {
-    flex: 1 1 100%;
-  }
-
-  .module-card__footer,
-  .module-directory-card__footer {
-    align-items: stretch;
-  }
-
-  .app-nav-domain__grid,
-  .connection-rail__form {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* Horizontal top domain strip hardening ----------------------------------- */
-.app-nav {
-  display: flex !important;
-  flex-direction: row !important;
-  flex-wrap: wrap;
-  align-items: center;
-  align-content: flex-start;
-}
-
-.app-nav > * {
-  flex: 0 0 auto;
-}
-
-.app-nav-domain {
-  display: inline-flex;
-}
-
-.app-nav-home {
-  flex: 0 0 auto;
-}
-
-.app-nav-domain__summary {
-  width: clamp(196px, 13vw, 238px);
-  min-width: 196px;
-  max-width: 238px;
-}
-
-@media (max-width: 991px) {
-  .app-nav {
-    width: max-content;
-    min-width: 100%;
-    flex-wrap: nowrap;
   }
 }
 

@@ -44,6 +44,7 @@ public class AuthControllerTests
         handler.EnqueueJson("{}");
         var controller = CreateController(database, handler);
         controller.HttpContext.Session.SetString(SessionDeviceAddressKey, "http://device.local");
+        controller.HttpContext.Session.SetString(SessionSessionStringKey, "existing-session");
 
         var result = await controller.Login(new LoginViewModel
         {
@@ -55,10 +56,43 @@ public class AuthControllerTests
         var request = Assert.Single(handler.Requests);
         Assert.Equal("POST", request.Method);
         Assert.Contains("/login.fcgi", request.Url, StringComparison.OrdinalIgnoreCase);
-        Assert.False(controller.HttpContext.Session.TryGetValue(SessionSessionStringKey, out _));
+        Assert.Equal("existing-session", controller.HttpContext.Session.GetString(SessionSessionStringKey));
         Assert.Contains(
             controller.ModelState[string.Empty]!.Errors,
             error => error.ErrorMessage.Contains("sess", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public void Login_GetPreservesExistingDeviceSession()
+    {
+        using var database = new SqliteTestDatabase();
+        var controller = CreateController(database, new RecordingHttpMessageHandler());
+        controller.HttpContext.Session.SetString(SessionSessionStringKey, "existing-session");
+
+        var result = controller.Login();
+
+        Assert.IsType<ViewResult>(result);
+        Assert.Equal("existing-session", controller.HttpContext.Session.GetString(SessionSessionStringKey));
+    }
+
+    [Fact]
+    public async Task Login_SuccessReplacesExistingDeviceSession()
+    {
+        using var database = new SqliteTestDatabase();
+        var handler = new RecordingHttpMessageHandler();
+        handler.EnqueueJson("{\"session\":\"new-session\"}");
+        var controller = CreateController(database, handler);
+        controller.HttpContext.Session.SetString(SessionDeviceAddressKey, "http://device.local");
+        controller.HttpContext.Session.SetString(SessionSessionStringKey, "existing-session");
+
+        var result = await controller.Login(new LoginViewModel
+        {
+            Username = "operator",
+            Password = "<senha>"
+        });
+
+        Assert.IsType<RedirectToActionResult>(result);
+        Assert.Equal("new-session", controller.HttpContext.Session.GetString(SessionSessionStringKey));
     }
 
     [Fact]

@@ -58,7 +58,7 @@ namespace Integracao.ControlID.PoC.Middlewares
                     context.TraceIdentifier
                 );
             }
-            catch (Exception ex)
+            catch
             {
                 sw.Stop();
                 OperationalMetrics.RecordHttpRequest(
@@ -68,12 +68,6 @@ namespace Integracao.ControlID.PoC.Middlewares
                     sw.Elapsed.TotalMilliseconds);
                 RecordProductAnalytics(context.Request, StatusCodes.Status500InternalServerError, sw.Elapsed.TotalMilliseconds);
 
-                _logger.LogError(OperationalEventIds.RequestFailed, ex, "Erro durante o processamento da requisicao [{Method}] {Path}. Tempo decorrido: {Elapsed} ms. Correlation {CorrelationId}.",
-                    context.Request.Method,
-                    context.Request.Path,
-                    sw.ElapsedMilliseconds,
-                    ObservabilityConstants.GetCorrelationId(context)
-                );
                 throw;
             }
         }

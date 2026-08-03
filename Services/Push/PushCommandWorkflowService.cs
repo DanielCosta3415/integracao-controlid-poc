@@ -61,7 +61,7 @@ public sealed class PushCommandWorkflowService
             DeviceId = model.DeviceId,
             UserId = model.UserId,
             Payload = model.Payload,
-            RawJson = model.Payload,
+            RawJson = string.Empty,
             Status = PushCommandStatuses.Pending,
             CreatedAt = DateTime.UtcNow
         };
@@ -146,7 +146,7 @@ public sealed class PushCommandWorkflowService
                 DeviceId = deviceId,
                 UserId = userId,
                 Payload = body,
-                RawJson = body,
+                RawJson = string.Empty,
                 Status = resolvedStatus,
                 CreatedAt = DateTime.UtcNow
             };
@@ -156,18 +156,18 @@ public sealed class PushCommandWorkflowService
             return command;
         }
 
-        command.RawJson = body;
+        command.RawJson = string.Empty;
         command.Payload = body;
         command.Status = resolvedStatus;
         command.UpdatedAt = DateTime.UtcNow;
-        var persisted = await _pushCommandRepository.UpdatePushCommandAsync(command);
-        if (!persisted)
+        try
+        {
+            await _pushCommandRepository.UpdatePushCommandAsync(command);
+        }
+        catch
         {
             OperationalMetrics.RecordPushOperation("result", "persist_failed");
-            _logger.LogError(
-                "Push result for command {CommandId} could not persist status {Status}.",
-                command.CommandId,
-                command.Status);
+            throw;
         }
 
         OperationalMetrics.RecordPushOperation("result", "updated");
@@ -192,7 +192,15 @@ public sealed class PushCommandWorkflowService
                 existing.UserId = command.UserId;
                 existing.UpdatedAt = DateTime.UtcNow;
 
-                await _pushCommandRepository.UpdatePushCommandAsync(existing);
+                try
+                {
+                    await _pushCommandRepository.UpdatePushCommandAsync(existing);
+                }
+                catch
+                {
+                    OperationalMetrics.RecordPushOperation("legacy_receive", "persist_failed");
+                    throw;
+                }
                 OperationalMetrics.RecordPushOperation("legacy_receive", "updated");
                 return existing;
             }
@@ -226,7 +234,7 @@ public sealed class PushCommandWorkflowService
             CommandId = commandId ?? Guid.NewGuid(),
             ReceivedAt = DateTime.UtcNow,
             CreatedAt = DateTime.UtcNow,
-            RawJson = body,
+            RawJson = string.Empty,
             Payload = body,
             CommandType = "legacy_push_event",
             Status = PushCommandStatuses.Received,
@@ -253,10 +261,17 @@ public sealed class PushCommandWorkflowService
                 TryGetJsonString(root, "user_id") ??
                 TryGetJsonString(root, "userid") ??
                 string.Empty;
-            command.Payload =
+            var extractedPayload =
                 TryGetJsonString(root, "payload") ??
-                TryGetJsonString(root, "data") ??
-                body;
+                TryGetJsonString(root, "data");
+
+            if (!string.IsNullOrWhiteSpace(extractedPayload))
+            {
+                command.Payload = extractedPayload;
+                command.RawJson = string.Equals(extractedPayload, body, StringComparison.Ordinal)
+                    ? string.Empty
+                    : body;
+            }
         }
         catch (JsonException je)
         {

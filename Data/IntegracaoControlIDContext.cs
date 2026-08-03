@@ -176,8 +176,14 @@ namespace Integracao.ControlID.PoC.Data
                 .HasDatabaseName("IX_Users_Registration");
 
             modelBuilder.Entity<UserLocal>()
-                .HasIndex(item => item.Username)
-                .HasDatabaseName("IX_Users_Username");
+                .HasIndex(item => item.NormalizedUsername)
+                .IsUnique()
+                .HasDatabaseName("UX_Users_NormalizedUsername");
+
+            modelBuilder.Entity<UserLocal>()
+                .HasIndex(item => item.NormalizedEmail)
+                .IsUnique()
+                .HasDatabaseName("UX_Users_NormalizedEmail");
 
             modelBuilder.Entity<UserLocal>()
                 .HasIndex(item => item.Role)

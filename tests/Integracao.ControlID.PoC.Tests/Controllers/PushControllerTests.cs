@@ -29,7 +29,8 @@ public class PushControllerTests
         var command = Assert.Single(await CreateRepository(database).GetAllPushCommandsAsync());
         Assert.Equal("legacy_push_event", command.CommandType);
         Assert.Equal("received", command.Status);
-        Assert.Equal("not-json", command.RawJson);
+        Assert.Equal("not-json", command.Payload);
+        Assert.Empty(command.RawJson);
     }
 
     [Fact]
@@ -47,7 +48,8 @@ public class PushControllerTests
 
         var command = Assert.Single(await CreateRepository(database).GetAllPushCommandsAsync());
         Assert.Equal("second", command.CommandType);
-        Assert.Equal("{\"event\":\"second\"}", command.RawJson);
+        Assert.Equal("{\"event\":\"second\"}", command.Payload);
+        Assert.Empty(command.RawJson);
         Assert.NotNull(command.UpdatedAt);
     }
 

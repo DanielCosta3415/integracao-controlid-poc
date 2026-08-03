@@ -78,7 +78,7 @@ namespace Integracao.ControlID.PoC.Services.Callbacks
                 return CallbackIngressResult.Rejected(bodyResult.StatusCode, bodyResult.Message);
             }
 
-            var signatureResult = _signatureValidator.Validate(httpContext.Request, bodyResult.Body);
+            var signatureResult = _signatureValidator.Validate(httpContext.Request, bodyResult.RawBody);
             if (!signatureResult.IsAllowed)
             {
                 OperationalMetrics.RecordCallbackIngress(
@@ -102,7 +102,7 @@ namespace Integracao.ControlID.PoC.Services.Callbacks
             {
                 EventId = Guid.NewGuid(),
                 ReceivedAt = DateTime.UtcNow,
-                RawJson = bodyResult.Body,
+                RawJson = string.Empty,
                 EventType = $"{eventFamily}:{path}",
                 DeviceId = httpContext.Request.Query["device_id"].ToString(),
                 UserId = httpContext.Request.Query["user_id"].ToString(),

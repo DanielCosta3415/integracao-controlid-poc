@@ -71,7 +71,7 @@ namespace Integracao.ControlID.PoC.Controllers
                     return StatusCode(bodyResult.StatusCode, bodyResult.Message);
 
                 body = bodyResult.Body;
-                var signatureRejection = ValidateSignature(body);
+                var signatureRejection = ValidateSignature(bodyResult.RawBody);
                 if (signatureRejection != null)
                     return signatureRejection;
 
@@ -139,7 +139,7 @@ namespace Integracao.ControlID.PoC.Controllers
             return StatusCode(securityResult.StatusCode, new { error = securityResult.Message });
         }
 
-        private IActionResult? ValidateSignature(string body)
+        private IActionResult? ValidateSignature(byte[] body)
         {
             var signatureResult = _signatureValidator.Validate(Request, body);
             if (signatureResult.IsAllowed)

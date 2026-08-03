@@ -51,6 +51,47 @@ public class CallbackSignatureValidatorTests
     }
 
     [Fact]
+    public void Validate_RejectsReplayedNonceAcrossDifferentCallbackPaths()
+    {
+        var options = CreateRequiredOptions();
+        var validator = CreateValidator(options);
+        var first = CreateContext("/result", "{}");
+        Sign(first.Request, "{}", validator, options, "shared-nonce");
+        Assert.True(validator.Validate(first.Request, "{}").IsAllowed);
+
+        var second = CreateContext("/new_card.fcgi", "{}");
+        Sign(second.Request, "{}", validator, options, "shared-nonce");
+
+        var replay = validator.Validate(second.Request, "{}");
+
+        Assert.False(replay.IsAllowed);
+        Assert.Equal(StatusCodes.Status409Conflict, replay.StatusCode);
+    }
+
+    [Fact]
+    public void Validate_FailsSecurelyWhenNonceCapacityIsReached()
+    {
+        var options = CreateRequiredOptions();
+        options.MaxTrackedNonces = 100;
+        var validator = CreateValidator(options);
+
+        for (var index = 0; index < options.MaxTrackedNonces; index++)
+        {
+            var context = CreateContext("/result", "{}");
+            Sign(context.Request, "{}", validator, options, $"nonce-{index}");
+            Assert.True(validator.Validate(context.Request, "{}").IsAllowed);
+        }
+
+        var overflow = CreateContext("/result", "{}");
+        Sign(overflow.Request, "{}", validator, options, "nonce-overflow");
+
+        var result = validator.Validate(overflow.Request, "{}");
+
+        Assert.False(result.IsAllowed);
+        Assert.Equal(StatusCodes.Status503ServiceUnavailable, result.StatusCode);
+    }
+
+    [Fact]
     public void Validate_RejectsTamperedBody()
     {
         var options = CreateRequiredOptions();
@@ -62,6 +103,27 @@ public class CallbackSignatureValidatorTests
 
         Assert.False(result.IsAllowed);
         Assert.Equal(StatusCodes.Status401Unauthorized, result.StatusCode);
+    }
+
+    [Fact]
+    public void Validate_AcceptsSignatureComputedFromExactBinaryBytes()
+    {
+        var options = CreateRequiredOptions();
+        var validator = CreateValidator(options);
+        var context = CreateContext("/new_biometric_image.fcgi", string.Empty);
+        var body = new byte[] { 0xff, 0xfe, 0x00, 0x80, 0x41 };
+        var timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(System.Globalization.CultureInfo.InvariantCulture);
+        context.Request.Headers[options.TimestampHeaderName] = timestamp;
+        context.Request.Headers[options.NonceHeaderName] = "binary-nonce";
+        context.Request.Headers[options.SignatureHeaderName] = validator.ComputeSignature(
+            context.Request,
+            body,
+            timestamp,
+            "binary-nonce");
+
+        var result = validator.Validate(context.Request, body);
+
+        Assert.True(result.IsAllowed);
     }
 
     private static CallbackSecurityOptions CreateRequiredOptions()

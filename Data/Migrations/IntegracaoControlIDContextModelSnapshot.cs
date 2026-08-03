@@ -15,7 +15,7 @@ namespace Integracao.ControlID.PoC.Data.Migrations
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "8.0.16");
+            modelBuilder.HasAnnotation("ProductVersion", "8.0.26");
 
             modelBuilder.Entity("Integracao.ControlID.PoC.Models.Database.AccessLogLocal", b =>
                 {
@@ -745,10 +745,22 @@ namespace Integracao.ControlID.PoC.Data.Migrations
 
                     b.Property<string>("Email")
                         .IsRequired()
+                        .HasMaxLength(254)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Name")
                         .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("NormalizedEmail")
+                        .IsRequired()
+                        .HasMaxLength(254)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("NormalizedUsername")
+                        .IsRequired()
+                        .HasMaxLength(128)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("PasswordHash")
@@ -757,10 +769,12 @@ namespace Integracao.ControlID.PoC.Data.Migrations
 
                     b.Property<string>("Phone")
                         .IsRequired()
+                        .HasMaxLength(32)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Registration")
                         .IsRequired()
+                        .HasMaxLength(128)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Role")
@@ -780,18 +794,24 @@ namespace Integracao.ControlID.PoC.Data.Migrations
 
                     b.Property<string>("Username")
                         .IsRequired()
+                        .HasMaxLength(128)
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("NormalizedEmail")
+                        .IsUnique()
+                        .HasDatabaseName("UX_Users_NormalizedEmail");
+
+                    b.HasIndex("NormalizedUsername")
+                        .IsUnique()
+                        .HasDatabaseName("UX_Users_NormalizedUsername");
 
                     b.HasIndex("Registration")
                         .HasDatabaseName("IX_Users_Registration");
 
                     b.HasIndex("Role")
                         .HasDatabaseName("IX_Users_Role");
-
-                    b.HasIndex("Username")
-                        .HasDatabaseName("IX_Users_Username");
 
                     b.ToTable("Users");
                 });

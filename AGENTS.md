@@ -225,7 +225,7 @@ Notas:
 
 ### Infraestrutura
 
-- Dockerfile/Compose existem para execucao reproduzivel e validacao de container; mantenha usuario nao root, porta 8080, volumes `/app/data` e `/app/Logs`, e healthcheck em `/health/live`.
+- Dockerfile/Compose existem para execucao reproduzivel e validacao de container; mantenha usuario nao root, porta 8080, volumes `/app/data` e `/app/Logs`, e healthcheck em `/health/ready`.
 - Nao versione `ops.local.json`; ele pode conter nomes, canais privados, local de evidencias e detalhes operacionais.
 - Nao crie deploy automatico, DNS real ou provedor cloud sem pedido explicito.
 - Nao reduzir retencao, logs de seguranca ou redundancia operacional apenas por custo; documente trade-off em `docs/finops-capacity.md`.

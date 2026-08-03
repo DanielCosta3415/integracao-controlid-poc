@@ -27,21 +27,26 @@ Este documento descreve o estado de dados local da PoC, as regras de evolucao de
 | `Groups` | `Id` | `Name`, `Description`, `Status` | Baixo a moderado | Conforme homologacao. |
 | `Logos` | `Id` | `Base64Image`, `Timestamp`, `FileName`, `Format`, `Description` | Imagem/base64 | Evitar imagens reais. |
 | `Logs` | `Id` | `Level`, `Message`, `Timestamp`, `StackTrace`, `User`, `EventCode`, `Source`, `AdditionalData` | Logs podem conter metadados sensiveis | Curto prazo local. |
-| `MonitorEvents` | `EventId` | `ReceivedAt`, `RawJson`, `EventType`, `DeviceId`, `UserId`, `Payload`, `Status` | Payload bruto de callback | Limpar manualmente apos QA. |
+| `MonitorEvents` | `EventId` | `ReceivedAt`, `RawJson`, `EventType`, `DeviceId`, `UserId`, `Payload`, `Status` | Payload de callback | `Payload` guarda o conteudo efetivo; `RawJson` fica vazio quando seria duplicado. |
 | `Photos` | `Id` | `UserId`, `Base64Image`, `Timestamp`, `FileName`, `Format` | Foto/base64 | Alto cuidado; evitar dados reais. |
-| `PushCommands` | `CommandId` | `ReceivedAt`, `CommandType`, `RawJson`, `Status`, `Payload`, `DeviceId`, `UserId` | Comando/resultado/payload bruto | Limpar manualmente apos analise. |
+| `PushCommands` | `CommandId` | `ReceivedAt`, `CommandType`, `RawJson`, `Status`, `Payload`, `DeviceId`, `UserId` | Comando/resultado/payload bruto | `RawJson` so preserva envelope distinto do `Payload`; limpar apos analise. |
 | `QRCodes` | `Id` | `UserId`, `Value`, `BeginTime`, `EndTime`, `Status` | QR code/token | Minimo necessario. |
 | `Sessions` | `Id` | `DeviceAddress`, `SessionString`, `DeviceName`, `DeviceSerial`, `Username`, `ExpiresAt`, `IsActive` | Sessao e usuario | Curto prazo; nao compartilhar DB. |
 | `Syncs` | `Id` | `SyncType`, `Status`, `Message`, `StartedAt`, `FinishedAt`, `ErrorCode`, `AdditionalData` | Diagnostico operacional | Curto prazo local. |
-| `Users` | `Id` | `Name`, `Registration`, `Username`, `PasswordHash`, `Salt`, `Email`, `Phone`, `Status` | Dados pessoais e credenciais derivadas | Evitar dados reais; minimo necessario. |
+| `Users` | `Id` | `Name`, `Registration`, `Username`, `NormalizedUsername`, `PasswordHash`, `Salt`, `Email`, `NormalizedEmail`, `Phone`, `Status` | Dados pessoais e credenciais derivadas | Evitar dados reais; minimo necessario. |
 
 ## Integridade e evolucao
 
 - O schema usa chaves primarias locais, mas nao declara foreign keys entre entidades. Isso evita quebrar dados importados ou simulados da Access API quando IDs remotos ainda nao possuem contrato relacional fechado no projeto.
-- Indices adicionados sao nao unicos. Unicidade em `Registration`, `Username`, `SerialNumber` ou `Group/Key` deve exigir analise de duplicidade antes de virar constraint.
+- `Users.NormalizedUsername` e `Users.NormalizedEmail` possuem indices unicos;
+  a migration falha sem excluir dados caso encontre duplicidades preexistentes.
+- Outros indices operacionais continuam nao unicos. Novas constraints exigem
+  analise de duplicidade e plano de rollback.
 - `DeviceLocal` ainda possui `Ip` e `IpAddress`. O campo duplicado deve ser preservado ate existir plano de migracao e confirmacao de compatibilidade.
-- `Program.cs` aplica `Database.Migrate()` no startup e mantem criacao idempotente de `MonitorEvents` e `PushCommands` para compatibilidade com bancos locais antigos.
-- Mudancas futuras de schema devem entrar por migrations versionadas. Evite criar tabelas novas diretamente no startup, exceto compatibilidade temporaria documentada.
+- `Program.cs` so aplica `Database.Migrate()` quando configurado; fora de
+  `Development`, o default e nao alterar schema no startup.
+- Nao ha mais criacao ad hoc de tabelas no startup. Toda evolucao deve entrar
+  por migration versionada.
 
 ## Indices operacionais
 
@@ -75,6 +80,8 @@ Historico atual:
 
 - `InitialLocalSchema`: cria tabelas com `CREATE TABLE IF NOT EXISTS` para preservar bancos locais existentes.
 - `AddOperationalIndexes`: cria indices com `CREATE INDEX IF NOT EXISTS` e remove com `DROP INDEX IF EXISTS`.
+- `HardenLocalIdentity`: adiciona identificadores normalizados e unicidade de
+  username/e-mail para eliminar corrida no bootstrap do primeiro administrador.
 
 Regras de seguranca:
 

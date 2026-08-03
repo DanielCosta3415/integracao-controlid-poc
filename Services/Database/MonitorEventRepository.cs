@@ -25,18 +25,10 @@ namespace Integracao.ControlID.PoC.Services.Database
         /// </summary>
         public async Task<MonitorEventLocal> AddMonitorEventAsync(MonitorEventLocal monitorEvent)
         {
-            try
-            {
-                monitorEvent.ReceivedAt = DateTime.UtcNow;
-                _dbContext.MonitorEvents.Add(monitorEvent);
-                await _dbContext.SaveChangesAsync();
-                return monitorEvent;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Erro ao adicionar evento monitorado local.");
-                throw;
-            }
+            monitorEvent.ReceivedAt = DateTime.UtcNow;
+            _dbContext.MonitorEvents.Add(monitorEvent);
+            await _dbContext.SaveChangesAsync();
+            return monitorEvent;
         }
 
         /// <summary>
@@ -76,17 +68,9 @@ namespace Integracao.ControlID.PoC.Services.Database
         /// </summary>
         public async Task<bool> UpdateMonitorEventAsync(MonitorEventLocal monitorEvent)
         {
-            try
-            {
-                _dbContext.MonitorEvents.Update(monitorEvent);
-                await _dbContext.SaveChangesAsync();
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Erro ao atualizar evento monitorado local {EventId}.", monitorEvent.EventId);
-                return false;
-            }
+            _dbContext.MonitorEvents.Update(monitorEvent);
+            await _dbContext.SaveChangesAsync();
+            return true;
         }
 
         /// <summary>
@@ -94,21 +78,13 @@ namespace Integracao.ControlID.PoC.Services.Database
         /// </summary>
         public async Task<bool> DeleteMonitorEventAsync(Guid id)
         {
-            try
-            {
-                var evt = await _dbContext.MonitorEvents.FirstOrDefaultAsync(e => e.EventId == id);
-                if (evt == null)
-                    return false;
-
-                _dbContext.MonitorEvents.Remove(evt);
-                await _dbContext.SaveChangesAsync();
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Erro ao remover evento monitorado local {id}.");
+            var evt = await _dbContext.MonitorEvents.FirstOrDefaultAsync(e => e.EventId == id);
+            if (evt == null)
                 return false;
-            }
+
+            _dbContext.MonitorEvents.Remove(evt);
+            await _dbContext.SaveChangesAsync();
+            return true;
         }
 
         public async Task<int> DeleteAllMonitorEventsAsync()

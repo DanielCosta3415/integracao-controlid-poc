@@ -2,7 +2,7 @@
 param(
     [string]$AppUrl = "http://localhost:5000",
     [string]$StubUrl = "http://127.0.0.1:6600",
-    [string]$ReportPath = ".\docs\reports\localhost-smoke-test-2026-04-14.md"
+    [string]$ReportPath = ".\artifacts\smoke\localhost-smoke-latest.md"
 )
 
 Set-StrictMode -Version Latest
@@ -25,6 +25,7 @@ $sampleWavPath = Join-Path $artifactsDir "sample.wav"
 $sampleMp4Path = Join-Path $artifactsDir "sample.mp4"
 $samplePemPath = Join-Path $artifactsDir "sample.pem"
 $sampleBinPath = Join-Path $artifactsDir "sample.bin"
+$smokeDatabasePath = Join-Path $artifactsDir ("runtime-{0}.db" -f [Guid]::NewGuid().ToString("N"))
 
 [IO.File]::WriteAllBytes($samplePngPath, [Convert]::FromBase64String("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aR8kAAAAASUVORK5CYII="))
 [IO.File]::WriteAllBytes($sampleWavPath, [Text.Encoding]::ASCII.GetBytes("RIFFSTUBWAVEfmt data"))
@@ -238,7 +239,7 @@ function Get-SmokeFieldValue {
         'DeviceAddress' { return $Context.DeviceAddress }
         'Scheme|Protocol' { return $Context.DeviceScheme }
         'User(name)?|Login' { return 'admin' }
-        'Password|ConfirmPassword' { return 'admin' }
+        'Password|ConfirmPassword' { return 'Local-Admin-2026!' }
         '^Name$' { return 'Smoke User' }
         'Registration' { return '9001' }
         'Email' { return 'smoke@example.com' }
@@ -342,6 +343,39 @@ function Submit-FormsFromPage {
     }
 }
 
+function Start-HiddenDotnetProcess {
+    param(
+        [Parameter(Mandatory = $true)][string]$Arguments,
+        [Parameter(Mandatory = $true)][string]$WorkingDirectory,
+        [hashtable]$Environment = @{}
+    )
+
+    $startInfo = [System.Diagnostics.ProcessStartInfo]::new()
+    $startInfo.FileName = (Get-Command dotnet).Source
+    $startInfo.Arguments = $Arguments
+    $startInfo.WorkingDirectory = $WorkingDirectory
+    $startInfo.UseShellExecute = $false
+    $startInfo.CreateNoWindow = $true
+    $startInfo.WindowStyle = [System.Diagnostics.ProcessWindowStyle]::Hidden
+    foreach ($entry in $Environment.GetEnumerator()) {
+        $startInfo.Environment[$entry.Key] = [string]$entry.Value
+    }
+
+    return [System.Diagnostics.Process]::Start($startInfo)
+}
+
+function Invoke-CheckedDotnetBuild {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Project
+    )
+
+    & dotnet build $Project -clp:ErrorsOnly
+    if ($LASTEXITCODE -ne 0) {
+        throw "dotnet build falhou para '$Project' com exit code $LASTEXITCODE."
+    }
+}
+
 function Submit-PreferredPostForm {
     param(
         [string]$Path,
@@ -397,13 +431,15 @@ function Ensure-LocalAuthentication {
         $homePage = Invoke-WebRequest -Uri ([Uri]::new([Uri]$AppUrl, "/").AbsoluteUri) -WebSession $webSession -Method Get -UseBasicParsing
         if ($homePage.Content -match 'Entrar na PoC' -or $homePage.Content -match 'Login local') {
             Add-Result "Bootstrap" "Auth/LocalLogin verification" "FAIL" "Sessao local nao foi estabelecida."
+            return $false
         }
-        else {
-            Add-Result "Bootstrap" "Auth/LocalLogin verification" "PASS" "Sessao local autenticada."
-        }
+
+        Add-Result "Bootstrap" "Auth/LocalLogin verification" "PASS" "Sessao local autenticada."
+        return $true
     }
     catch {
         Add-Result "Bootstrap" "Auth/LocalLogin" "FAIL" $_.Exception.Message
+        return $false
     }
 }
 
@@ -664,25 +700,28 @@ function Write-Report {
 }
 
 try {
-    dotnet build $stubProject -clp:ErrorsOnly | Out-Host
-    dotnet build $appProject -clp:ErrorsOnly | Out-Host
-
-    $stubStdOut = Join-Path $artifactsDir "stub.stdout.log"
-    $stubStdErr = Join-Path $artifactsDir "stub.stderr.log"
-    $appStdOut = Join-Path $artifactsDir "app.stdout.log"
-    $appStdErr = Join-Path $artifactsDir "app.stderr.log"
+    Invoke-CheckedDotnetBuild -Project $stubProject
+    Invoke-CheckedDotnetBuild -Project $appProject
 
     $stubArguments = "run --project `"$stubProject`" --no-build --no-launch-profile"
-    $stubProcess = Start-Process dotnet -ArgumentList $stubArguments -WorkingDirectory $root -RedirectStandardOutput $stubStdOut -RedirectStandardError $stubStdErr -PassThru
+    $stubProcess = Start-HiddenDotnetProcess -Arguments $stubArguments -WorkingDirectory $root
     $processes.Add($stubProcess)
     Wait-HttpEndpoint -Url "$StubUrl/system_information.fcgi"
 
     $appArguments = "run --project `"$appProject`" --no-build --launch-profile Integracao.ControlID.PoC"
-    $appProcess = Start-Process dotnet -ArgumentList $appArguments -WorkingDirectory $root -RedirectStandardOutput $appStdOut -RedirectStandardError $appStdErr -PassThru
+    $appEnvironment = @{
+        "ConnectionStrings__DefaultConnection" = "Data Source=$smokeDatabasePath"
+        "Database__ApplyMigrationsOnStartup"   = "true"
+    }
+    $appProcess = Start-HiddenDotnetProcess -Arguments $appArguments -WorkingDirectory $root -Environment $appEnvironment
     $processes.Add($appProcess)
     Wait-HttpEndpoint -Url "$AppUrl/"
 
-    Ensure-LocalAuthentication
+    if (-not (Ensure-LocalAuthentication)) {
+        $summary = Write-Report
+        Write-Host "Smoke interrompido no bootstrap de autenticacao. PASS=$($summary.Passed) FAIL=$($summary.Failed) SKIP=$($summary.Skipped)"
+        exit 1
+    }
 
     Submit-FormsFromPage -Path "/" -Phase "Bootstrap"
     Submit-FormsFromPage -Path "/Auth/Login" -Phase "Bootstrap"
@@ -762,6 +801,23 @@ finally {
     foreach ($process in $processes) {
         if ($null -ne $process -and -not $process.HasExited) {
             Stop-Process -Id $process.Id -Force
+            $process.WaitForExit(5000) | Out-Null
+        }
+    }
+
+    foreach ($databaseArtifact in @($smokeDatabasePath, "$smokeDatabasePath-shm", "$smokeDatabasePath-wal")) {
+        for ($attempt = 1; $attempt -le 20 -and (Test-Path -LiteralPath $databaseArtifact); $attempt++) {
+            try {
+                Remove-Item -LiteralPath $databaseArtifact -Force -ErrorAction Stop
+            }
+            catch [System.IO.IOException] {
+                if ($attempt -eq 20) {
+                    Write-Warning "Nao foi possivel remover o banco temporario do smoke: $databaseArtifact"
+                    break
+                }
+
+                Start-Sleep -Milliseconds 250
+            }
         }
     }
 }

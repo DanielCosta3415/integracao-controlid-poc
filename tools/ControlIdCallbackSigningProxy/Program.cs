@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Net;
 using System.Security.Cryptography;
 using System.Text;
+using Integracao.ControlID.PoC.Services.Callbacks;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddHttpClient("forwarder", client =>
@@ -64,15 +65,14 @@ app.MapMethods(
 
         var timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(CultureInfo.InvariantCulture);
         var nonce = Convert.ToBase64String(RandomNumberGenerator.GetBytes(18));
-        var body = Encoding.UTF8.GetString(bodyBytes);
-        var signature = ComputeSignature(
+        var signature = CallbackSignatureCanonicalizer.ComputeSignature(
             options.SharedKey,
             context.Request.Method,
             context.Request.Path.Value ?? string.Empty,
             context.Request.QueryString.HasValue ? context.Request.QueryString.Value : string.Empty,
             timestamp,
             nonce,
-            body);
+            bodyBytes);
 
         forwardRequest.Headers.TryAddWithoutValidation(options.SharedKeyHeaderName, options.SharedKey);
         forwardRequest.Headers.TryAddWithoutValidation(options.SignatureHeaderName, signature);
@@ -175,29 +175,6 @@ static void RemoveForwardedHeaders(HttpRequestMessage forwardRequest, params str
         forwardRequest.Headers.Remove(headerName);
         forwardRequest.Content?.Headers.Remove(headerName);
     }
-}
-
-static string ComputeSignature(
-    string sharedKey,
-    string method,
-    string path,
-    string queryString,
-    string timestamp,
-    string nonce,
-    string body)
-{
-    var bodyHash = SHA256.HashData(Encoding.UTF8.GetBytes(body ?? string.Empty));
-    var canonical = string.Join(
-        "\n",
-        method.ToUpperInvariant(),
-        path,
-        queryString,
-        timestamp,
-        nonce,
-        Convert.ToBase64String(bodyHash));
-
-    using var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(sharedKey));
-    return Convert.ToBase64String(hmac.ComputeHash(Encoding.UTF8.GetBytes(canonical)));
 }
 
 internal sealed class SigningProxyOptions

@@ -14,7 +14,7 @@ public class DeploymentEnvironmentContractTests
         Assert.Contains("USER app", dockerfile);
         Assert.Contains("EXPOSE 8080", dockerfile);
         Assert.Contains("HEALTHCHECK", dockerfile);
-        Assert.Contains("/health/live", dockerfile);
+        Assert.Contains("/health/ready", dockerfile);
     }
 
     [Fact]
@@ -31,7 +31,11 @@ public class DeploymentEnvironmentContractTests
         Assert.Contains("Serilog__WriteTo__1__Args__fileSizeLimitBytes", compose);
         Assert.Contains("controlid-data:/app/data", compose);
         Assert.Contains("controlid-logs:/app/Logs", compose);
-        Assert.Contains("/health/live", compose);
+        Assert.Contains("Database__ApplyMigrationsOnStartup", compose);
+        Assert.Contains("Database__ExitAfterMigrations", compose);
+        Assert.Contains("ControlIDApi__MaxResponseBodyBytes", compose);
+        Assert.Contains("CallbackSecurity__MaxTrackedNonces", compose);
+        Assert.Contains("/health/ready", compose);
     }
 
     [Fact]
@@ -73,6 +77,7 @@ public class DeploymentEnvironmentContractTests
         Assert.Contains("Procedimento de deploy", runbook);
         Assert.Contains("Rollback tecnico", runbook);
         Assert.Contains("ForwardedHeaders__KnownProxies__0", runbook);
+        Assert.Contains("Database__ExitAfterMigrations=true", runbook);
     }
 
     private static string ReadRepoFile(params string[] segments)

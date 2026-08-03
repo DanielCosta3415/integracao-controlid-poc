@@ -16,5 +16,6 @@ namespace Integracao.ControlID.PoC.Options
         public string NonceHeaderName { get; set; } = "X-ControlID-Nonce";
         public int MaxClockSkewSeconds { get; set; } = 300;
         public int NonceTtlSeconds { get; set; } = 600;
+        public int MaxTrackedNonces { get; set; } = 10_000;
     }
 }

@@ -128,7 +128,6 @@ namespace Integracao.ControlID.PoC.Controllers
         [HttpGet]
         public IActionResult Login()
         {
-            HttpContext.Session.Remove(SessionSessionStringKey);
             return View(new LoginViewModel());
         }
 
@@ -145,8 +144,6 @@ namespace Integracao.ControlID.PoC.Controllers
                 ModelState.AddModelError(string.Empty, "Nenhum dispositivo conectado. Conecte-se a um equipamento Control iD primeiro.");
                 return View(model);
             }
-
-            HttpContext.Session.Remove(SessionSessionStringKey);
 
             try
             {
@@ -300,7 +297,7 @@ namespace Integracao.ControlID.PoC.Controllers
         [ValidateAntiForgeryToken]
         [AllowAnonymous]
         [EnableRateLimiting("LocalAuth")]
-        public async Task<IActionResult> Register(RegisterViewModel model)
+        public async Task<IActionResult> Register(RegisterViewModel model, CancellationToken cancellationToken = default)
         {
             if (!await CanRegisterLocalUserAsync())
                 return Forbid();
@@ -308,33 +305,46 @@ namespace Integracao.ControlID.PoC.Controllers
             if (!ModelState.IsValid)
                 return View(model);
 
-            if (await _userRepository.GetUserByUsernameOrEmailAsync(model.Username) != null)
+            var allowAdditionalUsers = User.Identity?.IsAuthenticated == true &&
+                                       User.IsInRole(AppSecurityRoles.Administrator);
+            var registration = await _userRepository.RegisterLocalUserAsync(
+                new UserLocal
+                {
+                    Name = model.Name,
+                    Registration = model.Username,
+                    Username = model.Username,
+                    Email = model.Email,
+                    Phone = model.Phone,
+                    PasswordHash = CryptoHelper.HashPassword(model.Password),
+                    Salt = string.Empty,
+                    Status = "active"
+                },
+                allowAdditionalUsers,
+                cancellationToken);
+
+            if (registration.Status == LocalUserRegistrationStatus.RegistrationClosed)
+                return Forbid();
+
+            if (registration.Status == LocalUserRegistrationStatus.DuplicateUsername)
             {
                 ModelState.AddModelError(nameof(model.Username), "Já existe um usuário local com esse identificador.");
                 return View(model);
             }
 
-            if (await _userRepository.GetUserByUsernameOrEmailAsync(model.Email) != null)
+            if (registration.Status == LocalUserRegistrationStatus.DuplicateEmail)
             {
                 ModelState.AddModelError(nameof(model.Email), "Já existe um usuário local com esse e-mail.");
                 return View(model);
             }
 
-            var isBootstrapAdmin = await _userRepository.CountUsersAsync() == 0;
-            var user = new UserLocal
+            if (registration.Status == LocalUserRegistrationStatus.DuplicateIdentity)
             {
-                Name = model.Name,
-                Registration = model.Username,
-                Username = model.Username,
-                Email = model.Email,
-                Phone = model.Phone,
-                PasswordHash = CryptoHelper.HashPassword(model.Password),
-                Salt = string.Empty,
-                Status = "active",
-                Role = isBootstrapAdmin ? AppSecurityRoles.Administrator : AppSecurityRoles.Operator
-            };
+                ModelState.AddModelError(string.Empty, "Já existe um usuário local com esse usuário ou e-mail.");
+                return View(model);
+            }
 
-            await _userRepository.AddUserAsync(user);
+            var user = registration.User!;
+            var isBootstrapAdmin = registration.IsBootstrapAdministrator;
 
             TempData["StatusMessage"] = isBootstrapAdmin
                 ? "Administrador local registrado com sucesso. Faça login local para operar a PoC."

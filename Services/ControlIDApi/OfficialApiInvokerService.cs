@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using System.Text;
 using Integracao.ControlID.PoC.Helpers;
 using Integracao.ControlID.PoC.Models.ControlIDApi;
 using Integracao.ControlID.PoC.Services.Observability;
@@ -18,6 +17,7 @@ namespace Integracao.ControlID.PoC.Services.ControlIDApi
         private readonly OfficialApiCircuitBreaker _circuitBreaker;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly TimeSpan _requestTimeout;
+        private readonly int _maxResponseBodyBytes;
 
         public OfficialApiInvokerService(
             IHttpClientFactory httpClientFactory,
@@ -35,6 +35,8 @@ namespace Integracao.ControlID.PoC.Services.ControlIDApi
 
             var configuredTimeout = configuration.GetValue<int?>("ControlIDApi:ConnectionTimeoutSeconds") ?? 60;
             _requestTimeout = TimeSpan.FromSeconds(Math.Clamp(configuredTimeout, 5, 300));
+            var configuredMaxResponseBytes = configuration.GetValue<int?>("ControlIDApi:MaxResponseBodyBytes") ?? 16 * 1024 * 1024;
+            _maxResponseBodyBytes = Math.Clamp(configuredMaxResponseBytes, 64 * 1024, 64 * 1024 * 1024);
         }
 
         /// <summary>
@@ -51,7 +53,8 @@ namespace Integracao.ControlID.PoC.Services.ControlIDApi
             string deviceAddress,
             string sessionString,
             string additionalQuery,
-            string requestBody)
+            string requestBody,
+            CancellationToken cancellationToken = default)
         {
             var result = new OfficialApiInvocationResult();
             var stopwatch = Stopwatch.StartNew();
@@ -95,7 +98,12 @@ namespace Integracao.ControlID.PoC.Services.ControlIDApi
             }
 
             var client = _httpClientFactory.CreateClient();
-            client.Timeout = _requestTimeout;
+            client.Timeout = Timeout.InfiniteTimeSpan;
+            var requestAborted = cancellationToken.CanBeCanceled
+                ? cancellationToken
+                : _httpContextAccessor.HttpContext?.RequestAborted ?? CancellationToken.None;
+            using var timeoutSource = CancellationTokenSource.CreateLinkedTokenSource(requestAborted);
+            timeoutSource.CancelAfter(_requestTimeout);
 
             try
             {
@@ -145,22 +153,28 @@ namespace Integracao.ControlID.PoC.Services.ControlIDApi
 
                 result.RequestUrl = BuildSafeDisplayUrl(requestUrl);
 
-                using var response = await client.SendAsync(request);
-                var responseBytes = await response.Content.ReadAsByteArrayAsync();
+                using var response = await client.SendAsync(
+                    request,
+                    HttpCompletionOption.ResponseHeadersRead,
+                    timeoutSource.Token);
                 var responseContentType = response.Content.Headers.ContentType?.MediaType ?? string.Empty;
 
                 result.Success = response.IsSuccessStatusCode;
                 result.StatusCode = (int)response.StatusCode;
                 result.ResponseContentType = responseContentType;
+                var responseBytes = await OfficialApiResponseBodyReader.ReadAsync(
+                    response.Content,
+                    _maxResponseBodyBytes,
+                    timeoutSource.Token);
 
-                if (LooksLikeBinary(responseContentType))
+                if (OfficialApiResponseBodyReader.IsBinaryContentType(responseContentType))
                 {
                     result.ResponseBody = Convert.ToBase64String(responseBytes);
                     result.ResponseBodyIsBase64 = true;
                 }
                 else
                 {
-                    result.ResponseBody = Encoding.UTF8.GetString(responseBytes);
+                    result.ResponseBody = OfficialApiResponseBodyReader.DecodeText(response.Content, responseBytes);
                 }
 
                 if (OfficialApiCircuitBreaker.IsTransientStatusCode(result.StatusCode))
@@ -215,7 +229,29 @@ namespace Integracao.ControlID.PoC.Services.ControlIDApi
                     "Nao foi possivel validar os dados enviados ao endpoint.");
                 return result;
             }
-            catch (TaskCanceledException ex)
+            catch (InvalidDataException ex)
+            {
+                stopwatch.Stop();
+                result.Success = false;
+                result.StatusCode = StatusCodes.Status502BadGateway;
+                result.ErrorMessage = $"A resposta do equipamento excedeu o limite de {_maxResponseBodyBytes} bytes.";
+                _circuitBreaker.RecordFailure(endpoint.Id, deviceTarget);
+                OperationalMetrics.RecordOfficialApiInvocation(
+                    endpoint.Id,
+                    endpoint.Method,
+                    "response_too_large",
+                    result.StatusCode,
+                    stopwatch.Elapsed.TotalMilliseconds);
+                _logger.LogWarning(
+                    OperationalEventIds.OfficialApiInvocationFailed,
+                    ex,
+                    "Official endpoint {EndpointId} exceeded the response limit of {MaxResponseBodyBytes} bytes. Target {DeviceTarget}.",
+                    endpoint.Id,
+                    _maxResponseBodyBytes,
+                    deviceTarget);
+                return result;
+            }
+            catch (OperationCanceledException ex) when (!requestAborted.IsCancellationRequested)
             {
                 stopwatch.Stop();
                 _circuitBreaker.RecordFailure(endpoint.Id, deviceTarget);
@@ -235,6 +271,18 @@ namespace Integracao.ControlID.PoC.Services.ControlIDApi
                     deviceTarget);
 
                 result.ErrorMessage = "Tempo limite excedido ao comunicar com o equipamento.";
+                return result;
+            }
+            catch (OperationCanceledException)
+            {
+                stopwatch.Stop();
+                OperationalMetrics.RecordOfficialApiInvocation(
+                    endpoint.Id,
+                    endpoint.Method,
+                    "cancelled",
+                    null,
+                    stopwatch.Elapsed.TotalMilliseconds);
+                result.ErrorMessage = "A comunicação com o equipamento foi cancelada.";
                 return result;
             }
             catch (Exception ex)
@@ -343,23 +391,6 @@ namespace Integracao.ControlID.PoC.Services.ControlIDApi
                 });
 
             return string.Join("&", maskedItems);
-        }
-
-        /// <summary>
-        /// Heuristica simples para decidir se a resposta deve ser mantida em Base64 no resultado.
-        /// </summary>
-        /// <param name="contentType">Content-Type retornado pelo equipamento.</param>
-        /// <returns>True quando o conteudo parece binario e deve ser preservado em Base64.</returns>
-        private static bool LooksLikeBinary(string contentType)
-        {
-            if (string.IsNullOrWhiteSpace(contentType))
-            {
-                return false;
-            }
-
-            return !contentType.Contains("json", StringComparison.OrdinalIgnoreCase) &&
-                   !contentType.Contains("text", StringComparison.OrdinalIgnoreCase) &&
-                   !contentType.Contains("xml", StringComparison.OrdinalIgnoreCase);
         }
 
         /// <summary>

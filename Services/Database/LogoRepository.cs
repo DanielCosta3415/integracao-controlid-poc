@@ -25,18 +25,10 @@ namespace Integracao.ControlID.PoC.Services.Database
         /// </summary>
         public async Task<LogoLocal> AddLogoAsync(LogoLocal logo)
         {
-            try
-            {
-                logo.CreatedAt = DateTime.UtcNow;
-                _dbContext.Logos.Add(logo);
-                await _dbContext.SaveChangesAsync();
-                return logo;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Erro ao adicionar logo local.");
-                throw;
-            }
+            logo.CreatedAt = DateTime.UtcNow;
+            _dbContext.Logos.Add(logo);
+            await _dbContext.SaveChangesAsync();
+            return logo;
         }
 
         /// <summary>
@@ -63,17 +55,9 @@ namespace Integracao.ControlID.PoC.Services.Database
         /// </summary>
         public async Task<bool> UpdateLogoAsync(LogoLocal logo)
         {
-            try
-            {
-                _dbContext.Logos.Update(logo);
-                await _dbContext.SaveChangesAsync();
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Erro ao atualizar logo local {logo.Id}.");
-                return false;
-            }
+            _dbContext.Logos.Update(logo);
+            await _dbContext.SaveChangesAsync();
+            return true;
         }
 
         /// <summary>
@@ -81,21 +65,13 @@ namespace Integracao.ControlID.PoC.Services.Database
         /// </summary>
         public async Task<bool> DeleteLogoAsync(long id)
         {
-            try
-            {
-                var logo = await _dbContext.Logos.FindAsync(id);
-                if (logo == null)
-                    return false;
-
-                _dbContext.Logos.Remove(logo);
-                await _dbContext.SaveChangesAsync();
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Erro ao remover logo local {id}.");
+            var logo = await _dbContext.Logos.FindAsync(id);
+            if (logo == null)
                 return false;
-            }
+
+            _dbContext.Logos.Remove(logo);
+            await _dbContext.SaveChangesAsync();
+            return true;
         }
 
         /// <summary>

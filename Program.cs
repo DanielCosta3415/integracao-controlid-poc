@@ -303,42 +303,40 @@ if (app.Environment.IsDevelopment() && app.Configuration.GetValue<bool>("OpenApi
 // Sessão ASP.NET Core (deve vir antes de endpoints)
 app.UseSession();
 app.UseAuthentication();
+app.UseMiddleware<DynamicResponseCachePolicyMiddleware>();
 app.UseRateLimiter();
 app.UseAuthorization();
 app.UseMiddleware<ApiSessionMiddleware>();
 
-// Roda as migrações automáticas (opcional: apenas para desenvolvimento)
+var applyMigrationsOnStartup = app.Configuration.GetValue<bool?>("Database:ApplyMigrationsOnStartup") ??
+                               app.Environment.IsDevelopment();
+var exitAfterMigrations = app.Configuration.GetValue<bool>("Database:ExitAfterMigrations");
+if (exitAfterMigrations && !applyMigrationsOnStartup)
+{
+    throw new InvalidOperationException(
+        "Database:ExitAfterMigrations requires Database:ApplyMigrationsOnStartup=true.");
+}
+
+if (applyMigrationsOnStartup)
+{
+    using var migrationScope = app.Services.CreateScope();
+    var db = migrationScope.ServiceProvider.GetRequiredService<IntegracaoControlIDContext>();
+    db.Database.Migrate();
+    Log.Information("Database migrations applied during startup by explicit environment configuration.");
+}
+else
+{
+    Log.Information("Database startup migrations are disabled. Readiness will remain unhealthy while migrations are pending.");
+}
+
+if (exitAfterMigrations)
+{
+    Log.Information("Database migration-only mode completed successfully.");
+    return;
+}
+
 using (var scope = app.Services.CreateScope())
 {
-    var db = scope.ServiceProvider.GetRequiredService<IntegracaoControlIDContext>();
-    db.Database.Migrate();
-    db.Database.ExecuteSqlRaw(@"
-        CREATE TABLE IF NOT EXISTS MonitorEvents (
-            EventId TEXT NOT NULL PRIMARY KEY,
-            ReceivedAt TEXT NOT NULL,
-            RawJson TEXT NOT NULL,
-            EventType TEXT NOT NULL,
-            DeviceId TEXT NOT NULL,
-            UserId TEXT NOT NULL,
-            Payload TEXT NOT NULL,
-            Status TEXT NOT NULL,
-            CreatedAt TEXT NOT NULL,
-            UpdatedAt TEXT NULL
-        );");
-    db.Database.ExecuteSqlRaw(@"
-        CREATE TABLE IF NOT EXISTS PushCommands (
-            CommandId TEXT NOT NULL PRIMARY KEY,
-            ReceivedAt TEXT NOT NULL,
-            CommandType TEXT NOT NULL,
-            RawJson TEXT NOT NULL,
-            Status TEXT NOT NULL,
-            Payload TEXT NOT NULL,
-            DeviceId TEXT NOT NULL,
-            UserId TEXT NOT NULL,
-            CreatedAt TEXT NOT NULL,
-            UpdatedAt TEXT NULL
-        );");
-
     var callbackSecurityOptions = scope.ServiceProvider.GetRequiredService<IOptions<CallbackSecurityOptions>>().Value;
     if (callbackSecurityOptions.RequireSharedKey && string.IsNullOrWhiteSpace(callbackSecurityOptions.SharedKey))
     {
@@ -500,4 +498,8 @@ static bool IsPlaceholderValue(string? value)
            normalized.Contains("replace", StringComparison.OrdinalIgnoreCase) ||
            normalized.Contains("example", StringComparison.OrdinalIgnoreCase) ||
            normalized.Contains("localhost", StringComparison.OrdinalIgnoreCase);
+}
+
+public partial class Program
+{
 }

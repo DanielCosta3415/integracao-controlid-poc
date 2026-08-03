@@ -43,6 +43,22 @@ function Wait-StubReady {
     throw "Stub Control iD nao respondeu em $TimeoutSeconds segundos."
 }
 
+function Start-HiddenDotnetProcess {
+    param(
+        [Parameter(Mandatory = $true)][string]$Arguments,
+        [Parameter(Mandatory = $true)][string]$WorkingDirectory
+    )
+
+    $startInfo = [System.Diagnostics.ProcessStartInfo]::new()
+    $startInfo.FileName = (Get-Command dotnet).Source
+    $startInfo.Arguments = $Arguments
+    $startInfo.WorkingDirectory = $WorkingDirectory
+    $startInfo.UseShellExecute = $false
+    $startInfo.CreateNoWindow = $true
+    $startInfo.WindowStyle = [System.Diagnostics.ProcessWindowStyle]::Hidden
+    return [System.Diagnostics.Process]::Start($startInfo)
+}
+
 Push-Location $root
 try {
     if (-not (Test-Path $artifactsDir)) {
@@ -56,10 +72,8 @@ try {
 
     $alreadyRunning = Test-StubReady -BaseUrl $StubUrl
     if (-not $alreadyRunning) {
-        $stdout = Join-Path $artifactsDir "stub-contract.stdout.log"
-        $stderr = Join-Path $artifactsDir "stub-contract.stderr.log"
         $arguments = "run --project `"$stubProject`" --no-build --no-launch-profile"
-        $startedProcess = Start-Process dotnet -ArgumentList $arguments -WorkingDirectory $root -RedirectStandardOutput $stdout -RedirectStandardError $stderr -WindowStyle Hidden -PassThru
+        $startedProcess = Start-HiddenDotnetProcess -Arguments $arguments -WorkingDirectory $root
         Wait-StubReady -BaseUrl $StubUrl -TimeoutSeconds $TimeoutSec
     }
 

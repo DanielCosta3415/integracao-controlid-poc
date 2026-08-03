@@ -25,18 +25,10 @@ namespace Integracao.ControlID.PoC.Services.Database
         /// </summary>
         public async Task<SessionLocal> AddSessionAsync(SessionLocal session)
         {
-            try
-            {
-                session.CreatedAt = DateTime.UtcNow;
-                _dbContext.Sessions.Add(session);
-                await _dbContext.SaveChangesAsync();
-                return session;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Erro ao adicionar sessão local.");
-                throw;
-            }
+            session.CreatedAt = DateTime.UtcNow;
+            _dbContext.Sessions.Add(session);
+            await _dbContext.SaveChangesAsync();
+            return session;
         }
 
         /// <summary>
@@ -63,17 +55,9 @@ namespace Integracao.ControlID.PoC.Services.Database
         /// </summary>
         public async Task<bool> UpdateSessionAsync(SessionLocal session)
         {
-            try
-            {
-                _dbContext.Sessions.Update(session);
-                await _dbContext.SaveChangesAsync();
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Erro ao atualizar sessão local {session.Id}.");
-                return false;
-            }
+            _dbContext.Sessions.Update(session);
+            await _dbContext.SaveChangesAsync();
+            return true;
         }
 
         /// <summary>
@@ -81,21 +65,13 @@ namespace Integracao.ControlID.PoC.Services.Database
         /// </summary>
         public async Task<bool> DeleteSessionAsync(long id)
         {
-            try
-            {
-                var session = await _dbContext.Sessions.FindAsync(id);
-                if (session == null)
-                    return false;
-
-                _dbContext.Sessions.Remove(session);
-                await _dbContext.SaveChangesAsync();
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Erro ao remover sessão local {id}.");
+            var session = await _dbContext.Sessions.FindAsync(id);
+            if (session == null)
                 return false;
-            }
+
+            _dbContext.Sessions.Remove(session);
+            await _dbContext.SaveChangesAsync();
+            return true;
         }
 
         /// <summary>
@@ -138,21 +114,13 @@ namespace Integracao.ControlID.PoC.Services.Database
         /// </summary>
         public async Task<bool> DeactivateSessionAsync(long id)
         {
-            try
-            {
-                var session = await _dbContext.Sessions.FindAsync(id);
-                if (session == null)
-                    return false;
-
-                session.IsActive = false;
-                await _dbContext.SaveChangesAsync();
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Erro ao desativar sessão local {id}.");
+            var session = await _dbContext.Sessions.FindAsync(id);
+            if (session == null)
                 return false;
-            }
+
+            session.IsActive = false;
+            await _dbContext.SaveChangesAsync();
+            return true;
         }
 
         /// <summary>

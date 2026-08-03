@@ -126,6 +126,9 @@ Smoke local com app e stub:
 powershell -ExecutionPolicy Bypass -File .\tools\smoke-localhost.ps1
 ```
 
+O relatorio mais recente e gravado em `artifacts/smoke/localhost-smoke-latest.md`;
+o script interrompe imediatamente se o build da app ou do stub falhar.
+
 Em `Development`, a especificacao OpenAPI fica disponivel em
 `/swagger/v1/swagger.json` e a UI em `/swagger` quando `OpenApi:Enabled=true`.
 
@@ -185,15 +188,19 @@ Configuracao segue o padrao nativo ASP.NET Core (`Secao__Chave`).
 | `ASPNETCORE_ENVIRONMENT` | `Development` | Ambiente de execucao |
 | `ASPNETCORE_URLS` | `https://localhost:5001` | URLs de binding da app |
 | `ConnectionStrings__DefaultConnection` | `Data Source=integracao_controlid.db` | SQLite local |
+| `Database__ApplyMigrationsOnStartup` | `false` | Aplica migrations apenas quando explicitamente habilitado; `Development` usa `true` |
+| `Database__ExitAfterMigrations` | `false` | Encerra o processo apos uma execucao de migration controlada |
 | `AllowedHosts` | `poc.example.internal` | Hosts aceitos fora de `Development`; nao use `*` |
 | `ControlIDApi__DefaultDeviceUrl` | `http://<equipamento-ou-host>:8080` | Equipamento Control iD |
 | `ControlIDApi__ConnectionTimeoutSeconds` | `30` | Timeout das chamadas oficiais; normalizado entre 5 e 300 segundos |
+| `ControlIDApi__MaxResponseBodyBytes` | `16777216` | Limite de resposta da API externa; normalizado entre 64 KiB e 64 MiB |
 | `ControlIDApi__RequireAllowedDeviceHosts` | `true` | Exige allowlist de egress |
 | `ControlIDApi__AllowedDeviceHosts__0` | `<equipamento-ou-host>` | Primeiro host permitido do equipamento |
 | `CallbackSecurity__MaxBodyBytes` | `1048576` | Limite de payload para callbacks/monitor |
 | `CallbackSecurity__RequireSharedKey` | `true` | Exige chave compartilhada em ingressos externos |
 | `CallbackSecurity__SharedKey` | `<segredo>` | Segredo fora do Git |
 | `CallbackSecurity__RequireSignedRequests` | `true` | Exige assinatura HMAC com timestamp e nonce |
+| `CallbackSecurity__MaxTrackedNonces` | `10000` | Limite em memoria da protecao contra replay |
 | `CallbackSecurity__AllowedRemoteIps__0` | `192.168.0.10` | Primeiro IP permitido para callbacks |
 | `OpenApi__Enabled` | `false` | Swagger/OpenAPI fora de Development apenas com decisao explicita |
 | `Observability__Metrics__Enabled` | `true` | Habilita `/metrics` |
@@ -210,8 +217,9 @@ Exemplo completo seguro: `.env.example`.
 - SQLite padrao: `integracao_controlid.db`.
 - Arquivos `integracao_controlid.db*`, `Logs/`, `artifacts/`, `bin/` e `obj/`
   nao devem ser versionados.
-- `Program.cs` aplica `Database.Migrate()` no startup e mantem compatibilidade
-  com tabelas auxiliares de monitoramento/push.
+- Fora de `Development`, migrations nao sao aplicadas no startup sem
+  `Database__ApplyMigrationsOnStartup=true`.
+- `/health/ready` permanece unhealthy enquanto houver migration pendente.
 - Dados locais podem conter informacao pessoal ou sensivel.
 
 Comandos seguros:
@@ -252,7 +260,7 @@ Sinais disponiveis:
 Artefatos versionados:
 
 - `Dockerfile`: multi-stage .NET 8, runtime Alpine, usuario nao root, porta 8080
-  e healthcheck em `/health/live`.
+  e healthcheck em `/health/ready`.
 - `.dockerignore`: remove Git, logs, artefatos, SQLite local e `.env` do contexto.
 - `docker-compose.yml`: volumes persistentes para `/app/data` e `/app/Logs`.
 
@@ -261,6 +269,7 @@ Comandos:
 ```powershell
 docker build -t integracao-controlid-poc:local .
 docker compose config
+docker compose run --rm -e Database__ApplyMigrationsOnStartup=true -e Database__ExitAfterMigrations=true integracao-controlid-poc
 docker compose up --build
 ```
 

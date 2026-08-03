@@ -25,18 +25,10 @@ namespace Integracao.ControlID.PoC.Services.Database
         /// </summary>
         public async Task<AccessRuleLocal> AddAccessRuleAsync(AccessRuleLocal rule)
         {
-            try
-            {
-                rule.CreatedAt = DateTime.UtcNow;
-                _dbContext.AccessRules.Add(rule);
-                await _dbContext.SaveChangesAsync();
-                return rule;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Erro ao adicionar regra de acesso local.");
-                throw;
-            }
+            rule.CreatedAt = DateTime.UtcNow;
+            _dbContext.AccessRules.Add(rule);
+            await _dbContext.SaveChangesAsync();
+            return rule;
         }
 
         /// <summary>
@@ -63,17 +55,9 @@ namespace Integracao.ControlID.PoC.Services.Database
         /// </summary>
         public async Task<bool> UpdateAccessRuleAsync(AccessRuleLocal rule)
         {
-            try
-            {
-                _dbContext.AccessRules.Update(rule);
-                await _dbContext.SaveChangesAsync();
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Erro ao atualizar regra de acesso local {rule.Id}.");
-                return false;
-            }
+            _dbContext.AccessRules.Update(rule);
+            await _dbContext.SaveChangesAsync();
+            return true;
         }
 
         /// <summary>
@@ -81,21 +65,13 @@ namespace Integracao.ControlID.PoC.Services.Database
         /// </summary>
         public async Task<bool> DeleteAccessRuleAsync(long id)
         {
-            try
-            {
-                var rule = await _dbContext.AccessRules.FindAsync(id);
-                if (rule == null)
-                    return false;
-
-                _dbContext.AccessRules.Remove(rule);
-                await _dbContext.SaveChangesAsync();
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Erro ao remover regra de acesso local {id}.");
+            var rule = await _dbContext.AccessRules.FindAsync(id);
+            if (rule == null)
                 return false;
-            }
+
+            _dbContext.AccessRules.Remove(rule);
+            await _dbContext.SaveChangesAsync();
+            return true;
         }
 
         /// <summary>

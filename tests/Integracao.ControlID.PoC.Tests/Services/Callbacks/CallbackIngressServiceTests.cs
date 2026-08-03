@@ -36,6 +36,7 @@ public class CallbackIngressServiceTests
         Assert.Equal("101", item.UserId);
         Assert.Equal("received", item.Status);
         Assert.Equal("{\"event\":14}", item.Payload);
+        Assert.Empty(item.RawJson);
     }
 
     [Fact]

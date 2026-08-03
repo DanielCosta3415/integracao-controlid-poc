@@ -116,6 +116,7 @@ Os controllers coordenam as rotas MVC, recebem a entrada da UI, acionam serviço
 | `Middlewares/ApiSessionMiddleware.cs` | Garante contexto mínimo de sessão/API durante o pipeline HTTP. |
 | `Middlewares/CorrelationIdMiddleware.cs` | Normaliza, propaga e registra correlation ID seguro em requests/responses. |
 | `Middlewares/ExceptionHandlingMiddleware.cs` | Captura exceções não tratadas e padroniza a resposta/registro de erro. |
+| `Middlewares/DynamicResponseCachePolicyMiddleware.cs` | Impede cache de respostas dinamicas e dados operacionais no navegador. |
 | `Middlewares/RequestLoggingMiddleware.cs` | Registra informações de requests para observabilidade local. |
 | `Middlewares/SecurityHeadersMiddleware.cs` | Aplica cabeçalhos de segurança HTTP nas respostas da aplicação. |
 
@@ -195,6 +196,7 @@ Entidades persistidas no SQLite local para histórico, cache operacional, simula
 | --- | --- |
 | `Services/Callbacks/CallbackIngressService.cs` | Orquestra o recebimento, validação e persistência de callbacks. |
 | `Services/Callbacks/CallbackRequestBodyReader.cs` | Lê o corpo bruto das requisições de callback de forma reutilizável. |
+| `Services/Callbacks/CallbackSignatureCanonicalizer.cs` | Canonicaliza e assina method/path/query/timestamp/nonce e bytes exatos do body. |
 | `Services/Callbacks/CallbackSecurityEvaluator.cs` | Avalia regras de segurança, chave compartilhada e origem permitida dos callbacks. |
 
 ## Services/ControlIDApi
@@ -209,6 +211,7 @@ Entidades persistidas no SQLite local para histórico, cache operacional, simula
 | `Services/ControlIDApi/OfficialApiDocumentationSeedCatalog.cs` | Semeia metadados e documentação base dos endpoints oficiais. |
 | `Services/ControlIDApi/OfficialApiDocumentationService.cs` | Consolida documentação, exemplos e metadados para exibição na UI. |
 | `Services/ControlIDApi/OfficialApiInvokerService.cs` | Executa chamadas genéricas aos endpoints oficiais a partir do catálogo. |
+| `Services/ControlIDApi/OfficialApiResponseBodyReader.cs` | Le respostas externas com limite, cancelamento, charset e classificacao binaria. |
 | `Services/ControlIDApi/OfficialApiParameterDocumentationUtilities.cs` | Utilitários para documentar parâmetros, tipos e obrigatoriedade. |
 | `Services/ControlIDApi/OfficialApiQueryParameterStrategy.cs` | Define estratégia de montagem de parâmetros via query string. |
 | `Services/ControlIDApi/OfficialApiResultPresentationService.cs` | Prepara resultados oficiais para exibição amigável na interface. |
@@ -238,6 +241,7 @@ Repositórios que encapsulam acesso ao SQLite local para cada entidade da PoC.
 | `Services/Database/SessionRepository.cs` | Persistência e consulta de sessões. |
 | `Services/Database/SyncRepository.cs` | Persistência e consulta do estado de sincronização. |
 | `Services/Database/UserRepository.cs` | Persistência e consulta de usuários. |
+| `Services/Database/LocalUserRegistrationResult.cs` | Resultado tipado e estados do registro atomico de usuario local. |
 
 ## Services complementares
 
@@ -521,7 +525,8 @@ As views Razor compõem a interface web da PoC. Em geral, cada pasta espelha um 
 
 | Arquivo/Pasta | Responsabilidade |
 | --- | --- |
-| `wwwroot/css/site.css` | Estilos globais da PoC, componentes visuais, dashboard, tabelas, formularios e ajustes responsivos. |
+| `wwwroot/css/site.css` | Estilos globais da PoC, componentes visuais, dashboard, tabelas e formularios. |
+| `wwwroot/css/site-shell-responsive.css` | Overrides isolados da navegacao e do shell responsivo. |
 | `wwwroot/js/site.js` | JavaScript global da UI, comportamentos de interacao e utilidades client-side. |
 | `wwwroot/favicon.ico` | Icone exibido pelo navegador para a aplicação. |
 | `wwwroot/lib/bootstrap/*` | Arquivos CSS/JS do Bootstrap, incluindo versoes minificadas, sourcemaps, utilitários e licenças. |

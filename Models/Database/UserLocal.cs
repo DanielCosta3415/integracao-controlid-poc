@@ -1,4 +1,6 @@
 using System;
+using System.ComponentModel.DataAnnotations;
+using Integracao.ControlID.PoC.Models.Security;
 
 namespace Integracao.ControlID.PoC.Models.Database
 {
@@ -15,17 +17,23 @@ namespace Integracao.ControlID.PoC.Models.Database
         /// <summary>
         /// Nome completo do usuário.
         /// </summary>
+        [MaxLength(LocalIdentityPolicy.NameMaxLength)]
         public string Name { get; set; } = string.Empty;
 
         /// <summary>
         /// Matrícula/registro principal do usuário no ecossistema Control iD.
         /// </summary>
+        [MaxLength(LocalIdentityPolicy.UsernameMaxLength)]
         public string Registration { get; set; } = string.Empty;
 
         /// <summary>
         /// Login ou identificador único local (quando diferente da matrícula).
         /// </summary>
+        [MaxLength(LocalIdentityPolicy.UsernameMaxLength)]
         public string Username { get; set; } = string.Empty;
+
+        [MaxLength(LocalIdentityPolicy.UsernameMaxLength)]
+        public string NormalizedUsername { get; set; } = string.Empty;
 
         /// <summary>
         /// Hash da senha do usuário local.
@@ -40,11 +48,16 @@ namespace Integracao.ControlID.PoC.Models.Database
         /// <summary>
         /// E-mail do usuário.
         /// </summary>
+        [MaxLength(LocalIdentityPolicy.EmailMaxLength)]
         public string Email { get; set; } = string.Empty;
+
+        [MaxLength(LocalIdentityPolicy.EmailMaxLength)]
+        public string NormalizedEmail { get; set; } = string.Empty;
 
         /// <summary>
         /// Telefone do usuário.
         /// </summary>
+        [MaxLength(LocalIdentityPolicy.PhoneMaxLength)]
         public string Phone { get; set; } = string.Empty;
 
         /// <summary>

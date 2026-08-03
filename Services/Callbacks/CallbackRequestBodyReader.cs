@@ -24,7 +24,7 @@ namespace Integracao.ControlID.PoC.Services.Callbacks
         public async Task<CallbackRequestBodyReadResult> ReadAsync(HttpRequest request, CancellationToken cancellationToken = default)
         {
             if (request.ContentLength.HasValue && request.ContentLength.Value == 0)
-                return CallbackRequestBodyReadResult.Success(string.Empty);
+                return CallbackRequestBodyReadResult.Success(Array.Empty<byte>(), string.Empty);
 
             var maxBodyBytes = _options.MaxBodyBytes > 0 ? _options.MaxBodyBytes : 1024 * 1024;
 
@@ -63,36 +63,43 @@ namespace Integracao.ControlID.PoC.Services.Callbacks
             if (contentType.Contains("octet-stream", StringComparison.OrdinalIgnoreCase) ||
                 contentType.Contains("image/", StringComparison.OrdinalIgnoreCase))
             {
-                return CallbackRequestBodyReadResult.Success(Convert.ToBase64String(bytes));
+                return CallbackRequestBodyReadResult.Success(bytes, Convert.ToBase64String(bytes));
             }
 
-            return CallbackRequestBodyReadResult.Success(Encoding.UTF8.GetString(bytes));
+            return CallbackRequestBodyReadResult.Success(bytes, Encoding.UTF8.GetString(bytes));
         }
     }
 
     public sealed class CallbackRequestBodyReadResult
     {
-        private CallbackRequestBodyReadResult(bool isSuccessful, int statusCode, string message, string body)
+        private CallbackRequestBodyReadResult(bool isSuccessful, int statusCode, string message, string body, byte[] rawBody)
         {
             IsSuccessful = isSuccessful;
             StatusCode = statusCode;
             Message = message;
             Body = body;
+            RawBody = rawBody;
         }
 
         public bool IsSuccessful { get; }
         public int StatusCode { get; }
         public string Message { get; }
         public string Body { get; }
+        public byte[] RawBody { get; }
 
         public static CallbackRequestBodyReadResult Success(string body)
         {
-            return new CallbackRequestBodyReadResult(true, StatusCodes.Status200OK, string.Empty, body);
+            return Success(Encoding.UTF8.GetBytes(body), body);
+        }
+
+        public static CallbackRequestBodyReadResult Success(byte[] rawBody, string body)
+        {
+            return new CallbackRequestBodyReadResult(true, StatusCodes.Status200OK, string.Empty, body, rawBody);
         }
 
         public static CallbackRequestBodyReadResult Failure(int statusCode, string message)
         {
-            return new CallbackRequestBodyReadResult(false, statusCode, message, string.Empty);
+            return new CallbackRequestBodyReadResult(false, statusCode, message, string.Empty, Array.Empty<byte>());
         }
     }
 }

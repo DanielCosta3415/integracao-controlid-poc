@@ -82,7 +82,7 @@ namespace Integracao.ControlID.PoC.Controllers
             if (ingressRejection != null)
                 return ingressRejection;
 
-            var signatureRejection = ValidateSignature(string.Empty);
+            var signatureRejection = ValidateSignature(Array.Empty<byte>());
             if (signatureRejection != null)
                 return signatureRejection;
 
@@ -120,7 +120,7 @@ namespace Integracao.ControlID.PoC.Controllers
             return StatusCode(securityResult.StatusCode, new { error = securityResult.Message });
         }
 
-        private IActionResult? ValidateSignature(string body)
+        private IActionResult? ValidateSignature(byte[] body)
         {
             var signatureResult = _signatureValidator.Validate(Request, body);
             if (signatureResult.IsAllowed)

@@ -7,7 +7,7 @@
 - RBAC para operacoes administrativas, dados sensiveis, sessoes, biometria, cartoes, midia, configuracao, hardware, objetos oficiais mutaveis, push manual e limpeza/expurgo de eventos.
 - Hash de senha local migrado para PBKDF2-HMAC-SHA256 com suporte de leitura para hashes SHA256 legados. Hash legado valido e regravado em PBKDF2 no proximo login local.
 - Endpoints externos de callback/push permanecem anonimos para compatibilidade de equipamento, mas passam por IP/shared key/rate limit e podem exigir assinatura HMAC.
-- Assinatura HMAC de ingressos externos usa `X-ControlID-Signature`, `X-ControlID-Timestamp` e `X-ControlID-Nonce`, com janela de tempo e cache anti-replay.
+- Assinatura HMAC de ingressos externos usa `X-ControlID-Signature`, `X-ControlID-Timestamp` e `X-ControlID-Nonce`, com janela de tempo e cache anti-replay limitado por `CallbackSecurity:MaxTrackedNonces`.
 - `user_get_image.fcgi` agora usa a mesma avaliacao de seguranca e assinatura dos ingressos externos antes de retornar foto local.
 - Egress para equipamentos pode ser limitado por allowlist em `ControlIDApi:AllowedDeviceHosts`.
 - Fora de `Development`, a aplicacao exige `AllowedHosts` explicito, shared key de callback, assinatura HMAC, OpenAPI desabilitado e allowlist de equipamentos habilitada.
@@ -54,10 +54,10 @@ PATH
 QUERY_STRING
 TIMESTAMP
 NONCE
-BASE64(SHA256(BODY_NORMALIZADO))
+BASE64(SHA256(BODY_BYTES_EXATOS))
 ```
 
-O cliente envia o resultado em `X-ControlID-Signature`. O prefixo opcional `sha256=` e aceito. O `TIMESTAMP` pode ser Unix seconds ou data ISO-8601 UTC. O `NONCE` deve ser unico dentro da janela configurada.
+O cliente envia o resultado em `X-ControlID-Signature`. O prefixo opcional `sha256=` e aceito. O `TIMESTAMP` pode ser Unix seconds ou data ISO-8601 UTC. O `NONCE` deve ser unico em toda a superficie de callbacks dentro da janela configurada. O hash usa os bytes recebidos, inclusive para imagens e octet-stream, sem conversao intermediaria para texto.
 
 ## Equipamentos sem HMAC nativo
 

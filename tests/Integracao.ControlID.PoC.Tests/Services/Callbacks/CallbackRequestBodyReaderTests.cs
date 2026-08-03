@@ -18,6 +18,7 @@ public class CallbackRequestBodyReaderTests
 
         Assert.True(result.IsSuccessful);
         Assert.Equal("{\"ping\":true}", result.Body);
+        Assert.Equal(Encoding.UTF8.GetBytes("{\"ping\":true}"), result.RawBody);
         Assert.Equal(0, request.Body.Position);
     }
 
@@ -25,12 +26,14 @@ public class CallbackRequestBodyReaderTests
     public async Task ReadAsync_ReturnsBase64Payload_ForBinaryRequests()
     {
         var reader = CreateReader();
-        var request = CreateBinaryRequest(new byte[] { 1, 2, 3, 4 }, "application/octet-stream");
+        var bytes = new byte[] { 0xff, 0xfe, 0x00, 0x80 };
+        var request = CreateBinaryRequest(bytes, "application/octet-stream");
 
         var result = await reader.ReadAsync(request, TestContext.Current.CancellationToken);
 
         Assert.True(result.IsSuccessful);
-        Assert.Equal("AQIDBA==", result.Body);
+        Assert.Equal("//4AgA==", result.Body);
+        Assert.Equal(bytes, result.RawBody);
     }
 
     [Fact]

@@ -1,0 +1,155 @@
+/* Shell navigation and mobile layout overrides. Loaded after site.css. */
+.app-nav {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  align-content: flex-start;
+}
+
+.app-nav > * {
+  flex: 0 0 auto;
+}
+
+.app-nav-domain {
+  display: inline-flex;
+}
+
+.app-nav-home {
+  flex: 0 0 auto;
+}
+
+.app-nav-domain__summary {
+  width: clamp(196px, 13vw, 238px);
+  min-width: 196px;
+  max-width: 238px;
+}
+
+@media (max-width: 991px) {
+  .app-nav {
+    width: max-content;
+    min-width: 100%;
+    flex-wrap: nowrap;
+  }
+}
+
+@media (max-width: 767px) {
+  .app-header {
+    position: relative;
+  }
+
+  .app-topbar,
+  .app-main,
+  .app-nav-shell {
+    padding-left: 0.9rem;
+    padding-right: 0.9rem;
+  }
+
+  .app-topbar {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 0.55rem;
+    padding-top: 0.6rem;
+    padding-bottom: 0.55rem;
+  }
+
+  .app-topbar__left {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .app-brand__copy small {
+    display: none;
+  }
+
+  .app-topbar__center {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  .app-topbar__right {
+    grid-column: 2;
+    grid-row: 1;
+    width: auto;
+    min-width: 0;
+    justify-content: flex-start;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 0.45rem;
+    padding-bottom: 0.2rem;
+    scrollbar-width: thin;
+  }
+
+  .app-topbar__right,
+  .app-nav-shell {
+    scrollbar-width: none;
+  }
+
+  .app-topbar__right::-webkit-scrollbar,
+  .app-nav-shell::-webkit-scrollbar {
+    display: none;
+  }
+
+  .app-topbar__right > * {
+    flex: 0 0 auto;
+  }
+
+  .app-topbar__right .app-topbar__link,
+  .app-nav-module__favorite {
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .app-topbar__link,
+  .app-topbar .app-chip {
+    font-size: 0.74rem;
+  }
+
+  .app-nav-shell {
+    padding-bottom: 0.55rem;
+  }
+
+  .app-nav-home,
+  .app-nav-domain__summary {
+    min-height: 2.75rem;
+    padding: 0.7rem 0.9rem;
+  }
+
+  .app-nav-domain__panel {
+    top: 8.8rem;
+  }
+
+  .app-nav-domain__panel-head,
+  .app-nav-domain__footer,
+  .app-page-context__meta,
+  .connection-rail__actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .domain-section--primary .module-grid,
+  .domain-section--secondary .module-directory-grid,
+  .app-nav-domain__grid,
+  .connection-rail__form {
+    grid-template-columns: 1fr;
+  }
+
+  .official-api-entry__footer,
+  .module-card__footer,
+  .module-directory-card__footer {
+    align-items: stretch;
+  }
+
+  .official-api-entry__actions .btn {
+    flex: 1 1 100%;
+  }
+
+  .connection-card h2,
+  .activity-card h2,
+  .detail-card h2 {
+    font-size: 1.08rem;
+  }
+}

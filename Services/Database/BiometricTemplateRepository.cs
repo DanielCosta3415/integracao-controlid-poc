@@ -25,18 +25,10 @@ namespace Integracao.ControlID.PoC.Services.Database
         /// </summary>
         public async Task<BiometricTemplateLocal> AddTemplateAsync(BiometricTemplateLocal template)
         {
-            try
-            {
-                template.CreatedAt = DateTime.UtcNow;
-                _dbContext.BiometricTemplates.Add(template);
-                await _dbContext.SaveChangesAsync();
-                return template;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Erro ao adicionar template biométrico local.");
-                throw;
-            }
+            template.CreatedAt = DateTime.UtcNow;
+            _dbContext.BiometricTemplates.Add(template);
+            await _dbContext.SaveChangesAsync();
+            return template;
         }
 
         /// <summary>
@@ -63,17 +55,9 @@ namespace Integracao.ControlID.PoC.Services.Database
         /// </summary>
         public async Task<bool> UpdateTemplateAsync(BiometricTemplateLocal template)
         {
-            try
-            {
-                _dbContext.BiometricTemplates.Update(template);
-                await _dbContext.SaveChangesAsync();
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Erro ao atualizar template biométrico local {template.Id}.");
-                return false;
-            }
+            _dbContext.BiometricTemplates.Update(template);
+            await _dbContext.SaveChangesAsync();
+            return true;
         }
 
         /// <summary>
@@ -81,21 +65,13 @@ namespace Integracao.ControlID.PoC.Services.Database
         /// </summary>
         public async Task<bool> DeleteTemplateAsync(long id)
         {
-            try
-            {
-                var template = await _dbContext.BiometricTemplates.FindAsync(id);
-                if (template == null)
-                    return false;
-
-                _dbContext.BiometricTemplates.Remove(template);
-                await _dbContext.SaveChangesAsync();
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Erro ao remover template biométrico local {id}.");
+            var template = await _dbContext.BiometricTemplates.FindAsync(id);
+            if (template == null)
                 return false;
-            }
+
+            _dbContext.BiometricTemplates.Remove(template);
+            await _dbContext.SaveChangesAsync();
+            return true;
         }
 
         /// <summary>

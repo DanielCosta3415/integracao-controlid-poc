@@ -33,6 +33,7 @@ Nao ha loader `.env` configurado. Use `appsettings.json`, User Secrets ou variav
 | `ControlIDApi__DefaultUsername` | Usuario sugerido | Sim | Nao versionar |
 | `ControlIDApi__DefaultPassword` | Senha sugerida | Sim | Nao versionar |
 | `ControlIDApi__ConnectionTimeoutSeconds` | Timeout outbound para Access API | Nao | Normalizado entre 5 e 300 segundos |
+| `ControlIDApi__MaxResponseBodyBytes` | Limite de resposta outbound | Nao | Default 16 MiB; normalizado entre 64 KiB e 64 MiB |
 | `ControlIDApi__CircuitBreaker__Enabled` | Protecao contra falhas transitorias repetidas | Nao | Default: true |
 | `ControlIDApi__CircuitBreaker__FailureThreshold` | Falhas consecutivas para abrir circuito | Nao | Default: 5 |
 | `ControlIDApi__CircuitBreaker__BreakDurationSeconds` | Duracao do circuito aberto | Nao | Default: 30 |
@@ -61,7 +62,7 @@ Nao ha loader `.env` configurado. Use `appsettings.json`, User Secrets ou variav
 - Headers: `Content-Type` conforme `OfficialApiEndpointDefinition.ContentType`; session vai na query real `session=...` quando requerida, mas URLs exibidas em tela/logs devem mascarar esse valor.
 - Autenticacao: login oficial retorna `session`; endpoints com `RequiresSession=true` exigem sessao ativa.
 - Request: JSON, multipart, binario/base64 ou vazio, conforme `BodyKind`.
-- Response: texto/JSON ou binario preservado em Base64 quando Content-Type nao parece texto/json/xml.
+- Response: texto/JSON ou binario preservado em Base64 quando Content-Type nao parece texto/json/xml; leitura em streaming e rejeicao `502` acima do limite configurado.
 - DTO/schema: `OfficialApiEndpointDefinition`, `OfficialApiInvocationResult`; schemas de payload sao inferidos do catalogo e docs oficiais.
 - Status codes: propagados do equipamento em `OfficialApiInvocationResult.StatusCode`.
 - Erros esperados: endpoint ausente no catalogo, device address invalido, sessao ausente, timeout, HTTP nao 2xx, JSON inesperado.
@@ -102,8 +103,8 @@ Nao ha loader `.env` configurado. Use `appsettings.json`, User Secrets ou variav
 - Request: body textual, JSON, form, imagem ou octet-stream; schema oficial/inferido por endpoint.
 - Response: eventos de identificacao retornam `{ "result": { "event": 14 } }`; eventos reconhecidos retornam `200 OK` sem payload.
 - DTO/schema: persistencia em `MonitorEventLocal`; leitura por `CallbackRequestBodyReader`.
-- Status codes: `200`, `401`, `403`, `413`, `500`.
-- Erros esperados: shared key ausente/invalida, IP bloqueado, payload acima do limite, falha SQLite.
+- Status codes: `200`, `401`, `403`, `409`, `413`, `500`, `503`.
+- Erros esperados: shared key ausente/invalida, IP bloqueado, replay de nonce, capacidade anti-replay atingida, payload acima do limite, falha SQLite.
 - Timeout: nao ha timeout proprio; leitura aceita cancellation token do ASP.NET Core.
 - Retry/backoff: nao implementado na PoC; retry deve ser decidido pelo equipamento/origem.
 - Idempotencia: nao ha chave idempotente; cada callback aceito gera novo `EventId`.
