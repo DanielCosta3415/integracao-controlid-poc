@@ -1,14 +1,14 @@
 # ControlIdCallbackSigningProxy
 
-Proxy local para equipamentos Control iD que nao conseguem gerar assinatura HMAC nativamente.
+Proxy local para equipamentos Control iD que não conseguem gerar assinatura HMAC nativamente.
 
-O proxy recebe chamadas do equipamento em uma interface de rede restrita, valida IP remoto e chave opcional de entrada, assina a requisicao com `X-ControlID-Signature`, `X-ControlID-Timestamp` e `X-ControlID-Nonce`, injeta a shared key esperada pela PoC e encaminha para a aplicacao.
+O proxy recebe chamadas do equipamento em uma interface de rede restrita, valida IP remoto e chave opcional de entrada, assina a requisição com `X-ControlID-Signature`, `X-ControlID-Timestamp` e `X-ControlID-Nonce`, injeta a shared key esperada pela PoC e encaminha para a aplicação.
 
-Antes de encaminhar, o proxy remove headers sensiveis recebidos do cliente e insere uma assinatura nova. Assim a PoC continua exigindo `CallbackSecurity:RequireSignedRequests=true` mesmo quando o equipamento nao sabe assinar. Respostas acima de `Proxy:MaxResponseBytes` sao bloqueadas para reduzir risco de consumo excessivo de memoria.
+Antes de encaminhar, o proxy remove headers sensíveis recebidos do cliente e insere uma assinatura nova. Assim a PoC continua exigindo `CallbackSecurity:RequireSignedRequests=true` mesmo quando o equipamento não sabe assinar. Respostas acima de `Proxy:MaxResponseBytes` são bloqueadas para reduzir risco de consumo excessivo de memória.
 
-## Execucao
+## Execução
 
-Configure segredos fora do repositorio:
+Configure segredos fora do repositório:
 
 ```powershell
 dotnet restore .\tools\ControlIdCallbackSigningProxy\ControlIdCallbackSigningProxy.csproj --locked-mode
@@ -23,9 +23,9 @@ Depois execute:
 dotnet run --project .\tools\ControlIdCallbackSigningProxy\ControlIdCallbackSigningProxy.csproj --urls http://localhost:6700
 ```
 
-Configure o equipamento para chamar o proxy, nao a PoC diretamente. Mantenha firewall/rede permitindo que apenas o equipamento alcance o proxy.
+Configure o equipamento para chamar o proxy, não a PoC diretamente. Mantenha firewall/rede permitindo que apenas o equipamento alcance o proxy.
 
-## Checks
+## Verificações
 
 ```powershell
 dotnet build .\tools\ControlIdCallbackSigningProxy\ControlIdCallbackSigningProxy.csproj --no-restore -v:minimal

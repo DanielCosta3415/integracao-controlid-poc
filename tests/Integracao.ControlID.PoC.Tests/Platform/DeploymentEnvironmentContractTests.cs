@@ -74,8 +74,8 @@ public class DeploymentEnvironmentContractTests
         Assert.Contains("CallbackSecurity__Shared" + "Key=replace-with-at-least-32-random-characters", envExample);
         Assert.Contains("\"RequireSignedRequests\": true", staging);
         Assert.Contains("\"RequireAllowedDeviceHosts\": true", production);
-        Assert.Contains("Procedimento de deploy", runbook);
-        Assert.Contains("Rollback tecnico", runbook);
+        Assert.Contains("Procedimento de implantação", runbook);
+        Assert.Contains("Reversão técnica", runbook);
         Assert.Contains("ForwardedHeaders__KnownProxies__0", runbook);
         Assert.Contains("Database__ExitAfterMigrations=true", runbook);
     }

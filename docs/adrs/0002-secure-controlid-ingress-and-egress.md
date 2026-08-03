@@ -1,4 +1,4 @@
-# ADR 0002 - Ingress e egress Control iD seguros por padrao fora de Development
+# ADR 0002 - Ingress e egress Control iD seguros por padrão fora de Development
 
 Status: Aceita
 
@@ -7,32 +7,32 @@ Data: 2026-05-01
 ## Contexto
 
 A PoC recebe callbacks/Push do equipamento e faz chamadas para a Access API
-Control iD. Esses fluxos podem envolver credenciais, sessoes, payloads pessoais e
-dados sensiveis. Fora de `Development`, configuracao permissiva criaria risco de
-exposicao.
+Control iD. Esses fluxos podem envolver credenciais, sessões, payloads pessoais e
+dados sensíveis. Fora de `Development`, configuração permissiva criaria risco de
+exposição.
 
-## Decisao
+## Decisão
 
-Fora de `Development`, exigir configuracao segura de host, callbacks assinados,
+Fora de `Development`, exigir configuração segura de host, callbacks assinados,
 shared key, allowlist de equipamento e OpenAPI desabilitado. Equipamentos sem
-HMAC nativo devem usar o proxy assinador local quando necessario.
+HMAC nativo devem usar o proxy assinador local quando necessário.
 
 ## Alternativas consideradas
 
 - Permitir callbacks sem assinatura fora de Development: rejeitado por risco de
   spoofing e tampering.
-- Validar apenas por IP: insuficiente quando ha proxy, NAT ou rede compartilhada.
+- Validar apenas por IP: insuficiente quando há proxy, NAT ou rede compartilhada.
 - Exigir ferramenta externa de API gateway desde a PoC: forte, mas adicionaria
-  dependencia operacional sem evidencia suficiente.
+  dependência operacional sem evidência suficiente.
 
-## Consequencias
+## Consequências
 
-- Startup falha quando configuracoes inseguras sao detectadas.
+- Startup falha quando configurações inseguras são detectadas.
 - Setup real precisa preencher `.env`/User Secrets/secret manager corretamente.
 - Testes e runbooks devem cobrir callback security e contrato de equipamento.
-- O proxy assinador adiciona uma opcao operacional para equipamentos sem HMAC.
+- O proxy assinador adiciona uma opção operacional para equipamentos sem HMAC.
 
-## Evidencias
+## Evidências
 
 - `Program.cs`
 - `Options/CallbackSecurityOptions.cs`

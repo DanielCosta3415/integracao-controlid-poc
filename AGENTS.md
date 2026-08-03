@@ -1,12 +1,12 @@
 # AGENTS.md
 
-Regras permanentes para Codex e outros agentes de codigo neste repositorio.
+Regras permanentes para Codex e outros agentes de código neste repositório.
 
-## Visao geral
+## Visão geral
 
-Este repositorio e uma PoC web ASP.NET Core 8 MVC/Razor para integracao operacional e tecnica com a Access API da Control iD. A aplicacao permite conexao com equipamento, autenticacao, catalogo de endpoints oficiais, fluxos de hardware, cadastros, callbacks, monitoramento, fila push e persistencia local em SQLite.
+Este repositório é uma PoC web ASP.NET Core 8 MVC/Razor para integração operacional e técnica com a Access API da Control iD. A aplicação permite conexão com equipamento, autenticação, catálogo de endpoints oficiais, fluxos de hardware, cadastros, callbacks, monitoramento, fila push e persistência local em SQLite.
 
-Trate o projeto como uma PoC operacional com pontos sensiveis de seguranca, dados pessoais e integracao com dispositivo fisico. Diagnostique antes de alterar e registre falhas preexistentes separadamente de falhas introduzidas.
+Trate o projeto como uma PoC operacional com pontos sensíveis de segurança, dados pessoais e integração com dispositivo físico. Diagnostique antes de alterar e registre falhas preexistentes separadamente de falhas introduzidas.
 
 ## Stack detectada
 
@@ -24,25 +24,25 @@ Trate o projeto como uma PoC operacional com pontos sensiveis de seguranca, dado
 
 ## Estrutura principal
 
-- `Program.cs`: composicao da aplicacao, DI, middlewares, SQLite e validacoes de runtime.
+- `Program.cs`: composição da aplicação, DI, middlewares, SQLite e validações de runtime.
 - `Controllers/`: fluxos MVC, endpoints oficiais auxiliares, callbacks e push.
-- `Services/`: integracoes Control iD, seguranca, repositorios, navegacao, factories e casos de uso.
+- `Services/`: integrações Control iD, segurança, repositórios, navegação, factories e casos de uso.
 - `Data/`: `IntegracaoControlIDContext`.
 - `Models/`: entidades locais e modelos da API Control iD.
 - `ViewModels/`: DTOs/view models usados pelas views.
 - `Views/`: telas Razor.
-- `Middlewares/`: tratamento de erro, logging, headers de seguranca e sessao.
-- `Options/`: opcoes de configuracao tipadas.
-- `tests/`: testes unitarios xUnit.
+- `Middlewares/`: tratamento de erro, logging, headers de segurança e sessão.
+- `Options/`: opções de configuração tipadas.
+- `tests/`: testes unitários xUnit.
 - `tools/`: smoke test e stub local de equipamento.
-- `docs/`: documentacao tecnica, runbooks e relatorios.
-- `wwwroot/`: assets estaticos e bibliotecas vendorizadas.
+- `docs/`: documentação técnica, runbooks e relatórios.
+- `wwwroot/`: assets estáticos e bibliotecas vendorizadas.
 
 ## Comandos reais
 
-Execute comandos a partir da raiz do repositorio, em PowerShell.
+Execute comandos a partir da raiz do repositório, em PowerShell.
 
-### Setup
+### Configuração
 
 ```powershell
 dotnet restore .\Integracao.ControlID.PoC.sln --locked-mode
@@ -50,7 +50,7 @@ dotnet restore .\tools\ControlIdDeviceStub\ControlIdDeviceStub.csproj --locked-m
 dotnet restore .\tools\ControlIdCallbackSigningProxy\ControlIdCallbackSigningProxy.csproj --locked-mode
 ```
 
-Para desenvolvimento local, configure segredos fora do repositorio, usando placeholders:
+Para desenvolvimento local, configure segredos fora do repositório, usando placeholders:
 
 ```powershell
 dotnet user-secrets set "ControlIDApi:DefaultDeviceUrl" "http://<equipamento-ou-host>:8080"
@@ -63,14 +63,14 @@ dotnet user-secrets set "ControlIDApi:RequireAllowedDeviceHosts" "true"
 dotnet user-secrets set "ControlIDApi:AllowedDeviceHosts:0" "<equipamento-ou-host>"
 ```
 
-Para equipamentos sem assinatura HMAC nativa, configure o proxy assinador com segredos fora do repositorio:
+Para equipamentos sem assinatura HMAC nativa, configure o proxy assinador com segredos fora do repositório:
 
 ```powershell
 dotnet user-secrets set --project .\tools\ControlIdCallbackSigningProxy\ControlIdCallbackSigningProxy.csproj "Proxy:SharedKey" "<mesmo-segredo-da-poc>"
 dotnet run --project .\tools\ControlIdCallbackSigningProxy\ControlIdCallbackSigningProxy.csproj --urls http://localhost:6700
 ```
 
-### Execucao local
+### Execução local
 
 ```powershell
 dotnet run --project .\Integracao.ControlID.PoC.csproj
@@ -78,13 +78,13 @@ dotnet run --project .\tools\ControlIdDeviceStub\ControlIdDeviceStub.csproj --no
 dotnet run --project .\tools\ControlIdCallbackSigningProxy\ControlIdCallbackSigningProxy.csproj --urls http://localhost:6700
 ```
 
-O smoke test tambem sobe app e stub localmente:
+O smoke test também sobe app e stub localmente:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\tools\smoke-localhost.ps1
 ```
 
-Backup local nao destrutivo do SQLite:
+Backup local não destrutivo do SQLite:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\tools\backup-sqlite.ps1
@@ -93,7 +93,7 @@ powershell -ExecutionPolicy Bypass -File .\tools\restore-smoke-sqlite.ps1
 powershell -ExecutionPolicy Bypass -File .\tools\harden-local-state.ps1
 ```
 
-### Build, lint, format, typecheck, testes e auditoria
+### Compilação, lint, formatação, verificação de tipos, testes e auditoria
 
 ```powershell
 dotnet build .\Integracao.ControlID.PoC.sln --no-restore -v:minimal
@@ -124,169 +124,169 @@ git diff --check
 
 Notas:
 
-- Lint separado nao existe; `dotnet build` com warnings como erro e `dotnet format --verify-no-changes` sao os checks oficiais.
-- Typecheck separado nao existe; o typecheck e o build C#.
-- Para corrigir formatacao, use `dotnet format .\Integracao.ControlID.PoC.sln -v:minimal` e registre o efeito mecanico.
+- Lint separado não existe; `dotnet build` com warnings como erro e `dotnet format --verify-no-changes` são os checks oficiais.
+- Typecheck separado não existe; o typecheck é o próprio build C#.
+- Para corrigir formatação, use `dotnet format .\Integracao.ControlID.PoC.sln -v:minimal` e registre o efeito mecânico.
 - O smoke test escreve em `docs/reports/`, `artifacts/`, `Logs/` e no SQLite local.
-- O gate `test-readiness-gates.ps1` executa observabilidade offline por padrao; contra app rodando, use `OBSERVABILITY_BASE_URL` e credencial local para `/metrics` quando necessario.
-- `ops.example.json` define o contrato de ownership, on-call, backup externo, RTO/RPO, FinOps e contingencia fisica. Copie para `ops.local.json` fora do Git para releases reais; `-ReleaseGate` exige essa configuracao sem placeholders.
-- `test-readiness-gates.ps1 -ReleaseGate` e o modo estrito para release: exige smoke, cobertura, supply chain, container build, observabilidade online, configuracao operacional, FinOps/capacidade, contrato fisico e scanners externos.
-- Docker/Compose sao artefatos de execucao reproduzivel local/container; nao fazem deploy automatico nem configuram provedor cloud.
-- Scanners externos (`semgrep`, `osv-scanner`, `zap-baseline.py`, `axe`) sao orquestrados por `tools/external-security-scans.ps1`; a instalacao das CLIs fica no ambiente e deve ser justificada/registrada.
-- O contrato contra equipamento real e opt-in e exige variaveis `CONTROLID_DEVICE_URL`, `CONTROLID_USERNAME` e `CONTROLID_PASSWORD`: `powershell -ExecutionPolicy Bypass -File .\tools\contract-controlid-device.ps1`.
+- O gate `test-readiness-gates.ps1` executa observabilidade offline por padrão; contra app rodando, use `OBSERVABILITY_BASE_URL` e credencial local para `/metrics` quando necessário.
+- `ops.example.json` define o contrato de ownership, on-call, backup externo, RTO/RPO, FinOps e contingência física. Copie para `ops.local.json` fora do Git para releases reais; `-ReleaseGate` exige essa configuração sem placeholders.
+- `test-readiness-gates.ps1 -ReleaseGate` é o modo estrito para release: exige smoke, cobertura, cadeia de suprimentos, construção do contêiner, observabilidade on-line, configuração operacional, FinOps/capacidade, contrato físico e scanners externos.
+- Docker/Compose são artefatos de execução reproduzível local/container; não fazem deploy automático nem configuram provedor cloud.
+- Scanners externos (`semgrep`, `osv-scanner`, `zap-baseline.py`, `axe`) são orquestrados por `tools/external-security-scans.ps1`; a instalação das CLIs fica no ambiente e deve ser justificada/registrada.
+- O contrato com equipamento real é opcional, deve ser habilitado explicitamente e exige as variáveis `CONTROLID_DEVICE_URL`, `CONTROLID_USERNAME` e `CONTROLID_PASSWORD`: `powershell -ExecutionPolicy Bypass -File .\tools\contract-controlid-device.ps1`.
 
-### Comandos indisponiveis ou nao padronizados
+### Comandos indisponíveis ou não padronizados
 
-- `npm`, `pnpm`, `yarn`: nao ha frontend package manager configurado.
-- Migrations CLI destrutivas: nao ha fluxo documentado; nao execute sem aprovacao humana.
-- Deploy automatico/provedor cloud: nao ha provedor/manifesto de hospedagem versionado.
+- `npm`, `pnpm`, `yarn`: não há frontend package manager configurado.
+- Migrations CLI destrutivas: não há fluxo documentado; não execute sem aprovação humana.
+- Deploy automático/provedor cloud: não há provedor/manifesto de hospedagem versionado.
 
-## Regras obrigatorias
+## Regras obrigatórias
 
-- Preserve contratos publicos de rotas, payloads, callbacks, push e ViewModels, salvo pedido explicito ou versionamento documentado.
-- Nao altere regra de negocio sem evidencia em README, docs, testes, codigo existente ou confirmacao humana.
-- Nao remova dependencias sem analise de impacto, busca de uso e validacao dos checks.
-- Nao adicione dependencias sem justificar necessidade, alternativa e risco.
-- Nao execute migracoes destrutivas, exclusao de dados ou limpeza de banco sem confirmacao humana.
-- Nao apague dados locais versionados ou relatorios historicos sem confirmacao humana.
-- Nao crie abstracoes prematuras; siga os padroes existentes de controller, service, repository e ViewModel.
-- Nao misture refatoracao ampla com feature ou bugfix pontual.
-- Nao use `catch` vazio e nao engula excecoes. Logue contexto seguro e retorne erro apropriado.
-- Nao logue senha, shared key, token, certificado privado, biometria bruta ou dado pessoal desnecessario.
-- Nao exponha secrets em codigo, docs, logs, commits, exemplos reais ou screenshots.
-- Sempre rode checks relevantes antes de finalizar. Se algum check nao for executado, explique o motivo.
+- Preserve contratos públicos de rotas, payloads, callbacks, push e ViewModels, salvo pedido explícito ou versionamento documentado.
+- Não altere regra de negócio sem evidência em README, docs, testes, código existente ou confirmação humana.
+- Não remova dependências sem análise de impacto, busca de uso e validação dos checks.
+- Não adicione dependências sem justificar necessidade, alternativa e risco.
+- Não execute migrações destrutivas, exclusão de dados ou limpeza de banco sem confirmação humana.
+- Não apague dados locais versionados ou relatórios históricos sem confirmação humana.
+- Não crie abstrações prematuras; siga os padrões existentes de controller, service, repository e ViewModel.
+- Não misture refatoração ampla com feature ou bugfix pontual.
+- Não use `catch` vazio e não engula exceções. Logue contexto seguro e retorne erro apropriado.
+- Não logue senha, shared key, token, certificado privado, biometria bruta ou dado pessoal desnecessário.
+- Não exponha secrets em código, docs, logs, commits, exemplos reais ou screenshots.
+- Sempre rode checks relevantes antes de finalizar. Se algum check não for executado, explique o motivo.
 
 ## Regras por frente
 
 ### Arquitetura
 
-- Mantenha controllers finos quando possivel; regras reutilizaveis devem ficar em `Services/`.
-- Repositorios em `Services/Database/` devem encapsular acesso EF/SQLite.
+- Mantenha controllers finos quando possível; regras reutilizáveis devem ficar em `Services/`.
+- Repositórios em `Services/Database/` devem encapsular acesso EF/SQLite.
 - Evite acoplamento novo entre controllers; compartilhe via services existentes.
 
-### APIs e integracoes
+### APIs e integrações
 
-- Trate a Access API Control iD como contrato externo. Nao renomeie endpoints, campos ou rotas `.fcgi` sem evidencia.
+- Trate a Access API Control iD como contrato externo. Não renomeie endpoints, campos ou rotas `.fcgi` sem evidência.
 - Preserve compatibilidade de callbacks oficiais e endpoints push (`/push`, `/result`, `Push/Receive`).
-- Normalize entradas de URL, query, body e arquivo usando utilitarios existentes quando disponiveis.
-- Quando usar `ControlIdCallbackSigningProxy`, mantenha allowlist de IP, limite de body e remocao/reassinatura de headers sensiveis antes do encaminhamento.
+- Normalize entradas de URL, query, body e arquivo usando utilitários existentes quando disponíveis.
+- Quando usar `ControlIdCallbackSigningProxy`, mantenha allowlist de IP, limite de body e remoção/reassinatura de headers sensíveis antes do encaminhamento.
 
 ### Banco de dados
 
-- O SQLite local e estado runtime. Arquivos `integracao_controlid.db*` nao devem ser versionados.
-- `Program.cs` aplica `Database.Migrate()` e cria tabelas auxiliares idempotentes; iniciar app altera estado local.
-- Mudancas de schema exigem documentacao e testes. Migracoes destrutivas exigem confirmacao humana.
-- Consulte `docs/data-model-and-recovery.md` antes de tocar tabelas, indices, migrations, backup, restore ou retencao.
-- Listagens locais devem aplicar limite padrao de `LocalDataQueryLimits.DefaultListLimit`; use metodos de expurgo/limpeza confirmados para operacoes destrutivas.
+- O SQLite local é o estado de execução. Arquivos `integracao_controlid.db*` não devem ser versionados.
+- `Program.cs` aplica `Database.Migrate()` quando `Database:ApplyMigrationsOnStartup=true` (por padrão em `Development`); iniciar a aplicação nessa condição altera o estado local.
+- Mudanças de schema exigem documentação e testes. Migrações destrutivas exigem confirmação humana.
+- Consulte `docs/data-model-and-recovery.md` antes de tocar tabelas, índices, migrations, backup, restore ou retenção.
+- Listagens locais devem aplicar limite padrão de `LocalDataQueryLimits.DefaultListLimit`; use métodos de expurgo/limpeza confirmados para operações destrutivas.
 
-### Seguranca
+### Segurança
 
-- Fora de `Development`, `AllowedHosts` nao pode ser `*`, `OpenApi:Enabled` deve ser `false`, `CallbackSecurity:RequireSharedKey` e `CallbackSecurity:RequireSignedRequests` devem ser `true`, `SharedKey` deve existir e `ControlIDApi:RequireAllowedDeviceHosts` deve listar hosts permitidos.
-- Preserve validacao de callbacks, push e `user_get_image.fcgi` via `CallbackSecurityEvaluator` e `CallbackSignatureValidator`.
-- Nao enfraqueca headers de seguranca, validacao antiforgery ou sanitizacao sem justificativa forte.
+- Fora de `Development`, `AllowedHosts` não pode ser `*`, `OpenApi:Enabled` deve ser `false`, `CallbackSecurity:RequireSharedKey` e `CallbackSecurity:RequireSignedRequests` devem ser `true`, `SharedKey` deve existir e `ControlIDApi:RequireAllowedDeviceHosts` deve listar hosts permitidos.
+- Preserve validação de callbacks, push e `user_get_image.fcgi` via `CallbackSecurityEvaluator` e `CallbackSignatureValidator`.
+- Não enfraqueça headers de segurança, validação antiforgery ou sanitização sem justificativa forte.
 
 ### LGPD e privacidade
 
-- Considere usuarios, fotos, biometria, cartoes, QR Codes, logs de acesso e callbacks como dados pessoais ou sensiveis.
-- Minimize persistencia e logging de payloads pessoais. Mascarar ou truncar quando possivel.
-- Nao adicione dados reais a testes, docs, smoke ou fixtures.
-- Siga `docs/privacy-and-data-retention.md` ao tocar `MonitorEvents`, `PushCommands`, logs, payloads brutos ou limpeza de historico local.
+- Considere usuários, fotos, biometria, cartões, QR Codes, logs de acesso e callbacks como dados pessoais ou sensíveis.
+- Minimize persistência e logging de payloads pessoais. Mascarar ou truncar quando possível.
+- Não adicione dados reais a testes, docs, smoke ou fixtures.
+- Siga `docs/privacy-and-data-retention.md` ao tocar `MonitorEvents`, `PushCommands`, logs, payloads brutos ou limpeza de histórico local.
 
-### Dependencias
+### Dependências
 
 - Use NuGet lockfiles. A CI usa restore em modo locked.
-- Atualizacao de pacote exige build, testes, format check e auditoria de supply chain.
-- Dependencias frontend vendorizadas em `wwwroot/lib` devem estar declaradas em `wwwroot/lib/vendor-dependencies.json` e validadas por `tools/audit-vendor-dependencies.ps1`.
-- Preferir patches compativeis com .NET 8 a upgrades amplos de major version.
+- Atualização de pacote exige build, testes, format check e auditoria de supply chain.
+- Dependências frontend vendorizadas em `wwwroot/lib` devem estar declaradas em `wwwroot/lib/vendor-dependencies.json` e validadas por `tools/audit-vendor-dependencies.ps1`.
+- Preferir patches compatíveis com .NET 8 a upgrades amplos de major version.
 
-### Performance
+### Desempenho
 
-- Preserve compressao de resposta e evite carregar catalogos/payloads grandes desnecessariamente.
-- Nao adicione chamadas HTTP em loop sem timeout, cancelamento ou limite claro.
+- Preserve compressão de resposta e evite carregar catálogos/payloads grandes desnecessariamente.
+- Não adicione chamadas HTTP em loop sem timeout, cancelamento ou limite claro.
 - Evite leitura integral de payloads grandes fora dos leitores com limite.
 
 ### UX e acessibilidade
 
-- Preserve padroes Razor existentes, navegacao do shell e mensagens de erro seguras.
-- Nao exponha stack trace, segredo, IP interno sensivel ou payload bruto em tela.
-- Ao alterar UI, valide texto, estados de erro, responsividade e acessibilidade basica.
+- Preserve padrões Razor existentes, navegação do shell e mensagens de erro seguras.
+- Não exponha stack trace, segredo, IP interno sensível ou payload bruto em tela.
+- Ao alterar UI, valide texto, estados de erro, responsividade e acessibilidade básica.
 
 ### Testes
 
-- Para regra nova, bugfix ou hardening, adicione/atualize testes unitarios relevantes.
-- Para fluxos HTTP amplos, rode smoke local quando aplicavel.
-- Nao marque teste como skip sem justificativa documentada.
+- Para regra nova, bugfix ou hardening, adicione/atualize testes unitários relevantes.
+- Para fluxos HTTP amplos, rode smoke local quando aplicável.
+- Não marque teste como skip sem justificativa documentada.
 
 ### Observabilidade
 
 - Use `ILogger`/Serilog com contexto operacional seguro.
-- Logs devem ajudar diagnostico de endpoint, status, duracao, command id e device id quando seguro.
+- Logs devem ajudar diagnóstico de endpoint, status, duração, command id e device id quando seguro.
 - Nunca logue credenciais, shared key ou biometria bruta.
 
 ### Infraestrutura
 
-- Dockerfile/Compose existem para execucao reproduzivel e validacao de container; mantenha usuario nao root, porta 8080, volumes `/app/data` e `/app/Logs`, e healthcheck em `/health/ready`.
-- Nao versione `ops.local.json`; ele pode conter nomes, canais privados, local de evidencias e detalhes operacionais.
-- Nao crie deploy automatico, DNS real ou provedor cloud sem pedido explicito.
-- Nao reduzir retencao, logs de seguranca ou redundancia operacional apenas por custo; documente trade-off em `docs/finops-capacity.md`.
-- Fora de `Development`, nao use `AllowedHosts=*`, shared key placeholder, OpenAPI habilitado, metrics anonimo ou forwarded headers sem proxy conhecido.
-- Mudancas em CI devem refletir comandos reais locais.
+- Dockerfile/Compose existem para execução reproduzível e validação de container; mantenha usuário não root, porta 8080, volumes `/app/data` e `/app/Logs`, e healthcheck em `/health/ready`.
+- Não versione `ops.local.json`; ele pode conter nomes, canais privados, local de evidências e detalhes operacionais.
+- Não crie deploy automático, DNS real ou provedor cloud sem pedido explícito.
+- Não reduzir retenção, logs de segurança ou redundancia operacional apenas por custo; documente trade-off em `docs/finops-capacity.md`.
+- Fora de `Development`, não use `AllowedHosts=*`, chave compartilhada de exemplo, OpenAPI habilitado, métricas anônimas ou cabeçalhos encaminhados sem proxy conhecido.
+- Mudanças em CI devem refletir comandos reais locais.
 - Artefatos `bin/`, `obj/`, `Logs/`, `artifacts/` e banco local devem permanecer fora do Git.
 
-### Documentacao
+### Documentação
 
-- Atualize README/docs quando mudar setup, comando, seguranca, banco, contrato externo, FinOps/capacidade ou fluxo operacional.
-- Atualize `docs/README.md` quando criar, remover ou renomear documento tecnico.
-- Registre decisao estrutural em `docs/adrs/` quando alterar padrao de arquitetura, persistencia, seguranca, observabilidade, release ou provedor.
-- Atualize `docs/changelog-YYYY-MM-DD.md` ou `docs/pr-summary-YYYY-MM-DD.md` em rodadas amplas de governanca/documentacao.
-- Atualize `docs/residual-risk-closure.md` quando uma lacuna externa virar gate, aprovacao, excecao ou risco aceito.
-- Atualize `docs/product-acceptance-criteria.md` quando um fluxo critico ganhar, perder ou mudar criterio verificavel.
-- Relatorios em `docs/reports/` podem ser gerados por smoke/auditoria; registre data e resultado.
-- Nao documente comandos que nao existem no repositorio.
+- Atualize README/docs quando mudar setup, comando, segurança, banco, contrato externo, FinOps/capacidade ou fluxo operacional.
+- Atualize `docs/README.md` quando criar, remover ou renomear documento técnico.
+- Registre decisão estrutural em `docs/adrs/` quando alterar padrão de arquitetura, persistência, segurança, observabilidade, release ou provedor.
+- Atualize `docs/changelog-YYYY-MM-DD.md` ou `docs/pr-summary-YYYY-MM-DD.md` em rodadas amplas de governança/documentação.
+- Atualize `docs/residual-risk-closure.md` quando uma lacuna externa virar gate, aprovação, exceção ou risco aceito.
+- Atualize `docs/product-acceptance-criteria.md` quando um fluxo crítico ganhar, perder ou mudar criterio verificável.
+- Relatórios em `docs/reports/` podem ser gerados por smoke/auditoria; registre data e resultado.
+- Não documente comandos que não existem no repositório.
 
 ### CI/CD e release
 
 - A CI deve permanecer capaz de rodar restore locked, build, teste, format check e auditoria.
-- Mudancas em `.github/workflows/ci.yml` devem manter `docs/ci-cd-quality-gates.md` e os testes de governanca de CI sincronizados.
-- Release local minima exige build limpo, testes passando, format check limpo, auditoria sem vulnerabilidades conhecidas e riscos residuais documentados.
-- Release operacional real exige `tools/test-readiness-gates.ps1 -ReleaseGate`, `ops.local.json` preenchido, backup externo validado, RTO/RPO aprovado, FinOps/capacidade sem warnings, DPO/juridico quando aplicavel, scanners externos e contingencia do equipamento testada.
-- Mudancas em `tools/ControlIdCallbackSigningProxy` exigem restore locked, build e format check do projeto do proxy.
-- Nao publique release sem smoke quando a mudanca tocar callbacks, push, catalogo oficial, autenticacao ou banco.
+- Mudanças em `.github/workflows/ci.yml` devem manter `docs/ci-cd-quality-gates.md` e os testes de governança de CI sincronizados.
+- Release local mínima exige build limpo, testes passando, format check limpo, auditoria sem vulnerabilidades conhecidas e riscos residuais documentados.
+- Release operacional real exige `tools/test-readiness-gates.ps1 -ReleaseGate`, `ops.local.json` preenchido, backup externo validado, RTO/RPO aprovado, FinOps/capacidade sem warnings, DPO/jurídico quando aplicável, scanners externos e contingência do equipamento testada.
+- Mudanças em `tools/ControlIdCallbackSigningProxy` exigem restore locked, build e format check do projeto do proxy.
+- Não publique release sem smoke quando a mudança tocar callbacks, push, catálogo oficial, autenticação ou banco.
 
-## Definition of Done tecnica
+## Definição Técnica de Pronto
 
 Antes de finalizar uma tarefa, confirme:
 
-- Codigo ou documentacao implementado conforme escopo.
-- Contratos publicos preservados ou alteracao versionada/documentada.
+- Código ou documentação implementado conforme escopo.
+- Contratos públicos preservados ou alteração versionada/documentada.
 - Testes relevantes criados ou atualizados.
 - Checks relevantes executados e resultado informado.
-- Documentacao atualizada quando o comportamento/setup mudou.
-- Riscos residuais e checks nao executados documentados.
+- Documentação atualizada quando o comportamento/setup mudou.
+- Riscos residuais e checks não executados documentados.
 - Arquivos alterados listados no resumo final.
 
-## Acoes proibidas sem confirmacao humana
+## Ações proibidas sem confirmação humana
 
 - Commit.
 - Push.
-- Deploy ou publicacao de release.
-- Migracao destrutiva.
-- Exclusao de dados, logs historicos ou relatorios versionados.
+- Deploy ou publicação de release.
+- Migração destrutiva.
+- Exclusão de dados, logs históricos ou relatórios versionados.
 - Troca de provedor de hospedagem, banco ou CI.
-- Alteracao de contrato publico de API, rota, callback ou payload.
-- Remocao de dependencia central.
-- Exposicao, copia ou persistencia de secrets reais.
-- Alteracao de configuracao de producao.
-- Limpeza destrutiva de workspace (`git reset --hard`, `git clean -fdx`, delecao recursiva).
+- Alteração de contrato público de API, rota, callback ou payload.
+- Remoção de dependência central.
+- Exposição, cópia ou persistência de secrets reais.
+- Alteração de configuração de produção.
+- Limpeza destrutiva de workspace (`git reset --hard`, `git clean -fdx`, deleção recursiva).
 
-## AGENTS.md por subdiretorio
+## AGENTS.md por subdiretório
 
-Nao crie AGENTS.md adicionais sem evidencia clara de regras divergentes. No estado atual, este arquivo raiz cobre o repositorio.
+Não crie AGENTS.md adicionais sem evidência clara de regras divergentes. No estado atual, este arquivo raiz cobre o repositório.
 
-Sugestoes futuras, caso a area cresca:
+Sugestoes futuras, caso a área cresca:
 
-- `tools/ControlIdDeviceStub/AGENTS.md`: regras especificas do stub e contratos simulados.
-- `docs/reports/AGENTS.md`: politica de relatorios gerados, datas e preservacao historica.
-- `tests/AGENTS.md`: convencoes de fixtures, nomes e cobertura minima.
+- `tools/ControlIdDeviceStub/AGENTS.md`: regras específicas do stub e contratos simulados.
+- `docs/reports/AGENTS.md`: política de relatórios gerados, datas e preservação histórica.
+- `tests/AGENTS.md`: convenções de fixtures, nomes e cobertura mínima.
 
 Crie esses arquivos apenas se houver necessidade concreta e documente o motivo no PR/resumo.

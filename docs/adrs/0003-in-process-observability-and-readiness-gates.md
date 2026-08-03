@@ -1,4 +1,4 @@
-# ADR 0003 - Observabilidade in-process e gates de readiness locais
+# ADR 0003 - Observabilidade no processo e gates locais de prontidão
 
 Status: Aceita
 
@@ -6,32 +6,32 @@ Data: 2026-05-01
 
 ## Contexto
 
-A PoC precisa ser diagnosticavel sem exigir fornecedor externo de APM, metrics ou
+A PoC precisa ser diagnosticável sem exigir fornecedor externo de APM, metrics ou
 logs. Ao mesmo tempo, releases precisam validar build, testes, secrets, readiness,
 observabilidade, FinOps e contratos.
 
-## Decisao
+## Decisão
 
-Publicar health checks e metricas in-process em `/health/live`, `/health/ready` e
-`/metrics`, com dashboards/alertas versionados e scripts PowerShell de validacao.
-O endpoint `/metrics` fica protegido por administrador por padrao.
+Publicar health checks e métricas in-process em `/health/live`, `/health/ready` e
+`/metrics`, com dashboards/alertas versionados e scripts PowerShell de validação.
+O endpoint `/metrics` fica protegido por administrador por padrão.
 
 ## Alternativas consideradas
 
-- APM externo obrigatorio: melhor em producao, mas criaria custo e configuracao
+- APM externo obrigatório: melhor em produção, mas criaria custo e configuração
   antes da escolha de provedor.
 - Apenas logs em arquivo: insuficiente para alertas e dashboards.
-- Apenas testes unitarios: insuficiente para readiness operacional.
+- Apenas testes unitários: insuficiente para readiness operacional.
 
-## Consequencias
+## Consequências
 
-- O repositorio consegue validar observabilidade sem fornecedor externo.
+- O repositório consegue validar observabilidade sem fornecedor externo.
 - Ferramentas externas podem consumir Prometheus text quando houver ambiente.
 - Labels precisam permanecer allowlist para evitar cardinalidade e dados
-  sensiveis.
-- CPU/saturacao ainda dependem de monitoramento do host/provedor.
+  sensíveis.
+- CPU/saturação ainda dependem de monitoramento do host/provedor.
 
-## Evidencias
+## Evidências
 
 - `Services/Observability/OperationalMetrics.cs`
 - `Services/Observability/PrometheusMetricsWriter.cs`

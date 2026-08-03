@@ -6,7 +6,7 @@ Data da auditoria: 2026-04-13
 
 - Índice atual da documentação da API de acesso: https://www.controlid.com.br/docs/access-api-en/
 - Import/Export data (`export_objects.fcgi`): https://www.controlid.com.br/docs/access-api-en/system/synchronization/
-- Camera image capture (`save_screenshot.fcgi`): https://www.controlid.com.br/docs/access-api-en/facial-recognition/camera-capture/
+- Captura de imagem da câmera (`save_screenshot.fcgi`): https://www.controlid.com.br/docs/access-api-en/facial-recognition/camera-capture/
 - Facial photo enrollment (`user_get_image_list.fcgi`, `user_set_image_list.fcgi`, `user_test_image.fcgi`): https://www.controlid.com.br/docs/access-api-en/facial-recognition/facial-enroll/
 - Network Interlocking (`set_network_interlock.fcgi`): https://www.controlid.com.br/docs/access-api-en/configurations/network-interlocking/
 - Security Hardening (`set_configuration.fcgi` com `ssh_enabled`): https://www.controlid.com.br/docs/access-api-en/system/security-hardening/
@@ -18,7 +18,7 @@ Data da auditoria: 2026-04-13
 - Upgrade iDFlex/iDAccess Nano (`idflex_upgrade_enterprise.fcgi`): https://www.controlid.com.br/docs/access-api-en/particularities-of-the-products/update-idflex-idaccess-nano/
 - Streaming iDFace (`onvif.*` via `set_configuration.fcgi`): https://www.controlid.com.br/docs/access-api-en/particularities-of-the-products/streaming-idface/
 - SIP intercom iDFace (`set_pjsip_audio_message.fcgi`, `get_pjsip_audio_message.fcgi`, `has_pjsip_audio_message.fcgi`, `make_sip_call.fcgi`, `finalize_sip_call.fcgi`, `get_sip_status.fcgi`): https://www.controlid.com.br/docs/access-api-en/particularities-of-the-products/sip-intercom-idface/
-- iDFace access sound messages (`set_audio_access_message.fcgi`, `get_audio_access_message.fcgi`, `has_audio_access_messages.fcgi`): https://www.controlid.com.br/docs/access-api-en/particularities-of-the-products/access-audio-messages-idface/
+- Mensagens sonoras de acesso do iDFace (`set_audio_access_message.fcgi`, `get_audio_access_message.fcgi`, `has_audio_access_messages.fcgi`): https://www.controlid.com.br/docs/access-api-en/particularities-of-the-products/access-audio-messages-idface/
 - Custom signals iDFace Max (`general.sec_box_out_mode`, `general.relay_out_mode`, `general.gpio_ext*`): https://www.controlid.com.br/docs/access-api-en/particularities-of-the-products/custom-signals-idface-max/
 - Power iDFace Max (`general.energy_*`, `general.screenshot_resize`): https://www.controlid.com.br/docs/access-api-en/configurations/configuration-parameters/
 

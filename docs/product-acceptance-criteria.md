@@ -24,7 +24,7 @@ Critérios:
 Critérios:
 
 - AC-F02-01: Dado que um endpoint oficial existe no catálogo, quando o usuário abre a tela técnica, então a PoC deve exibir método, rota, query/body esperados e exemplos quando disponíveis.
-- AC-F02-02: Dado que o endpoint selecionado é servido pela própria PoC, como callback, monitor ou push, quando o usuário tenta invocá-lo pela tela técnica, então a PoC deve informar que ele é um endpoint de entrada local e não deve chamar o equipamento.
+- AC-F02-02: Dado que o endpoint selecionado é servido pela própria PoC, como callback, monitor ou push, quando o usuário tenta invoca-lo pela tela técnica, então a PoC deve informar que ele é um endpoint de entrada local e não deve chamar o equipamento.
 - AC-F02-03: Dado que a chamada oficial exige sessão, quando não há sessão Control iD ativa, então a PoC deve bloquear a invocação com mensagem segura.
 - AC-F02-04: Dado que o corpo JSON informado é inválido, quando o usuário tenta invocar endpoint com body, então a PoC deve rejeitar a entrada antes de chamar o equipamento.
 - AC-F02-05: Dado que a resposta oficial é binária ou não textual, quando a chamada retorna, então a PoC deve preservar o conteúdo em Base64/download e não tentar renderizar como texto inseguro.
@@ -64,7 +64,7 @@ Critérios:
 
 Critérios:
 
-- AC-F06-01: Dado callback com IP permitido, tamanho permitido e shared key válida quando exigida, quando o endpoint recebe a requisição, então a PoC deve persistir evento com `EventType`, `DeviceId`, `UserId`, payload bruto e status `received`.
+- AC-F06-01: Dado callback com IP permitido, tamanho permitido, chave compartilhada válida e assinatura HMAC válida quando exigidas, quando o endpoint recebe a requisição, então a PoC deve persistir evento com `EventType`, `DeviceId`, `UserId`, `Payload` e status `received`, sem duplicar o corpo em `RawJson`.
 - AC-F06-02: Dado shared key obrigatória ausente ou inválida, quando o callback chega, então a PoC deve rejeitar a requisição e não persistir evento.
 - AC-F06-03: Dado payload acima de `CallbackSecurity:MaxBodyBytes`, quando o callback chega, então a PoC deve responder rejeição por tamanho e não persistir evento.
 - AC-F06-04: Dado corpo binário ou imagem, quando o callback é aceito, então a PoC deve salvar o conteúdo em Base64.
@@ -79,28 +79,28 @@ Critérios:
 - AC-F07-02: Dado payload JSON inválido, quando o usuário tenta enfileirar comando, então a PoC deve rejeitar antes de persistir.
 - AC-F07-03: Dado comando `pending` elegível para o dispositivo, quando o equipamento chama `GET /push`, então a PoC deve retornar o payload como JSON e marcar o comando como `delivered`.
 - AC-F07-04: Dado ausência de comando elegível, quando o equipamento chama `GET /push`, então a PoC deve retornar `{}`.
-- AC-F07-05: Dado `POST /result` com `command_id` existente, quando o resultado chega, então a PoC deve atualizar payload, raw JSON, status e `UpdatedAt`.
+- AC-F07-05: Dado `POST /result` com `command_id` existente, quando o resultado chega, então a PoC deve atualizar `Payload`, `Status` e `UpdatedAt`, mantendo `RawJson` vazio quando não houver envelope distinto.
 - AC-F07-06: Dado `POST /result` sem `command_id`, quando o resultado chega, então a PoC deve criar registro do tipo `result` com status `completed` se nenhum status for informado.
 - AC-F07-07: Dado evento legado em `POST /Push/Receive` com JSON inválido, quando o corpo é recebido, então a PoC deve persistir o corpo bruto como `legacy_push_event` com status `received`.
 - AC-F07-08: Dado limpeza da fila Push, quando a confirmação textual não corresponde a `LIMPAR PUSH`, então a PoC deve bloquear a exclusão.
 - AC-F07-09: Dado `POST /result` ou `POST /Push/Receive` com `Idempotency-Key` ou `idempotency_key`, quando a mesma chave é reenviada, então a PoC deve atualizar o mesmo registro em vez de criar duplicata.
 
-### F08 - Privacidade, segurança de ingress e runtime
+### F08 - Privacidade, segurança de entrada e execução
 
 Critérios:
 
 - AC-F08-01: Dado ambiente diferente de `Development`, quando a aplicação inicia sem `AllowedHosts` explícito, então o startup deve falhar para evitar exposição ampla.
-- AC-F08-02: Dado ambiente diferente de `Development`, quando `CallbackSecurity:RequireSharedKey` não está habilitado ou `SharedKey` está ausente, então o startup deve falhar ou bloquear a execução conforme a validação de configuração.
-- AC-F08-03: Dado payload com dado pessoal ou sensível, quando for persistido em Monitor ou Push, então a PoC deve tratá-lo como dado local sensível e não deve versionar exemplos reais.
+- AC-F08-02: Dado ambiente diferente de `Development`, quando a chave compartilhada ou a assinatura HMAC obrigatória não está configurada corretamente, então a inicialização deve falhar.
+- AC-F08-03: Dado payload com dado pessoal ou sensível, quando for persistido em Monitor ou Push, então a PoC deve trata-lo como dado local sensível e não deve versionar exemplos reais.
 - AC-F08-04: Dado log ou mensagem ao usuário, quando ocorre falha técnica, então a PoC deve preferir mensagem segura/sanitizada e registrar detalhe técnico apenas no log.
 - AC-F08-05: Dado rajada de callbacks ou push acima do limite configurado, quando a origem excede `CallbackSecurity:RateLimit`, então a PoC deve responder `429` sem persistir novo payload.
 - AC-F08-06: Dado um segredo acidental com padrão reconhecido, quando a CI executa, então o secret scan deve falhar antes da auditoria de release.
 
-### F09 - Banco local e evolução de schema
+### F09 - Banco local e evolução do esquema
 
 Critérios:
 
-- AC-F09-01: Dado banco SQLite local inexistente, quando a aplicação inicia, então as migrations devem criar o schema local necessário.
+- AC-F09-01: Dado banco SQLite local inexistente, quando a aplicação inicia com `Database:ApplyMigrationsOnStartup=true` ou executa o modo exclusivo de migração, então as migrações devem criar o esquema local necessário.
 - AC-F09-02: Dado banco SQLite local já existente da PoC, quando a migration inicial roda, então a criação idempotente deve preservar tabelas existentes.
 - AC-F09-03: Dado alteração futura de schema, quando implementada, então deve haver migration versionada ou script SQL revisável.
 - AC-F09-04: Dado tabelas `MonitorEvents` e `PushCommands`, quando armazenam payloads reais, então devem seguir a política de privacidade e retenção documentada.
@@ -119,9 +119,9 @@ Critérios:
 - Dados inválidos: ausência de dispositivo, resposta sem `session`, sessão expirada.
 - Estados esperados: sem dispositivo, autenticado, sessão válida, sessão expirada, sessão limpa.
 - Erros esperados: falha de login, resposta inesperada, falha de validação de sessão.
-- Permissões esperadas: usuário com acesso à UI da PoC; não há RBAC documentado.
-- Testes existentes: não há teste automatizado direto para `AuthController`/`SessionController`.
-- Testes ausentes: controller tests para login sem dispositivo, resposta sem sessão, logout cross-origin e validação de sessão.
+- Permissões esperadas: usuário local autenticado; ações de sessão do equipamento exigem o papel `Administrator`.
+- Testes existentes: `AuthControllerTests.cs` e `SessionControllerTests.cs`.
+- Testes ausentes: homologação com equipamento real para expiração e encerramento da sessão oficial.
 
 ### REQ-002 - Catálogo e invocação da API oficial
 
@@ -135,7 +135,7 @@ Critérios:
 - Dados inválidos: endpoint inexistente, JSON inválido, ausência de sessão.
 - Estados esperados: endpoint selecionado, chamada pronta, resposta textual, resposta binária, erro sanitizado.
 - Erros esperados: endpoint inválido, timeout, falha HTTP, payload inválido.
-- Permissões esperadas: usuário com acesso à UI técnica da PoC; sem RBAC documentado.
+- Permissões esperadas: usuário local autenticado; a invocação oficial exige o papel `Administrator`.
 - Testes existentes: `OfficialApiContractDocumentationServiceTests.cs`, `OfficialApiBinaryFileResultFactoryTests.cs`.
 - Testes ausentes: integração/controller para bloqueio de endpoints servidos pela PoC, JSON inválido e ausência de sessão.
 
@@ -151,9 +151,9 @@ Critérios:
 - Dados inválidos: JSON inválido, objeto não selecionado, confirmação ausente/incorreta.
 - Estados esperados: objeto selecionado, erro local, resposta oficial exibida.
 - Erros esperados: JSON inválido, sem conexão, falha oficial.
-- Permissões esperadas: usuário com acesso à UI técnica; sem RBAC documentado.
-- Testes existentes: `HighImpactOperationGuardTests.cs`.
-- Testes ausentes: controller tests para JSON inválido, confirmação de destroy e não chamada ao equipamento.
+- Permissões esperadas: usuário local autenticado; operações de escrita exigem o papel `Administrator`.
+- Testes existentes: `HighImpactOperationGuardTests.cs` e `OfficialObjectsControllerTests.cs`.
+- Testes ausentes: homologação de escrita e destruição com equipamento real em bancada controlada.
 
 ### REQ-004 - Operações administrativas de alto impacto
 
@@ -167,9 +167,9 @@ Critérios:
 - Dados inválidos: frase vazia, frase incorreta, sem conexão.
 - Estados esperados: bloqueado por confirmação, executado, erro oficial, histórico local preservado ou limpo.
 - Erros esperados: confirmação requerida, sem conexão, falha oficial.
-- Permissões esperadas: usuário com acesso à UI; sem RBAC documentado.
-- Testes existentes: `HighImpactOperationGuardTests.cs`, `OfficialEventsControllerTests.cs`, `PushCenterControllerTests.cs`.
-- Testes ausentes: controller tests para todas as ações de `SystemController`.
+- Permissões esperadas: usuário local com o papel `Administrator`.
+- Testes existentes: `HighImpactOperationGuardTests.cs`, `SystemControllerTests.cs`, `OfficialEventsControllerTests.cs` e `PushCenterControllerTests.cs`.
+- Testes ausentes: homologação das operações remotas em equipamento real, sem executa-las fora de bancada controlada.
 
 ### REQ-005 - Modos Standalone, Pro e Enterprise
 
@@ -183,7 +183,7 @@ Critérios:
 - Dados inválidos: combinação desconhecida, ausência de conexão, licença inválida, falha ao criar servidor online.
 - Estados esperados: Standalone, Pro, Enterprise, desconhecido/indisponível, aplicado com resposta oficial.
 - Erros esperados: falha de leitura, falha de sessão, falha ao aplicar modo, licença não aceita.
-- Permissões esperadas: usuário com acesso operacional à UI; sem RBAC documentado.
+- Permissões esperadas: usuário local com o papel `Administrator`.
 - Testes existentes: `OperationModesPayloadFactoryTests.cs`, `OperationModesProfileResolverTests.cs`.
 - Testes ausentes: controller/integration tests com stub para transições, server_id e resposta oficial; E2E com equipamento real.
 
@@ -193,13 +193,13 @@ Critérios:
 - Fonte/evidência: `docs/monitor-implementation.md`, `Controllers/OfficialCallbacksController.cs`, `Services/Callbacks/*`, `Services/Database/MonitorEventRepository.cs`.
 - Prioridade: Crítica.
 - Fluxo associado: F06.
-- Regra de negócio associada: callbacks devem passar por validação de tamanho, IP e shared key quando configurado.
+- Regra de negócio associada: callbacks devem passar por validação de tamanho, IP, chave compartilhada e assinatura HMAC quando configuradas.
 - Critérios de aceite: AC-F06-01 a AC-F06-06.
 - Dados válidos: body textual/binário dentro do limite, IP permitido, shared key correta quando exigida.
-- Dados inválidos: shared key ausente/incorreta, IP bloqueado, payload acima do limite.
+- Dados inválidos: chave compartilhada ausente ou incorreta, assinatura inválida ou repetida, IP bloqueado e payload acima do limite.
 - Estados esperados: `received`, rejeitado, persistido, limpo localmente.
 - Erros esperados: `401/403` conforme política de segurança, `413` por tamanho, erro de persistência.
-- Permissões esperadas: origem HTTP autorizada por IP/shared key; usuário UI para consulta/limpeza.
+- Permissões esperadas: origem HTTP autorizada por IP, chave compartilhada e assinatura; usuário `Administrator` para consulta e limpeza.
 - Testes existentes: `CallbackSecurityEvaluatorTests.cs`, `CallbackRequestBodyReaderTests.cs`, `CallbackIngressServiceTests.cs`, `OfficialEventsControllerTests.cs`.
 - Testes ausentes: teste E2E com equipamento real e URL pública; testes de UI para listagem/detalhe.
 
@@ -215,27 +215,27 @@ Critérios:
 - Dados inválidos: JSON inválido na fila UI, shared key inválida quando exigida, payload acima do limite.
 - Estados esperados: `pending`, `delivered`, `completed`, `received`, status livre recebido em `/result`.
 - Erros esperados: rejeição por segurança, erro de persistência, fila vazia retorna `{}`.
-- Permissões esperadas: usuário UI para enfileirar/limpar; origem HTTP autorizada para `/push`, `/result` e `/Push/Receive`.
+- Permissões esperadas: usuário `Administrator` para enfileirar ou limpar; origem HTTP autorizada para `/push`, `/result` e `/Push/Receive`.
 - Testes existentes: `PushCenterControllerTests.cs`, `PushControllerTests.cs`, `PushCommandRepositoryTests.cs`, `PushIdempotencyKeyResolverTests.cs`.
-- Testes ausentes: concorrência em múltiplos polls simultâneos, E2E com equipamento real e smoke cobrindo autenticação de shared key em ambiente exposto.
+- Testes ausentes: E2E com equipamento real e smoke em ambiente exposto controlado; a concorrência entre consultas simultâneas já é coberta por reivindicação atômica no SQLite e teste dedicado.
 
-### REQ-008 - Privacidade, segurança e runtime fora de desenvolvimento
+### REQ-008 - Privacidade, segurança e execução fora de desenvolvimento
 
 - Descrição: impedir exposição acidental de callbacks/push e tratar payloads locais como dados sensíveis.
 - Fonte/evidência: `README.md`, `docs/privacy-and-data-retention.md`, `Program.cs`, `Options/CallbackSecurityOptions.cs`.
 - Prioridade: Crítica.
 - Fluxo associado: F08.
-- Regra de negócio associada: fora de `Development`, `AllowedHosts`, `RequireSharedKey` e `SharedKey` devem estar configurados.
+- Regra de negócio associada: fora de `Development`, `AllowedHosts`, chave compartilhada, assinatura HMAC, OpenAPI desabilitado e lista de hosts permitidos do equipamento devem estar configurados com padrões seguros.
 - Critérios de aceite: AC-F08-01 a AC-F08-04.
-- Dados válidos: `AllowedHosts` explícito, `RequireSharedKey=true`, segredo fora do repositório, IPs permitidos quando aplicável.
+- Dados válidos: `AllowedHosts` explícito, chave compartilhada e assinatura obrigatórias, segredo fora do repositório, hosts e IPs permitidos quando aplicável, e OpenAPI desabilitado.
 - Dados inválidos: wildcard em ambiente exposto, segredo ausente, payload real versionado.
 - Estados esperados: startup permitido, startup bloqueado, callback aceito/rejeitado.
 - Erros esperados: falha de configuração no startup, rejeição de ingress.
 - Permissões esperadas: gestão de configuração por operador técnico; segredo nunca versionado.
-- Testes existentes: `CallbackSecurityEvaluatorTests.cs`; auditoria NuGet, secret scan na CI e docs.
-- Testes ausentes: teste automatizado de startup para ambientes não Development e teste de middleware para rate limit.
+- Testes existentes: testes de avaliação e assinatura de callbacks, contratos de segurança de inicialização e rate limit, auditoria NuGet e varredura de segredos na CI.
+- Testes ausentes: validação de DAST e homologação da configuração em um ambiente de staging controlado.
 
-### REQ-009 - Banco local e schema
+### REQ-009 - Banco local e esquema
 
 - Descrição: manter schema local versionado e compatível com bancos SQLite da PoC.
 - Fonte/evidência: `docs/database-and-runtime-state.md`, `Data/Migrations/*`, `Program.cs`.
@@ -265,7 +265,7 @@ Critérios:
 | REQ-008 | F08 | `Program.cs`, `CallbackSecurityOptions`, docs de privacidade | Security evaluator + secret scan | AC-F08-01..06 | Exposição pública sem shared key ou vazamento de dados | Startup tests, rate limit middleware test e revisão LGPD |
 | REQ-009 | F09 | `Data/Migrations/*`, `IntegracaoControlIDContext`, `Program.cs` | SQLite em memória e script validado | AC-F09-01..04 | Banco local incompatível ou schema não rastreado | Migration idempotente e teste de banco legado |
 
-## Definition of Ready
+## Definição de Preparado
 
 Uma mudança só está pronta para implementação quando:
 
@@ -279,7 +279,7 @@ Uma mudança só está pronta para implementação quando:
 - comportamento ambíguo está marcado como lacuna, não como requisito fechado;
 - testes existentes e testes ausentes estão listados.
 
-## Definition of Done
+## Definição de Pronto
 
 Uma mudança só está concluída quando:
 
@@ -299,13 +299,13 @@ Uma mudança só está concluída quando:
 
 | Lacuna | Impacto | Prioridade | Recomendação |
 | --- | --- | --- | --- |
-| Autenticação/sessão sem testes de controller | Regressões podem quebrar login/validação sem alerta unitário | Alta | Criar testes para `AuthController` e `SessionController` |
-| `SystemController` sem testes por operação crítica | Confirmações podem regredir em ações remotas perigosas | Alta | Testar reboot, rede, factory reset, recovery e delete admins com mock do serviço oficial |
+| Autenticação e sessão sem homologação física | A suíte cobre os controllers, mas não comprova o comportamento de expiração no firmware real | Alta | Homologar login, expiração e logout em equipamento de bancada |
+| Operações críticas sem homologação física | `SystemControllerTests` protege confirmações e chamadas simuladas, mas não valida efeitos no equipamento | Alta | Homologar reinicialização, rede, restauração de fábrica, recuperação e remoção de administradores em bancada controlada |
 | Operation Modes sem teste de controller com stub | Payloads têm teste, mas orquestração pode regredir | Alta | Criar integração com stub para Standalone, Pro e Enterprise |
-| Push sem teste de concorrência | Dois polls simultâneos podem disputar o mesmo comando | Média | Testar transação/locking ou implementar controle explícito antes de produção |
+| Concorrência Push dependente do SQLite | A reivindicação atômica e os testes concorrentes cobrem a PoC local, mas não outro mecanismo de persistência | Baixa | Reavaliar o contrato se o banco ou a topologia de implantação mudar |
 | Status de `/result` é livre | Relatórios podem ficar inconsistentes | Média | Definir enum/normalização se o produto exigir relatórios formais |
-| RBAC/permissões de UI não documentadas | Usuário com acesso à PoC pode acionar telas críticas | Alta | Definir papéis ou declarar escopo restrito de laboratório |
-| Retenção de dados não automatizada | Payload sensível pode ficar no SQLite indefinidamente | Alta | Implementar rotina de purge/backup quando houver requisito operacional |
+| RBAC sem homologação de identidade corporativa | Os papéis `Administrator` e `Operator` protegem a PoC local, mas não integram um provedor corporativo | Média | Definir federação de identidade somente se a PoC evoluir para uso produtivo |
+| Retenção depende de acionamento operacional | O expurgo confirmado por período existe, mas não há agendamento automático | Alta | Definir responsável, periodicidade e evidência no ambiente operacional |
 | Smoke/E2E dependente de equipamento real | Aceite final de integração depende de ambiente físico | Crítica | Bloquear release com `tools/test-readiness-gates.ps1 -RequireHardwareContract` e registrar modelo, firmware, licença, rede e URL pública |
 | Secret scan automatizado com heurística local | Falsos negativos ainda são possíveis sem ferramenta externa dedicada | Média | Bloquear release ampliado com `-RequireExternalScanners`; revisar achados manualmente antes de produção |
 | Observabilidade online | `/metrics` exige app rodando e credencial local de administrador | Alta | Bloquear release operacional com `-RunObservabilityOnline -RequireObservabilityMetrics` |
@@ -350,9 +350,9 @@ Manual guiada:
 
 ## Recomendações para próximas implementações/testes
 
-1. Criar testes de controller para `AuthController`, `SessionController`, `OfficialObjectsController`, `SystemController` e `OperationModesController`.
+1. Criar testes de controller para `OperationModesController` e ampliar os testes de integração dos fluxos oficiais restantes.
 2. Validar a heurística do secret scan com amostras controladas antes de qualquer uso com credenciais reais.
-3. Definir política operacional para RBAC ou declarar formalmente que a PoC é de uso restrito em laboratório.
-4. Criar rotina opcional de retenção/purge para `MonitorEvents` e `PushCommands`.
-5. Expandir smoke local para shared key obrigatória, callbacks oficiais e ciclo Push completo com stub.
+3. Homologar os papéis locais e decidir se um provedor corporativo de identidade será necessário fora do laboratório.
+4. Agendar operacionalmente o expurgo já disponível para `MonitorEvents` e `PushCommands`, com responsável e evidência.
+5. Manter o smoke local com chave compartilhada, assinatura, callbacks oficiais e ciclo Push completo com stub.
 6. Criar runbook de homologação física com equipamento real, incluindo versão de firmware, modo, rede e evidências esperadas.

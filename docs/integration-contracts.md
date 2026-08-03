@@ -1,130 +1,130 @@
-# Inventario de integracoes e contratos
+# Inventário de integrações e contratos
 
-Este documento registra os contratos de integracao da PoC sem criar endpoints novos ou alterar contratos publicos. Quando um schema vem de payload livre da Control iD ou da UI tecnica, ele e marcado como inferido.
+Este documento registra os contratos de integração da PoC sem criar endpoints novos ou alterar contratos públicos. Quando um esquema provém de um payload livre da Control iD ou da interface técnica, ele é marcado como inferido.
 
-## Sumario executivo
+## Sumário executivo
 
-| Integracao | Tipo | Direcao | Ambiente | Status |
+| Integração | Tipo | Direção | Ambiente | Status |
 | --- | --- | --- | --- | --- |
-| Access API Control iD | API externa HTTP | PoC -> equipamento | Local/laboratorio/equipamento real | Implementada |
-| Catalogo oficial da PoC | API interna/UI tecnica | Browser -> PoC | Local/laboratorio | Implementada |
-| Callbacks oficiais | Webhook HTTP | equipamento -> PoC | URL acessivel ao equipamento | Implementada |
-| Monitor | Webhook HTTP | equipamento -> PoC | URL acessivel ao equipamento | Implementada |
-| Push oficial | Fila/polling HTTP | equipamento <-> PoC | URL acessivel ao equipamento | Implementada |
-| Push legado | Webhook HTTP legado | equipamento/simulador -> PoC | Local/laboratorio | Implementada |
+| Access API Control iD | API externa HTTP | PoC -> equipamento | Local/laboratório/equipamento real | Implementada |
+| Catálogo oficial da PoC | API interna/UI técnica | Browser -> PoC | Local/laboratório | Implementada |
+| Callbacks oficiais | Webhook HTTP | equipamento -> PoC | URL acessível ao equipamento | Implementada |
+| Monitor | Webhook HTTP | equipamento -> PoC | URL acessível ao equipamento | Implementada |
+| Push oficial | Fila/polling HTTP | equipamento <-> PoC | URL acessível ao equipamento | Implementada |
+| Push legado | Webhook HTTP legado | equipamento/simulador -> PoC | Local/laboratório | Implementada |
 | SQLite local | Banco de dados | PoC -> arquivo local | Workspace/local | Implementada |
-| Sessao ASP.NET + sessao Control iD | Autenticacao/estado | Browser/PoC/equipamento | Local/laboratorio | Implementada |
-| Serilog | Observabilidade | PoC -> console/arquivo | Local/laboratorio | Implementada |
+| Sessão ASP.NET + sessão Control iD | Autenticação/estado | Browser/PoC/equipamento | Local/laboratório | Implementada |
+| Serilog | Observabilidade | PoC -> console/arquivo | Local/laboratório | Implementada |
 | Smoke/stub local | Teste/terceiro simulado | PoC <-> stub | Local | Implementada |
-| Swagger/OpenAPI | Documentacao automatica | Browser/cliente -> PoC | Development/configurado | Implementada |
-| Cache | Cache de aplicacao | N/A | N/A | Nao aplicavel |
-| Mensageria externa | Queue/broker | N/A | N/A | Nao aplicavel |
-| Pagamentos | Terceiro | N/A | N/A | Nao aplicavel |
-| E-mail/SMS/analytics | Terceiro | N/A | N/A | Nao aplicavel |
+| Swagger/OpenAPI | Documentação automática | Browser/cliente -> PoC | Development/configurado | Implementada |
+| Cache | Cache de aplicação | N/A | N/A | Não aplicável |
+| Mensageria externa | Queue/broker | N/A | N/A | Não aplicável |
+| Pagamentos | Terceiro | N/A | N/A | Não aplicável |
+| E-mail/SMS/analytics | Terceiro | N/A | N/A | Não aplicável |
 
-## Configuracao e variaveis
+## Configuração e variáveis
 
-Nao ha loader `.env` configurado. Use `appsettings.json`, User Secrets ou variaveis de ambiente ASP.NET Core no formato `Secao__Chave`.
+Não há loader `.env` configurado. Use `appsettings.json`, User Secrets ou variáveis de ambiente ASP.NET Core no formato `Secao__Chave`.
 
-| Chave | Finalidade | Sensivel | Observacao |
+| Chave | Finalidade | Sensível | Observação |
 | --- | --- | --- | --- |
-| `ConnectionStrings__DefaultConnection` | Caminho SQLite local | Nao, salvo caminho sensivel | Default: `integracao_controlid.db` |
-| `ControlIDApi__DefaultDeviceUrl` | URL padrao do equipamento | Sim em rede privada | Nao versionar valores reais |
-| `ControlIDApi__DefaultUsername` | Usuario sugerido | Sim | Nao versionar |
-| `ControlIDApi__DefaultPassword` | Senha sugerida | Sim | Nao versionar |
-| `ControlIDApi__ConnectionTimeoutSeconds` | Timeout outbound para Access API | Nao | Normalizado entre 5 e 300 segundos |
-| `ControlIDApi__MaxResponseBodyBytes` | Limite de resposta outbound | Nao | Default 16 MiB; normalizado entre 64 KiB e 64 MiB |
-| `ControlIDApi__CircuitBreaker__Enabled` | Protecao contra falhas transitorias repetidas | Nao | Default: true |
-| `ControlIDApi__CircuitBreaker__FailureThreshold` | Falhas consecutivas para abrir circuito | Nao | Default: 5 |
-| `ControlIDApi__CircuitBreaker__BreakDurationSeconds` | Duracao do circuito aberto | Nao | Default: 30 |
-| `OpenApi__Enabled` | Habilita Swagger fora de Development | Nao | Default: false; Development habilita automaticamente |
-| `CallbackSecurity__MaxBodyBytes` | Limite de body em callbacks/push | Nao | Default: 1048576 |
-| `CallbackSecurity__RequireSharedKey` | Exige shared key nos ingressos | Nao | Obrigatorio fora de Development |
-| `CallbackSecurity__SharedKeyHeaderName` | Header da chave compartilhada | Nao | Default: `X-ControlID-Callback-Key` |
-| `CallbackSecurity__SharedKey` | Segredo do ingresso | Sim | Obrigatorio fora de Development |
-| `CallbackSecurity__AllowedRemoteIps__N` | IPs autorizados | Pode ser sensivel | Opcional; vazio aceita qualquer IP |
-| `CallbackSecurity__AllowLoopback` | Permite loopback com lista de IP | Nao | Facilita stub/smoke local |
-| `CallbackSecurity__RateLimit__PermitLimit` | Limite por janela para ingressos callback/push | Nao | Default: 120 |
-| `CallbackSecurity__RateLimit__WindowSeconds` | Janela do rate limit de ingressos | Nao | Default: 60 |
-| `Session__IdleTimeout` | Timeout de sessao ASP.NET | Nao | Default: 30 minutos |
-| `Session__CookieName` | Nome do cookie de sessao | Nao | Default: `.IntegracaoControlID.Session` |
-| `AllowedHosts` | Hosts aceitos pelo ASP.NET Core | Nao | Nao pode ser `*` fora de Development |
+| `ConnectionStrings__DefaultConnection` | Caminho SQLite local | Não, salvo caminho sensível | Default: `integracao_controlid.db` |
+| `ControlIDApi__DefaultDeviceUrl` | URL padrão do equipamento | Sim em rede privada | Não versionar valores reais |
+| `ControlIDApi__DefaultUsername` | Usuário sugerido | Sim | Não versionar |
+| `ControlIDApi__DefaultPassword` | Senha sugerida | Sim | Não versionar |
+| `ControlIDApi__ConnectionTimeoutSeconds` | Timeout outbound para Access API | Não | Normalizado entre 5 e 300 segundos |
+| `ControlIDApi__MaxResponseBodyBytes` | Limite de resposta outbound | Não | Default 16 MiB; normalizado entre 64 KiB e 64 MiB |
+| `ControlIDApi__CircuitBreaker__Enabled` | Proteção contra falhas transitórias repetidas | Não | Default: true |
+| `ControlIDApi__CircuitBreaker__FailureThreshold` | Falhas consecutivas para abrir circuito | Não | Default: 5 |
+| `ControlIDApi__CircuitBreaker__BreakDurationSeconds` | Duração do circuito aberto | Não | Default: 30 |
+| `OpenApi__Enabled` | Habilita Swagger fora de Development | Não | Padrão: `false`; Development habilita automaticamente |
+| `CallbackSecurity__MaxBodyBytes` | Limite de body em callbacks/push | Não | Default: 1048576 |
+| `CallbackSecurity__RequireSharedKey` | Exige shared key nos ingressos | Não | Obrigatório fora de Development |
+| `CallbackSecurity__SharedKeyHeaderName` | Header da chave compartilhada | Não | Default: `X-ControlID-Callback-Key` |
+| `CallbackSecurity__SharedKey` | Segredo do ingresso | Sim | Obrigatório fora de Development |
+| `CallbackSecurity__AllowedRemoteIps__N` | IPs autorizados | Pode ser sensível | Opcional; vazio aceita qualquer IP |
+| `CallbackSecurity__AllowLoopback` | Permite loopback com lista de IP | Não | Facilita stub/smoke local |
+| `CallbackSecurity__RateLimit__PermitLimit` | Limite por janela para ingressos callback/push | Não | Default: 120 |
+| `CallbackSecurity__RateLimit__WindowSeconds` | Janela do rate limit de ingressos | Não | Default: 60 |
+| `Session__IdleTimeout` | Timeout de sessão ASP.NET | Não | Default: 30 minutos |
+| `Session__CookieName` | Nome do cookie de sessão | Não | Default: `.IntegracaoControlID.Session` |
+| `AllowedHosts` | Hosts aceitos pelo ASP.NET Core | Não | Não pode ser `*` fora de Development |
 
 ## Contratos mapeados
 
 ### INT-001 - Access API Control iD
 
 - Tipo: API externa HTTP.
-- Finalidade: conectar, autenticar, consultar e alterar estado/configuracao/objetos do equipamento.
+- Finalidade: conectar, autenticar, consultar e alterar estado/configuração/objetos do equipamento.
 - Ponto de chamada: `OfficialApiInvokerService` via `OfficialControlIdApiService`.
 - Endpoints: catalogados em `OfficialApiCatalogService` como paths `.fcgi`, por exemplo `/login.fcgi`, `/load_objects.fcgi`, `/set_configuration.fcgi`, `/reboot.fcgi`.
-- Metodo: definido por endpoint (`GET` ou `POST`).
+- Método: definido por endpoint (`GET` ou `POST`).
 - Headers: `Content-Type` conforme `OfficialApiEndpointDefinition.ContentType`; session vai na query real `session=...` quando requerida, mas URLs exibidas em tela/logs devem mascarar esse valor.
-- Autenticacao: login oficial retorna `session`; endpoints com `RequiresSession=true` exigem sessao ativa.
-- Request: JSON, multipart, binario/base64 ou vazio, conforme `BodyKind`.
-- Response: texto/JSON ou binario preservado em Base64 quando Content-Type nao parece texto/json/xml; leitura em streaming e rejeicao `502` acima do limite configurado.
-- DTO/schema: `OfficialApiEndpointDefinition`, `OfficialApiInvocationResult`; schemas de payload sao inferidos do catalogo e docs oficiais.
+- Autenticação: login oficial retorna `session`; endpoints com `RequiresSession=true` exigem sessão ativa.
+- Request: JSON, multipart, binário/base64 ou vazio, conforme `BodyKind`.
+- Response: texto/JSON ou binário preservado em Base64 quando Content-Type não parece texto/json/xml; leitura em streaming e rejeição `502` acima do limite configurado.
+- DTO/schema: `OfficialApiEndpointDefinition`, `OfficialApiInvocationResult`; schemas de payload são inferidos do catálogo e docs oficiais.
 - Status codes: propagados do equipamento em `OfficialApiInvocationResult.StatusCode`.
-- Erros esperados: endpoint ausente no catalogo, device address invalido, sessao ausente, timeout, HTTP nao 2xx, JSON inesperado.
+- Erros esperados: endpoint ausente no catálogo, device address inválido, sessão ausente, timeout, HTTP não 2xx, JSON inesperado.
 - Timeout: `ControlIDApi:ConnectionTimeoutSeconds`, normalizado entre 5 e 300 segundos.
-- Retry/backoff: nao existe; seguro porque muitas operacoes oficiais nao sao idempotentes.
-- Idempotencia: depende do endpoint externo; `load/get` tendem a ser seguros, `create/modify/destroy/reboot/reset` nao devem ser repetidos automaticamente.
-- Rate limit: nao implementado.
-- Circuit breaker/fallback: `OfficialApiCircuitBreaker` abre circuito por endpoint/equipamento apos falhas transitorias repetidas (`408`, `429`, `5xx`, timeout ou falha inesperada).
-- Logs: endpoint id, metodo, path, target sem query/session, status e duracao.
-- Dados sensiveis: credenciais, session, fotos, biometria, cartoes, QR, payloads de usuarios.
+- Retry/backoff: não existe; seguro porque muitas operações oficiais não são idempotentes.
+- Idempotência: depende do endpoint externo; `load/get` tendem a ser seguros, `create/modify/destroy/reboot/reset` não devem ser repetidos automaticamente.
+- Rate limit: não implementado.
+- Circuit breaker/fallback: `OfficialApiCircuitBreaker` abre circuito por endpoint/equipamento após falhas transitórias repetidas (`408`, `429`, `5xx`, timeout ou falha inesperada).
+- Logs: endpoint id, método, path, target sem query/session, status e duração.
+- Dados sensíveis: credenciais, session, fotos, biometria, cartões, QR, payloads de usuários.
 
-### INT-002 - Catalogo oficial da PoC
+### INT-002 - Catálogo oficial da PoC
 
-- Tipo: API interna/UI tecnica MVC.
-- Finalidade: expor catalogo de endpoints oficiais, exemplos e invocacao assistida.
+- Tipo: API interna/UI técnica MVC.
+- Finalidade: expor catálogo de endpoints oficiais, exemplos e invocação assistida.
 - Ponto de chamada: `OfficialApiController`, `OfficialApiCatalogService`, `OfficialApiContractDocumentationService`.
-- Metodo: MVC `GET` para catalogo/detalhe e `POST` para invocacao.
-- Headers: cookie de sessao ASP.NET e antiforgery em formularios.
-- Autenticacao/autorizacao: sessao da PoC e RBAC por papel; invocacao assistida exige perfil autorizado conforme controller.
+- Método: MVC `GET` para catálogo/detalhe e `POST` para invocação.
+- Headers: cookie de sessão ASP.NET e antiforgery em formulários.
+- Autenticação/autorização: sessão da PoC e RBAC por papel; invocação assistida exige perfil autorizado conforme controller.
 - Request: ViewModels de `ViewModels/OfficialApi/*`.
 - Response: views Razor com resposta oficial formatada.
-- Status codes: MVC padrao; erros aparecem em tela.
-- Erros esperados: endpoint invocavel falso, JSON invalido, sessao ausente, falha oficial.
-- Timeout/retry: delegados ao INT-001; sem retry automatico.
-- Idempotencia: nao garantida para endpoints oficiais.
+- Status codes: MVC padrão; erros aparecem em tela.
+- Erros esperados: endpoint não invocável, JSON inválido, sessão ausente e falha oficial.
+- Timeout/retry: delegados ao INT-001; sem retry automático.
+- Idempotência: não garantida para endpoints oficiais.
 - Logs: via invoker e controllers relacionados.
-- Dados sensiveis: payloads e respostas oficiais podem conter dados pessoais; nao usar exemplos reais.
+- Dados sensíveis: payloads e respostas oficiais podem conter dados pessoais; não usar exemplos reais.
 
 ### INT-003 - Callbacks oficiais
 
 - Tipo: Webhook HTTP.
-- Finalidade: receber eventos oficiais de identificacao online e cadastros remotos.
+- Finalidade: receber eventos oficiais de identificação online e cadastros remotos.
 - Ponto de chamada: `OfficialCallbacksController`.
 - Endpoints: `/new_biometric_image.fcgi`, `/new_biometric_template.fcgi`, `/new_card.fcgi`, `/new_qrcode.fcgi`, `/new_uhf_tag.fcgi`, `/new_user_id_and_password.fcgi`, `/new_user_identified.fcgi`, `/new_rex_log.fcgi`, `/device_is_alive.fcgi`, `/card_create.fcgi`, `/fingerprint_create.fcgi`, `/template_create.fcgi`, `/face_create.fcgi`, `/pin_create.fcgi`, `/password_create.fcgi`.
-- Metodo: `POST`.
+- Método: `POST`.
 - Headers: `X-ControlID-Callback-Key` quando `RequireSharedKey=true`.
-- Autenticacao/autorizacao: `CallbackSecurityEvaluator` por shared key, IP permitido e limite de body.
+- Autenticação/autorização: `CallbackSecurityEvaluator` por shared key, IP permitido e limite de body.
 - Request: body textual, JSON, form, imagem ou octet-stream; schema oficial/inferido por endpoint.
-- Response: eventos de identificacao retornam `{ "result": { "event": 14 } }`; eventos reconhecidos retornam `200 OK` sem payload.
-- DTO/schema: persistencia em `MonitorEventLocal`; leitura por `CallbackRequestBodyReader`.
+- Response: eventos de identificação retornam `{ "result": { "event": 14 } }`; eventos reconhecidos retornam `200 OK` sem payload.
+- DTO/schema: persistência em `MonitorEventLocal`; leitura por `CallbackRequestBodyReader`.
 - Status codes: `200`, `401`, `403`, `409`, `413`, `500`, `503`.
-- Erros esperados: shared key ausente/invalida, IP bloqueado, replay de nonce, capacidade anti-replay atingida, payload acima do limite, falha SQLite.
-- Timeout: nao ha timeout proprio; leitura aceita cancellation token do ASP.NET Core.
-- Retry/backoff: nao implementado na PoC; retry deve ser decidido pelo equipamento/origem.
-- Idempotencia: nao ha chave idempotente; cada callback aceito gera novo `EventId`.
+- Erros esperados: shared key ausente/inválida, IP bloqueado, replay de nonce, capacidade anti-replay atingida, payload acima do limite, falha SQLite.
+- Timeout: não há timeout próprio; leitura aceita cancellation token do ASP.NET Core.
+- Retry/backoff: não implementado na PoC; retry deve ser decidido pelo equipamento/origem.
+- Idempotência: não há chave idempotente; cada callback aceito gera novo `EventId`.
 - Rate limit: policy `CallbackIngress`, particionada por IP remoto.
-- Circuit breaker/fallback: nao implementado.
-- Logs: aceite/rejeicao com path, event id, familia e device id quando seguro.
-- Dados sensiveis: imagens, templates, identificadores de usuario, eventos de acesso.
+- Circuit breaker/fallback: não implementado.
+- Logs: aceite/rejeição com path, event id, família e device id quando seguro.
+- Dados sensíveis: imagens, templates, identificadores de usuário, eventos de acesso.
 
 ### INT-004 - Monitor
 
 - Tipo: Webhook HTTP.
-- Finalidade: receber notificacoes de topicos Monitor.
+- Finalidade: receber notificações de tópicos Monitor.
 - Ponto de chamada: `OfficialCallbacksController.ReceiveMonitorNotification`.
 - Endpoint: `POST /api/notifications/{topic}`.
-- Headers/autenticacao: iguais aos callbacks oficiais.
-- Request: JSON ou payload bruto de monitor; schema inferido por topico.
+- Headers/autenticação: iguais aos callbacks oficiais.
+- Request: JSON ou payload bruto de monitor; schema inferido por tópico.
 - Response: `200 OK` sem payload em sucesso.
 - DTO/schema: `MonitorEventLocal`, `WebhookEventViewModel`.
-- Status codes/erros/timeout/retry/idempotencia/logs/dados: iguais ao INT-003.
-- Topicos documentados: `user_image`, `template`, `card`, `operation_mode`, `pin`, `password`, `catra_event`, `usb_drive`.
+- Status codes/erros/timeout/retry/idempotência/logs/dados: iguais ao INT-003.
+- Tópicos documentados: `user_image`, `template`, `card`, `operation_mode`, `pin`, `password`, `catra_event`, `usb_drive`.
 
 ### INT-005 - Push oficial
 
@@ -135,7 +135,7 @@ Nao ha loader `.env` configurado. Use `appsettings.json`, User Secrets ou variav
   - `GET /push?device_id=<id>` ou `GET /push?deviceid=<id>`.
   - `POST /result?command_id=<guid>&status=<status>&device_id=<id>&user_id=<id>`.
 - Headers: `X-ControlID-Callback-Key` quando `RequireSharedKey=true`; `Content-Type: application/json` recomendado no resultado.
-- Autenticacao/autorizacao: `CallbackSecurityEvaluator`.
+- Autenticação/autorização: `CallbackSecurityEvaluator`.
 - Request:
   - `/push`: query opcional de dispositivo.
   - `/result`: body bruto do resultado; query opcional `command_id`, `status`, `device_id`, `user_id`.
@@ -143,96 +143,96 @@ Nao ha loader `.env` configurado. Use `appsettings.json`, User Secrets ou variav
   - `/push` com comando: payload JSON enfileirado.
   - `/push` sem comando: `{}`.
   - `/result`: `200 OK` sem payload.
-- DTO/schema: `PushCommandLocal`, `PushQueueCommandViewModel`, `PushEventViewModel`; payload do comando e resultado e inferido/livre.
+- DTO/esquema: `PushCommandLocal`, `PushQueueCommandViewModel`, `PushEventViewModel`; os payloads do comando e do resultado são inferidos e livres.
 - Status codes: `200`, `401`, `403`, `413`, `500`.
-- Erros esperados: shared key ausente/invalida, IP bloqueado, payload acima do limite, falha de persistencia.
+- Erros esperados: shared key ausente/inválida, IP bloqueado, payload acima do limite, falha de persistência.
 - Timeout: leitura de body limitada por request/cancellation token; limite por `CallbackSecurity:MaxBodyBytes`.
-- Retry/backoff: nao implementado; retry de `/result` pode criar ou atualizar registro conforme `command_id`.
-- Idempotencia:
-  - `/push` nao e idempotente: muda `pending` para `delivered`.
-  - `/result` com `command_id` e idempotente por sobrescrita do mesmo registro.
+- Retry/backoff: não implementado; retry de `/result` pode criar ou atualizar registro conforme `command_id`.
+- Idempotência:
+  - `/push` não é idempotente: altera `pending` para `delivered`.
+- `/result` com `command_id` é idempotente pela sobrescrita do mesmo registro.
   - `/result` sem `command_id` aceita `Idempotency-Key` ou `idempotency_key` e atualiza o mesmo registro derivado da chave.
   - `/result` sem `command_id` e sem chave idempotente cria registro novo.
 - Rate limit: policy `CallbackIngress`, particionada por IP remoto.
-- Circuit breaker: nao aplicavel a polling ingress.
-- Logs: command id, device id, status e bytes; payload bruto nao deve ser logado.
-- Dados sensiveis: payloads podem conter dados pessoais/operacionais.
+- Circuit breaker: não aplicável a polling ingress.
+- Logs: command id, device id, status e bytes; payload bruto não deve ser logado.
+- Dados sensíveis: payloads podem conter dados pessoais/operacionais.
 
 ### INT-006 - Push legado
 
 - Tipo: webhook HTTP legado.
 - Finalidade: manter compatibilidade com `POST /Push/Receive`.
 - Endpoint: `POST /Push/Receive`.
-- Headers/autenticacao: iguais ao Push oficial.
+- Headers/autenticação: iguais ao Push oficial.
 - Request: body bruto; se JSON, campos inferidos `command_type`, `type`, `event`, `status`, `device_id`, `deviceid`, `user_id`, `userid`, `payload`, `data`.
 - Response: `{ "status": "received", "eventId": "<guid>" }`.
 - DTO/schema: `PushCommandLocal`.
 - Status codes: `200`, `401`, `403`, `413`, `500`.
-- Timeout/retry/backoff/idempotencia: sem retry; aceita `Idempotency-Key` ou `idempotency_key` para atualizar o mesmo evento legado, mas cada aceite sem chave cria registro.
-- Logs: body truncado em ate 500 caracteres no legado; nao use payload real sensivel em ambiente exposto.
-- Dados sensiveis: payload bruto.
+- Timeout/retry/backoff/idempotência: sem retry; aceita `Idempotency-Key` ou `idempotency_key` para atualizar o mesmo evento legado, mas cada aceite sem chave cria registro.
+- Logs: registram apenas metadados operacionais, como tamanho do corpo e identificador do evento; não registram o payload bruto.
+- Dados sensíveis: payload bruto.
 
 ### INT-007 - SQLite local
 
 - Tipo: banco de dados local.
-- Finalidade: persistir estado da PoC, eventos, push, usuarios locais e artefatos.
-- Ponto de chamada: `IntegracaoControlIDContext`, repositories em `Services/Database`.
-- Schema: EF Core migrations em `Data/Migrations`; compatibilidade idempotente em `Program.cs`.
-- Autenticacao: arquivo local; sem usuario/senha.
+- Finalidade: persistir estado da PoC, eventos, push, usuários locais e artefatos.
+- Ponto de chamada: `IntegracaoControlIDContext`, com repositórios em `Services/Database`.
+- Esquema: migrações do EF Core em `Data/Migrations`; a aplicação ocorre quando `Database:ApplyMigrationsOnStartup=true` ou no modo exclusivo de migração.
+- Autenticação: arquivo local; sem usuário/senha.
 - Timeout/retry/backoff: defaults do SQLite/EF Core; sem retry customizado.
-- Idempotencia: depende do repository; inserts geram novos ids, updates por chave.
+- Idempotência: depende do repository; inserts geram novos ids, updates por chave.
 - Logs: repositories registram falhas.
-- Dados sensiveis: usuarios, fotos, biometria, cartoes, QR, callbacks e push.
-- Ambiente: local/workspace; arquivos `integracao_controlid.db*` nao devem ser versionados.
+- Dados sensíveis: usuários, fotos, biometria, cartões, QR, callbacks e push.
+- Ambiente: local/workspace; arquivos `integracao_controlid.db*` não devem ser versionados.
 
-### INT-008 - Sessao ASP.NET e sessao Control iD
+### INT-008 - Sessão ASP.NET e sessão Control iD
 
-- Tipo: autenticacao/estado.
+- Tipo: autenticação/estado.
 - Finalidade: guardar device address e session string oficial para chamadas autenticadas.
 - Chaves: `ControlID_DeviceAddress`, `ControlID_SessionString`.
 - Cookie: `Session:CookieName`, HttpOnly, SameSite Strict, Secure Always fora de Development.
 - Request/response: MVC com antiforgery nos POSTs.
 - Timeout: `Session:IdleTimeout`.
-- Retry/backoff: nao aplicavel.
-- Idempotencia: logout/clear sao tolerantes a ausencia de sessao.
-- Dados sensiveis: session string oficial; nao logar.
-- Controle: auth local global com RBAC por papel; session string oficial deve aparecer apenas mascarada em URLs de diagnostico.
+- Retry/backoff: não aplicável.
+- Idempotência: logout/clear são tolerantes a ausência de sessão.
+- Dados sensíveis: session string oficial; não logar.
+- Controle: auth local global com RBAC por papel; session string oficial deve aparecer apenas mascarada em URLs de diagnóstico.
 
 ### INT-009 - Observabilidade Serilog
 
-- Tipo: logs, correlation ID, health checks e metricas in-process.
+- Tipo: logs, correlation ID, health checks e métricas in-process.
 - Destino: console e `Logs/app_log.txt`.
-- Payload: mensagens estruturadas com endpoint, device id pseudonimizado, command id, status, duracao, correlation id e excecoes.
-- Correlacao: `X-Correlation-ID` inbound/outbound, retornado em toda resposta HTTP.
+- Payload: mensagens estruturadas com endpoint, device id pseudonimizado, command id, status, duração, correlation id e exceções.
+- Correlação: `X-Correlation-ID` inbound/outbound, retornado em toda resposta HTTP.
 - Health: `GET /health/live` e `GET /health/ready`.
-- Metricas: meter `Integracao.ControlID.PoC.Operations` via `System.Diagnostics.Metrics` e `GET /metrics` em formato Prometheus text.
-- Autorizacao: `/metrics` exige `AdministratorOnly` por padrao; `AllowAnonymous` e bloqueado fora de `Development`.
+- Métricas: meter `Integracao.ControlID.PoC.Operations` via `System.Diagnostics.Metrics` e `GET /metrics` em formato Prometheus text.
+- Autorização: `/metrics` exige `AdministratorOnly` por padrão; `AllowAnonymous` é bloqueado fora de `Development`.
 - Artefatos: alertas em `docs/observability/alert-rules.json`, dashboards em `docs/observability/dashboard.json`, monitor local em `tools/observability-check.ps1`.
-- Dados sensiveis: nao logar credenciais, shared key, biometria bruta ou payload integral.
-- Retencao: configurada por `Logging__File__RetainedFileCountLimit`/Serilog.
+- Dados sensíveis: não logar credenciais, shared key, biometria bruta ou payload integral.
+- Retenção: configurada por `Logging__File__RetainedFileCountLimit`/Serilog.
 
 ### INT-010 - OpenAPI/Swagger local
 
-- Tipo: documentacao automatica HTTP.
-- Finalidade: expor especificacao e UI tecnica dos contratos HTTP locais da PoC.
+- Tipo: documentação automática HTTP.
+- Finalidade: expor especificação e UI técnica dos contratos HTTP locais da PoC.
 - Endpoint: `/swagger/v1/swagger.json` e `/swagger`.
 - Ambiente: habilitado automaticamente em `Development`; fora de Development exige `OpenApi:Enabled=true`.
-- Autenticacao/autorizacao: nao adiciona autenticacao propria; nao habilite fora de rede controlada sem protecao externa.
+- Autenticação/autorização: não adiciona autenticação própria; não habilite fora de rede controlada sem proteção externa.
 - DTO/schema: gerado pelo Swashbuckle a partir dos controllers MVC e metadados ASP.NET Core.
-- Dados sensiveis: exemplos reais nao devem ser colocados em atributos, docs ou responses.
+- Dados sensíveis: exemplos reais não devem ser colocados em atributos, docs ou responses.
 
 ### INT-011 - Check opt-in de contrato com equipamento real
 
-- Tipo: script de validacao externa.
+- Tipo: script de validação externa.
 - Ponto de chamada: `tools/contract-controlid-device.ps1`.
 - Finalidade: validar `login.fcgi`, `session_is_valid.fcgi` e `system_information.fcgi` contra equipamento real sem versionar credenciais.
-- Ambiente: local/laboratorio; exige `CONTROLID_DEVICE_URL`, `CONTROLID_USERNAME` e `CONTROLID_PASSWORD`.
-- Persistencia: gera relatorio em `artifacts/reports/controlid-device-contract-latest.md` por padrao, fora do Git, omitindo host real, credenciais e session.
-- Restricao: nao roda na CI porque depende de equipamento fisico e credenciais reais.
+- Ambiente: local/laboratório; exige `CONTROLID_DEVICE_URL`, `CONTROLID_USERNAME` e `CONTROLID_PASSWORD`.
+- Persistência: gera relatório em `artifacts/reports/controlid-device-contract-latest.md` por padrão, fora do Git, omitindo host real, credenciais e session.
+- Restrição: não roda na CI porque depende de equipamento físico e credenciais reais.
 
 ## Exemplos de payloads
 
-### Access API - login valido
+### Access API - login válido
 
 Request:
 
@@ -254,11 +254,11 @@ Response de sucesso inferido:
 }
 ```
 
-Erro esperado: credencial invalida ou resposta sem `session`; a PoC nao cria sessao local.
+Erro esperado: credencial inválida ou resposta sem `session`; a PoC não cria sessão local.
 
 ### Callback com shared key ausente
 
-Request invalido:
+Request inválido:
 
 ```http
 POST /device_is_alive.fcgi HTTP/1.1
@@ -274,9 +274,9 @@ Response quando `RequireSharedKey=true`:
 Callback shared key is missing.
 ```
 
-### Monitor valido
+### Monitor válido
 
-Request valido:
+Request válido:
 
 ```http
 POST /api/notifications/operation_mode?device_id=123 HTTP/1.1
@@ -295,9 +295,9 @@ Response:
 200 OK
 ```
 
-Persistencia esperada: `EventType = "monitor:operation_mode:/api/notifications/operation_mode"`, `Status = "received"`.
+Persistência esperada: `EventType = "monitor:operation_mode:/api/notifications/operation_mode"`, `Status = "received"`.
 
-### Push - comando disponivel
+### Push - comando disponível
 
 Request:
 
@@ -325,7 +325,7 @@ Content-Type: application/json
 {}
 ```
 
-### Push - resultado valido
+### Push - resultado válido
 
 Request:
 
@@ -355,7 +355,7 @@ Quando o body ultrapassa `CallbackSecurity:MaxBodyBytes`, mesmo sem `Content-Len
 
 ### Falha de rede/timeout outbound
 
-Quando o equipamento nao responde dentro de `ControlIDApi:ConnectionTimeoutSeconds`, a PoC retorna mensagem funcional segura:
+Quando o equipamento não responde dentro de `ControlIDApi:ConnectionTimeoutSeconds`, a PoC retorna mensagem funcional segura:
 
 ```text
 Tempo limite excedido ao comunicar com o equipamento.
@@ -363,28 +363,28 @@ Tempo limite excedido ao comunicar com o equipamento.
 
 ### Resposta inesperada
 
-Quando um fluxo espera JSON estruturado e o equipamento retorna corpo nao parseavel, a PoC mantem o resultado bruto e registra warning; o fluxo consumidor deve tratar `JsonDocument` nulo.
+Quando um fluxo espera JSON estruturado e o equipamento retorna corpo não parseável, a PoC mantém o resultado bruto e registra warning; o fluxo consumidor deve tratar `JsonDocument` nulo.
 
-## Riscos mitigados nesta revisao
+## Riscos mitigados nesta revisão
 
-| Risco | Mitigacao |
+| Risco | Mitigação |
 | --- | --- |
-| Contratos de integracao espalhados | Documento unico de inventario e exemplos |
-| Payload Push sem `Content-Length` podendo exceder limite antes da persistencia | `CallbackRequestBodyReader` agora limita leitura de `/result` e `/Push/Receive` |
-| DTO/status Push implicitos | `PushCommandWorkflowService` e `PushCommandStatuses` centralizam estados e workflow |
+| Contratos de integração espalhados | Documento único de inventário e exemplos |
+| Payload Push sem `Content-Length` podendo exceder limite antes da persistência | `CallbackRequestBodyReader` agora limita leitura de `/result` e `/Push/Receive` |
+| DTO/status Push implícitos | `PushCommandWorkflowService` e `PushCommandStatuses` centralizam estados e workflow |
 | OpenAPI presumido | Swagger/OpenAPI habilitado em Development ou via `OpenApi:Enabled=true` |
-| Sem circuit breaker outbound | `OfficialApiCircuitBreaker` protege endpoint/equipamento apos falhas transitorias repetidas |
-| Sem idempotency key para Push sem `command_id` e legado | `Idempotency-Key`/`idempotency_key` geram chave deterministica e atualizam o mesmo registro |
+| Sem circuit breaker outbound | `OfficialApiCircuitBreaker` protege endpoint/equipamento após falhas transitórias repetidas |
+| Sem idempotency key para Push sem `command_id` e legado | `Idempotency-Key`/`idempotency_key` geram chave determinística e atualizam o mesmo registro |
 | Sem secret scanner dedicado | `tools/scan-secrets.ps1` roda localmente e na CI |
 | Sem check contra equipamento real | `tools/contract-controlid-device.ps1` valida contrato real de forma opt-in, sem credenciais versionadas |
 | Sem rate limit para ingressos | Policy `CallbackIngress` limita callbacks e push por IP remoto |
-| Ingressos sem autenticidade criptografica | `CallbackSignatureValidator` exige HMAC/timestamp/nonce quando configurado e `ControlIdCallbackSigningProxy` assina equipamentos sem HMAC nativo |
-| UI sem autorizacao por perfil | Cookie auth global e RBAC por papel protegem operacoes administrativas e dados sensiveis |
+| Ingressos sem autenticidade criptográfica | `CallbackSignatureValidator` exige HMAC/timestamp/nonce quando configurado e `ControlIdCallbackSigningProxy` assina equipamentos sem HMAC nativo |
+| UI sem autorização por perfil | Cookie auth global e RBAC por papel protegem operações administrativas e dados sensíveis |
 
 ## Riscos controlados e limites externos
 
 | Item | Prioridade | Controle |
 | --- | --- | --- |
-| `/push` altera estado por natureza do contrato de polling | Alta | Mantido sem retry automatico para evitar replay de operacoes fisicas; resultados usam idempotency key quando o equipamento envia ou quando a PoC deriva chave segura |
-| Operacoes oficiais outbound podem nao ser idempotentes | Media | Sem retry automatico generico; timeout e circuit breaker reduzem repeticao perigosa e falhas em cascata |
-| Contratos oficiais dependem de firmware/modelo/licenca | Alta | Check opt-in real existe em `tools/contract-controlid-device.ps1`; validacao final exige equipamento fisico e credenciais fora do Git |
+| `/push` altera estado por natureza do contrato de polling | Alta | Mantido sem retry automático para evitar replay de operações físicas; resultados usam idempotency key quando o equipamento envia ou quando a PoC deriva chave segura |
+| Operações oficiais de saída podem não ser idempotentes | Média | Sem nova tentativa automática genérica; tempo limite e circuit breaker reduzem repetição perigosa e falhas em cascata |
+| Contratos oficiais dependem de firmware/modelo/licença | Alta | Check opt-in real existe em `tools/contract-controlid-device.ps1`; validação final exige equipamento físico e credenciais fora do Git |

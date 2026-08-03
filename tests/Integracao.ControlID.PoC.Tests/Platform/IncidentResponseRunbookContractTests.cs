@@ -12,14 +12,14 @@ public class IncidentResponseRunbookContractTests
         Assert.Contains("SEV1", runbook, StringComparison.Ordinal);
         Assert.Contains("SEV2", runbook, StringComparison.Ordinal);
         Assert.Contains("IR-01 API fora do ar", runbook, StringComparison.Ordinal);
-        Assert.Contains("IR-02 Banco SQLite indisponivel", runbook, StringComparison.Ordinal);
-        Assert.Contains("IR-07 Integracao Control iD indisponivel", runbook, StringComparison.Ordinal);
+        Assert.Contains("IR-02 Banco SQLite indisponível", runbook, StringComparison.Ordinal);
+        Assert.Contains("IR-07 Integração Control iD indisponível", runbook, StringComparison.Ordinal);
         Assert.Contains("IR-08 Webhook/callback falhando", runbook, StringComparison.Ordinal);
-        Assert.Contains("IR-10 Deploy ruim", runbook, StringComparison.Ordinal);
+        Assert.Contains("IR-10 Implantação malsucedida", runbook, StringComparison.Ordinal);
         Assert.Contains("IR-13 Vazamento de dados", runbook, StringComparison.Ordinal);
-        Assert.Contains("IR-14 Secret comprometido", runbook, StringComparison.Ordinal);
+        Assert.Contains("IR-14 Segredo comprometido", runbook, StringComparison.Ordinal);
         Assert.Contains("RTO/RPO", runbook, StringComparison.Ordinal);
-        Assert.Contains("Template de postmortem", runbook, StringComparison.Ordinal);
+        Assert.Contains("Modelo de análise pós-incidente", runbook, StringComparison.Ordinal);
         Assert.Contains("ops.local.json", runbook, StringComparison.Ordinal);
         Assert.Contains("docs/equipment-contingency-runbook.md", runbook, StringComparison.Ordinal);
         Assert.Contains("docs/incident-response-and-dr.md", readme, StringComparison.Ordinal);
@@ -47,8 +47,8 @@ public class IncidentResponseRunbookContractTests
         Assert.Contains("MirrorDirectory", backupScript, StringComparison.Ordinal);
         Assert.Contains("RunRestoreSmoke", backupScript, StringComparison.Ordinal);
         Assert.Contains("RetentionConfirmation", backupScript, StringComparison.Ordinal);
-        Assert.Contains("Manual fallback", equipmentRunbook, StringComparison.Ordinal);
-        Assert.Contains("Contingency validation", equipmentRunbook, StringComparison.Ordinal);
+        Assert.Contains("Contingência manual", equipmentRunbook, StringComparison.Ordinal);
+        Assert.Contains("Validação da contingência", equipmentRunbook, StringComparison.Ordinal);
     }
 
     private static string ReadRepoFile(params string[] segments)

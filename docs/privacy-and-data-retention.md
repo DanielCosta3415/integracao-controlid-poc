@@ -1,151 +1,151 @@
-# Privacidade, LGPD e retencao local
+# Privacidade, LGPD e retenção local
 
-Revisao tecnica de privacidade da PoC. Este documento nao e parecer juridico e nao declara conformidade total com a LGPD. Bases legais, papeis dos agentes de tratamento, contratos com terceiros e RIPD precisam de validacao formal do DPO/juridico antes de uso real.
+Esta é uma revisão técnica de privacidade da PoC. O documento não constitui parecer jurídico nem declara conformidade total com a LGPD. Bases legais, papéis dos agentes de tratamento, contratos com terceiros e RIPD precisam de validação formal do DPO ou do departamento jurídico antes do uso real.
 
 ## Escopo funcional
 
-Esta PoC ASP.NET Core MVC integra com equipamentos Control iD para autenticacao, catalogo de endpoints oficiais, cadastros, callbacks, monitoramento, fila Push e persistencia local em SQLite. A aplicacao pode tratar dados pessoais comuns, dados tecnicos identificaveis, credenciais e dados sensiveis como foto, biometria, cartoes, QR codes e logs de acesso.
+Esta PoC ASP.NET Core MVC integra com equipamentos Control iD para autenticação, catálogo de endpoints oficiais, cadastros, callbacks, monitoramento, fila Push e persistência local em SQLite. A aplicação pode tratar dados pessoais comuns, dados técnicos identificáveis, credenciais e dados sensíveis como foto, biometria, cartões, QR codes e logs de acesso.
 
-## Inventario e classificacao de dados
+## Inventário e classificação de dados
 
-| Dado | Origem | Classificacao | Necessidade na PoC | Observacoes |
+| Dado | Origem | Classificação | Necessidade na PoC | Observações |
 | --- | --- | --- | --- | --- |
-| Nome, matricula/registration, status de usuario | UI/API Control iD | Pessoal comum | Necessario para cadastro e consulta operacional | Pode identificar titular. |
+| Nome, matricula/registration, status de usuário | UI/API Control iD | Pessoal comum | Necessário para cadastro e consulta operacional | Pode identificar titular. |
 | E-mail e telefone | UI/API Control iD | Pessoal comum | Condicional | Deve ser coletado apenas quando o fluxo exigir. |
-| Senha de usuario local, hash e salt | UI local/SQLite | Credencial/confidencial | Necessario para login local | Senha em claro nao deve ser persistida nem logada. |
-| Sessao oficial Control iD | API Control iD/sessao ASP.NET | Credencial/confidencial | Necessario para chamadas oficiais autenticadas | Exibida apenas mascarada; nao logar. |
-| Shared key/HMAC/certificados/VPN | Configuracao local | Secret/confidencial | Necessario para seguranca de callbacks/ambiente | Usar User Secrets, env vars ou cofre. |
-| IP remoto, IP do equipamento, host, serial, device_id | HTTP/equipamento/API | Tecnico identificavel | Necessario para seguranca, diagnostico e roteamento | Logs devem usar referencias pseudonimizadas. |
-| Fotos, imagens faciais e logos com pessoas | Upload/API/SQLite | Sensivel quando identifica pessoa | Condicional a fluxos de midia | Evitar dados reais em PoC. |
-| Templates biometricos, fingerprint, face template | API/SQLite/payloads | Sensivel | Condicional a fluxos biometricos | Alto risco; requer base legal e RIPD. |
-| Cartoes, tags, QR codes, PINs | UI/API/SQLite | Pessoal/credencial de acesso | Condicional a controle de acesso | Tratar como credenciais de acesso fisico. |
-| Logs de acesso, monitoramento, callbacks e Push | Equipamento/API local | Pessoal, tecnico e possivelmente sensivel | Necessario para QA/diagnostico | Payload bruto pode conter dados pessoais. |
-| Cookies de autenticacao, antiforgery e sessao | ASP.NET Core | Tecnico identificavel/seguranca | Necessario para UI segura | Sem evidencia de cookies de analytics. |
-| Eventos agregados de produto | Middleware HTTP interno | Agregado nao pessoal | Medir uso de fluxos e qualidade sem tracking individual | Labels em allowlist; sem usuario, IP, query, body, payload ou device real. |
-| Dados financeiros, saude, geolocalizacao, scores | Nao encontrado | N/A | Nao aplicavel | Nao introduzir sem requisito e avaliacao. |
-| Criancas/adolescentes | Nao ha campo explicito de idade | Necessita validacao | Ambiguo | A base de usuarios do equipamento pode incluir menores; DPO deve validar contexto. |
-| Decisao automatizada/perfis | Nao encontrado | N/A | Nao aplicavel | Nao ha score ou decisao automatizada propria da PoC. |
+| Senha de usuário local, hash e salt | UI local/SQLite | Credencial/confidencial | Necessário para login local | Senha em claro não deve ser persistida nem logada. |
+| Sessão oficial Control iD | API Control iD/sessão ASP.NET | Credencial/confidencial | Necessário para chamadas oficiais autenticadas | Exibida apenas mascarada; não logar. |
+| Shared key/HMAC/certificados/VPN | Configuração local | Secret/confidencial | Necessário para segurança de callbacks/ambiente | Usar User Secrets, env vars ou cofre. |
+| IP remoto, IP do equipamento, host, serial, device_id | HTTP/equipamento/API | Técnico identificável | Necessário para segurança, diagnóstico e roteamento | Logs devem usar referências pseudonimizadas. |
+| Fotos, imagens faciais e logos com pessoas | Upload/API/SQLite | Sensível quando identifica pessoa | Condicional a fluxos de mídia | Evitar dados reais em PoC. |
+| Templates biométricos, fingerprint, face template | API/SQLite/payloads | Sensível | Condicional a fluxos biométricos | Alto risco; requer base legal e RIPD. |
+| Cartões, tags, QR codes, PINs | UI/API/SQLite | Pessoal/credencial de acesso | Condicional a controle de acesso | Tratar como credenciais de acesso físico. |
+| Logs de acesso, monitoramento, callbacks e Push | Equipamento/API local | Pessoal, técnico e possivelmente sensível | Necessário para QA/diagnóstico | Payload bruto pode conter dados pessoais. |
+| Cookies de autenticação, antiforgery e sessão | ASP.NET Core | Técnico identificável/segurança | Necessário para UI segura | Sem evidência de cookies de analytics. |
+| Eventos agregados de produto | Middleware HTTP interno | Agregado não pessoal | Medir uso de fluxos e qualidade sem tracking individual | Labels em allowlist; sem usuário, IP, query, body, payload ou device real. |
+| Dados financeiros, saúde, geolocalização, scores | Não encontrado | N/A | Não aplicável | Não introduzir sem requisito e avaliação. |
+| Criancas/adolescentes | Não há campo explícito de idade | Necessita validação | Ambíguo | A base de usuários do equipamento pode incluir menores; DPO deve validar contexto. |
+| Decisão automatizada/perfis | Não encontrado | N/A | Não aplicável | Não há score ou decisão automatizada própria da PoC. |
 
 ## Mapa de tratamento
 
-| Tratamento | Finalidade | Origem | Destino | Tela/API/servico/banco | Acesso/alteracao/exclusao | Retencao | Base legal provavel |
+| Tratamento | Finalidade | Origem | Destino | Tela/API/serviço/banco | Acesso/alteração/exclusão | Retenção | Base legal provável |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Cadastro e edicao de usuarios | Gerir identidades no equipamento | UI admin | Access API Control iD | `UsersController`, `users` | Admin altera/exclui | Minimo necessario | Necessita validacao juridica/DPO; possiveis execucao de contrato, obrigacao legal/regulatoria ou legitimo interesse conforme contexto. |
-| Login local | Proteger acesso a PoC | UI local | Cookie/SQLite `Users` | `AuthController`, cookie auth | Usuario/admin | Enquanto conta existir | Necessita validacao; seguranca da aplicacao e legitimo interesse podem ser aplicaveis. |
-| Login no equipamento | Criar sessao oficial Control iD | UI admin | Equipamento/sessao ASP.NET | `AuthController`, `SessionController` | Admin inicia/encerra | Curto prazo de sessao | Necessita validacao; execucao operacional/contratual. |
-| Fotos e midia de usuario | Sincronizar imagem facial | UI/API | Equipamento/SQLite `Photos` | `MediaController`, `OfficialCallbacksController` | Admin cria/remove | Minimo necessario | Dados sensiveis quando biometria/facial: necessita base especifica e RIPD. |
-| Templates biometricos | Cadastro/consulta biometrica | UI/API | Equipamento/SQLite `BiometricTemplates` | `BiometricTemplatesController` | Admin cria/remove | Minimo necessario | Dados sensiveis: necessita validacao juridica/DPO e provavelmente RIPD. |
-| Cartoes, QR codes e tags | Credenciais de acesso fisico | UI/API | Equipamento/SQLite | `CardsController`, `QRCodesController`, callbacks | Admin cria/remove | Minimo necessario | Necessita validacao; controle de acesso/seguranca. |
-| Callbacks e monitoramento | Receber eventos do equipamento | Equipamento | SQLite `MonitorEvents` | `CallbackIngressService`, callbacks `.fcgi` | Sistema grava; admin expurga | Curto prazo para QA | Necessita validacao; seguranca, auditoria e operacao. |
-| Push e resultados | Enfileirar comandos e receber status | UI/equipamento | SQLite `PushCommands` | `PushCommandWorkflowService`, `/push`, `/result` | Admin cria/expurga; sistema atualiza | Curto prazo para QA | Necessita validacao; operacao tecnica. |
-| Logs tecnicos | Diagnostico, seguranca e rastreabilidade | App/middleware | `Logs/`/Serilog | middlewares, controllers, services | Operador do host | Curto prazo | Necessita validacao; seguranca/prevencao. |
-| Backups SQLite | Recuperacao local | SQLite | `artifacts/backups/` | scripts `backup-sqlite`, `restore-smoke` | Operador do host | Apenas enquanto necessario | Necessita validacao; recuperabilidade e continuidade. |
+| Cadastro e edição de usuários | Gerir identidades no equipamento | UI admin | Access API Control iD | `UsersController`, `users` | Admin altera/exclui | Mínimo necessário | Necessita validação jurídica/DPO; possíveis execução de contrato, obrigação legal/regulatória ou legitimo interesse conforme contexto. |
+| Login local | Proteger acesso a PoC | UI local | Cookie/SQLite `Users` | `AuthController`, cookie auth | Usuário/admin | Enquanto conta existir | Necessita validação; segurança da aplicação e legitimo interesse podem ser aplicáveis. |
+| Login no equipamento | Criar sessão oficial Control iD | UI admin | Equipamento/sessão ASP.NET | `AuthController`, `SessionController` | Admin inicia/encerra | Curto prazo de sessão | Necessita validação; execução operacional/contratual. |
+| Fotos e mídia de usuário | Sincronizar imagem facial | UI/API | Equipamento/SQLite `Photos` | `MediaController`, `OfficialCallbacksController` | Admin cria/remove | Mínimo necessário | Dados sensíveis quando biometria/facial: necessita base específica e RIPD. |
+| Templates biométricos | Cadastro/consulta biométrica | UI/API | Equipamento/SQLite `BiometricTemplates` | `BiometricTemplatesController` | Admin cria/remove | Mínimo necessário | Dados sensíveis: necessita validação jurídica/DPO e provavelmente RIPD. |
+| Cartões, QR codes e tags | Credenciais de acesso físico | UI/API | Equipamento/SQLite | `CardsController`, `QRCodesController`, callbacks | Admin cria/remove | Mínimo necessário | Necessita validação; controle de acesso/segurança. |
+| Callbacks e monitoramento | Receber eventos do equipamento | Equipamento | SQLite `MonitorEvents` | `CallbackIngressService`, callbacks `.fcgi` | Sistema grava; admin expurga | Curto prazo para QA | Necessita validação; segurança, auditoria e operação. |
+| Push e resultados | Enfileirar comandos e receber status | UI/equipamento | SQLite `PushCommands` | `PushCommandWorkflowService`, `/push`, `/result` | Admin cria/expurga; sistema atualiza | Curto prazo para QA | Necessita validação; operação técnica. |
+| Logs técnicos | Diagnóstico, segurança e rastreabilidade | App/middleware | `Logs/`/Serilog | middlewares, controllers, services | Operador do host | Curto prazo | Necessita validação; segurança/prevenção. |
+| Backups SQLite | Recuperação local | SQLite | `artifacts/backups/` | scripts `backup-sqlite`, `restore-smoke` | Operador do host | Apenas enquanto necessário | Necessita validação; recuperabilidade e continuidade. |
 
-Todas as bases acima sao hipoteses tecnicas. A definicao final depende do controlador real, finalidade concreta, titulares afetados, contratos, setor, legislacao trabalhista/regulatoria e politica interna.
+Todas as bases acima são hipoteses técnicas. A definição final depende do controlador real, finalidade concreta, titulares afetados, contratos, setor, legislação trabalhista/regulatória e política interna.
 
-## Principios LGPD avaliados
+## Princípios LGPD avaliados
 
-| Principio | Estado tecnico | Lacunas |
+| Principio | Estado técnico | Lacunas |
 | --- | --- | --- |
-| Finalidade | Fluxos estao ligados a operacao Control iD e QA local | Formalizar finalidade por ambiente/projeto real. |
-| Adequacao | Dados se relacionam a controle de acesso e integracao | Confirmar adequacao com politica do controlador. |
-| Necessidade | Logs foram reduzidos para referencias pseudonimizadas; `RawJson` nao duplica `Payload` e so preserva envelope distinto em Push legado | Definir se cada payload remanescente e indispensavel em producao. |
-| Livre acesso | Nao ha portal DSAR/self-service | Criar procedimento manual ou automatizado. |
-| Qualidade | Dados refletem equipamento/API | Sem processo de correcao pelo titular. |
-| Transparencia | Documentacao tecnica existe | Aviso de privacidade e informativos ao titular nao estao versionados. |
-| Seguranca | Auth local, RBAC, HMAC, rate limit, headers, backups DPAPI e logs pseudonimizados | Validar configuracao real, cofre de segredos e hardening do host. |
-| Prevencao | Limites de payload, expurgo guiado e mascaramento reduzem risco | Falta runbook formal de incidente e exercicio periodico. |
-| Nao discriminacao | Nao ha score/decisao automatizada propria | Uso de biometria no contexto real precisa avaliacao. |
-| Responsabilizacao | Baselines, docs e checks existem | DPA/contratos, RIPD e evidencias juridicas ainda pendentes. |
+| Finalidade | Fluxos estão ligados a operação Control iD e QA local | Formalizar finalidade por ambiente/projeto real. |
+| Adequação | Dados se relacionam a controle de acesso e integração | Confirmar adequação com política do controlador. |
+| Necessidade | Logs foram reduzidos a referências pseudonimizadas; `RawJson` não duplica `Payload` e só preserva um envelope distinto no Push legado | Definir se cada payload remanescente é indispensável em produção. |
+| Livre acesso | Não há portal DSAR/self-service | Criar procedimento manual ou automatizado. |
+| Qualidade | Dados refletem equipamento/API | Sem processo de correção pelo titular. |
+| Transparência | Documentação técnica existe | Aviso de privacidade e informativos ao titular não estão versionados. |
+| Segurança | Auth local, RBAC, HMAC, rate limit, headers, backups DPAPI e logs pseudonimizados | Validar configuração real, cofre de segredos e hardening do host. |
+| Prevenção | Limites de payload, expurgo guiado e mascaramento reduzem risco | Falta runbook formal de incidente e exercicio periódico. |
+| Não discriminação | Não há score/decisão automatizada própria | Uso de biometria no contexto real precisa avaliação. |
+| Responsabilização | Baselines, docs e checks existem | DPA/contratos, RIPD e evidências jurídicas ainda pendentes. |
 
 ## Direitos dos titulares
 
-| Direito | Cobertura tecnica atual | Lacuna |
+| Direito | Cobertura técnica atual | Lacuna |
 | --- | --- | --- |
-| Confirmacao e acesso | Admin consegue gerar relatorio minimizado em `Privacy/Index` e consultar usuarios/eventos no equipamento/local | Canal formal e SLA dependem de DPO/juridico. |
-| Correcao | Admin pode editar usuarios/credenciais no equipamento | Necessita procedimento de solicitacao e registro. |
-| Anonimizacao, bloqueio e eliminacao | Existem exclusoes por entidade e expurgo de MonitorEvents/PushCommands | Nao ha workflow consolidado por titular em todos os dados. |
-| Portabilidade | `Privacy/Export` gera JSON minimizado, sem payload bruto | Definir formato final, escopo e seguranca para exportacao bruta. |
-| Informacao sobre compartilhamento | Documentacao lista Control iD/equipamento e artefatos locais | DPA/contratos e terceiros reais precisam validacao. |
-| Revogacao | Nao ha consentimento modelado no sistema | Se consentimento for usado, criar registro e revogacao. |
-| Revisao de decisao automatizada | Nao ha decisao automatizada propria | Validar uso real do equipamento. |
-| Canal e prazo | Nao implementado | DPO/juridico devem definir canal, prazos e responsabilidades. |
+| Confirmação e acesso | Admin consegue gerar relatório minimizado em `Privacy/Index` e consultar usuários/eventos no equipamento/local | Canal formal e SLA dependem de DPO/jurídico. |
+| Correção | Admin pode editar usuários/credenciais no equipamento | Necessita procedimento de solicitação e registro. |
+| Anonimização, bloqueio e eliminação | Existem exclusoes por entidade e expurgo de MonitorEvents/PushCommands | Não há workflow consolidado por titular em todos os dados. |
+| Portabilidade | `Privacy/Export` gera JSON minimizado, sem payload bruto | Definir formato final, escopo e segurança para exportação bruta. |
+| Informação sobre compartilhamento | Documentação lista Control iD/equipamento e artefatos locais | DPA/contratos e terceiros reais precisam validação. |
+| Revogação | Não há consentimento modelado no sistema | Se consentimento for usado, criar registro e revogação. |
+| Revisão de decisão automatizada | Não há decisão automatizada própria | Validar uso real do equipamento. |
+| Canal e prazo | Não implementado | DPO/jurídico devem definir canal, prazos e responsabilidades. |
 
-## Terceiros e transferencias
+## Terceiros e transferências
 
-- Equipamento/firmware Control iD: recebe e retorna dados de usuarios, credenciais de acesso, fotos, biometria, eventos e configuracoes. Papel do terceiro, contrato, DPA e transferencia internacional: necessita validacao juridica/DPO.
-- GitHub Actions/NuGet: evidenciados para codigo, CI e dependencias; nao devem receber dados reais da PoC. Nao enviar logs, bancos ou artefatos com dados pessoais.
-- Sem evidencia de analytics externo, e-mail/SMS/push externo, gateway de pagamento, cache externo ou storage cloud de runtime. Analytics de produto existe apenas como metricas internas agregadas em `/metrics`, conforme `docs/product-analytics.md`.
-- Callback signing proxy local e stub de equipamento sao ferramentas tecnicas; nao devem receber dados reais fora de ambiente controlado.
+- Equipamento/firmware Control iD: recebe e retorna dados de usuários, credenciais de acesso, fotos, biometria, eventos e configurações. Papel do terceiro, contrato, DPA e transferência internacional: necessita validação jurídica/DPO.
+- GitHub Actions/NuGet: evidenciados para código, CI e dependências; não devem receber dados reais da PoC. Não enviar logs, bancos ou artefatos com dados pessoais.
+- Sem evidência de analytics externo, e-mail/SMS/push externo, gateway de pagamento, cache externo ou storage cloud de runtime. Analytics de produto existe apenas como métricas internas agregadas em `/metrics`, conforme `docs/product-analytics.md`.
+- Callback signing proxy local e stub de equipamento são ferramentas técnicas; não devem receber dados reais fora de ambiente controlado.
 
-## Retencao, descarte e anonimizacao
+## Retenção, descarte e anonimização
 
-| Dado local | Retencao recomendada | Descarte/controle |
+| Dado local | Retenção recomendada | Descarte/controle |
 | --- | --- | --- |
-| `MonitorEvents` | Minimo necessario para QA/homologacao | `OfficialEvents/Purge` com frase `EXPURGAR EVENTOS`; payload bruto pode conter dados pessoais/sensiveis. |
-| `PushCommands` | Ate concluir analise do ciclo Push | `PushCenter/Purge` com frase `EXPURGAR PUSH`; payload/resultados podem conter ids e comandos. |
-| `Logs/` | Curto prazo local | Logs novos usam referencias pseudonimizadas para IP, usuario, equipamento e ids sensiveis; manter fora do Git. |
-| `integracao_controlid.db*` | Ambiente local controlado | Nao versionar nem compartilhar; tratar como base com dados pessoais/sensiveis. |
-| `artifacts/backups/` | Apenas enquanto necessario para rollback local | DPAPI por padrao; nao versionar; restringir permissoes com `tools/harden-local-state.ps1`. |
-| Fotos/templates/cartoes/QRs | Minimo necessario | Preferir dados ficticios; exclusao real exige confirmacao humana e base juridica. |
+| `MonitorEvents` | Mínimo necessário para QA/homologação | `OfficialEvents/Purge` com frase `EXPURGAR EVENTOS`; payload bruto pode conter dados pessoais/sensíveis. |
+| `PushCommands` | Até concluir análise do ciclo Push | `PushCenter/Purge` com frase `EXPURGAR PUSH`; payload/resultados podem conter ids e comandos. |
+| `Logs/` | Curto prazo local | Logs novos usam referências pseudonimizadas para IP, usuário, equipamento e ids sensíveis; manter fora do Git. |
+| `integracao_controlid.db*` | Ambiente local controlado | Não versionar nem compartilhar; tratar como base com dados pessoais/sensíveis. |
+| `artifacts/backups/` | Apenas enquanto necessário para rollback local | DPAPI por padrão; não versionar; restringir permissões com `tools/harden-local-state.ps1`. |
+| Fotos/templates/cartões/QRs | Mínimo necessário | Preferir dados fictícios; exclusão real exige confirmação humana e base jurídica. |
 
-Nao apagar dados reais sem confirmacao humana, registro da finalidade e decisao do controlador/DPO. Para dados em producao real, documentar politica de retencao, descarte seguro e evidencias.
+Não apagar dados reais sem confirmação humana, registro da finalidade e decisão do controlador/DPO. Para dados em produção real, documentar política de retenção, descarte seguro e evidências.
 
 ## RIPD e incidentes
 
-RIPD e recomendado e pode ser necessario antes de uso real porque a PoC pode tratar biometria, fotos, credenciais de acesso fisico, monitoramento de acesso e payloads brutos de eventos. A necessidade final depende de escala, finalidade, titulares, ambiente e papel do controlador.
+O RIPD é recomendado e pode ser necessário antes do uso real porque a PoC pode tratar biometria, fotos, credenciais de acesso físico, monitoramento de acesso e payloads brutos de eventos. A necessidade final depende da escala, da finalidade, dos titulares, do ambiente e do papel do controlador.
 
-Procedimento minimo recomendado para incidente:
+Procedimento mínimo recomendado para incidente:
 
 1. Conter acesso ao host, equipamento, banco, logs e backups.
-2. Preservar evidencias sem copiar dados pessoais para canais inseguros.
-3. Identificar titulares, categorias de dados, periodo e sistemas afetados.
-4. Rotacionar secrets, shared keys, sessoes e credenciais impactadas.
-5. Acionar DPO/juridico para avaliar notificacao a ANPD e titulares.
-6. Registrar causa raiz, mitigacoes, risco residual e decisao formal.
+2. Preservar evidências sem copiar dados pessoais para canais inseguros.
+3. Identificar titulares, categorias de dados, período e sistemas afetados.
+4. Rotacionar secrets, shared keys, sessões e credenciais impactadas.
+5. Acionar DPO/jurídico para avaliar notificação a ANPD e titulares.
+6. Registrar causa raiz, mitigações, risco residual e decisão formal.
 
-## Controles tecnicos aplicados
+## Controles técnicos aplicados
 
-- Logs HTTP agora registram `IPRef` e `UserRef`, sem IP remoto ou usuario bruto.
-- Logs de autenticacao local e login/logout de equipamento usam referencias pseudonimizadas.
-- Logs de sessao, callbacks, Push, usuarios, fotos, biometria, cartoes e QR codes usam `PrivacyLogHelper` para ids sensiveis.
-- Alvo de observabilidade da Access API usa referencia pseudonimizada de endpoint, sem host, caminho, query ou sessao.
+- Logs HTTP agora registram `IPRef` e `UserRef`, sem IP remoto ou usuário bruto.
+- Logs de autenticação local e login/logout de equipamento usam referências pseudonimizadas.
+- Logs de sessão, callbacks, Push, usuários, fotos, biometria, cartões e QR codes usam `PrivacyLogHelper` para ids sensíveis.
+- Alvo de observabilidade da Access API usa referência pseudonimizada de endpoint, sem host, caminho, query ou sessão.
 - Mensagem de sucesso do teste de conectividade deixou de exibir o endpoint bruto informado.
-- `Privacy/Index` gera relatorio minimizado de atendimento a direitos do titular por ID, matricula, usuario, e-mail ou telefone.
-- `Privacy/Export` exporta JSON minimizado sem foto Base64, biometria bruta, hashes, sessoes, payloads, cartoes ou QR codes.
-- Analytics de produto usa somente metricas agregadas por fluxo/evento allowlist, sem identificador pessoal, IP, session, query string, body ou payload bruto.
-- Respostas dinamicas usam `Cache-Control: no-store`; assets estaticos versionados preservam cache proprio.
-- Testes unitarios cobrem estabilidade e nao exposicao de usuario, IP, endpoint e identificador pseudonimizados.
-- `docs/privacy-governance-runbook.md` define RACI, DSAR, RIPD, DPA, retencao e incidente como artefatos verificaveis para decisao humana.
+- `Privacy/Index` gera relatório minimizado de atendimento a direitos do titular por ID, matricula, usuário, e-mail ou telefone.
+- `Privacy/Export` exporta JSON minimizado sem foto Base64, biometria bruta, hashes, sessões, payloads, cartões ou QR codes.
+- Analytics de produto usa somente métricas agregadas por fluxo/evento allowlist, sem identificador pessoal, IP, session, query string, body ou payload bruto.
+- Respostas dinâmicas usam `Cache-Control: no-store`; assets estáticos versionados preservam cache próprio.
+- Testes unitários cobrem estabilidade e não exposição de usuário, IP, endpoint e identificador pseudonimizados.
+- `docs/privacy-governance-runbook.md` define RACI, DSAR, RIPD, DPA, retenção e incidente como artefatos verificáveis para decisão humana.
 
-## Regras obrigatorias
+## Regras obrigatórias
 
-- Nao versionar dados reais, secrets, bancos SQLite locais, logs ou artefatos de runtime.
-- Nao copiar payload bruto para docs, issues ou commits quando houver dado pessoal/sensivel.
+- Não versionar dados reais, secrets, bancos SQLite locais, logs ou artefatos de runtime.
+- Não copiar payload bruto para docs, issues ou commits quando houver dado pessoal/sensível.
 - Mascarar segredos e identificadores em exemplos, screenshots e mensagens de erro.
-- Usar User Secrets, variaveis de ambiente ou cofre externo para credenciais e `CallbackSecurity:SharedKey`.
+- Usar User Secrets, variáveis de ambiente ou cofre externo para credenciais e `CallbackSecurity:SharedKey`.
 - Validar `AllowedHosts`, shared key, assinatura HMAC e IPs permitidos antes de expor a PoC fora de localhost.
-- Limpar `MonitorEvents` e `PushCommands` apenas por acao manual confirmada na UI.
-- Preferir expurgo por retencao (`EXPURGAR EVENTOS` ou `EXPURGAR PUSH`) a limpeza total quando o objetivo for reduzir historico.
-- Tratar backups SQLite como dados sensiveis; backups novos sao protegidos por DPAPI por padrao.
-- Rodar `tools/harden-local-state.ps1` no host local para restringir permissoes de SQLite, logs, backups e copias temporarias de restore.
-- Nao usar dados pessoais reais em testes, docs, smoke, fixtures ou screenshots.
+- Limpar `MonitorEvents` e `PushCommands` apenas por ação manual confirmada na UI.
+- Preferir expurgo por retenção (`EXPURGAR EVENTOS` ou `EXPURGAR PUSH`) a limpeza total quando o objetivo for reduzir histórico.
+- Tratar backups SQLite como dados sensíveis; backups novos são protegidos por DPAPI por padrão.
+- Executar `tools/harden-local-state.ps1` no host local para restringir permissões do SQLite, dos logs, das cópias de segurança e das cópias temporárias de restauração.
+- Não usar dados pessoais reais em testes, docs, smoke, fixtures ou screenshots.
 
-## Criterios de aceite de privacidade
+## Critérios de aceite de privacidade
 
 - Fluxo que grava payload bruto documenta tabela, finalidade e forma de limpeza local.
-- Tela que apaga historico local exige confirmacao textual.
-- Mensagem ao usuario nao expoe stack trace, secret, sessao, IP interno sensivel ou payload completo.
-- Exemplo versionado usa valores ficticios e placeholders.
-- Ambiente nao `Development` falha no startup sem `AllowedHosts` explicito, `RequireSharedKey=true`, `SharedKey` configurado e assinatura HMAC quando exigida.
-- Log novo que envolva titular, IP, host, device id, user id, biometria, cartao ou QR code usa mascaramento ou pseudonimizacao.
+- Tela que apaga histórico local exige confirmação textual.
+- Mensagem ao usuário não expõe stack trace, secret, sessão, IP interno sensível ou payload completo.
+- Exemplo versionado usa valores fictícios e placeholders.
+- Ambiente não `Development` falha no startup sem `AllowedHosts` explícito, `RequireSharedKey=true`, `SharedKey` configurado e assinatura HMAC quando exigida.
+- Log novo que envolva titular, IP, host, device id, user id, biometria, cartão ou QR code usa mascaramento ou pseudonimização.
 
-## Lacunas para DPO/juridico
+## Lacunas para DPO/jurídico
 
 - Definir controlador, operador, encarregado e matriz RACI.
 - Validar bases legais por tratamento e por ambiente.
-- Validar necessidade de consentimento ou outra base especifica para biometria/foto.
+- Validar necessidade de consentimento ou outra base específica para biometria/foto.
 - Formalizar aviso de privacidade, canal de direitos e prazos.
 - Validar contratos/DPA com Control iD, fornecedores de infraestrutura e qualquer terceiro real.
-- Confirmar transferencia internacional, se houver.
-- Aprovar RIPD, politica de retencao, descarte, backup e resposta a incidente.
+- Confirmar transferência internacional, se houver.
+- Aprovar RIPD, política de retenção, descarte, backup e resposta a incidente.

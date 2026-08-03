@@ -22,15 +22,15 @@ Objetivo: registrar, por linha de produto e por modo, o que já está coberto de
 
 Superfícies e serviços que sustentam os modos:
 
-- Hub unificado: [Controllers/OperationModesController.cs](</C:/Users/danie/OneDrive/Desktop/Minhas Coisas/Projetos/Pessoais/Control iD/Integracao.ControlID.PoC/Controllers/OperationModesController.cs:1>)
-- UI do hub: [Views/OperationModes/Index.cshtml](</C:/Users/danie/OneDrive/Desktop/Minhas Coisas/Projetos/Pessoais/Control iD/Integracao.ControlID.PoC/Views/OperationModes/Index.cshtml:1>)
-- Payloads oficiais de modo: [Services/OperationModes/OperationModesPayloadFactory.cs](</C:/Users/danie/OneDrive/Desktop/Minhas Coisas/Projetos/Pessoais/Control iD/Integracao.ControlID.PoC/Services/OperationModes/OperationModesPayloadFactory.cs:1>)
-- Resolução do perfil atual: [Services/OperationModes/OperationModesProfileResolver.cs](</C:/Users/danie/OneDrive/Desktop/Minhas Coisas/Projetos/Pessoais/Control iD/Integracao.ControlID.PoC/Services/OperationModes/OperationModesProfileResolver.cs:1>)
-- Reaproveitamento no tópico documentado: [Services/DocumentedFeatures/DocumentedFeaturesPayloadFactory.cs](</C:/Users/danie/OneDrive/Desktop/Minhas Coisas/Projetos/Pessoais/Control iD/Integracao.ControlID.PoC/Services/DocumentedFeatures/DocumentedFeaturesPayloadFactory.cs:1>)
-- Upgrade Pro: [Controllers/ProductSpecificController.cs](</C:/Users/danie/OneDrive/Desktop/Minhas Coisas/Projetos/Pessoais/Control iD/Integracao.ControlID.PoC/Controllers/ProductSpecificController.cs:31>)
-- Upgrade Enterprise: [Controllers/ProductSpecificController.cs](</C:/Users/danie/OneDrive/Desktop/Minhas Coisas/Projetos/Pessoais/Control iD/Integracao.ControlID.PoC/Controllers/ProductSpecificController.cs:56>)
-- Callbacks relevantes: [Controllers/OfficialCallbacksController.cs](</C:/Users/danie/OneDrive/Desktop/Minhas Coisas/Projetos/Pessoais/Control iD/Integracao.ControlID.PoC/Controllers/OfficialCallbacksController.cs:20>)
-- Persistência dos sinais: [Services/Callbacks/CallbackIngressService.cs](</C:/Users/danie/OneDrive/Desktop/Minhas Coisas/Projetos/Pessoais/Control iD/Integracao.ControlID.PoC/Services/Callbacks/CallbackIngressService.cs:27>)
+- Hub unificado: `Controllers/OperationModesController.cs`.
+- Interface do hub: `Views/OperationModes/Index.cshtml`.
+- Payloads oficiais de modo: `Services/OperationModes/OperationModesPayloadFactory.cs`.
+- Resolução do perfil atual: `Services/OperationModes/OperationModesProfileResolver.cs`.
+- Reaproveitamento no tópico documentado: `Services/DocumentedFeatures/DocumentedFeaturesPayloadFactory.cs`.
+- Upgrade Pro: `Controllers/ProductSpecificController.cs`.
+- Upgrade Enterprise: `Controllers/ProductSpecificController.cs`.
+- Callbacks relevantes: `Controllers/OfficialCallbacksController.cs`.
+- Persistência dos sinais: `Services/Callbacks/CallbackIngressService.cs`.
 
 ## Matriz por produto e por modo
 

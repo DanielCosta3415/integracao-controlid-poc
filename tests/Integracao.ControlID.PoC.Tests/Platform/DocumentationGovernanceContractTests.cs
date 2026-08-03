@@ -17,7 +17,7 @@ public class DocumentationGovernanceContractTests
         Assert.Contains("docs/adrs/", readme, StringComparison.Ordinal);
         Assert.Contains("Leitura por papel", docsIndex, StringComparison.Ordinal);
         Assert.Contains("Gate estrito de release", onboarding, StringComparison.Ordinal);
-        Assert.Contains("Trust boundaries", architecture, StringComparison.Ordinal);
+        Assert.Contains("Fronteiras de confiança", architecture, StringComparison.Ordinal);
         Assert.Contains("docs/adrs/", agents, StringComparison.Ordinal);
     }
 
@@ -35,10 +35,10 @@ public class DocumentationGovernanceContractTests
         Assert.Contains("Status: Aceita", sqliteAdr, StringComparison.Ordinal);
         Assert.Contains("SQLite local", sqliteAdr, StringComparison.Ordinal);
         Assert.Contains("Ingress e egress Control iD", securityAdr, StringComparison.Ordinal);
-        Assert.Contains("Observabilidade in-process", observabilityAdr, StringComparison.Ordinal);
-        Assert.Contains("Governanca de release", releaseAdr, StringComparison.Ordinal);
+        Assert.Contains("Observabilidade no processo", observabilityAdr, StringComparison.Ordinal);
+        Assert.Contains("Governança de release", releaseAdr, StringComparison.Ordinal);
         Assert.Contains("Como validar", changelog, StringComparison.Ordinal);
-        Assert.Contains("Pendencias conhecidas", prSummary, StringComparison.Ordinal);
+        Assert.Contains("Pendências conhecidas", prSummary, StringComparison.Ordinal);
         Assert.Contains("Lacunas restantes", audit, StringComparison.Ordinal);
     }
 
@@ -52,7 +52,7 @@ public class DocumentationGovernanceContractTests
         var releaseGate = ReadRepoFile("tools", "test-readiness-gates.ps1");
 
         Assert.Contains("docs/residual-risk-closure.md", docsIndex, StringComparison.Ordinal);
-        Assert.Contains("Gate estrito sem excecoes", closure, StringComparison.Ordinal);
+        Assert.Contains("Gate estrito sem exceções", closure, StringComparison.Ordinal);
         Assert.Contains("deployment", opsExample, StringComparison.Ordinal);
         Assert.Contains("privacy", opsExample, StringComparison.Ordinal);
         Assert.Contains("externalValidation", opsExample, StringComparison.Ordinal);

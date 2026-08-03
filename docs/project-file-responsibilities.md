@@ -19,10 +19,10 @@ Observações de escopo:
 | `Dockerfile` | Define build multi-stage e runtime não root para execução containerizada da PoC. |
 | `appsettings.Staging.json` | Defaults seguros sem segredos para validação em staging. |
 | `appsettings.Production.json` | Defaults seguros sem segredos para produção; exige variáveis reais no ambiente. |
-| `docker-compose.yml` | Executa a PoC em container com volumes persistentes, healthcheck e variáveis obrigatórias. |
+| `docker-compose.yml` | Executa a PoC em contêiner com volumes persistentes, verificação de integridade e variáveis obrigatórias. |
 | `.editorconfig` | Padroniza convenções básicas de edição, formatação e estilo entre IDEs. |
 | `.gitignore` | Define arquivos e pastas que não devem ser versionados, como builds, logs e artefatos locais. |
-| `ops.example.json` | Exemplo versionado de configuracao operacional para incidentes, on-call, backup externo, RTO/RPO, deploy, privacidade, validacao externa, contrato fisico e FinOps. |
+| `ops.example.json` | Exemplo versionado de configuração operacional para incidentes, on-call, backup externo, RTO/RPO, deploy, privacidade, validação externa, contrato físico e FinOps. |
 | `Directory.Build.props` | Centraliza propriedades comuns de build para os projetos .NET da solução. |
 | `Integracao.ControlID.PoC.csproj` | Define o projeto ASP.NET Core MVC principal, dependências NuGet e configurações de compilação. |
 | `Integracao.ControlID.PoC.sln` | Agrupa o projeto principal, testes e utilitários em uma única solução. |
@@ -99,14 +99,14 @@ Os controllers coordenam as rotas MVC, recebem a entrada da UI, acionam serviço
 
 | Arquivo | Responsabilidade |
 | --- | --- |
-| `Logging/SeriLogConfiguration.cs` | Configura sinks, formato e politicas de logging com Serilog. |
+| `Logging/SeriLogConfiguration.cs` | Configura sinks, formato e políticas de logging com Serilog. |
 | `Logging/SeriLogEvents.cs` | Centraliza identificadores/eventos de log usados para rastreabilidade. |
 
 ## Mappings
 
 | Arquivo | Responsabilidade |
 | --- | --- |
-| `Mappings/ModelMappings.cs` | Converte modelos da API/DOMINIO para entidades locais ou estruturas equivalentes. |
+| `Mappings/ModelMappings.cs` | Converte modelos da API/DOMÍNIO para entidades locais ou estruturas equivalentes. |
 | `Mappings/ViewModelMappings.cs` | Converte modelos e entidades em ViewModels prontos para as telas Razor. |
 
 ## Middlewares
@@ -116,7 +116,7 @@ Os controllers coordenam as rotas MVC, recebem a entrada da UI, acionam serviço
 | `Middlewares/ApiSessionMiddleware.cs` | Garante contexto mínimo de sessão/API durante o pipeline HTTP. |
 | `Middlewares/CorrelationIdMiddleware.cs` | Normaliza, propaga e registra correlation ID seguro em requests/responses. |
 | `Middlewares/ExceptionHandlingMiddleware.cs` | Captura exceções não tratadas e padroniza a resposta/registro de erro. |
-| `Middlewares/DynamicResponseCachePolicyMiddleware.cs` | Impede cache de respostas dinamicas e dados operacionais no navegador. |
+| `Middlewares/DynamicResponseCachePolicyMiddleware.cs` | Impede cache de respostas dinâmicas e dados operacionais no navegador. |
 | `Middlewares/RequestLoggingMiddleware.cs` | Registra informações de requests para observabilidade local. |
 | `Middlewares/SecurityHeadersMiddleware.cs` | Aplica cabeçalhos de segurança HTTP nas respostas da aplicação. |
 
@@ -143,7 +143,7 @@ Modelos que representam contratos, payloads e respostas próximas da API Control
 | `Models/ControlIDApi/MonitorEvent.cs` | Representa eventos monitorados em tempo real ou via callback. |
 | `Models/ControlIDApi/OfficialApiEndpointDefinition.cs` | Define metadados de endpoints oficiais, parâmetros, método HTTP e documentação visual. |
 | `Models/ControlIDApi/OfficialApiInvocationResult.cs` | Representa o resultado de uma invocação genérica da API oficial. |
-| `Models/ControlIDApi/Photo.cs` | Representa foto ou imagem associada a usuário/midia. |
+| `Models/ControlIDApi/Photo.cs` | Representa foto ou imagem associada a usuário/mídia. |
 | `Models/ControlIDApi/PushCommand.cs` | Representa comandos push enfileirados ou recebidos. |
 | `Models/ControlIDApi/QRCode.cs` | Representa QR Codes de acesso. |
 | `Models/ControlIDApi/RemoteAction.cs` | Representa uma ação remota solicitada ao equipamento. |
@@ -154,7 +154,7 @@ Modelos que representam contratos, payloads e respostas próximas da API Control
 
 ## Models/Database
 
-Entidades persistidas no SQLite local para histórico, cache operacional, simulacoes e suporte a UI.
+Entidades persistidas no SQLite local para histórico, cache operacional, simulações e suporte a UI.
 
 | Arquivo | Responsabilidade |
 | --- | --- |
@@ -211,7 +211,7 @@ Entidades persistidas no SQLite local para histórico, cache operacional, simula
 | `Services/ControlIDApi/OfficialApiDocumentationSeedCatalog.cs` | Semeia metadados e documentação base dos endpoints oficiais. |
 | `Services/ControlIDApi/OfficialApiDocumentationService.cs` | Consolida documentação, exemplos e metadados para exibição na UI. |
 | `Services/ControlIDApi/OfficialApiInvokerService.cs` | Executa chamadas genéricas aos endpoints oficiais a partir do catálogo. |
-| `Services/ControlIDApi/OfficialApiResponseBodyReader.cs` | Le respostas externas com limite, cancelamento, charset e classificacao binaria. |
+| `Services/ControlIDApi/OfficialApiResponseBodyReader.cs` | Lê respostas externas com limite, cancelamento, charset e classificação binária. |
 | `Services/ControlIDApi/OfficialApiParameterDocumentationUtilities.cs` | Utilitários para documentar parâmetros, tipos e obrigatoriedade. |
 | `Services/ControlIDApi/OfficialApiQueryParameterStrategy.cs` | Define estratégia de montagem de parâmetros via query string. |
 | `Services/ControlIDApi/OfficialApiResultPresentationService.cs` | Prepara resultados oficiais para exibição amigável na interface. |
@@ -241,7 +241,7 @@ Repositórios que encapsulam acesso ao SQLite local para cada entidade da PoC.
 | `Services/Database/SessionRepository.cs` | Persistência e consulta de sessões. |
 | `Services/Database/SyncRepository.cs` | Persistência e consulta do estado de sincronização. |
 | `Services/Database/UserRepository.cs` | Persistência e consulta de usuários. |
-| `Services/Database/LocalUserRegistrationResult.cs` | Resultado tipado e estados do registro atomico de usuario local. |
+| `Services/Database/LocalUserRegistrationResult.cs` | Resultado tipado e estados do registro atômico de usuário local. |
 
 ## Services complementares
 
@@ -252,22 +252,22 @@ Repositórios que encapsulam acesso ao SQLite local para cada entidade da PoC.
 | `Services/Analytics/ProductAnalyticsEventClassifier.cs` | Classifica rotas allowlist em eventos agregados de produto sem identificadores pessoais. |
 | `Services/Navigation/NavigationCatalogService.cs` | Monta o catálogo de navegação das páginas e módulos da PoC. |
 | `Services/Navigation/PageShellService.cs` | Fornece metadados de shell, cabeçalho e breadcrumbs das páginas. |
-| `Services/Observability/HealthCheckResponseWriter.cs` | Serializa health checks sem expor excecoes, paths locais ou connection string. |
+| `Services/Observability/HealthCheckResponseWriter.cs` | Serializa health checks sem expor exceções, paths locais ou connection string. |
 | `Services/Observability/ObservabilityConstants.cs` | Centraliza nomes de header, item de contexto e propriedades de escopo. |
-| `Services/Observability/OperationalEventIds.cs` | Define IDs estaveis para eventos operacionais criticos. |
-| `Services/Observability/OperationalMetrics.cs` | Publica metricas via `System.Diagnostics.Metrics` para coleta futura. |
-| `Services/Observability/PrometheusMetricsWriter.cs` | Renderiza snapshot de metricas locais em formato Prometheus text para `/metrics`. |
-| `Services/Observability/RuntimeCapacityMetricsProvider.cs` | Coleta gauges seguros de memoria, storage local e disco para FinOps/capacidade. |
+| `Services/Observability/OperationalEventIds.cs` | Define IDs estáveis para eventos operacionais críticos. |
+| `Services/Observability/OperationalMetrics.cs` | Publica métricas via `System.Diagnostics.Metrics` para coleta futura. |
+| `Services/Observability/PrometheusMetricsWriter.cs` | Renderiza snapshot de métricas locais em formato Prometheus text para `/metrics`. |
+| `Services/Observability/RuntimeCapacityMetricsProvider.cs` | Coleta gauges seguros de memória, storage local e disco para FinOps/capacidade. |
 | `Services/Observability/SqliteReadinessHealthCheck.cs` | Verifica readiness do SQLite local usado como estado runtime. |
 | `Services/OperationModes/OperationModesPayloadFactory.cs` | Monta payloads demonstrativos dos modos Standalone, Pro e Enterprise. |
 | `Services/OperationModes/OperationModesProfileResolver.cs` | Resolve perfis, comportamento esperado e transições dos modos de operação. |
-| `Services/ProductSpecific/ProductSpecificCommandService.cs` | Executa comandos específicos por produto/modelo. |
+| `Services/ProductSpecific/ProductSpecificCommandService.cs` | Executa comandos específicos por produto ou modelo. |
 | `Services/ProductSpecific/ProductSpecificConfigurationPayloadFactory.cs` | Monta payloads de configuração específicos por linha de produto. |
 | `Services/ProductSpecific/ProductSpecificDownloadResult.cs` | Representa resultado de download em fluxos específicos de produto. |
 | `Services/ProductSpecific/ProductSpecificJsonReader.cs` | Lê e interpreta JSONs usados por funcionalidades específicas. |
-| `Services/ProductSpecific/ProductSpecificSections.cs` | Define secoes/categorias exibidas no modulo de recursos específicos. |
+| `Services/ProductSpecific/ProductSpecificSections.cs` | Define seções/categorias exibidas no módulo de recursos específicos. |
 | `Services/ProductSpecific/ProductSpecificSnapshotService.cs` | Monta snapshots de estado/configuração específicos por produto. |
-| `Services/Security/ControlIdInputSanitizer.cs` | Sanitiza entradas para reduzir risco de payloads invalidos ou inseguros. |
+| `Services/Security/ControlIdInputSanitizer.cs` | Sanitiza entradas para reduzir risco de payloads inválidos ou inseguros. |
 
 ## ViewModels
 
@@ -283,7 +283,7 @@ As ViewModels carregam dados já preparados para as telas Razor, reduzindo regra
 | `ViewModels/AccessRules/AccessRuleEditViewModel.cs` | Campos usados na criação/edição de regra de acesso. |
 | `ViewModels/AccessRules/AccessRuleListViewModel.cs` | Dados da listagem de regras de acesso. |
 | `ViewModels/AccessRules/AccessRuleViewModel.cs` | Dados de detalhe de uma regra de acesso. |
-| `ViewModels/AdvancedOfficial/CameraCaptureViewModel.cs` | Dados do fluxo oficial de captura de camera. |
+| `ViewModels/AdvancedOfficial/CameraCaptureViewModel.cs` | Dados do fluxo oficial de captura de câmera. |
 | `ViewModels/AdvancedOfficial/ExportObjectsViewModel.cs` | Dados do fluxo oficial de exportação de objetos. |
 | `ViewModels/AdvancedOfficial/FacialEnrollViewModel.cs` | Dados do fluxo oficial de enroll facial. |
 | `ViewModels/AdvancedOfficial/NetworkInterlockViewModel.cs` | Dados do fluxo de intertravamento/rede. |
@@ -346,7 +346,7 @@ As ViewModels carregam dados já preparados para as telas Razor, reduzindo regra
 | `ViewModels/OfficialApi/OfficialApiContractViewModel.cs` | Dados de contrato de endpoint oficial. |
 | `ViewModels/OfficialApi/OfficialApiIndexViewModel.cs` | Dados do catálogo oficial de endpoints. |
 | `ViewModels/OfficialApi/OfficialApiInvokeViewModel.cs` | Dados do formulário e resultado de invocação oficial. |
-| `ViewModels/OfficialObjects/OfficialObjectsViewModel.cs` | Dados da tela de exploracao de objetos oficiais. |
+| `ViewModels/OfficialObjects/OfficialObjectsViewModel.cs` | Dados da tela de exploração de objetos oficiais. |
 | `ViewModels/OperationModes/OperationModesViewModel.cs` | Dados da tela de modos Standalone, Pro e Enterprise. |
 | `ViewModels/ProductSpecific/ProductSpecificViewModel.cs` | Dados da tela de recursos específicos por produto. |
 | `ViewModels/Push/PushEventListViewModel.cs` | Dados da listagem de eventos push. |
@@ -362,12 +362,12 @@ As ViewModels carregam dados já preparados para as telas Razor, reduzindo regra
 | `ViewModels/RemoteActions/RemoteAuthorizationViewModel.cs` | Dados do fluxo de autorização remota. |
 | `ViewModels/RemoteActions/RemoteEnrollViewModel.cs` | Dados do fluxo de enroll remoto. |
 | `ViewModels/Session/SessionCreateViewModel.cs` | Campos de criação de sessão. |
-| `ViewModels/Session/SessionDeactivateViewModel.cs` | Dados de desativacao/encerramento de sessão. |
+| `ViewModels/Session/SessionDeactivateViewModel.cs` | Dados de desativação/encerramento de sessão. |
 | `ViewModels/Session/SessionEditViewModel.cs` | Campos de edição de sessão. |
 | `ViewModels/Session/SessionListViewModel.cs` | Dados da listagem de sessões. |
 | `ViewModels/Session/SessionStatusViewModel.cs` | Dados de status da sessão. |
 | `ViewModels/Session/SessionViewModel.cs` | Dados de detalhe de sessão. |
-| `ViewModels/Shared/AppPageHeaderViewModel.cs` | Dados do cabeçalho padrao das páginas. |
+| `ViewModels/Shared/AppPageHeaderViewModel.cs` | Dados do cabeçalho padrão das páginas. |
 | `ViewModels/Shared/NavigationViewModels.cs` | Modelos compartilhados de navegação, menus e itens do shell. |
 | `ViewModels/Shared/RawResponsePanelViewModel.cs` | Dados do painel reutilizável de resposta bruta. |
 | `ViewModels/System/HashPasswordViewModel.cs` | Campos e resultado de hash de senha. |
@@ -378,7 +378,7 @@ As ViewModels carregam dados já preparados para as telas Razor, reduzindo regra
 | `ViewModels/System/SystemVpnViewModel.cs` | Dados de configuração/consulta de VPN. |
 | `ViewModels/Users/HashPasswordResponse.cs` | Estrutura de resposta de hash de senha usada nos fluxos de usuário. |
 | `ViewModels/Users/UserDeleteViewModel.cs` | Dados da confirmação de exclusão de usuário. |
-| `ViewModels/Users/UserDto.cs` | DTO auxiliar para transferencia de dados de usuário. |
+| `ViewModels/Users/UserDto.cs` | DTO auxiliar para transferência de dados de usuário. |
 | `ViewModels/Users/UserEditViewModel.cs` | Campos usados na criação/edição de usuário. |
 | `ViewModels/Users/UserListViewModel.cs` | Dados da listagem de usuários. |
 | `ViewModels/Users/UsersApiResponse.cs` | Estrutura de resposta agregada da API para usuários. |
@@ -391,8 +391,8 @@ As views Razor compõem a interface web da PoC. Em geral, cada pasta espelha um 
 
 | Arquivo | Responsabilidade |
 | --- | --- |
-| `Views/_ViewImports.cshtml` | Importa namespaces e tag helpers disponiveis para todas as views. |
-| `Views/_ViewStart.cshtml` | Define o layout padrao usado pelas views. |
+| `Views/_ViewImports.cshtml` | Importa namespaces e tag helpers disponíveis para todas as views. |
+| `Views/_ViewStart.cshtml` | Define o layout padrão usado pelas views. |
 | `Views/AccessLogs/Delete.cshtml` | Tela de confirmação de exclusão de log de acesso. |
 | `Views/AccessLogs/Details.cshtml` | Tela de detalhe de log de acesso. |
 | `Views/AccessLogs/Index.cshtml` | Tela de listagem/filtro de logs de acesso. |
@@ -401,7 +401,7 @@ As views Razor compõem a interface web da PoC. Em geral, cada pasta espelha um 
 | `Views/AccessRules/Details.cshtml` | Tela de detalhe de regra de acesso. |
 | `Views/AccessRules/Edit.cshtml` | Tela de edição de regra de acesso. |
 | `Views/AccessRules/Index.cshtml` | Tela de listagem de regras de acesso. |
-| `Views/AdvancedOfficial/CameraCapture.cshtml` | Tela do fluxo oficial de captura de camera. |
+| `Views/AdvancedOfficial/CameraCapture.cshtml` | Tela do fluxo oficial de captura de câmera. |
 | `Views/AdvancedOfficial/ExportObjects.cshtml` | Tela do fluxo oficial de exportação de objetos. |
 | `Views/AdvancedOfficial/FacialEnroll.cshtml` | Tela do fluxo oficial de enroll facial. |
 | `Views/AdvancedOfficial/Index.cshtml` | Tela inicial dos recursos oficiais avançados. |
@@ -461,19 +461,19 @@ As views Razor compõem a interface web da PoC. Em geral, cada pasta espelha um 
 | `Views/Logo/Index.cshtml` | Tela de listagem de logos. |
 | `Views/Logo/Upload.cshtml` | Tela de upload de logo. |
 | `Views/Media/AdMode.cshtml` | Tela de gerenciamento de vídeo/modo propaganda. |
-| `Views/Media/Delete.cshtml` | Tela de confirmação de exclusão de midia. |
-| `Views/Media/Details.cshtml` | Tela de detalhe de midia/foto. |
+| `Views/Media/Delete.cshtml` | Tela de confirmação de exclusão de mídia. |
+| `Views/Media/Details.cshtml` | Tela de detalhe de mídia/foto. |
 | `Views/Media/Index.cshtml` | Tela de listagem de mídias/fotos. |
-| `Views/Media/Upload.cshtml` | Tela de upload de midia/foto. |
+| `Views/Media/Upload.cshtml` | Tela de upload de mídia/foto. |
 | `Views/Monitor/Push.cshtml` | Tela de monitoramento de eventos push. |
 | `Views/Monitor/PushDetails.cshtml` | Tela de detalhe de evento push monitorado. |
 | `Views/Monitor/Webhook.cshtml` | Tela de monitoramento de webhooks/callbacks. |
 | `Views/Monitor/WebhookDetails.cshtml` | Tela de detalhe de webhook/callback recebido. |
 | `Views/OfficialApi/Index.cshtml` | Tela do catálogo oficial de endpoints. |
-| `Views/OfficialApi/Invoke.cshtml` | Tela de invocação dinamica de endpoint oficial. |
+| `Views/OfficialApi/Invoke.cshtml` | Tela de invocação dinâmica de endpoint oficial. |
 | `Views/OfficialEvents/Details.cshtml` | Tela de detalhe de evento oficial. |
 | `Views/OfficialEvents/Index.cshtml` | Tela de listagem de eventos oficiais. |
-| `Views/OfficialObjects/Index.cshtml` | Tela de exploracao de objetos oficiais. |
+| `Views/OfficialObjects/Index.cshtml` | Tela de exploração de objetos oficiais. |
 | `Views/OperationModes/Index.cshtml` | Tela dos modos Standalone, Pro e Enterprise. |
 | `Views/ProductSpecific/Index.cshtml` | Tela de recursos específicos por produto. |
 | `Views/PushCenter/Details.cshtml` | Tela de detalhe de item/comando da central de push. |
@@ -493,7 +493,7 @@ As views Razor compõem a interface web da PoC. Em geral, cada pasta espelha um 
 | `Views/Session/Index.cshtml` | Tela de listagem de sessões. |
 | `Views/Session/Status.cshtml` | Tela de status de sessão. |
 | `Views/Shared/_AccessDenied.cshtml` | Parcial de acesso negado. |
-| `Views/Shared/_AppPageHeader.cshtml` | Parcial de cabeçalho padrao das páginas. |
+| `Views/Shared/_AppPageHeader.cshtml` | Parcial de cabeçalho padrão das páginas. |
 | `Views/Shared/_ConnectionPanel.cshtml` | Parcial do painel de conexão/status do equipamento. |
 | `Views/Shared/_EndpointContractPanel.cshtml` | Parcial de exibição de contrato de endpoint. |
 | `Views/Shared/_Layout.cshtml` | Layout principal da aplicação. |
@@ -518,53 +518,53 @@ As views Razor compõem a interface web da PoC. Em geral, cada pasta espelha um 
 | `Views/Users/Details.cshtml` | Tela de detalhe de usuário. |
 | `Views/Users/Edit.cshtml` | Tela de edição de usuário. |
 | `Views/Users/Index.cshtml` | Tela de listagem de usuários. |
-| `Views/Workspace/Domain.cshtml` | Tela de dominio/área específica do workspace. |
+| `Views/Workspace/Domain.cshtml` | Tela de domínio/área específica do workspace. |
 | `Views/Workspace/Index.cshtml` | Tela principal do workspace/explorador operacional. |
 
 ## wwwroot
 
 | Arquivo/Pasta | Responsabilidade |
 | --- | --- |
-| `wwwroot/css/site.css` | Estilos globais da PoC, componentes visuais, dashboard, tabelas e formularios. |
-| `wwwroot/css/site-shell-responsive.css` | Overrides isolados da navegacao e do shell responsivo. |
-| `wwwroot/js/site.js` | JavaScript global da UI, comportamentos de interacao e utilidades client-side. |
-| `wwwroot/favicon.ico` | Icone exibido pelo navegador para a aplicação. |
-| `wwwroot/lib/bootstrap/*` | Arquivos CSS/JS do Bootstrap, incluindo versoes minificadas, sourcemaps, utilitários e licenças. |
+| `wwwroot/css/site.css` | Estilos globais da PoC, componentes visuais, dashboard, tabelas e formulários. |
+| `wwwroot/css/site-shell-responsive.css` | Overrides isolados da navegação e do shell responsivo. |
+| `wwwroot/js/site.js` | JavaScript global da UI, comportamentos de interação e utilidades client-side. |
+| `wwwroot/favicon.ico` | Ícone exibido pelo navegador para a aplicação. |
+| `wwwroot/lib/bootstrap/*` | Arquivos CSS/JS do Bootstrap, incluindo versões minificadas, sourcemaps, utilitários e licenças. |
 | `wwwroot/lib/jquery/*` | Arquivos da biblioteca jQuery usados pela camada client-side. |
-| `wwwroot/lib/jquery-validation/*` | Biblioteca de validação jQuery usada nos formularios. |
+| `wwwroot/lib/jquery-validation/*` | Biblioteca de validação jQuery usada nos formulários. |
 | `wwwroot/lib/jquery-validation-unobtrusive/*` | Adaptadores unobtrusive validation usados com ASP.NET Core MVC/Razor. |
 
 ## docs
 
 | Arquivo/Pasta | Responsabilidade |
 | --- | --- |
-| `docs/README.md` | Indice central da documentacao tecnica por papel e por tema. |
-| `docs/adrs/` | Registros de decisoes arquiteturais aceitas e suas consequencias. |
-| `docs/architecture-overview.md` | Visao de camadas, fluxos criticos, dependencias, trust boundaries e contratos a preservar. |
-| `docs/changelog-2026-04-14.md` | Registro resumido de evolucoes relevantes realizadas na PoC. |
-| `docs/changelog-2026-04-15.md` | Registro resumido das atualizacoes de documentação, comentarios inline e observabilidade. |
-| `docs/changelog-2026-05-01.md` | Registro da rodada de documentacao, onboarding e ADRs. |
-| `docs/ci-cd-quality-gates.md` | Documenta GitHub Actions, quality gates, artefatos, branch protection recomendada e reproducao local. |
-| `docs/developer-onboarding.md` | Guia de setup, execucao, desenvolvimento, diagnostico e entrega segura para novos contribuidores. |
-| `docs/deployment-runbook.md` | Mapeia ambientes, container, variaveis obrigatorias, deploy, rollback e riscos de infraestrutura. |
-| `docs/documentation-audit-2026-05-01.md` | Auditoria de documentacao, achados, consistencia e lacunas restantes. |
-| `docs/equipment-contingency-runbook.md` | Define contingencia operacional do equipamento Control iD, fallback manual e validacao de bancada. |
+| `docs/README.md` | Índice central da documentação técnica por papel e por tema. |
+| `docs/adrs/` | Registros de decisões arquiteturais aceitas e suas consequências. |
+| `docs/architecture-overview.md` | Visão de camadas, fluxos críticos, dependências, trust boundaries e contratos a preservar. |
+| `docs/changelog-2026-04-14.md` | Registro resumido de evoluções relevantes realizadas na PoC. |
+| `docs/changelog-2026-04-15.md` | Registro resumido das atualizações de documentação, comentários inline e observabilidade. |
+| `docs/changelog-2026-05-01.md` | Registro da rodada de documentação, onboarding e ADRs. |
+| `docs/ci-cd-quality-gates.md` | Documenta GitHub Actions, quality gates, artefatos, branch protection recomendada e reprodução local. |
+| `docs/developer-onboarding.md` | Guia de setup, execução, desenvolvimento, diagnóstico e entrega segura para novos contribuidores. |
+| `docs/deployment-runbook.md` | Mapeia ambientes, container, variáveis obrigatórias, deploy, rollback e riscos de infraestrutura. |
+| `docs/documentation-audit-2026-05-01.md` | Auditoria de documentação, achados, consistência e lacunas restantes. |
+| `docs/equipment-contingency-runbook.md` | Define contingência operacional do equipamento Control iD, fallback manual e validação de bancada. |
 | `docs/external-validation-runbook.md` | Padroniza SAST, OSV, DAST, acessibilidade e contrato com stub/equipamento. |
-| `docs/finops-capacity.md` | Define inventario de custos, capacidade, limites, governanca FinOps e sustentabilidade operacional. |
-| `docs/incident-response-and-dr.md` | Define matriz SEV, runbooks de incidentes, continuidade, backup/restore operacional, DR, comunicacao e postmortem. |
+| `docs/finops-capacity.md` | Define inventário de custos, capacidade, limites, governança FinOps e sustentabilidade operacional. |
+| `docs/incident-response-and-dr.md` | Define matriz SEV, runbooks de incidentes, continuidade, backup/restore operacional, DR, comunicação e postmortem. |
 | `docs/monitor-implementation.md` | Documenta a implementação da funcionalidade Monitor, callbacks oficiais, segurança e persistência local. |
-| `docs/observability-runbook.md` | Define health, metricas, alertas, dashboards e resposta a incidentes operacionais. |
+| `docs/observability-runbook.md` | Define health, métricas, alertas, dashboards e resposta a incidentes operacionais. |
 | `docs/observability/alert-rules.json` | Regras versionadas de alerta para o monitor local e ferramentas externas. |
-| `docs/observability/dashboard.json` | Especificacao versionada de dashboards independente de fornecedor. |
+| `docs/observability/dashboard.json` | Especificação versionada de dashboards independente de fornecedor. |
 | `docs/operation-modes-implementation.md` | Documenta a implementação dos modos Standalone, Pro e Enterprise, incluindo payloads e transições. |
-| `docs/product-analytics.md` | Define objetivos, KPIs, funis, eventos, dashboards e restricoes de analytics privacy-aware. |
+| `docs/product-analytics.md` | Define objetivos, KPIs, funis, eventos, dashboards e restrições de analytics privacy-aware. |
 | `docs/pr-summary-2026-05-01.md` | Resumo de PR/release notes da rodada documental. |
 | `docs/project-file-responsibilities.md` | Este inventário de responsabilidades por pasta e arquivo. |
 | `docs/push-implementation.md` | Documenta a implementação da funcionalidade Push, fila persistida, polling e retorno de resultados. |
-| `docs/residual-risk-closure.md` | Mapeia riscos residuais externos para campos obrigatorios, gates e evidencias de release. |
-| `docs/reports/controlid-api-audit-2026-04-13.md` | Auditoria tecnica da cobertura da API Control iD. |
+| `docs/residual-risk-closure.md` | Mapeia riscos residuais externos para campos obrigatórios, gates e evidências de release. |
+| `docs/reports/controlid-api-audit-2026-04-13.md` | Auditoria técnica da cobertura da API Control iD. |
 | `docs/reports/design-system-accessibility-audit-2026-04-14.md` | Auditoria de design system e acessibilidade da UI. |
-| `docs/reports/heuristic-ui-audit-2026-04-14.md` | Avaliacao heuristica inicial da interface. |
+| `docs/reports/heuristic-ui-audit-2026-04-14.md` | Avaliação heurística inicial da interface. |
 | `docs/reports/localhost-smoke-test-2026-04-13.md` | Relatório de smoke test local da rodada de 13/04/2026. |
 | `docs/reports/localhost-smoke-test-2026-04-14.md` | Relatório de smoke test local da rodada de 14/04/2026. |
 | `docs/reports/operation-modes-e2e-runbook-2026-04-14.md` | Roteiro E2E para validação dos modos de operação. |
@@ -597,7 +597,7 @@ As views Razor compõem a interface web da PoC. Em geral, cada pasta espelha um 
 | `tests/Integracao.ControlID.PoC.Tests/Services/ControlIDApi/OfficialApiQueryParameterStrategyTests.cs` | Testa montagem de parâmetros via query string. |
 | `tests/Integracao.ControlID.PoC.Tests/Services/DocumentedFeatures/DocumentedFeaturesPayloadFactoryTests.cs` | Testa payload de funcionalidades documentadas. |
 | `tests/Integracao.ControlID.PoC.Tests/Services/Files/UploadedFileBase64EncoderTests.cs` | Testa conversão de uploads para Base64. |
-| `tests/Integracao.ControlID.PoC.Tests/Services/Analytics/ProductAnalyticsEventClassifierTests.cs` | Testa classificacao privacy-aware de eventos de produto por rota. |
+| `tests/Integracao.ControlID.PoC.Tests/Services/Analytics/ProductAnalyticsEventClassifierTests.cs` | Testa classificação privacy-aware de eventos de produto por rota. |
 | `tests/Integracao.ControlID.PoC.Tests/Services/Navigation/NavigationCatalogServiceTests.cs` | Testa catálogo de navegação. |
 | `tests/Integracao.ControlID.PoC.Tests/Services/Navigation/PageShellServiceTests.cs` | Testa metadados de shell/cabeçalho das páginas. |
 | `tests/Integracao.ControlID.PoC.Tests/Services/OperationModes/OperationModesPayloadFactoryTests.cs` | Testa payloads dos modos de operação. |
@@ -612,13 +612,13 @@ As views Razor compõem a interface web da PoC. Em geral, cada pasta espelha um 
 
 | Arquivo/Pasta | Responsabilidade |
 | --- | --- |
-| `tools/observability-check.ps1` | Valida artefatos de observabilidade, health checks, metricas e contrato fisico opcional. |
+| `tools/observability-check.ps1` | Valida artefatos de observabilidade, health checks, métricas e contrato físico opcional. |
 | `tools/operational-readiness-check.ps1` | Valida runbooks operacionais, `ops.example.json` e, em release, `ops.local.json` sem placeholders. |
-| `tools/backup-sqlite-operational.ps1` | Orquestra backup SQLite protegido, espelhamento opcional, restore-smoke e retencao confirmada. |
-| `tools/contract-controlid-stub.ps1` | Sobe o stub local e valida contrato Control iD sem equipamento fisico ou credenciais reais. |
-| `tools/external-security-scans.ps1` | Orquestra inventario e execucao de Semgrep, OSV Scanner, ZAP baseline e axe quando disponiveis. |
-| `tools/finops-capacity-check.ps1` | Valida runbook, alertas, governanca e tamanhos locais de SQLite, logs, artifacts e reports sem apagar dados. |
-| `tools/test-readiness-gates.ps1` | Orquestra build, testes, format, secret scan, observabilidade offline, FinOps/capacidade, cobertura, smoke, auditoria, contrato fisico, scanners externos e modo estrito `-ReleaseGate`. |
-| `tools/smoke-localhost.ps1` | Script PowerShell que executa smoke test local, sobe stub e percorre fluxos criticos da PoC. |
+| `tools/backup-sqlite-operational.ps1` | Orquestra backup SQLite protegido, espelhamento opcional, restore-smoke e retenção confirmada. |
+| `tools/contract-controlid-stub.ps1` | Sobe o stub local e valida contrato Control iD sem equipamento físico ou credenciais reais. |
+| `tools/external-security-scans.ps1` | Orquestra inventário e execução de Semgrep, OSV Scanner, ZAP baseline e axe quando disponíveis. |
+| `tools/finops-capacity-check.ps1` | Valida runbook, alertas, governança e tamanhos locais de SQLite, logs, artifacts e reports sem apagar dados. |
+| `tools/test-readiness-gates.ps1` | Orquestra build, testes, format, secret scan, observabilidade offline, FinOps/capacidade, cobertura, smoke, auditoria, contrato físico, scanners externos e modo estrito `-ReleaseGate`. |
+| `tools/smoke-localhost.ps1` | Script PowerShell que executa smoke test local, sobe stub e percorre fluxos críticos da PoC. |
 | `tools/ControlIdDeviceStub/ControlIdDeviceStub.csproj` | Projeto .NET do stub local que simula respostas de um equipamento Control iD. |
 | `tools/ControlIdDeviceStub/Program.cs` | Implementa os endpoints simulados usados pelos smoke tests locais. |

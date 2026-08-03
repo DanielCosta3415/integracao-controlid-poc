@@ -1,4 +1,4 @@
-# Runbook E2E dos modos de operação
+# Guia E2E dos modos de operação
 
 Data: 2026-04-14  
 Escopo: PoC `Integracao.ControlID.PoC`  
@@ -19,14 +19,14 @@ Objetivo: validar em bancada real os modos `Standalone`, `Pro` e `Enterprise` po
 - [Upgrade iDFlex and iDAccess Nano](https://www.controlid.com.br/docs/access-api-en/particularities-of-the-products/update-idflex-idaccess-nano/)
 - [Particularities of Control iD's Terminals](https://www.controlid.com.br/docs/access-api-en/particularities-of-the-products/particularities-control-id-terminals/)
 
-## Superficies da PoC envolvidas
+## Superfícies da PoC envolvidas
 
-- Centro de modos: [OperationModesController.cs](</C:/Users/danie/OneDrive/Desktop/Minhas Coisas/Projetos/Pessoais/Control iD/Integracao.ControlID.PoC/Controllers/OperationModesController.cs:1>) e [Views/OperationModes/Index.cshtml](</C:/Users/danie/OneDrive/Desktop/Minhas Coisas/Projetos/Pessoais/Control iD/Integracao.ControlID.PoC/Views/OperationModes/Index.cshtml:1>)
-- Modo online detalhado: [DocumentedFeaturesController.cs](</C:/Users/danie/OneDrive/Desktop/Minhas Coisas/Projetos/Pessoais/Control iD/Integracao.ControlID.PoC/Controllers/DocumentedFeaturesController.cs:1>)
-- Recursos específicos de produto: [ProductSpecificController.cs](</C:/Users/danie/OneDrive/Desktop/Minhas Coisas/Projetos/Pessoais/Control iD/Integracao.ControlID.PoC/Controllers/ProductSpecificController.cs:1>)
-- Eventos oficiais: [OfficialEventsController.cs](</C:/Users/danie/OneDrive/Desktop/Minhas Coisas/Projetos/Pessoais/Control iD/Integracao.ControlID.PoC/Controllers/OfficialEventsController.cs:1>)
-- Callbacks oficiais: [OfficialCallbacksController.cs](</C:/Users/danie/OneDrive/Desktop/Minhas Coisas/Projetos/Pessoais/Control iD/Integracao.ControlID.PoC/Controllers/OfficialCallbacksController.cs:1>)
-- Persistência dos sinais: [CallbackIngressService.cs](</C:/Users/danie/OneDrive/Desktop/Minhas Coisas/Projetos/Pessoais/Control iD/Integracao.ControlID.PoC/Services/Callbacks/CallbackIngressService.cs:1>)
+- Centro de modos: `Controllers/OperationModesController.cs` e `Views/OperationModes/Index.cshtml`.
+- Modo on-line detalhado: `Controllers/DocumentedFeaturesController.cs`.
+- Recursos específicos de produto: `Controllers/ProductSpecificController.cs`.
+- Eventos oficiais: `Controllers/OfficialEventsController.cs`.
+- Callbacks oficiais: `Controllers/OfficialCallbacksController.cs`.
+- Persistência dos sinais: `Services/Callbacks/CallbackIngressService.cs`.
 
 ## Pré-requisitos gerais
 
@@ -199,10 +199,10 @@ Use o formato abaixo para cada execução real:
 ## Observações
 - Comportamento após reboot:
 - Callbacks recebidos:
-- Ajustes necessarios:
+- Ajustes necessários:
 ```
 
-## Conclusao
+## Conclusão
 
 Com este runbook, a PoC passa a ter:
 

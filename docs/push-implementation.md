@@ -163,7 +163,7 @@ O fluxo de `PushCenterController.Result` é:
 2. Quando `command_id` não vem, resolver chave opcional `Idempotency-Key` ou `idempotency_key`.
 3. Ler o corpo bruto da requisição.
 4. Delegar persistência para `PushCommandWorkflowService.StoreResultAsync`.
-5. Se existir comando, atualizar `RawJson`, `Payload`, `Status` e `UpdatedAt`.
+5. Se existir comando, atualizar `Payload`, `Status` e `UpdatedAt`, mantendo `RawJson` vazio para não duplicar o corpo.
 6. Se não existir, criar um novo registro do tipo `result`.
 7. Se a query `status` não vier preenchida, usar `completed`.
 8. Retornar `200 OK`.
@@ -178,7 +178,7 @@ POST /result?command_id=00000000-0000-0000-0000-000000000001&status=completed
 
 Os comandos ficam na tabela `PushCommands`.
 
-O `Program.cs` garante a criação da tabela quando a aplicação inicia:
+As migrações versionadas do EF Core criam e evoluem a tabela quando são aplicadas, seja na inicialização configurada, seja no modo exclusivo de migração:
 
 ```text
 PushCommands(
@@ -202,7 +202,7 @@ Campos principais:
 | `CommandId` | Identificador GUID do comando/evento. |
 | `ReceivedAt` | Data/hora de recebimento ou registro. |
 | `CommandType` | Tipo do comando, por exemplo `custom`, `result` ou tipo enviado no evento legado. |
-| `RawJson` | JSON bruto ou corpo recebido. |
+| `RawJson` | Envelope JSON bruto somente quando ele difere do `Payload`; permanece vazio nos demais fluxos. |
 | `Status` | Estado operacional do item. |
 | `Payload` | Conteúdo entregue ao equipamento ou resultado recebido. |
 | `DeviceId` | Dispositivo alvo ou origem. |
@@ -234,7 +234,7 @@ A rota `POST /Push/Receive` aceita um corpo bruto e tenta interpretar alguns cam
 | `user_id` ou `userid` | Define `UserId`. |
 | `payload` ou `data` | Define `Payload`. |
 
-Quando a origem envia `Idempotency-Key` ou `idempotency_key`, a PoC deriva um identificador determinístico e atualiza o mesmo evento em retries, evitando duplicatas acidentais no legado.
+Quando a origem envia `Idempotency-Key` ou `idempotency_key`, a PoC deriva um identificador determinístico e atualiza o mesmo evento nas novas tentativas, evitando duplicatas acidentais no legado.
 
 Se o JSON for inválido, a PoC registra warning e ainda salva o corpo bruto como evento legado com `CommandType = "legacy_push_event"` e `Status = "received"`.
 
@@ -268,6 +268,8 @@ A mesma configuração de ingress usada por callbacks também vale para Push:
 | `CallbackSecurity:AllowLoopback` | Mantém validação local/stub possível mesmo com lista de IPs restrita. |
 | `CallbackSecurity:RequireSharedKey` | Exige o header configurado em `SharedKeyHeaderName`. |
 | `CallbackSecurity:SharedKeyHeaderName` | Define o nome do header, por padrão `X-ControlID-Callback-Key`. |
+| `CallbackSecurity:RequireSignedRequests` | Exige assinatura HMAC validada depois da leitura limitada do corpo. |
+| `CallbackSecurity:SignatureHeaderName`, `TimestampHeaderName`, `NonceHeaderName` | Definem os cabeçalhos de assinatura, carimbo de data e hora e nonce. |
 | `CallbackSecurity:RateLimit:PermitLimit` | Limita chamadas de callbacks/push por IP remoto. |
 | `CallbackSecurity:RateLimit:WindowSeconds` | Define a janela do rate limit dos ingressos. |
 
@@ -277,11 +279,11 @@ O endpoint legado `POST /Push/Receive` também limita o corpo lido a aproximadam
 
 Para uso fora de PoC, continue recomendando:
 
-- habilitar `RequireSharedKey=true` e provisionar `SharedKey` fora do repositório;
+- habilitar `RequireSharedKey=true` e `RequireSignedRequests=true`, provisionando `SharedKey` fora do repositório;
 - restringir IPs de origem;
 - usar HTTPS em uma URL acessível pelo equipamento;
 - registrar tentativa de polling e resultados com mais metadados;
-- tratar concorrência em múltiplos polls simultâneos.
+- monitorar a concorrência entre consultas simultâneas se a persistência ou a topologia mudar.
 
 ## Cobertura de testes
 
@@ -306,5 +308,4 @@ A suíte cobre:
 | Equipamento real | O ciclo completo depende de um dispositivo consultando `GET /push` e enviando `POST /result`. |
 | Autenticação dos endpoints Push | Usa `CallbackSecurityEvaluator`; a robustez depende de configurar shared key/IPs em ambientes expostos. |
 | Status padronizados | A PoC aceita status livres vindos de `/result`, o que é flexível, mas pode exigir normalização futura. |
-| Concorrência | O fluxo entrega o primeiro comando pendente; em produção, seria interessante reforcar controle transacional para múltiplos polls simultaneos. |
-
+| Concorrência | O repositório reivindica atomicamente um único comando pendente no SQLite, e a suíte cobre consultas simultâneas; outra persistência exigirá nova validação. |

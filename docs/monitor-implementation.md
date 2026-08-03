@@ -129,11 +129,12 @@ A lógica principal fica em `CallbackIngressService.PersistAsync`.
 
 O fluxo é:
 
-1. `CallbackSecurityEvaluator.Evaluate` valida a requisição.
-2. `CallbackRequestBodyReader.ReadAsync` lê o corpo da requisição.
-3. A PoC monta um `MonitorEventLocal`.
-4. O evento é persistido por `MonitorEventRepository.AddMonitorEventAsync`.
-5. A resposta informa sucesso ou rejeição.
+1. `CallbackSecurityEvaluator.Evaluate` valida origem, chave compartilhada e tamanho declarado.
+2. `CallbackRequestBodyReader.ReadAsync` lê o corpo da requisição dentro do limite configurado.
+3. `CallbackSignatureValidator.Validate` valida assinatura HMAC, carimbo de data e hora e nonce quando a assinatura é obrigatória.
+4. A PoC monta um `MonitorEventLocal`.
+5. O evento é persistido por `MonitorEventRepository.AddMonitorEventAsync`.
+6. A resposta informa sucesso ou rejeição.
 
 O `EventType` é montado assim:
 
@@ -156,21 +157,25 @@ A segurança do Monitor é configurada por `CallbackSecurityOptions`, carregada 
 
 | Opção | Comportamento |
 | --- | --- |
-| `MaxBodyBytes` | Limita o tamanho máximo do payload. O default é 1 MB. |
+| `MaxBodyBytes` | Limita o tamanho máximo do payload. O padrão é 1 MB. |
 | `AllowedRemoteIps` | Quando preenchido, restringe os IPs que podem enviar callbacks. |
 | `AllowLoopback` | Permite loopback mesmo quando há filtro de IP. |
-| `RequireSharedKey` | Exige uma chave compartilhada no header configurado. |
-| `SharedKeyHeaderName` | Nome do header usado para a chave. Default: `X-ControlID-Callback-Key`. |
+| `RequireSharedKey` | Exige uma chave compartilhada no cabeçalho configurado. |
+| `SharedKeyHeaderName` | Nome do cabeçalho usado para a chave. Padrão: `X-ControlID-Callback-Key`. |
 | `SharedKey` | Valor esperado da chave compartilhada. |
+| `RequireSignedRequests` | Exige assinatura HMAC do corpo e dos metadados canônicos da requisição. |
+| `SignatureHeaderName`, `TimestampHeaderName`, `NonceHeaderName` | Definem os cabeçalhos da assinatura, do carimbo de data e hora e do nonce. |
+| `MaxClockSkewSeconds`, `NonceTtlSeconds`, `MaxTrackedNonces` | Limitam desvio de relógio, vida útil e quantidade de nonces para proteção contra repetição. |
 
 A comparação da chave usa `CryptographicOperations.FixedTimeEquals`, evitando comparação simples de strings para o segredo.
 
-O `Program.cs` também faz uma verificação de sanidade no startup:
+O `Program.cs` também valida a segurança durante a inicialização:
 
 | Condição | Resultado |
 | --- | --- |
-| `RequireSharedKey=true` e `SharedKey` vazio | Log de erro de segurança. |
-| `RequireSharedKey=false` fora de Development | Log de warning recomendando restrição. |
+| `RequireSharedKey=true` e `SharedKey` vazio em `Development` | Registra erro de segurança para diagnóstico local. |
+| Ambiente fora de `Development` sem chave compartilhada válida ou sem assinatura obrigatória | Interrompe a inicialização. |
+| Ambiente fora de `Development` com `AllowedHosts`, OpenAPI ou lista de hosts do equipamento inseguros | Interrompe a inicialização. |
 
 ## Leitura do corpo da requisição
 
@@ -187,7 +192,7 @@ Isso permite que eventos com imagem, template ou binário sejam inspecionados po
 
 Os eventos são salvos na tabela `MonitorEvents`.
 
-O `Program.cs` garante a criação da tabela quando a aplicação inicia:
+As migrações versionadas do EF Core criam e evoluem a tabela quando são aplicadas, seja na inicialização configurada, seja no modo exclusivo de migração:
 
 ```text
 MonitorEvents(
@@ -210,11 +215,11 @@ Campos principais:
 | --- | --- |
 | `EventId` | GUID gerado pela PoC. |
 | `ReceivedAt` | Data/hora UTC de recebimento. |
-| `RawJson` | Corpo bruto lido da requisição. |
+| `RawJson` | Reservado para um envelope bruto distinto; permanece vazio no pipeline principal para não duplicar `Payload`. |
 | `EventType` | Família + path do callback. |
 | `DeviceId` | Query string `device_id`, quando enviada. |
 | `UserId` | Query string `user_id`, quando enviada. |
-| `Payload` | Mesmo conteúdo lido do corpo, salvo para exibição rápida. |
+| `Payload` | Conteúdo textual ou Base64 lido do corpo. |
 | `Status` | Atualmente definido como `received` no pipeline principal. |
 
 ## Interface de consulta
@@ -227,7 +232,7 @@ GET /OfficialEvents/Details/{id}
 POST /OfficialEvents/Clear
 ```
 
-`OfficialEventsController.Index` consulta todos os eventos por `MonitorEventRepository.GetAllMonitorEventsAsync`, ordenados do mais recente para o mais antigo.
+`OfficialEventsController.Index` consulta os eventos recentes por `MonitorEventRepository.GetAllMonitorEventsAsync`, alias limitado de `GetRecentMonitorEventsAsync`, ordenados do mais recente para o mais antigo.
 
 `Details` abre um evento específico.
 
@@ -275,6 +280,7 @@ O pipeline HTTP principal de callbacks usa `CallbackIngressService` diretamente.
 | Teste | Cobre |
 | --- | --- |
 | `CallbackSecurityEvaluatorTests.cs` | Validação de IP, tamanho, loopback e chave compartilhada. |
+| `CallbackSignatureValidatorTests.cs` | Assinatura HMAC, carimbo de data e hora, nonce e proteção contra repetição. |
 | `CallbackRequestBodyReaderTests.cs` | Leitura de payload textual, vazio, binário e limite de tamanho. |
 | `CallbackIngressServiceTests.cs` | Fluxo de persistência/rejeição dos callbacks recebidos. |
 
@@ -285,4 +291,4 @@ O pipeline HTTP principal de callbacks usa `CallbackIngressService` diretamente.
 | Equipamento real | A validação completa depende de um dispositivo Control iD enviando callbacks reais. |
 | Tempo real | A PoC persiste e lista eventos, mas ainda não publica eventos via SignalR/websocket. |
 | Processamento assíncrono | A fila em memória existe, mas o pipeline principal persiste diretamente no banco. |
-| Exposicao pública | Para receber callbacks reais, a URL da PoC precisa estar acessível pelo equipamento. |
+| Exposição pública | Para receber callbacks reais, a URL da PoC precisa estar acessível pelo equipamento. |

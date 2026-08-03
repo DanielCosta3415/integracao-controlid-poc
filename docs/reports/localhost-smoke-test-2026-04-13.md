@@ -1,4 +1,4 @@
-﻿# Smoke test local da PoC Control iD
+﻿# Teste smoke local da PoC Control iD
 
 Data: 2026-04-14 03:55:55 -03:00
 
@@ -9,7 +9,7 @@ Data: 2026-04-14 03:55:55 -03:00
 - FAIL: 144
 - SKIP: 7
 
-## Bootstrap
+## Inicialização
 
 - [PASS] /: GET 200
 - [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200

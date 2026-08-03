@@ -64,7 +64,7 @@ public class ReadinessGateContractTests
         Assert.Contains("-RequireHardwareContract", acceptance, StringComparison.Ordinal);
         Assert.Contains("-RunObservabilityOnline -RequireObservabilityMetrics", acceptance, StringComparison.Ordinal);
         Assert.Contains("-ReleaseGate", acceptance, StringComparison.Ordinal);
-        Assert.Contains("Gates de validacao externa", strategy, StringComparison.Ordinal);
+        Assert.Contains("Gates de validação externa", strategy, StringComparison.Ordinal);
     }
 
     private static string ReadRepoFile(params string[] segments)

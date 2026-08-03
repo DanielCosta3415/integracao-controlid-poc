@@ -1,10 +1,10 @@
-# Banco de dados e estado de runtime
+# Banco de dados e estado de execução
 
-Este projeto usa SQLite local por padrao. A connection string `DefaultConnection` fica em `appsettings.json` e aponta para `integracao_controlid.db`.
+Este projeto usa SQLite local por padrão. A cadeia de conexão `DefaultConnection` fica em `appsettings.json` e aponta para `integracao_controlid.db`.
 
-## Estado criado em runtime
+## Estado criado durante a execução
 
-Os arquivos abaixo sao estado local e nao devem ser versionados:
+Os arquivos abaixo são estado local e não devem ser versionados:
 
 - `integracao_controlid.db`
 - `integracao_controlid.db-shm`
@@ -14,26 +14,26 @@ Os arquivos abaixo sao estado local e nao devem ser versionados:
 - `bin/`
 - `obj/`
 
-Esses caminhos ja estao cobertos por `.gitignore`.
+Esses caminhos já estão cobertos por `.gitignore`.
 
-## Aplicacao de schema
+## Aplicação do esquema
 
-Na inicializacao, `Program.cs` executa `Database.Migrate()`. O schema local inicial esta versionado em `Data/Migrations/` por EF Core.
+O esquema local está versionado em `Data/Migrations/` pelo EF Core. O `Program.cs` executa `Database.Migrate()` somente quando `Database:ApplyMigrationsOnStartup=true`; quando a opção não é informada, o padrão é habilita-la apenas em `Development`.
 
-A migration inicial usa `CREATE TABLE IF NOT EXISTS` para preservar bancos SQLite locais ja existentes desta PoC. As tabelas locais `MonitorEvents` e `PushCommands` tambem continuam com criacao idempotente em `Program.cs` como compatibilidade para bancos criados antes da migration.
+A migração inicial usa `CREATE TABLE IF NOT EXISTS` para preservar bancos SQLite locais já existentes desta PoC. As tabelas `MonitorEvents` e `PushCommands` fazem parte das migrações versionadas e não são criadas manualmente pelo `Program.cs`.
 
-Iniciar a aplicacao pode criar ou atualizar o banco local, mesmo sem alterar arquivos rastreados pelo Git. Antes de validar alteracoes de schema em um banco com dados importantes, faca backup do arquivo SQLite local.
+Iniciar a aplicação com migrações automáticas habilitadas pode criar ou atualizar o banco local, mesmo sem alterar arquivos rastreados pelo Git. Antes de validar alterações de esquema em um banco com dados importantes, faça backup do arquivo SQLite local.
 
-Regra de evolucao:
+Regra de evolução:
 
-- alteracoes de schema devem ser feitas por migrations versionadas do EF Core ou scripts `.sql` revisaveis;
-- mudanças em `Program.cs` para criacao manual de tabelas devem ser compatibilidade temporaria, nao o mecanismo principal de evolucao;
-- nao remova colunas/tabelas locais sem plano de migracao e backup do SQLite local;
-- `MonitorEvents` e `PushCommands` podem conter payloads pessoais/sensiveis e devem seguir a politica de retencao em `docs/privacy-and-data-retention.md`.
+- alterações de esquema devem ser feitas por migrações versionadas do EF Core ou scripts `.sql` revisáveis;
+- não introduza criação manual de tabelas no `Program.cs`; o mecanismo de evolução é o histórico de migrações;
+- não remova colunas/tabelas locais sem plano de migração e backup do SQLite local;
+- `MonitorEvents` e `PushCommands` podem conter payloads pessoais/sensíveis e devem seguir a política de retenção em `docs/privacy-and-data-retention.md`.
 
 ## Comandos seguros
 
-Use estes comandos para validacao sem tocar em dados de producao:
+Use estes comandos para validação sem tocar em dados de produção:
 
 ```powershell
 dotnet restore .\Integracao.ControlID.PoC.sln --locked-mode
@@ -45,42 +45,45 @@ dotnet list .\Integracao.ControlID.PoC.sln package --vulnerable --include-transi
 
 ## Comandos que alteram estado local
 
-Estes comandos sao esperados para criar arquivos locais, processos ou relatorios:
+Estes comandos são esperados para criar arquivos locais, processos ou relatórios:
 
 ```powershell
 dotnet run --project .\Integracao.ControlID.PoC.csproj
 powershell -ExecutionPolicy Bypass -File .\tools\smoke-localhost.ps1
 ```
 
-O smoke test sobe o stub local, executa fluxos HTTP e escreve relatorios em `docs/reports/`.
+O teste smoke inicia o stub local, executa fluxos HTTP e grava relatórios em `docs/reports/` e `artifacts/`.
 
-## Backup local
+## Cópia de segurança local
 
-Antes de validar mudancas de schema em um banco local com dados importantes, gere uma copia segura:
+Antes de validar mudanças de schema em um banco local com dados importantes, gere uma cópia segura:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\tools\backup-sqlite.ps1
 powershell -ExecutionPolicy Bypass -File .\tools\restore-smoke-sqlite.ps1
 ```
 
-O script copia `integracao_controlid.db` e, quando existirem, `integracao_controlid.db-wal` e `integracao_controlid.db-shm` para `artifacts/backups/`. Backups podem conter dados pessoais, sessoes, logs e payloads brutos; nao versione nem compartilhe esses arquivos.
+O script cópia `integracao_controlid.db` e, quando existirem, `integracao_controlid.db-wal` e `integracao_controlid.db-shm` para `artifacts/backups/`. Os backups podem conter dados pessoais, sessões, logs e payloads brutos; não versione nem compartilhe esses arquivos.
 
-Backups novos sao protegidos por DPAPI por padrao e recebem extensao `.protected`. O smoke de restore descriptografa uma copia temporaria, aplica migrations apenas nessa copia e nao sobrescreve o banco real.
+Backups novos são protegidos por DPAPI por padrão e recebem extensão `.protected`. O smoke de restore descriptografa uma cópia temporária, aplica migrations apenas nessa cópia e não sobrescreve o banco real.
 
-Restrinja permissoes locais de SQLite, logs e backups no host com:
+Restrinja permissões locais de SQLite, logs e backups no host com:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\tools\harden-local-state.ps1
 ```
 
-O mapa completo de tabelas, indices, riscos de integridade e procedimento de restore esta em `docs/data-model-and-recovery.md`.
+O mapa completo de tabelas, índices, riscos de integridade e procedimento de restauração está em `docs/data-model-and-recovery.md`.
 
-## Requisitos para ambientes nao Development
+## Requisitos para ambientes não Development
 
 Ambientes fora de `Development` devem configurar:
 
 - `AllowedHosts` sem wildcard `*`.
 - `CallbackSecurity:RequireSharedKey=true`.
-- `CallbackSecurity:SharedKey` com valor secreto via User Secrets, variavel de ambiente ou cofre externo.
+- `CallbackSecurity:SharedKey` com valor secreto via User Secrets, variável de ambiente ou cofre externo.
+- `CallbackSecurity:RequireSignedRequests=true`.
+- `ControlIDApi:RequireAllowedDeviceHosts=true`, com os hosts permitidos configurados.
+- `OpenApi:Enabled=false`.
 
-Sem esses valores, a aplicacao falha na inicializacao para evitar exposicao acidental dos callbacks e endpoints push.
+Sem esses valores, a aplicação falha na inicialização para evitar exposição acidental dos callbacks e endpoints push.

@@ -1,7 +1,7 @@
-# Indice da documentacao tecnica
+# Índice da documentação técnica
 
-Este indice orienta desenvolvedores, mantenedores, SREs, QA, DPO/privacidade e
-agentes de codigo no uso seguro da PoC `Integracao.ControlID.PoC`.
+Este índice orienta desenvolvedores, mantenedores, SREs, QA, DPO/privacidade e
+agentes de código no uso seguro da PoC `Integracao.ControlID.PoC`.
 
 ## Leitura por papel
 
@@ -10,7 +10,7 @@ agentes de codigo no uso seguro da PoC `Integracao.ControlID.PoC`.
 | Novo desenvolvedor | `docs/developer-onboarding.md`, `docs/architecture-overview.md`, `docs/project-file-responsibilities.md` |
 | Maintainer | `AGENTS.md`, `docs/adrs/`, `docs/testing-strategy.md`, `docs/changelog-2026-05-01.md` |
 | QA/SDET | `docs/product-acceptance-criteria.md`, `docs/testing-strategy.md`, `docs/external-validation-runbook.md` |
-| SRE/Operacao | `docs/observability-runbook.md`, `docs/deployment-runbook.md`, `docs/incident-response-and-dr.md` |
+| SRE/Operação | `docs/observability-runbook.md`, `docs/deployment-runbook.md`, `docs/incident-response-and-dr.md` |
 | DevOps/Platform | `docs/ci-cd-quality-gates.md`, `.github/workflows/ci.yml`, `docs/deployment-runbook.md` |
 | Security/AppSec | `docs/security-hardening.md`, `docs/integration-contracts.md`, `docs/external-validation-runbook.md` |
 | DPO/Privacidade | `docs/privacy-and-data-retention.md`, `docs/privacy-governance-runbook.md` |
@@ -21,40 +21,40 @@ agentes de codigo no uso seguro da PoC `Integracao.ControlID.PoC`.
 
 ## Desenvolvimento e arquitetura
 
-- `docs/developer-onboarding.md`: setup reproduzivel, execucao, comandos,
-  diagnostico e entrega.
-- `docs/architecture-overview.md`: camadas, fluxos criticos, dependencias e
+- `docs/developer-onboarding.md`: setup reproduzível, execução, comandos,
+  diagnóstico e entrega.
+- `docs/architecture-overview.md`: camadas, fluxos críticos, dependências e
   limites.
 - `docs/project-file-responsibilities.md`: mapa detalhado de arquivos e pastas.
-- `docs/adrs/`: decisoes arquiteturais e suas consequencias.
+- `docs/adrs/`: decisões arquiteturais e suas consequências.
 
 ## Produto e requisitos
 
-- `docs/product-acceptance-criteria.md`: requisitos, fluxos, criterios de aceite,
+- `docs/product-acceptance-criteria.md`: requisitos, fluxos, critérios de aceite,
   rastreabilidade, DoR e DoD.
-- `docs/product-analytics.md`: KPIs, eventos agregados, dashboards e restricoes de
+- `docs/product-analytics.md`: KPIs, eventos agregados, dashboards e restrições de
   privacidade.
 - `docs/brand.md`: identidade visual, tokens e regras de acessibilidade visual.
 
-## Integracoes e dados
+## Integrações e dados
 
-- `docs/integration-contracts.md`: inventario de integracoes, contratos,
+- `docs/integration-contracts.md`: inventário de integrações, contratos,
   payloads e riscos.
-- `docs/monitor-implementation.md`: callbacks, monitoramento e persistencia de
+- `docs/monitor-implementation.md`: callbacks, monitoramento e persistência de
   eventos.
 - `docs/push-implementation.md`: fila Push, polling, resultados e estados.
 - `docs/operation-modes-implementation.md`: Standalone, Pro, Enterprise e
-  transicoes.
-- `docs/data-model-and-recovery.md`: modelo local, indices, migrations, backup e
+  transições.
+- `docs/data-model-and-recovery.md`: modelo local, índices, migrations, backup e
   restore.
 - `docs/database-and-runtime-state.md`: estado de runtime e comandos seguros.
 
-## Seguranca, privacidade e supply chain
+## Segurança, privacidade e cadeia de suprimentos
 
 - `docs/security-hardening.md`: controles de auth, RBAC, HMAC, headers,
   allowlist e estado local.
-- `docs/privacy-and-data-retention.md`: inventario de dados pessoais, tratamento,
-  retencao, descarte e lacunas LGPD.
+- `docs/privacy-and-data-retention.md`: inventário de dados pessoais, tratamento,
+  retenção, descarte e lacunas LGPD.
 - `docs/privacy-governance-runbook.md`: RACI, DSAR, RIPD, DPA e incidente de
   dados.
 - `docs/supply-chain-review.md`: NuGet, lockfiles, SBOM, vendor dependencies e
@@ -62,36 +62,36 @@ agentes de codigo no uso seguro da PoC `Integracao.ControlID.PoC`.
 - `docs/external-validation-runbook.md`: Semgrep, OSV, ZAP, axe e contrato com
   stub/equipamento.
 
-## Operacao, release e continuidade
+## Operação, release e continuidade
 
-- `docs/testing-strategy.md`: testes, coverage, gates e validacao externa.
-- `docs/ci-cd-quality-gates.md`: GitHub Actions, gates obrigatorios,
-  artefatos, branch protection recomendada e reproducao local.
-- `docs/observability-runbook.md`: logs, metricas, tracing, health checks,
+- `docs/testing-strategy.md`: testes, coverage, gates e validação externa.
+- `docs/ci-cd-quality-gates.md`: GitHub Actions, gates obrigatórios,
+  artefatos, branch protection recomendada e reprodução local.
+- `docs/observability-runbook.md`: logs, métricas, tracing, health checks,
   alertas e dashboards.
 - `docs/deployment-runbook.md`: ambientes, Docker/Compose, deploy e rollback.
 - `docs/incident-response-and-dr.md`: matriz SEV, runbooks, DR e postmortem.
-- `docs/equipment-contingency-runbook.md`: contingencia fisica e fallback manual.
-- `docs/finops-capacity.md`: custos, limites, capacidade e governanca FinOps.
-- `docs/residual-risk-closure.md`: fechamento verificavel de lacunas externas,
-  gates e evidencias exigidas para release.
+- `docs/equipment-contingency-runbook.md`: contingência física e fallback manual.
+- `docs/finops-capacity.md`: custos, limites, capacidade e governança FinOps.
+- `docs/residual-risk-closure.md`: fechamento verificável de lacunas externas,
+  gates e evidências exigidas para release.
 
-## Changelog e relatorios
+## Changelog e relatórios
 
-- `docs/changelog-2026-04-14.md`: rodada inicial de evolucao tecnica.
-- `docs/changelog-2026-04-15.md`: comentarios e observabilidade.
-- `docs/changelog-2026-05-01.md`: documentacao, governanca e readiness.
+- `docs/changelog-2026-04-14.md`: rodada inicial de evolução técnica.
+- `docs/changelog-2026-04-15.md`: comentários e observabilidade.
+- `docs/changelog-2026-05-01.md`: documentação, governança e readiness.
 - `docs/changelog-2026-08-03.md`: fechamento dos 14 riscos full-stack.
 - `docs/pr-summary-2026-05-01.md`: resumo de PR/release notes da rodada.
 - `docs/documentation-audit-2026-05-01.md`: auditoria documental e lacunas.
-- `docs/reports/`: relatorios historicos de smoke, UX, design e auditorias. Use
-  somente dados ficticios ou sanitizados.
+- `docs/reports/`: relatórios históricos de smoke, UX, design e auditorias. Use
+  somente dados fictícios ou sanitizados.
 
-## Regras de manutencao
+## Regras de manutenção
 
-- Atualize o indice quando criar, remover ou renomear documentos.
-- Nao inclua secrets, payloads reais, bancos, logs locais ou dados pessoais.
-- Nao documente comandos que nao existem no repositorio.
-- Marque dependencias de decisao humana, DPO, juridico, provedor ou equipamento
-  fisico em `docs/residual-risk-closure.md` e em gates verificaveis.
-- Registre decisoes estruturais em ADR antes de transformar excecao em padrao.
+- Atualize o índice quando criar, remover ou renomear documentos.
+- Não inclua secrets, payloads reais, bancos, logs locais ou dados pessoais.
+- Não documente comandos que não existem no repositório.
+- Marque dependências de decisão humana, DPO, jurídico, provedor ou equipamento
+  físico em `docs/residual-risk-closure.md` e em gates verificáveis.
+- Registre decisões estruturais em ADR antes de transformar exceção em padrão.

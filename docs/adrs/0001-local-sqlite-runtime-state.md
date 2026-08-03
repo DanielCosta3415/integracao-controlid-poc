@@ -1,4 +1,4 @@
-# ADR 0001 - SQLite local como estado runtime da PoC
+# ADR 0001 - SQLite local como estado de execução da PoC
 
 Status: Aceita
 
@@ -6,33 +6,33 @@ Data: 2026-05-01
 
 ## Contexto
 
-A PoC precisa persistir usuarios locais, sessoes, callbacks, eventos de monitor,
-Push, logs operacionais e artefatos tecnicos sem exigir infraestrutura externa.
-O repositorio tambem precisa ser executavel localmente por desenvolvedores e em
+A PoC precisa persistir usuários locais, sessões, callbacks, eventos de monitor,
+Push, logs operacionais e artefatos técnicos sem exigir infraestrutura externa.
+O repositório também precisa ser executável localmente por desenvolvedores e em
 container.
 
-## Decisao
+## Decisão
 
 Usar SQLite local via Entity Framework Core como estado runtime da PoC. O arquivo
-`integracao_controlid.db*` e estado local, nao artefato versionado.
+`integracao_controlid.db*` é estado local, não um artefato versionado.
 
 ## Alternativas consideradas
 
-- Banco relacional externo: melhor para producao multi-instancia, mas criaria
-  dependencia de infraestrutura e segredos para uma PoC.
-- Banco em memoria: simples, mas perderia historico de callbacks, Push e testes de
-  recuperacao.
-- NoSQL/cache externo: nao ha necessidade comprovada no escopo atual.
+- Banco relacional externo: melhor para produção multi-instancia, mas criaria
+  dependência de infraestrutura e segredos para uma PoC.
+- Banco em memória: simples, mas perderia histórico de callbacks, Push e testes de
+  recuperação.
+- NoSQL/cache externo: não há necessidade comprovada no escopo atual.
 
-## Consequencias
+## Consequências
 
-- Setup local fica simples e reproduzivel.
+- Setup local fica simples e reproduzível.
 - Backup/restore precisa tratar `.db`, `-wal` e `-shm` juntos.
-- Escala horizontal e concorrencia ficam limitadas.
-- Dados locais podem conter dados pessoais/sensiveis e devem ficar fora do Git.
-- Mudancas de schema exigem migrations, backup e testes.
+- Escala horizontal e concorrência ficam limitadas.
+- Dados locais podem conter dados pessoais/sensíveis e devem ficar fora do Git.
+- Mudanças de schema exigem migrations, backup e testes.
 
-## Evidencias
+## Evidências
 
 - `Data/IntegracaoControlIDContext.cs`
 - `Data/Migrations/`

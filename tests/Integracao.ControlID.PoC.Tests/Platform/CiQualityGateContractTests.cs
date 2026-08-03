@@ -45,10 +45,10 @@ public class CiQualityGateContractTests
         Assert.Contains("docs/ci-cd-quality-gates.md", readme, StringComparison.Ordinal);
         Assert.Contains("docs/ci-cd-quality-gates.md", docsIndex, StringComparison.Ordinal);
         Assert.Contains("GitHub Actions", ciDocs, StringComparison.Ordinal);
-        Assert.Contains("Quality gates obrigatorios", ciDocs, StringComparison.Ordinal);
-        Assert.Contains("Reproducao local", ciDocs, StringComparison.Ordinal);
-        Assert.Contains("Branch protection recomendada", ciDocs, StringComparison.Ordinal);
-        Assert.Contains("A CI nao executa deploy", ciDocs, StringComparison.Ordinal);
+        Assert.Contains("Critérios de qualidade obrigatórios", ciDocs, StringComparison.Ordinal);
+        Assert.Contains("Reprodução local", ciDocs, StringComparison.Ordinal);
+        Assert.Contains("Proteção de branch recomendada", ciDocs, StringComparison.Ordinal);
+        Assert.Contains("A CI não executa deploy", ciDocs, StringComparison.Ordinal);
         Assert.Contains("docs/ci-cd-quality-gates.md", projectMap, StringComparison.Ordinal);
     }
 
@@ -67,7 +67,7 @@ public class CiQualityGateContractTests
         Assert.Contains("Get-FileHash -LiteralPath $Path", vendorAudit, StringComparison.Ordinal);
         Assert.Contains("[Array]::Sort($files, [StringComparer]::Ordinal)", vendorAudit, StringComparison.Ordinal);
         Assert.Contains("manifest=$($dependency.directorySha256), detected=$($directoryHash.Sha256)", vendorAudit, StringComparison.Ordinal);
-        Assert.Contains("normaliza finais de linha de arquivos texto e usa ordenacao ordinal de caminhos", supplyChainDocs, StringComparison.Ordinal);
+        Assert.Contains("normaliza finais de linha de arquivos texto e usa ordenação ordinal de caminhos", supplyChainDocs, StringComparison.Ordinal);
     }
 
     private static string ReadRepoFile(params string[] segments)

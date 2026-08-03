@@ -10,12 +10,12 @@ public class FinOpsCapacityContractTests
         var dashboard = ReadRepoFile("docs", "observability", "dashboard.json");
         var opsExample = ReadRepoFile("ops.example.json");
 
-        Assert.Contains("Inventario de custos", runbook, StringComparison.Ordinal);
+        Assert.Contains("Inventário de custos", runbook, StringComparison.Ordinal);
         Assert.Contains("Riscos de custo", runbook, StringComparison.Ordinal);
         Assert.Contains("Riscos de capacidade", runbook, StringComparison.Ordinal);
-        Assert.Contains("Governanca FinOps", runbook, StringComparison.Ordinal);
+        Assert.Contains("Governança FinOps", runbook, StringComparison.Ordinal);
         Assert.Contains("Alertas e limites sugeridos", runbook, StringComparison.Ordinal);
-        Assert.Contains("Trade-offs", runbook, StringComparison.Ordinal);
+        Assert.Contains("Contrapartidas", runbook, StringComparison.Ordinal);
         Assert.Contains("Riscos residuais", runbook, StringComparison.Ordinal);
         Assert.Contains("\"FIN-001\"", alerts, StringComparison.Ordinal);
         Assert.Contains("\"FIN-002\"", alerts, StringComparison.Ordinal);
