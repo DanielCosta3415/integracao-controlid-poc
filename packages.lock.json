@@ -26,11 +26,11 @@
       },
       "Microsoft.EntityFrameworkCore.Tools": {
         "type": "Direct",
-        "requested": "[8.0.29, )",
-        "resolved": "8.0.29",
-        "contentHash": "+WAOvbMU0D1vF+b4KCMzOuFq2X8cDAflQdHsxInO6tMyOxXvnsLFa1nKlxV2wk0LPAkrv+4MUL4wJPYLBBySDw==",
+        "requested": "[10.0.10, )",
+        "resolved": "10.0.10",
+        "contentHash": "oFNTteHcfnftdV9a+4Psed+HV95YKnNrPF8F2+nHtvdOVDfdcbNqKE7xYutOquo1cuBAs84Lq5Boh49ANnF4zQ==",
         "dependencies": {
-          "Microsoft.EntityFrameworkCore.Design": "8.0.29"
+          "Microsoft.EntityFrameworkCore.Design": "8.0.26"
         }
       },
       "Microsoft.Extensions.Configuration": {
@@ -200,12 +200,12 @@
       },
       "Microsoft.EntityFrameworkCore.Design": {
         "type": "Transitive",
-        "resolved": "8.0.29",
-        "contentHash": "109wTzveE4yG4aBbAgspGPd3DgVxqmDPyn3duOIgPemQkdm8Y+g6ZSQngvOou3YwgLEYat1+JHVyzdRbLp24BQ==",
+        "resolved": "8.0.26",
+        "contentHash": "XSH+wJmfNBO5eJJdqRGYhHxILGiq1Fl3xkXa3RT+jk/vLIh7Rs5aPwrajoq//TivEyrSUwGg1BfsI2IDVRtp7A==",
         "dependencies": {
           "Humanizer.Core": "2.14.1",
           "Microsoft.CodeAnalysis.CSharp.Workspaces": "4.5.0",
-          "Microsoft.EntityFrameworkCore.Relational": "8.0.29",
+          "Microsoft.EntityFrameworkCore.Relational": "8.0.26",
           "Microsoft.Extensions.DependencyModel": "8.0.2",
           "Mono.TextTemplating": "2.2.1"
         }
