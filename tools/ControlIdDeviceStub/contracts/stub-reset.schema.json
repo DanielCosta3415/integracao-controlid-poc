@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/controlid-stub/stub-reset.schema.json",
+  "title": "Reinicialização determinística do simulador",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "datasetSize": { "type": "integer", "enum": [1, 100, 1000, 10000, 100000] },
+    "profile": { "type": "string", "enum": ["idface", "idflex", "idbox", "legacy"] }
+  },
+  "required": ["datasetSize", "profile"]
+}

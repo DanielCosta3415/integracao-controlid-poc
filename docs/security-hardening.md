@@ -1,6 +1,6 @@
 # Fortalecimento da segurança
 
-> **Documento vivo** · Público: desenvolvimento, AppSec e operação · Responsável: AppSec · Última validação: 2026-08-03.
+> **Documento vivo** · Público: desenvolvimento, AppSec e operação · Responsável: AppSec · Última validação: 2026-08-04.
 
 ## Controles implementados
 
@@ -27,6 +27,13 @@
 - Cópias de segurança do SQLite geradas por `tools/backup-sqlite.ps1` são protegidas por DPAPI por padrão; o teste smoke de restauração descriptografa cópias protegidas para validar a recuperação.
 - `tools/harden-local-state.ps1` restringe permissões locais de SQLite, logs e backups para o usuário atual, Administrators e SYSTEM no Windows.
 - `tools/ControlIdCallbackSigningProxy` fornece uma ponte assinadora para equipamentos que não conseguem gerar HMAC nativamente, com allowlist de paths, bloqueio de headers sensíveis encaminhados e limite de resposta.
+
+O endereço-base do equipamento aceita somente `http` ou `https`, sem
+credenciais, fragmento, caminho ou consulta. A normalização rejeita esquemas
+alternativos e sufixos ambíguos após IPv6, evitando reinterpretação silenciosa
+do destino. O limitador por equipamento permite até quatro operações
+simultâneas e fila de 16; excesso retorna erro local controlado sem atingir o
+dispositivo.
 
 ## Configuração de produção ou ambiente exposto
 

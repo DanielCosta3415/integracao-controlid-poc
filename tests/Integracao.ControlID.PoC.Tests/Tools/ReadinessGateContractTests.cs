@@ -12,6 +12,9 @@ public class ReadinessGateContractTests
         Assert.Contains("MSBUILDDISABLENODEREUSE", script, StringComparison.Ordinal);
         Assert.Contains("DOTNET_CLI_USE_MSBUILD_SERVER", script, StringComparison.Ordinal);
         Assert.Contains("-nr:false", script, StringComparison.Ordinal);
+        Assert.Contains("Invoke-Step \"unit-tests\"", script, StringComparison.Ordinal);
+        Assert.Contains("Invoke-Step \"e2e-tests\"", script, StringComparison.Ordinal);
+        Assert.DoesNotContain("dotnet test \".\\Integracao.ControlID.PoC.sln\"", script, StringComparison.Ordinal);
         Assert.Contains("observability-check.ps1\" -OfflineValidateOnly", script, StringComparison.Ordinal);
         Assert.Contains("RunObservabilityOnline", script, StringComparison.Ordinal);
         Assert.Contains("RequireObservabilityMetrics", script, StringComparison.Ordinal);

@@ -136,7 +136,11 @@ function Get-MetricsHeaders {
 function Read-Metrics {
     $uri = Join-Url -Base $BaseUrl -Path "/metrics"
     $headers = Get-MetricsHeaders
-    return Invoke-WebRequest -Uri $uri -Method Get -Headers $headers -TimeoutSec 10
+    if ($headers.Count -gt 0) {
+        return Invoke-WebRequest -Uri $uri -Method Get -Headers $headers -UseBasicParsing -TimeoutSec 10
+    }
+
+    return Invoke-WebRequest -Uri $uri -Method Get -UseBasicParsing -TimeoutSec 10
 }
 
 function Parse-Metrics {
@@ -149,12 +153,15 @@ function Parse-Metrics {
             continue
         }
 
-        if ($trimmed -notmatch '^(?<name>[a-zA-Z_:][a-zA-Z0-9_:]*)(?<labels>\{[^}]*\})?\s+(?<value>[-+]?[0-9]*\.?[0-9]+)') {
+        $metricMatch = [regex]::Match(
+            $trimmed,
+            '^(?<name>[a-zA-Z_:][a-zA-Z0-9_:]*)(?<labels>\{[^}]*\})?\s+(?<value>[-+]?[0-9]*\.?[0-9]+)')
+        if (-not $metricMatch.Success) {
             continue
         }
 
         $labels = @{}
-        $labelText = $Matches.labels
+        $labelText = $metricMatch.Groups['labels'].Value
         if (-not [string]::IsNullOrWhiteSpace($labelText)) {
             foreach ($labelMatch in [regex]::Matches($labelText.Trim("{}"), '([^=,]+)="((?:\\"|[^"])*)"')) {
                 $labels[$labelMatch.Groups[1].Value] = $labelMatch.Groups[2].Value.Replace('\"', '"')
@@ -162,9 +169,9 @@ function Parse-Metrics {
         }
 
         $metrics.Add([pscustomobject]@{
-            Name = $Matches.name
+            Name = $metricMatch.Groups['name'].Value
             Labels = $labels
-            Value = [double]::Parse($Matches.value, [System.Globalization.CultureInfo]::InvariantCulture)
+            Value = [double]::Parse($metricMatch.Groups['value'].Value, [System.Globalization.CultureInfo]::InvariantCulture)
         })
     }
 
@@ -174,7 +181,7 @@ function Parse-Metrics {
 function Test-LabelFilters {
     param(
         [Parameter(Mandatory = $true)]$Metric,
-        [Parameter(Mandatory = $true)]$Filters
+        [AllowNull()]$Filters
     )
 
     if ($null -eq $Filters) {
@@ -209,6 +216,30 @@ function Test-Threshold {
         "==" { return [double]::Equals($Actual, $Threshold) }
         default { throw "Operador de threshold nao suportado: $Operator" }
     }
+}
+
+function ConvertTo-ThresholdValue {
+    param([Parameter(Mandatory = $true)]$Value)
+
+    if ($Value -is [ValueType]) {
+        return [Convert]::ToDouble($Value, [System.Globalization.CultureInfo]::InvariantCulture)
+    }
+
+    $text = ([string]$Value).Trim()
+    $match = [regex]::Match($text, '^(?<number>[0-9]+(?:\.[0-9]+)?)\s*(?<unit>B|KB|MB|GB)?$', [Text.RegularExpressions.RegexOptions]::IgnoreCase)
+    if (-not $match.Success) {
+        throw "Threshold invalido: $text"
+    }
+
+    $number = [double]::Parse($match.Groups['number'].Value, [System.Globalization.CultureInfo]::InvariantCulture)
+    $multiplier = switch ($match.Groups['unit'].Value.ToUpperInvariant()) {
+        'KB' { 1KB }
+        'MB' { 1MB }
+        'GB' { 1GB }
+        default { 1 }
+    }
+
+    return $number * $multiplier
 }
 
 function Write-Report {
@@ -278,9 +309,14 @@ try {
     Add-Result -Results $results -Name "metrics-endpoint" -Status "PASS" -Detail "Endpoint /metrics respondeu com $($parsedMetrics.Count) series."
 }
 catch {
+    $metricsFailureDetail = "$($_.Exception.GetType().FullName): $($_.Exception.Message)"
+    if (-not [string]::IsNullOrWhiteSpace($_.ScriptStackTrace)) {
+        $metricsFailureDetail += " Linha: $($_.ScriptStackTrace -replace '[\r\n]+', ' ')"
+    }
+
     if ($RequireMetrics) {
         $hasFailure = $true
-        Add-Result -Results $results -Name "metrics-endpoint" -Status "FAIL" -Detail "Endpoint /metrics indisponivel ou sem autorizacao: $($_.Exception.Message)"
+        Add-Result -Results $results -Name "metrics-endpoint" -Status "FAIL" -Detail "Endpoint /metrics indisponivel ou sem autorizacao: $metricsFailureDetail"
     }
     else {
         Add-Result -Results $results -Name "metrics-endpoint" -Status "SKIP" -Detail "Endpoint /metrics nao acessivel sem credencial; use OBSERVABILITY_METRICS_COOKIE ou OBSERVABILITY_METRICS_BEARER_TOKEN."
@@ -289,12 +325,21 @@ catch {
 
 if ($parsedMetrics.Count -gt 0) {
     foreach ($alert in ($rules.alerts | Where-Object { $_.source -eq "metrics" })) {
-        $series = $parsedMetrics | Where-Object {
-            $_.Name -eq $alert.metric -and (Test-LabelFilters -Metric $_ -Filters $alert.labelFilters)
+        $labelFilters = if ($alert.PSObject.Properties['labelFilters']) {
+            $alert.labelFilters
         }
-        $measure = $series | Measure-Object -Property Value -Sum
-        $actual = if ($null -eq $measure.Sum) { 0.0 } else { [double]$measure.Sum }
-        $triggered = Test-Threshold -Actual $actual -Operator $alert.operator -Threshold ([double]$alert.threshold)
+        else {
+            $null
+        }
+        $series = $parsedMetrics | Where-Object {
+            $_.Name -eq $alert.metric -and (Test-LabelFilters -Metric $_ -Filters $labelFilters)
+        }
+        $actual = 0.0
+        foreach ($metricSeries in @($series)) {
+            $actual += [double]$metricSeries.Value
+        }
+        $threshold = ConvertTo-ThresholdValue -Value $alert.threshold
+        $triggered = Test-Threshold -Actual $actual -Operator $alert.operator -Threshold $threshold
 
         if ($triggered) {
             $hasFailure = $true

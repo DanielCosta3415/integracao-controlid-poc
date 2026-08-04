@@ -18,6 +18,7 @@ using Integracao.ControlID.PoC.Services.Security;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -40,6 +41,17 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Configura Serilog
 SeriLogConfiguration.ConfigureSerilog(builder.Host, builder.Configuration);
+
+var dataProtection = builder.Services
+    .AddDataProtection()
+    .SetApplicationName(builder.Configuration["DataProtection:ApplicationName"] ?? "Integracao.ControlID.PoC");
+var dataProtectionKeyPath = builder.Configuration["DataProtection:KeyPath"];
+if (!string.IsNullOrWhiteSpace(dataProtectionKeyPath))
+{
+    var resolvedKeyPath = Path.GetFullPath(dataProtectionKeyPath, builder.Environment.ContentRootPath);
+    Directory.CreateDirectory(resolvedKeyPath);
+    dataProtection.PersistKeysToFileSystem(new DirectoryInfo(resolvedKeyPath));
+}
 
 builder.Services.Configure<HostOptions>(options =>
 {
@@ -70,9 +82,14 @@ if (forwardedHeadersEnabled)
     });
 }
 
-// Configura contexto do banco de dados SQLite
-builder.Services.AddDbContext<IntegracaoControlIDContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+// Configura contexto do banco de dados SQLite.
+builder.Services.Configure<SqliteRuntimeOptions>(builder.Configuration.GetSection("Database:Sqlite"));
+builder.Services.AddSingleton<SqliteConnectionPragmaInterceptor>();
+builder.Services.AddScoped<SqliteRuntimePolicy>();
+builder.Services.AddDbContext<IntegracaoControlIDContext>((serviceProvider, options) =>
+    options
+        .UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"))
+        .AddInterceptors(serviceProvider.GetRequiredService<SqliteConnectionPragmaInterceptor>()));
 
 // Add services MVC
 builder.Services.AddControllersWithViews(options =>
@@ -207,11 +224,13 @@ builder.Services.AddHttpClient(); // HttpClientFactory
 builder.Services.Configure<CallbackSecurityOptions>(builder.Configuration.GetSection("CallbackSecurity"));
 builder.Services.Configure<ControlIdEgressOptions>(builder.Configuration.GetSection("ControlIDApi"));
 builder.Services.Configure<ControlIdCircuitBreakerOptions>(builder.Configuration.GetSection("ControlIDApi:CircuitBreaker"));
+builder.Services.Configure<ControlIdConcurrencyOptions>(builder.Configuration.GetSection("ControlIDApi:Concurrency"));
 builder.Services.AddScoped<CallbackSecurityEvaluator>();
 builder.Services.AddSingleton<CallbackSignatureValidator>();
 builder.Services.AddScoped<CallbackRequestBodyReader>();
 builder.Services.AddScoped<CallbackIngressService>();
 builder.Services.AddSingleton<OfficialApiCircuitBreaker>();
+builder.Services.AddSingleton<OfficialApiConcurrencyLimiter>();
 builder.Services.AddScoped<OfficialApiCatalogService>();
 builder.Services.AddScoped<OfficialApiDocumentationSeedCatalog>();
 builder.Services.AddScoped<OfficialApiQueryParameterStrategy>();
@@ -222,6 +241,7 @@ builder.Services.AddScoped<OfficialApiResultPresentationService>();
 builder.Services.AddScoped<OfficialApiBinaryFileResultFactory>();
 builder.Services.AddScoped<OfficialControlIdApiService>();
 builder.Services.AddScoped<IOfficialControlIdApiService>(serviceProvider => serviceProvider.GetRequiredService<OfficialControlIdApiService>());
+builder.Services.AddScoped<IControlIdSystemClient, ControlIdSystemClient>();
 builder.Services.AddScoped<ControlIdInputSanitizer>();
 builder.Services.AddSingleton<NavigationCatalogService>();
 builder.Services.AddScoped<PageShellService>();
@@ -332,6 +352,14 @@ else
     Log.Information("Database startup migrations are disabled. Readiness will remain unhealthy while migrations are pending.");
 }
 
+using (var sqlitePolicyScope = app.Services.CreateScope())
+{
+    var db = sqlitePolicyScope.ServiceProvider.GetRequiredService<IntegracaoControlIDContext>();
+    var sqlitePolicy = sqlitePolicyScope.ServiceProvider.GetRequiredService<SqliteRuntimePolicy>();
+    var journalMode = await sqlitePolicy.ApplyAsync(db);
+    Log.Information("SQLite runtime policy applied. JournalMode {JournalMode}.", journalMode);
+}
+
 if (exitAfterMigrations)
 {
     Log.Information("Database migration-only mode completed successfully.");
@@ -415,6 +443,13 @@ static void ValidateRuntimeSecurity(WebApplication app)
     {
         throw new InvalidOperationException(
             "AllowedHosts must not contain placeholder values for non-Development environments.");
+    }
+
+    var dataProtectionKeyPath = app.Configuration["DataProtection:KeyPath"];
+    if (string.IsNullOrWhiteSpace(dataProtectionKeyPath) || IsPlaceholderValue(dataProtectionKeyPath))
+    {
+        throw new InvalidOperationException(
+            "DataProtection:KeyPath must point to persistent storage for non-Development environments.");
     }
 
     var callbackSecurityOptions = app.Services.GetRequiredService<IOptions<CallbackSecurityOptions>>().Value;

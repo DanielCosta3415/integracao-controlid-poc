@@ -22,6 +22,7 @@ WORKDIR /app
 
 ENV ASPNETCORE_ENVIRONMENT=Production \
     ASPNETCORE_URLS=http://+:8080 \
+    DataProtection__KeyPath=/app/data/data-protection-keys \
     ConnectionStrings__DefaultConnection="Data Source=/app/data/integracao_controlid.db"
 
 RUN if ! grep -q '^app:' /etc/group; then addgroup -S app; fi && \

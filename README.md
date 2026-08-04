@@ -1,6 +1,6 @@
 # Integração.ControlID.PoC
 
-> **Documento vivo** · Público: novos usuários, desenvolvimento e operação · Responsável: mantenedores · Última validação: 2026-08-03.
+> **Documento vivo** · Público: novos usuários, desenvolvimento e operação · Responsável: mantenedores · Última validação: 2026-08-04.
 
 PoC web em ASP.NET Core 10 MVC/Razor para exploração operacional e técnica da
 Access API da Control iD. A aplicação ajuda um time técnico a conectar um
@@ -55,8 +55,8 @@ Leitura recomendada para um novo desenvolvedor:
 | Banco | SQLite com Entity Framework Core |
 | Logs | Serilog em console e arquivo rolling |
 | Observabilidade | Verificações de saúde, `/metrics` em texto Prometheus e `System.Diagnostics.Metrics` |
-| Testes | xUnit |
-| Teste integrado/contrato | PowerShell com simulador local em `tools/ControlIdDeviceStub` |
+| Testes | xUnit, Playwright e axe |
+| Teste integrado/contrato | PowerShell com simulador determinístico em `tools/ControlIdDeviceStub` |
 | CI | GitHub Actions em `.github/workflows/ci.yml` |
 | Container | `Dockerfile` e `docker-compose.yml` |
 | Dependências | NuGet com `packages.lock.json` |
@@ -86,7 +86,7 @@ Mapa detalhado: `docs/project-file-responsibilities.md`.
 
 ## Requisitos
 
-- .NET SDK 8 compatível com `global.json`.
+- .NET SDK 10 compatível com `global.json`.
 - Windows PowerShell 5+ ou PowerShell 7+.
 - Git.
 - Docker opcional para validar container.
@@ -168,6 +168,8 @@ Este roteiro leva do clone ao primeiro fluxo autenticado sem equipamento físico
    sessão em `/Auth/Status`.
 6. Abra `OfficialApi`, consulte `system_information.fcgi` e confirme resposta de
    sucesso sem dados pessoais reais.
+7. Abra `/Development/Simulator` para aplicar falhas, trocar o perfil de produto
+   ou recriar uma massa sintética. A conexão passa a exibir a origem `Simulado`.
 
 Resultado esperado: interface autenticada, sessão Control iD válida, prontidão
 saudável e nenhuma credencial registrada em logs ou arquivos versionados. Para
@@ -199,7 +201,9 @@ Compilação e testes:
 
 ```powershell
 dotnet build .\Integracao.ControlID.PoC.sln --no-restore -v:minimal
-dotnet test .\Integracao.ControlID.PoC.sln --no-build -v:minimal
+dotnet test .\tests\Integracao.ControlID.PoC.Tests\Integracao.ControlID.PoC.Tests.csproj --no-build -v:minimal
+pwsh .\tests\Integracao.ControlID.PoC.E2E\bin\Debug\net10.0\playwright.ps1 install chromium
+dotnet test .\tests\Integracao.ControlID.PoC.E2E\Integracao.ControlID.PoC.E2E.csproj --no-build -v:minimal
 ```
 
 Formatação, análise estática e verificação de tipos:
@@ -227,6 +231,9 @@ powershell -ExecutionPolicy Bypass -File .\tools\observability-check.ps1 -Offlin
 powershell -ExecutionPolicy Bypass -File .\tools\operational-readiness-check.ps1
 powershell -ExecutionPolicy Bypass -File .\tools\finops-capacity-check.ps1
 powershell -ExecutionPolicy Bypass -File .\tools\contract-controlid-stub.ps1
+powershell -ExecutionPolicy Bypass -File .\tools\maintainability-check.ps1
+powershell -ExecutionPolicy Bypass -File .\tools\performance-baseline.ps1 -FailOnBudget
+powershell -ExecutionPolicy Bypass -File .\tools\test-readiness-gates.ps1 -RunCoverage -RunPerformanceBaseline
 powershell -ExecutionPolicy Bypass -File .\tools\test-readiness-gates.ps1
 ```
 
@@ -256,10 +263,16 @@ Configuração segue o padrão nativo ASP.NET Core (`Secao__Chave`).
 | `ConnectionStrings__DefaultConnection` | `Data Source=integracao_controlid.db` | SQLite local |
 | `Database__ApplyMigrationsOnStartup` | `false` | Aplica migrations apenas quando explicitamente habilitado; `Development` usa `true` |
 | `Database__ExitAfterMigrations` | `false` | Encerra o processo após uma execução de migration controlada |
+| `Database__Sqlite__BusyTimeoutMilliseconds` | `5000` | Espera por escrita concorrente antes de falhar |
+| `Database__Sqlite__WriteAheadLoggingEnabled` | `true` | Solicita journal WAL no início |
 | `AllowedHosts` | `poc.example.internal` | Hosts aceitos fora de `Development`; não use `*` |
+| `DataProtection__KeyPath` | `/app/data/data-protection-keys` | Diretório persistente das chaves de cookies e antiforgery |
 | `ControlIDApi__DefaultDeviceUrl` | `http://<equipamento-ou-host>:8080` | Equipamento Control iD |
 | `ControlIDApi__ConnectionTimeoutSeconds` | `30` | Tempo limite das chamadas oficiais; normalizado entre 5 e 300 segundos |
 | `ControlIDApi__MaxResponseBodyBytes` | `16777216` | Limite de resposta da API externa; normalizado entre 64 KiB e 64 MiB |
+| `ControlIDApi__MaxStreamingResponseBytes` | `268435456` | Limite para download binário transferido em fluxo |
+| `ControlIDApi__Concurrency__MaxConcurrentRequestsPerDevice` | `4` | Operações simultâneas por equipamento |
+| `ControlIDApi__Concurrency__QueueLimitPerDevice` | `16` | Fila máxima por equipamento |
 | `ControlIDApi__RequireAllowedDeviceHosts` | `true` | Exige lista de permissões de saída |
 | `ControlIDApi__AllowedDeviceHosts__0` | `<equipamento-ou-host>` | Primeiro host permitido do equipamento |
 | `CallbackSecurity__MaxBodyBytes` | `1048576` | Limite do corpo para callbacks/monitor |
@@ -378,6 +391,8 @@ Use `tools/contract-controlid-stub.ps1` para validar o contrato sem hardware.
 - `docs/persona-guides.md`: percursos para avaliação, integração, operação e
   liberação.
 - `docs/developer-onboarding.md`: guia de desenvolvimento e diagnóstico.
+- `docs/validation-without-device.md`: escopo verificável antes do aparelho.
+- `docs/stub-scenarios.md`: falhas, perfis e massas do simulador.
 - `docs/architecture-overview.md`: arquitetura e fluxos.
 - `docs/local-account-administration.md`: contas, papéis, sessões e recuperação.
 - `docs/device-compatibility-matrix.md`: compatibilidade por produto, firmware e
@@ -388,6 +403,7 @@ Use `tools/contract-controlid-stub.ps1` para validar o contrato sem hardware.
 - `docs/troubleshooting-controlid.md`: diagnóstico guiado da integração.
 - `docs/data-synchronization-ownership.md`: fontes de verdade e reconciliação.
 - `docs/official-api-version-governance.md`: revisão contínua da API e firmware.
+- `docs/endpoint-validation-matrix.md`: evidência por família de endpoint.
 - `docs/data-model-and-recovery.md`: dados, migrações, índices, cópia de segurança e restauração.
 - `docs/security-hardening.md`: fortalecimento, HMAC, RBAC, cabeçalhos e segredos.
 - `docs/privacy-and-data-retention.md`: LGPD, dados pessoais e retenção.
@@ -399,6 +415,7 @@ Use `tools/contract-controlid-stub.ps1` para validar o contrato sem hardware.
 - `docs/incident-response-and-dr.md`: incidentes, recuperação de desastres e análise pós-incidente.
 - `docs/product-analytics.md`: KPIs e eventos sem rastreamento pessoal.
 - `docs/finops-capacity.md`: custos, capacidade e sustentabilidade operacional.
+- `docs/performance-baseline.md`: complexidade, benchmark e orçamento local.
 - `docs/residual-risk-closure.md`: lacunas externas, gates bloqueantes e
   evidências exigidas para release sem exceções.
 - `docs/adrs/`: decisões arquiteturais.

@@ -101,6 +101,34 @@ namespace Integracao.ControlID.PoC.Services.ControlIDApi
                 cancellationToken);
         }
 
+        public async Task<OfficialApiInvocationResult> InvokeToStreamAsync(
+            string endpointId,
+            Stream destination,
+            Func<OfficialApiStreamMetadata, CancellationToken, ValueTask> onResponseHeaders,
+            object? payload = null,
+            string additionalQuery = "",
+            CancellationToken cancellationToken = default)
+        {
+            var endpoint = _catalogService.GetById(endpointId);
+            if (endpoint == null)
+            {
+                return new OfficialApiInvocationResult
+                {
+                    ErrorMessage = $"Endpoint oficial '{endpointId}' não encontrado."
+                };
+            }
+
+            return await _invokerService.InvokeToStreamAsync(
+                endpoint,
+                GetDeviceAddress(),
+                GetSessionString(),
+                additionalQuery,
+                SerializePayload(payload),
+                destination,
+                onResponseHeaders,
+                cancellationToken);
+        }
+
         /// <summary>
         /// Invoca um endpoint oficial com endereco e sessao informados manualmente.
         /// </summary>

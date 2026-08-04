@@ -1,6 +1,7 @@
 ﻿@using Integracao.ControlID.PoC.Services.Navigation
 @inject NavigationCatalogService NavigationCatalog
 @inject PageShellService PageShellService
+@inject IWebHostEnvironment HostEnvironment
 @{
     Layout = null;
     var controller = ViewContext.RouteData.Values["controller"]?.ToString() ?? "Home";
@@ -16,12 +17,10 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@title - Control iD PoC</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" />
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/site-content.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/site-shell.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/site-shell-responsive.css" asp-append-version="true" />
 </head>
 <body class="app-body" data-controller="@controller" data-action="@action">
@@ -106,6 +105,14 @@
                        aria-label="Ir para o painel de conexão do equipamento">
                         Conexão
                     </a>
+                    @if (HostEnvironment.IsDevelopment())
+                    {
+                        <a class="app-topbar__link"
+                           href="@Url.Action("Simulator", "Development")"
+                           aria-label="Abrir a central do simulador local">
+                            Simulador
+                        </a>
+                    }
                     <span class="app-chip @(shellContext.ConnectionPanel.IsSessionActive ? "app-chip--success" : "app-chip--warning")"
                           aria-label="Status da sessão atual: @(shellContext.ConnectionPanel.IsSessionActive ? "ativa" : "inativa")">
                         @(shellContext.ConnectionPanel.IsSessionActive ? "Sessão ativa" : "Sessão inativa")
@@ -114,6 +121,13 @@
                           aria-label="Status do equipamento em contexto: @(shellContext.ConnectionPanel.IsDeviceConnected ? "conectado" : "não conectado")">
                         @(shellContext.ConnectionPanel.IsDeviceConnected ? "Equipamento pronto" : "Sem equipamento")
                     </span>
+                    @if (shellContext.ConnectionPanel.IsDeviceConnected)
+                    {
+                        <span class="app-chip @(shellContext.ConnectionPanel.IsSimulated ? "app-chip--warning" : "app-chip--neutral")"
+                              aria-label="Origem da conexão: @(shellContext.ConnectionPanel.IsSimulated ? "simulador local" : "equipamento físico não confirmado")">
+                            @(shellContext.ConnectionPanel.IsSimulated ? "Simulado" : "Físico/não confirmado")
+                        </span>
+                    }
                 </div>
             </div>
 
@@ -178,6 +192,7 @@
         }
     </div>
 
+    <script src="~/js/site-forms.js" asp-append-version="true"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>

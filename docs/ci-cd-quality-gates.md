@@ -1,6 +1,6 @@
 # CI/CD e critérios de qualidade
 
-> **Documento vivo** · Público: desenvolvimento, plataforma e release · Responsável: DevOps/Platform · Última validação: 2026-08-03.
+> **Documento vivo** · Público: desenvolvimento, plataforma e release · Responsável: DevOps/Platform · Última validação: 2026-08-04.
 
 Este documento descreve a automação versionada para impedir regressão antes de
 merge ou publicação. Ele complementa `AGENTS.md`, `docs/testing-strategy.md`,
@@ -59,6 +59,10 @@ Não há tarefa de implantação, liberação, publicação, marcação ou envio
 | Ferramentas locais | `dotnet tool restore` | O `dotnet-ef` pinado não pode ser restaurado. |
 | Compilação/verificação de tipos | `dotnet build ... --no-restore` | Erro de compilação ou aviso tratado como erro. |
 | Testes | `dotnet test ... --no-build` | Qualquer teste xUnit falha. |
+| Chromium/Playwright | instalação pinada pelo projeto E2E | Navegador não instala ou jornada autenticada falha. |
+| Cobertura | Coverlet + `tools/validate-coverage.ps1` | Linhas abaixo de 28% ou ramificações abaixo de 16%. |
+| Manutenibilidade | `tools/maintainability-check.ps1` | Arquivo ultrapassa o orçamento versionado. |
+| Desempenho | `tools/performance-baseline.ps1 -FailOnBudget` | p95 local supera 1 s ou o stub supera 768 MiB. |
 | Verificação integrada local | `tools/smoke-localhost.ps1` | Aplicação, simulador ou fluxos locais não respondem. |
 | Contrato simulado Control iD | `tools/contract-controlid-stub.ps1` | O simulador não cumpre autenticação, sessão ou consulta de informações do sistema. |
 | Formatação/análise estática | `dotnet format --verify-no-changes` | Código fora do padrão. |
@@ -84,6 +88,10 @@ A CI publica artefatos diagnósticos não sensíveis por 14 dias:
 - `artifacts/finops-capacity/**/*.md`;
 - `artifacts/reports/**/*.md`;
 - `artifacts/sbom/**/*.json`.
+- `artifacts/e2e/**/*`;
+- `artifacts/performance/**/*`;
+- `artifacts/maintainability/**/*`;
+- `artifacts/test-readiness/coverage/**/*`.
 
 Não publicar logs completos, bancos SQLite, backups, payloads pessoais, fotos,
 biometria, cartões, QR Codes, headers de auth ou secrets.
@@ -100,7 +108,12 @@ dotnet tool restore
 dotnet build .\Integracao.ControlID.PoC.sln --no-restore -v:minimal
 dotnet build .\tools\ControlIdDeviceStub\ControlIdDeviceStub.csproj --no-restore -v:minimal
 dotnet build .\tools\ControlIdCallbackSigningProxy\ControlIdCallbackSigningProxy.csproj --no-restore -v:minimal
-dotnet test .\Integracao.ControlID.PoC.sln --no-build -v:minimal
+pwsh .\tests\Integracao.ControlID.PoC.E2E\bin\Debug\net10.0\playwright.ps1 install chromium
+dotnet test .\tests\Integracao.ControlID.PoC.Tests\Integracao.ControlID.PoC.Tests.csproj --no-build -v:minimal
+dotnet test .\tests\Integracao.ControlID.PoC.E2E\Integracao.ControlID.PoC.E2E.csproj --no-build -v:minimal
+powershell -ExecutionPolicy Bypass -File .\tools\validate-coverage.ps1
+powershell -ExecutionPolicy Bypass -File .\tools\maintainability-check.ps1
+powershell -ExecutionPolicy Bypass -File .\tools\performance-baseline.ps1 -FailOnBudget
 powershell -ExecutionPolicy Bypass -File .\tools\smoke-localhost.ps1
 powershell -ExecutionPolicy Bypass -File .\tools\contract-controlid-stub.ps1
 dotnet format .\Integracao.ControlID.PoC.sln --verify-no-changes --no-restore -v:minimal
@@ -179,9 +192,8 @@ Configurar no GitHub, fora do repositório:
 - A CI não usa credenciais reais nem equipamento físico.
 - Scanners externos completos ficam no `-ReleaseGate` ou em ambiente preparado.
 - Branch protection precisa ser aplicada nas configurações do GitHub.
-- Cobertura numérica por percentual ainda depende de ferramenta adicional
-  versionada; hoje a suíte bloqueia falha de teste e o gate de cobertura bloqueia
-  ausência de artefato quando solicitado.
+- A cobertura inicial é deliberadamente modesta e bloqueia regressão; ela não
+  autoriza reduzir testes de risco nem omitir homologação física.
 
 ## Fluxo da automação
 
@@ -190,8 +202,8 @@ flowchart LR
     Event["Push, PR, agenda ou execução manual"] --> Checkout["Checkout e SDK pinado"]
     Checkout --> Restore["Restauração locked"]
     Restore --> Build["Compilação da solução, stub e proxy"]
-    Build --> Tests["Testes, smoke e contrato stub"]
-    Tests --> Quality["Formatação, documentação e segredos"]
+    Build --> Tests["xUnit, Playwright, axe, cobertura, smoke e contrato stub"]
+    Tests --> Quality["Formatação, manutenibilidade, desempenho, documentação e segredos"]
     Quality --> Audit["Cadeia de suprimentos e vulnerabilidades"]
     Audit --> Artifacts["Artefatos diagnósticos"]
     Event --> Container["Compose e imagem Docker"]

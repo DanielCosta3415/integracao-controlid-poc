@@ -134,11 +134,20 @@ namespace Integracao.ControlID.PoC.Controllers
             if (id == null)
                 return NotFound();
 
-            var result = await _officialApi.InvokeAsync("logo-get", additionalQuery: $"id={id.Value}");
-            if (!result.Success || result.ResponseBytes is not { Length: > 0 } imageBytes)
+            var result = await _officialApi.InvokeToStreamAsync(
+                "logo-get",
+                Response.Body,
+                (metadata, _) => OfficialApiDownloadResponse.ApplyAsync(
+                    Response,
+                    metadata,
+                    $"logo_slot_{id.Value}.{GetFileExtension(metadata.ContentType)}",
+                    "image/jpeg"),
+                additionalQuery: $"id={id.Value}",
+                cancellationToken: HttpContext.RequestAborted);
+            if (!result.Success)
                 return NotFound();
 
-            return File(imageBytes, GetContentType(result.ResponseContentType), $"logo_slot_{id.Value}.{GetFileExtension(result.ResponseContentType)}");
+            return new EmptyResult();
         }
 
         public async Task<IActionResult> Delete(long? id)
@@ -189,15 +198,13 @@ namespace Integracao.ControlID.PoC.Controllers
 
         private async Task<List<LogoViewModel>> LoadLogosAsync()
         {
-            var logos = new List<LogoViewModel>();
+            var slotIds = Enumerable.Range(1, 8).Select(static value => (long)value).ToArray();
+            var logoTasks = slotIds.Select(GetLogoBySlotAsync).ToArray();
+            var loadedLogos = await Task.WhenAll(logoTasks);
 
-            for (var slotId = 1; slotId <= 8; slotId++)
-            {
-                var logo = await GetLogoBySlotAsync(slotId);
-                logos.Add(logo ?? CreateEmptyLogo(slotId));
-            }
-
-            return logos;
+            return slotIds
+                .Select((slotId, index) => loadedLogos[index] ?? CreateEmptyLogo(slotId))
+                .ToList();
         }
 
         private async Task<LogoViewModel?> GetLogoBySlotAsync(long slotId)

@@ -31,6 +31,10 @@
                     <span>Sessão</span>
                     <strong>@(Model.IsSessionActive ? "Ativa" : "Inativa")</strong>
                 </div>
+                <div class="connection-pill">
+                    <span>Origem</span>
+                    <strong>@(Model.IsSimulated ? "Simulador local" : "Físico/não confirmado")</strong>
+                </div>
             </div>
         }
         else
@@ -59,7 +63,7 @@
             <label asp-for="Host" class="form-label">IP ou domínio</label>
             <input asp-for="Host"
                    class="form-control"
-                   placeholder="192.168.0.10, controlid.local ou URL completa"
+                   placeholder="controlid.local ou URL completa"
                    aria-describedby="connectionPanelHelp connectionPanelState" />
         </div>
 
@@ -68,7 +72,7 @@
             <input asp-for="Port"
                    class="form-control"
                    inputmode="numeric"
-                   placeholder="80 / 443 / personalizada"
+                   placeholder="ex.: 8080"
                    aria-describedby="connectionPanelHelp connectionPanelState" />
         </div>
 

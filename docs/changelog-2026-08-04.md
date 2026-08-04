@@ -31,9 +31,34 @@ MVC, os payloads e as regras de negócio foram preservados.
 11. O simulador aplica paginação antes da materialização e usa dicionário para
     `create_or_modify`, eliminando a busca quadrática por objeto.
 
+## Fortalecimento sem equipamento físico
+
+- simulador modularizado com 18 cenários de falha, quatro perfis, cinco massas,
+  schemas, fixtures, métricas e administração exclusiva de loopback;
+- central autenticada em `/Development/Simulator`, com origem simulada visível;
+- E2E Playwright com Chromium, axe, desktop, mobile e referências visuais;
+- cobertura Cobertura XML com pisos bloqueantes de 28% e 16%;
+- transferência binária direta, limite por equipamento e cancelamento;
+- SQLite com WAL, espera ocupada e teste de escritores concorrentes;
+- benchmark reproduzível com percentis, vazão, CPU e memória;
+- CSS dividido em base, conteúdo, shell e responsividade; JavaScript de
+  formulários separado do shell;
+- progresso e cancelamento no upload de vídeo;
+- Semgrep e OSV executados sem achados bloqueantes;
+- axe público sem violações e ZAP sem alertas altos, médios ou baixos;
+- imagem Production validada sem root, com readiness e chaves de Data Protection
+  persistidas no volume de dados;
+- gate de observabilidade on-line compatível com Windows PowerShell 5.1,
+  validado com 25 séries, 15 regras de alerta e seis painéis;
+- testes unitários e E2E executados em processos sequenciais explícitos na CI e
+  no gate local, evitando interferência entre hosts xUnit;
+- matriz de evidência que mantém homologação física separada da simulação.
+
 ## Validação funcional e visual
 
-- Compilação e testes unitários: 218 aprovados, nenhuma falha.
+- Compilação e testes unitários: 242 aprovados, nenhuma falha.
+- E2E agregado: uma jornada aprovada, cobrindo nove telas desktop e duas telas
+  móveis com dados fictícios.
 - Smoke local com aplicação e simulador: 388 aprovações, nenhuma falha e 55
   cenários conscientemente ignorados por dependerem de arquivo, efeito físico ou
   operação destrutiva.

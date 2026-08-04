@@ -1,5 +1,6 @@
 using Integracao.ControlID.PoC.Controllers;
 using Integracao.ControlID.PoC.Helpers;
+using Integracao.ControlID.PoC.Services.ControlIDApi;
 using Integracao.ControlID.PoC.Services.Files;
 using Integracao.ControlID.PoC.Tests.TestSupport;
 using Integracao.ControlID.PoC.ViewModels.System;
@@ -95,8 +96,10 @@ public class SystemControllerTests
             httpContext.Session.SetString(SessionSessionStringKey, "official-session");
         }
 
+        var officialApi = OfficialApiTestFactory.Create(httpContext, handler);
         return new SystemController(
-            OfficialApiTestFactory.Create(httpContext, handler),
+            officialApi,
+            new ControlIdSystemClient(officialApi),
             new UploadedFileBase64Encoder(),
             NullLogger<SystemController>.Instance)
         {

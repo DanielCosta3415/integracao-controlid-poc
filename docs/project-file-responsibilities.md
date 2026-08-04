@@ -1,6 +1,6 @@
 # Responsabilidades dos arquivos do projeto
 
-> **Inventário vivo** · Público: desenvolvimento e manutenção · Responsável: mantenedores · Última validação: 2026-08-03.
+> **Inventário vivo** · Público: desenvolvimento e manutenção · Responsável: mantenedores · Última validação: 2026-08-04.
 
 Este documento resume a responsabilidade dos arquivos versionados da PoC `Integracao.ControlID.PoC`.
 
@@ -223,6 +223,8 @@ Entidades persistidas no SQLite local para histórico, cache operacional, simula
 | `Options/CallbackSecurityOptions.cs` | Representa as configurações de segurança aplicadas aos callbacks/webhooks. |
 | `Options/ControlIdCircuitBreakerOptions.cs` | Configura o limiar e a janela do disjuntor das chamadas à API Control iD. |
 | `Options/ControlIdEgressOptions.cs` | Configura limites, timeout e políticas seguras para tráfego de saída ao equipamento. |
+| `Options/ControlIdConcurrencyOptions.cs` | Configura concorrência, fila e quantidade de equipamentos rastreados. |
+| `Options/SqliteRuntimeOptions.cs` | Configura espera ocupada, WAL e sincronização do SQLite. |
 
 ## Services/Callbacks
 
@@ -577,8 +579,11 @@ As views Razor compõem a interface web da PoC. Em geral, cada pasta espelha um 
 | Arquivo/Pasta | Responsabilidade |
 | --- | --- |
 | `wwwroot/css/site.css` | Estilos globais da PoC, componentes visuais, painel, tabelas e formulários. |
+| `wwwroot/css/site-content.css` | Componentes e superfícies das páginas de conteúdo. |
+| `wwwroot/css/site-shell.css` | Estrutura visual do shell e navegação desktop. |
 | `wwwroot/css/site-shell-responsive.css` | Sobrescritas isoladas da navegação e do shell responsivo. |
 | `wwwroot/js/site.js` | JavaScript global da interface, comportamentos de interação e utilidades executadas no cliente. |
+| `wwwroot/js/site-forms.js` | Estados pendentes, progresso e cancelamento de uploads. |
 | `wwwroot/favicon.ico` | Ícone exibido pelo navegador para a aplicação. |
 | `wwwroot/img/docs/local-login.png` | Captura sanitizada da tela inicial de autenticação local. |
 | `wwwroot/img/docs/authenticated-home.png` | Captura sanitizada do painel autenticado sem equipamento conectado. |
@@ -696,11 +701,13 @@ a arquivos removidos fazem o gate documental falhar.
 | `tests/Integracao.ControlID.PoC.Tests/Services/ControlIDApi/OfficialApiCircuitBreakerTests.cs` | Valida serviços da área `ControlIDApi` e os casos de borda cobertos por `OfficialApiCircuitBreakerTests`. |
 | `tests/Integracao.ControlID.PoC.Tests/Services/ControlIDApi/OfficialApiContractDocumentationServiceTests.cs` | Valida serviços da área `ControlIDApi` e os casos de borda cobertos por `OfficialApiContractDocumentationServiceTests`. |
 | `tests/Integracao.ControlID.PoC.Tests/Services/ControlIDApi/OfficialApiInvokerServiceTests.cs` | Valida serviços da área `ControlIDApi` e os casos de borda cobertos por `OfficialApiInvokerServiceTests`. |
+| `tests/Integracao.ControlID.PoC.Tests/Services/ControlIDApi/OfficialApiConcurrencyLimiterTests.cs` | Valida isolamento, fila e paralelismo por equipamento. |
 | `tests/Integracao.ControlID.PoC.Tests/Services/ControlIDApi/OfficialObjectPagingTests.cs` | Valida limite, offset, lookahead e metadados da paginação oficial. |
 | `tests/Integracao.ControlID.PoC.Tests/Services/Database/DeviceRepositoryTests.cs` | Valida serviços da área `Database` e os casos de borda cobertos por `DeviceRepositoryTests`. |
 | `tests/Integracao.ControlID.PoC.Tests/Services/Database/MonitorEventRepositoryTests.cs` | Valida serviços da área `Database` e os casos de borda cobertos por `MonitorEventRepositoryTests`. |
 | `tests/Integracao.ControlID.PoC.Tests/Services/Database/PushCommandRepositoryTests.cs` | Valida serviços da área `Database` e os casos de borda cobertos por `PushCommandRepositoryTests`. |
 | `tests/Integracao.ControlID.PoC.Tests/Services/Database/RepositoryFailureContractTests.cs` | Valida serviços da área `Database` e os casos de borda cobertos por `RepositoryFailureContractTests`. |
+| `tests/Integracao.ControlID.PoC.Tests/Services/Database/SqliteRuntimePolicyTests.cs` | Valida WAL e escritores SQLite concorrentes. |
 | `tests/Integracao.ControlID.PoC.Tests/Services/Database/UserRepositoryRegistrationTests.cs` | Valida serviços da área `Database` e os casos de borda cobertos por `UserRepositoryRegistrationTests`. |
 | `tests/Integracao.ControlID.PoC.Tests/Services/Files/UploadedFileBase64EncoderTests.cs` | Valida serviços da área `Files` e os casos de borda cobertos por `UploadedFileBase64EncoderTests`. |
 | `tests/Integracao.ControlID.PoC.Tests/Services/Navigation/NavigationCatalogServiceTests.cs` | Valida serviços da área `Navigation` e os casos de borda cobertos por `NavigationCatalogServiceTests`. |
@@ -728,6 +735,7 @@ a arquivos removidos fazem o gate documental falhar.
 | `tests/Integracao.ControlID.PoC.Tests/TestSupport/TestSession.cs` | Fornece infraestrutura determinística de teste por meio de `TestSession`. |
 | `tests/Integracao.ControlID.PoC.Tests/TestSupport/TestSessionFeature.cs` | Fornece infraestrutura determinística de teste por meio de `TestSessionFeature`. |
 | `tests/Integracao.ControlID.PoC.Tests/Tools/ReadinessGateContractTests.cs` | Valida os contratos dos scripts e gates cobertos por `ReadinessGateContractTests`. |
+| `tests/Integracao.ControlID.PoC.Tests/Tools/ControlIdDeviceStubScenarioTests.cs` | Valida catálogo, reset, concorrência e sessão expirada do simulador. |
 
 ## tools
 
@@ -752,11 +760,56 @@ a arquivos removidos fazem o gate documental falhar.
 | `tools/smoke-localhost.ps1` | Script PowerShell que executa teste integrado local, inicia o simulador e percorre fluxos críticos da PoC. |
 | `tools/ControlIdDeviceStub/ControlIdDeviceStub.csproj` | Projeto .NET do simulador local que reproduz respostas de um equipamento Control iD. |
 | `tools/ControlIdDeviceStub/Program.cs` | Implementa os endpoints simulados usados pelos smoke tests locais. |
+| `tools/performance-baseline.ps1` | Mede percentis, vazão, CPU e memória contra massas sintéticas. |
+| `tools/maintainability-check.ps1` | Bloqueia crescimento além dos orçamentos de arquivo versionados. |
 | `tools/ControlIdDeviceStub/packages.lock.json` | Fixa o grafo NuGet do simulador local. |
 | `tools/ControlIdCallbackSigningProxy/ControlIdCallbackSigningProxy.csproj` | Define o proxy mínimo de assinatura HMAC para callbacks de equipamentos sem suporte nativo. |
 | `tools/ControlIdCallbackSigningProxy/Program.cs` | Valida origem e tamanho, remove cabeçalhos sensíveis, assina e encaminha callbacks ao destino permitido. |
 | `tools/ControlIdCallbackSigningProxy/appsettings.json` | Fornece configuração segura sem segredo para o proxy assinador. |
 | `tools/ControlIdCallbackSigningProxy/packages.lock.json` | Fixa o grafo NuGet do proxy assinador. |
+
+## Extensões de validação sem equipamento
+
+Os arquivos desta seção sustentam a validação determinística, a concorrência
+controlada e a inspeção visual introduzidas em 2026-08-04. Eles permanecem
+listados individualmente para que mudanças futuras de responsabilidade sejam
+detectadas pelo inventário.
+
+| Arquivo | Responsabilidade |
+| --- | --- |
+| `Controllers/DevelopmentController.cs` | Disponibiliza, somente em desenvolvimento e em loopback, a administração autenticada do simulador local. |
+| `Models/ControlIDApi/OfficialApiStreamMetadata.cs` | Representa metadados seguros de respostas binárias transmitidas diretamente ao cliente. |
+| `Options/ControlIdConcurrencyOptions.cs` | Define limites configuráveis de paralelismo e fila por equipamento. |
+| `Options/SqliteRuntimeOptions.cs` | Define espera ocupada, modo de diário e sincronização aplicados ao SQLite local. |
+| `Services/ControlIDApi/IControlIdSystemClient.cs` | Expõe o cliente tipado para informações e configuração de rede do equipamento. |
+| `Services/ControlIDApi/OfficialApiConcurrencyLimiter.cs` | Isola e limita requisições concorrentes por destino Control iD, com fila limitada e rejeição segura. |
+| `Services/ControlIDApi/OfficialApiDownloadResponse.cs` | Aplica cabeçalhos permitidos e transmite downloads oficiais sem materialização integral em memória. |
+| `Services/Database/SqliteConnectionPragmaInterceptor.cs` | Aplica pragmas de integridade, sincronização e espera em cada conexão SQLite. |
+| `Services/Database/SqliteRuntimePolicy.cs` | Valida e aplica a política de diário WAL na inicialização do banco local. |
+| `ViewModels/Development/SimulatorViewModel.cs` | Modela cenário, perfil, massa e estado apresentados na central do simulador. |
+| `Views/Development/Simulator.cshtml` | Permite consultar e alterar, de modo seguro, o cenário determinístico usado no desenvolvimento. |
+| `tests/Integracao.ControlID.PoC.E2E/Integracao.ControlID.PoC.E2E.csproj` | Define a suíte de navegador Playwright, axe e xUnit com dependências bloqueadas. |
+| `tests/Integracao.ControlID.PoC.E2E/CriticalJourneysTests.cs` | Percorre jornadas autenticadas, teclado, acessibilidade, responsividade e regressão visual. |
+| `tests/Integracao.ControlID.PoC.E2E/E2EEnvironment.cs` | Inicia aplicação, banco isolado e simulador em portas livres para cada execução de navegador. |
+| `tests/Integracao.ControlID.PoC.E2E/VisualRegression.cs` | Compara capturas de tela por pixels com tolerância versionada. |
+| `tests/Integracao.ControlID.PoC.E2E/packages.lock.json` | Fixa o grafo NuGet da suíte de navegador para restauração reprodutível. |
+| `tests/Integracao.ControlID.PoC.E2E/xunit.runner.json` | Desabilita paralelismo incompatível com o ambiente isolado compartilhado da suíte E2E. |
+| `tools/ControlIdDeviceStub/Properties/AssemblyInfo.cs` | Libera componentes internos do simulador apenas para o projeto de testes. |
+| `tools/ControlIdDeviceStub/StubDatasetFactory.cs` | Gera massas sintéticas determinísticas, sem dados pessoais reais. |
+| `tools/ControlIdDeviceStub/StubDeviceProfile.cs` | Modela perfis representativos de produto e capacidade do equipamento simulado. |
+| `tools/ControlIdDeviceStub/StubEndpointRouter.cs` | Resolve endpoints oficiais simulados e separa o roteamento da composição da aplicação. |
+| `tools/ControlIdDeviceStub/StubManagementEndpoints.cs` | Expõe catálogo, estado, seleção e restauração do simulador somente em loopback. |
+| `tools/ControlIdDeviceStub/StubRequestBodyReader.cs` | Lê corpos de requisição com limite explícito para preservar memória. |
+| `tools/ControlIdDeviceStub/StubRuntimeState.cs` | Mantém cenário, perfil, massa e atraso atuais de forma concorrente e determinística. |
+| `tools/ControlIdDeviceStub/StubScenario.cs` | Implementa falhas, atrasos e respostas anômalas selecionáveis. |
+| `tools/ControlIdDeviceStub/StubState.cs` | Mantém objetos, usuários e demais fixtures determinísticas do equipamento simulado. |
+| `tools/ControlIdDeviceStub/contracts/stub-reset.schema.json` | Documenta o contrato JSON aceito para restauração de perfil e massa do stub. |
+| `tools/ControlIdDeviceStub/contracts/stub-scenario.schema.json` | Documenta o contrato JSON aceito para seleção de cenários e atrasos. |
+| `tools/ControlIdDeviceStub/fixtures/dataset-100.json` | Registra uma fixture mínima representativa para validação documental de massa sintética. |
+| `tools/ControlIdDeviceStub/fixtures/scenario-timeout.json` | Registra uma fixture de falha temporal sem dependência de equipamento físico. |
+| `tools/coverage.runsettings` | Configura a coleta Cobertura e exclui artefatos gerados das métricas. |
+| `tools/maintainability-baseline.json` | Versiona limites globais e exceções justificadas para arquivos legados extensos. |
+| `tools/validate-coverage.ps1` | Valida pisos objetivos de cobertura de linhas e desvios no relatório Cobertura. |
 
 ## Política de geração e revisão
 

@@ -1,6 +1,6 @@
 # Fechamento de riscos residuais externos
 
-> **Registro vivo de riscos** · Público: liderança, release e auditoria · Responsável: Risk Owner/Release · Última validação: 2026-08-03.
+> **Registro vivo de riscos** · Público: liderança, release e auditoria · Responsável: Risk Owner/Release · Última validação: 2026-08-04.
 
 Este documento transforma as lacunas residuais da rodada técnica em controles
 versionados, comandos verificáveis e bloqueios de release. Ele não substitui
@@ -17,7 +17,7 @@ tratados como "resolvidos" sem evidência.
 | RTO/RPO e restauração real | `ops.example.json` já exige RTO/RPO, cópia externa e data de validação; a restauração local tem teste seguro. | `tools/backup-sqlite-operational.ps1 -RunRestoreSmoke` e `tools/operational-readiness-check.ps1 -RequireConfig`. | Restauração real no ambiente-alvo, destino fora do host e aprovação de RTO/RPO. |
 | Bases legais, DPA e RIPD | Template operacional exige status de base legal, DPA, RIPD, canal do titular e evidência DPO. | `tools/operational-readiness-check.ps1 -RequireConfig` bloqueia status pendente. | Validação jurídica/DPO formal e evidências fora do Git. |
 | Contrato físico Control iD | `ops.example.json` exige dono do equipamento, firmware, rede de bancada, data e evidência; release gate exige contrato físico. | `tools/test-readiness-gates.ps1 -ReleaseGate` chama `tools/contract-controlid-device.ps1`. | Hardware, firmware, rede e credenciais reais fora do Git. |
-| Analisadores externos SAST/OSV/DAST/acessibilidade | O modelo operacional exige responsável, estado por analisador, data e relatório; guia e script orquestram as ferramentas. | `tools/external-security-scans.ps1 -InventoryOnly -RequireTools` e `tools/test-readiness-gates.ps1 -ReleaseGate`. | Instalação/aprovação das ferramentas e URL local/homologação controlada. |
+| Analisadores externos SAST/OSV/DAST/acessibilidade | Semgrep, OSV, axe e ZAP foram executados localmente em 2026-08-04; o ZAP não encontrou alertas altos, médios ou baixos, e o axe não encontrou violações na página pública. O E2E mantém axe autenticado. | `tools/external-security-scans.ps1 -RequireTools`, E2E e `tools/test-readiness-gates.ps1 -ReleaseGate`. | Repetição em URL de homologação controlada por release. |
 | Faturamento e orçamento real | `ops.example.json` exige orçamento, painel, alertas e fonte de gasto real; a verificação FinOps valida o contrato documental. | `tools/finops-capacity-check.ps1 -FailOnWarnings` e `tools/operational-readiness-check.ps1 -RequireConfig`. | Conta/provedor real, orçamento aprovado e responsável pelo custo. |
 
 ## Critério mínimo sem ambiente real
@@ -86,7 +86,8 @@ controles:
 
 O que permanece fora do alcance do repositório é a execução real de decisões
 externas: contratar provedor, emitir certificado, validar juridicamente bases,
-rodar hardware físico e instalar scanners no host/CI. Essas dependências agora
+rodar hardware físico, manter scanners no host/CI e executar DAST no ambiente
+alvo. Essas dependências agora
 são bloqueios explícitos, não lacunas silenciosas.
 
 ## Registro e validade do aceite

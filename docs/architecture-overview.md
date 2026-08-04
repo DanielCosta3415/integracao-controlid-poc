@@ -184,6 +184,10 @@ sido diferente.
 | --- | --- | --- |
 | MVC/Razor | Jornada, autorização e apresentação | Critérios de aceite, acessibilidade e testes de controlador |
 | Serviços Control iD | Contrato de saída, limites e falhas | Contratos de integração, stub e segurança de saída |
+| `OfficialApiConcurrencyLimiter` | Até quatro operações por equipamento e fila limitada | Testes concorrentes e resposta local `429` |
+| `ControlIdSystemClient` | Adaptador tipado para informações do sistema | Testes de conexão e sistema |
+| `SqliteRuntimePolicy` | WAL persistente e pragmas de concorrência | Testes SQLite com escritores concorrentes |
+| Central do simulador | Administração local de cenários, perfis e massas | E2E autenticado e contrato do stub |
 | Ingressos externos | Callbacks, Monitor e Push | Assinatura, lista de IPs, idempotência e privacidade |
 | EF Core/SQLite | Estado local, integridade e consultas | Migrações, recuperação, retenção e capacidade |
 | Middlewares | Controles transversais HTTP | Cabeçalhos, correlação, erros, cache e métricas |

@@ -18,6 +18,10 @@ Para escolher um percurso objetivo, consulte [Rotas de leitura e cadência](#rot
   stub ou pendente de equipamento físico.
 - `docs/network-topologies.md`: quem inicia cada conexão e quando a PoC precisa
   ser alcançável pelo equipamento.
+- `docs/validation-without-device.md`: o que pode ser concluído sem aparelho e
+  onde começa a homologação física.
+- `docs/stub-scenarios.md`: cenários, perfis, massas e administração do
+  simulador determinístico.
 
 ## Como a documentação está organizada
 
@@ -67,6 +71,8 @@ ADRs atuais:
 - `docs/adrs/0003-in-process-observability-and-readiness-gates.md`: sinais operacionais.
 - `docs/adrs/0004-release-governance-with-local-scripts.md`: gates de release.
 - `docs/adrs/0005-dotnet-10-lts-runtime.md`: runtime .NET 10 LTS coordenado.
+- `docs/adrs/0006-deterministic-simulator-and-browser-validation.md`: simulador,
+  Playwright, axe e separação da evidência física.
 
 ## Produto e requisitos
 
@@ -90,6 +96,8 @@ ADRs atuais:
   conflitos e reconciliação.
 - `docs/official-api-version-governance.md`: fontes oficiais, cadência e
   revalidação de firmware/contratos.
+- `docs/endpoint-validation-matrix.md`: nível de evidência por família de
+  endpoint.
 - `docs/monitor-implementation.md`: callbacks, monitoramento e persistência de
   eventos.
 - `docs/push-implementation.md`: fila Push, polling, resultados e estados.
@@ -126,6 +134,8 @@ ADRs atuais:
 - `docs/incident-response-and-dr.md`: matriz SEV, guias operacionais, recuperação de desastres e análise pós-incidente.
 - `docs/equipment-contingency-runbook.md`: contingência física e alternativa manual.
 - `docs/finops-capacity.md`: custos, limites, capacidade e governança FinOps.
+- `docs/performance-baseline.md`: método, complexidade, orçamento e resultados
+  locais de desempenho.
 - `docs/residual-risk-closure.md`: fechamento verificável de lacunas externas,
   gates e evidências exigidas para release.
 
@@ -167,7 +177,7 @@ Catálogo de evidências históricas:
   a CI mantém o modo off-line para evitar falhas causadas por terceiros.
 - Todo documento autoral deve informar classificação, público, responsável e
   data de validação logo após o título principal.
-- O inventário atual possui 60 arquivos Markdown: 59 documentos autorais e uma
+- O inventário atual possui 65 arquivos Markdown: 64 documentos autorais e uma
   licença vendorizada que deve permanecer literal.
 
 ## Rotas de leitura e cadência

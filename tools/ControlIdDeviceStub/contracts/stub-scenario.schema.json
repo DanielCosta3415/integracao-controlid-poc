@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/controlid-stub/stub-scenario.schema.json",
+  "title": "Controle de cenário do simulador",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "name": {
+      "type": "string",
+      "enum": [
+        "normal",
+        "slow",
+        "timeout",
+        "bad-request",
+        "unauthorized",
+        "forbidden",
+        "not-found",
+        "conflict",
+        "rate-limited",
+        "server-error",
+        "invalid-json",
+        "truncated-json",
+        "unexpected-json",
+        "wrong-content-type",
+        "oversized-response",
+        "session-expired",
+        "feature-unavailable",
+        "network-drop"
+      ]
+    },
+    "delayMs": { "type": "integer", "minimum": 0, "maximum": 60000 },
+    "endpoint": { "type": ["string", "null"], "pattern": "^/.*" },
+    "responseBytes": { "type": "integer", "minimum": 1048577, "maximum": 67108864 }
+  },
+  "required": ["name"]
+}

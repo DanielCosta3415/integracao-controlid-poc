@@ -1,0 +1,5 @@
+{
+  "name": "timeout",
+  "delayMs": 15000,
+  "endpoint": "/load_objects.fcgi"
+}

@@ -11,7 +11,9 @@ Este guia registra a linha de base visual da PoC Control iD para orientar evolu�
 - Público: desenvolvedores, integradores, operadores técnicos, QA, segurança e times internos que validam equipamento físico, callbacks, push, banco local e contratos.
 - Tom: operacional, preciso, seguro, técnico e confiável. A interface deve parecer ferramenta de trabalho, não landing page.
 - Identidade existente: vermelho como cor primária, grafite para estrutura, superfícies claras, cartões densos, indicadores de estado, tabelas e navegação por domínios.
-- Tipografia existente: `Sora` para títulos e marca; `Manrope` para a interface e o texto.
+- Tipografia existente: famílias locais `Segoe UI Variable Display` para títulos
+  e `Segoe UI Variable Text` para interface e texto, com fallback para
+  `Segoe UI` e `sans-serif`. A PoC não depende de fontes externas.
 - Componentes principais: estrutura fixa, barra superior, busca de módulos, marcadores, cartões, tabelas, formulários, painéis de conexão, painéis de código e alertas.
 - Assets existentes: `wwwroot/favicon.ico` e marca construída em CSS no shell. Foi adicionado `wwwroot/img/brand/controlid-poc-mark.svg` como símbolo independente da PoC.
 
@@ -50,7 +52,10 @@ Use vermelho como acento de decisão e criticidade, não como preenchimento domi
 
 ### Tokenização aplicada no CSS
 
-- `wwwroot/css/site.css` centraliza valores `hex` e `rgba()` no bloco `:root`.
+- `wwwroot/css/site.css` concentra tokens e base;
+  `wwwroot/css/site-content.css` reúne superfícies de conteúdo; e
+  `wwwroot/css/site-shell.css` contém o shell desktop. Regras responsivas do
+  shell permanecem em `site-shell-responsive.css`.
 - Fora de `:root`, cores, overlays, sombras, fundos transluidos, estados e textos inversos devem usar `var(--...)`.
 - Tokens `--white-alpha-*`, `--ink-alpha-*`, `--brand-primary-alpha-*`, `--brand-accent-alpha-*`, `--surface-*-alpha-*`, `--success-alpha-*`, `--warning-alpha-*` e `--info-alpha-*` existem para evitar novos valores soltos.
 - `--color-text-inverse`, `--warning-text-on-dark` e `--success-text-on-dark` governam texto sobre superfícies escuras.
@@ -73,8 +78,8 @@ Esses pares atendem WCAG AA para texto normal. Para texto pequeno sobre fundos t
 
 ### Tipografia
 
-- Destaques: `Sora`, peso 600-800, títulos curtos e métricas.
-- UI/texto: `Manrope`, peso 400-800, formulários, tabelas, botões, hints e navegação.
+- Destaques: `Segoe UI Variable Display`, peso 600-800, títulos curtos e métricas.
+- UI/texto: `Segoe UI Variable Text`, peso 400-800, formulários, tabelas, botões, dicas e navegação.
 - Espaçamento entre letras: manter `0` em títulos, marca e números grandes. Use espaçamento positivo apenas em rótulos curtos em caixa alta, com moderação.
 - Tamanho mínimo: 16px para corpo; 14px apenas para metadados, chips e labels auxiliares.
 

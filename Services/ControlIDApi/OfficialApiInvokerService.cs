@@ -15,15 +15,18 @@ namespace Integracao.ControlID.PoC.Services.ControlIDApi
         private readonly ILogger<OfficialApiInvokerService> _logger;
         private readonly ControlIdInputSanitizer _inputSanitizer;
         private readonly OfficialApiCircuitBreaker _circuitBreaker;
+        private readonly OfficialApiConcurrencyLimiter _concurrencyLimiter;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly TimeSpan _requestTimeout;
         private readonly int _maxResponseBodyBytes;
+        private readonly long _maxStreamingResponseBytes;
 
         public OfficialApiInvokerService(
             IHttpClientFactory httpClientFactory,
             ILogger<OfficialApiInvokerService> logger,
             ControlIdInputSanitizer inputSanitizer,
             OfficialApiCircuitBreaker circuitBreaker,
+            OfficialApiConcurrencyLimiter concurrencyLimiter,
             IHttpContextAccessor httpContextAccessor,
             IConfiguration configuration)
         {
@@ -31,12 +34,15 @@ namespace Integracao.ControlID.PoC.Services.ControlIDApi
             _logger = logger;
             _inputSanitizer = inputSanitizer;
             _circuitBreaker = circuitBreaker;
+            _concurrencyLimiter = concurrencyLimiter;
             _httpContextAccessor = httpContextAccessor;
 
             var configuredTimeout = configuration.GetValue<int?>("ControlIDApi:ConnectionTimeoutSeconds") ?? 60;
             _requestTimeout = TimeSpan.FromSeconds(Math.Clamp(configuredTimeout, 5, 300));
             var configuredMaxResponseBytes = configuration.GetValue<int?>("ControlIDApi:MaxResponseBodyBytes") ?? 16 * 1024 * 1024;
             _maxResponseBodyBytes = Math.Clamp(configuredMaxResponseBytes, 64 * 1024, 64 * 1024 * 1024);
+            var configuredMaxStreamingBytes = configuration.GetValue<long?>("ControlIDApi:MaxStreamingResponseBytes") ?? 256L * 1024 * 1024;
+            _maxStreamingResponseBytes = Math.Clamp(configuredMaxStreamingBytes, 64 * 1024, 1024L * 1024 * 1024);
         }
 
         /// <summary>
@@ -62,7 +68,9 @@ namespace Integracao.ControlID.PoC.Services.ControlIDApi
                 sessionString,
                 additionalQuery,
                 () => _inputSanitizer.BuildSanitizedContent(endpoint, requestBody),
-                cancellationToken);
+                cancellationToken,
+                null,
+                null);
         }
 
         public Task<OfficialApiInvocationResult> InvokeBinaryAsync(
@@ -82,7 +90,33 @@ namespace Integracao.ControlID.PoC.Services.ControlIDApi
                 sessionString,
                 additionalQuery,
                 () => _inputSanitizer.BuildBinaryContent(requestBody),
-                cancellationToken);
+                cancellationToken,
+                null,
+                null);
+        }
+
+        public Task<OfficialApiInvocationResult> InvokeToStreamAsync(
+            OfficialApiEndpointDefinition endpoint,
+            string deviceAddress,
+            string sessionString,
+            string additionalQuery,
+            string requestBody,
+            Stream destination,
+            Func<OfficialApiStreamMetadata, CancellationToken, ValueTask> onResponseHeaders,
+            CancellationToken cancellationToken = default)
+        {
+            ArgumentNullException.ThrowIfNull(destination);
+            ArgumentNullException.ThrowIfNull(onResponseHeaders);
+
+            return InvokeCoreAsync(
+                endpoint,
+                deviceAddress,
+                sessionString,
+                additionalQuery,
+                () => _inputSanitizer.BuildSanitizedContent(endpoint, requestBody),
+                cancellationToken,
+                destination,
+                onResponseHeaders);
         }
 
         private async Task<OfficialApiInvocationResult> InvokeCoreAsync(
@@ -91,7 +125,9 @@ namespace Integracao.ControlID.PoC.Services.ControlIDApi
             string sessionString,
             string additionalQuery,
             Func<HttpContent?> contentFactory,
-            CancellationToken cancellationToken)
+            CancellationToken cancellationToken,
+            Stream? responseDestination,
+            Func<OfficialApiStreamMetadata, CancellationToken, ValueTask>? onResponseHeaders)
         {
             var result = new OfficialApiInvocationResult();
             var stopwatch = Stopwatch.StartNew();
@@ -173,6 +209,10 @@ namespace Integracao.ControlID.PoC.Services.ControlIDApi
                     return result;
                 }
 
+                using var concurrencyLease = await _concurrencyLimiter.AcquireAsync(
+                    deviceTarget,
+                    timeoutSource.Token);
+
                 _logger.LogInformation(
                     OperationalEventIds.OfficialApiInvocationStarted,
                     "Invoking official endpoint {EndpointId} {Method} {Path} against {DeviceTarget}.",
@@ -199,19 +239,40 @@ namespace Integracao.ControlID.PoC.Services.ControlIDApi
                 result.Success = response.IsSuccessStatusCode;
                 result.StatusCode = (int)response.StatusCode;
                 result.ResponseContentType = responseContentType;
-                var responseBytes = await OfficialApiResponseBodyReader.ReadAsync(
-                    response.Content,
-                    _maxResponseBodyBytes,
-                    timeoutSource.Token);
-
-                if (OfficialApiResponseBodyReader.IsBinaryContentType(responseContentType))
+                if (responseDestination != null && result.Success)
                 {
-                    result.ResponseBytes = responseBytes;
-                    result.ResponseBodyIsBase64 = true;
+                    if (response.Content.Headers.ContentLength > _maxStreamingResponseBytes)
+                        throw new InvalidDataException("Response Content-Length exceeds the configured streaming limit.");
+
+                    await onResponseHeaders!(
+                        new OfficialApiStreamMetadata(
+                            result.StatusCode,
+                            responseContentType,
+                            response.Content.Headers.ContentLength),
+                        timeoutSource.Token);
+                    result.ResponseBodyLength = await OfficialApiResponseBodyReader.CopyToAsync(
+                        response.Content,
+                        responseDestination,
+                        _maxStreamingResponseBytes,
+                        timeoutSource.Token);
                 }
                 else
                 {
-                    result.ResponseBody = OfficialApiResponseBodyReader.DecodeText(response.Content, responseBytes);
+                    var responseBytes = await OfficialApiResponseBodyReader.ReadAsync(
+                        response.Content,
+                        _maxResponseBodyBytes,
+                        timeoutSource.Token);
+                    result.ResponseBodyLength = responseBytes.LongLength;
+
+                    if (OfficialApiResponseBodyReader.IsBinaryContentType(responseContentType))
+                    {
+                        result.ResponseBytes = responseBytes;
+                        result.ResponseBodyIsBase64 = true;
+                    }
+                    else
+                    {
+                        result.ResponseBody = OfficialApiResponseBodyReader.DecodeText(response.Content, responseBytes);
+                    }
                 }
 
                 if (OfficialApiCircuitBreaker.IsTransientStatusCode(result.StatusCode))
@@ -243,6 +304,25 @@ namespace Integracao.ControlID.PoC.Services.ControlIDApi
 
                 return result;
             }
+            catch (OfficialApiConcurrencyRejectedException ex)
+            {
+                stopwatch.Stop();
+                result.StatusCode = StatusCodes.Status429TooManyRequests;
+                result.ErrorMessage = "O equipamento está processando o limite de operações simultâneas. Tente novamente em instantes.";
+                OperationalMetrics.RecordOfficialApiInvocation(
+                    endpoint.Id,
+                    endpoint.Method,
+                    "blocked_concurrency_limit",
+                    result.StatusCode,
+                    stopwatch.Elapsed.TotalMilliseconds);
+                _logger.LogWarning(
+                    OperationalEventIds.OfficialApiInvocationBlocked,
+                    ex,
+                    "Official endpoint {EndpointId} was rejected by the per-device concurrency limit for {DeviceTarget}.",
+                    endpoint.Id,
+                    deviceTarget);
+                return result;
+            }
             catch (InvalidOperationException ex)
             {
                 stopwatch.Stop();
@@ -271,7 +351,7 @@ namespace Integracao.ControlID.PoC.Services.ControlIDApi
                 stopwatch.Stop();
                 result.Success = false;
                 result.StatusCode = StatusCodes.Status502BadGateway;
-                result.ErrorMessage = $"A resposta do equipamento excedeu o limite de {_maxResponseBodyBytes} bytes.";
+                result.ErrorMessage = "A resposta do equipamento excedeu o limite de tamanho configurado.";
                 _circuitBreaker.RecordFailure(endpoint.Id, deviceTarget);
                 OperationalMetrics.RecordOfficialApiInvocation(
                     endpoint.Id,

@@ -18,7 +18,8 @@ public class CiQualityGateContractTests
         Assert.Contains("dotnet restore .\\Integracao.ControlID.PoC.sln --locked-mode", workflow, StringComparison.Ordinal);
         Assert.Contains("dotnet tool restore", workflow, StringComparison.Ordinal);
         Assert.Contains("dotnet build .\\Integracao.ControlID.PoC.sln --no-restore", workflow, StringComparison.Ordinal);
-        Assert.Contains("dotnet test .\\Integracao.ControlID.PoC.sln --no-build", workflow, StringComparison.Ordinal);
+        Assert.Contains("dotnet test .\\tests\\Integracao.ControlID.PoC.Tests\\Integracao.ControlID.PoC.Tests.csproj --no-build", workflow, StringComparison.Ordinal);
+        Assert.Contains("dotnet test .\\tests\\Integracao.ControlID.PoC.E2E\\Integracao.ControlID.PoC.E2E.csproj --no-build", workflow, StringComparison.Ordinal);
         Assert.Contains(".\\tools\\smoke-localhost.ps1", workflow, StringComparison.Ordinal);
         Assert.Contains(".\\tools\\contract-controlid-stub.ps1", workflow, StringComparison.Ordinal);
         Assert.Contains("dotnet format .\\Integracao.ControlID.PoC.sln --verify-no-changes", workflow, StringComparison.Ordinal);

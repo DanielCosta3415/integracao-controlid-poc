@@ -11,6 +11,7 @@ public class DeploymentEnvironmentContractTests
         Assert.Contains("dotnet restore ./Integracao.ControlID.PoC.csproj --locked-mode", dockerfile);
         Assert.Contains("ASPNETCORE_URLS=http://+:8080", dockerfile);
         Assert.Contains("Data Source=/app/data/integracao_controlid.db", dockerfile);
+        Assert.Contains("DataProtection__KeyPath=/app/data/data-protection-keys", dockerfile);
         Assert.Contains("USER app", dockerfile);
         Assert.Contains("EXPOSE 8080", dockerfile);
         Assert.Contains("HEALTHCHECK", dockerfile);
@@ -30,6 +31,7 @@ public class DeploymentEnvironmentContractTests
         Assert.Contains("Serilog__WriteTo__1__Args__retainedFileCountLimit", compose);
         Assert.Contains("Serilog__WriteTo__1__Args__fileSizeLimitBytes", compose);
         Assert.Contains("controlid-data:/app/data", compose);
+        Assert.Contains("DataProtection__KeyPath", compose);
         Assert.Contains("controlid-logs:/app/Logs", compose);
         Assert.Contains("Database__ApplyMigrationsOnStartup", compose);
         Assert.Contains("Database__ExitAfterMigrations", compose);
@@ -59,6 +61,7 @@ public class DeploymentEnvironmentContractTests
         Assert.Contains("CallbackSecurity:SharedKey must be a non-placeholder value with at least 32 characters", program);
         Assert.Contains("ForwardedHeaders:KnownProxies must list trusted reverse proxy IPs", program);
         Assert.Contains("ControlIDApi:AllowedDeviceHosts must not contain placeholder values", program);
+        Assert.Contains("DataProtection:KeyPath must point to persistent storage", program);
         Assert.Contains("options.ShutdownTimeout", program);
         Assert.Contains("app.UseForwardedHeaders()", program);
     }
@@ -72,6 +75,7 @@ public class DeploymentEnvironmentContractTests
         var runbook = ReadRepoFile("docs", "deployment-runbook.md");
 
         Assert.Contains("CallbackSecurity__Shared" + "Key=replace-with-at-least-32-random-characters", envExample);
+        Assert.Contains("DataProtection__KeyPath=/app/data/data-protection-keys", envExample);
         Assert.Contains("\"RequireSignedRequests\": true", staging);
         Assert.Contains("\"RequireAllowedDeviceHosts\": true", production);
         Assert.Contains("Procedimento de implantação", runbook);

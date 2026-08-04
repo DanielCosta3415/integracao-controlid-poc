@@ -20,6 +20,7 @@ namespace Integracao.ControlID.PoC.Controllers
     {
         private readonly ILogger<HomeController> _logger;
         private readonly OfficialControlIdApiService _officialApi;
+        private readonly IControlIdSystemClient _systemClient;
         private readonly OfficialApiCatalogService _officialApiCatalogService;
         private readonly MonitorEventRepository _monitorEventRepository;
         private readonly PushCommandRepository _pushCommandRepository;
@@ -30,12 +31,14 @@ namespace Integracao.ControlID.PoC.Controllers
         private const string SessionDeviceSerialKey = "ControlID_DeviceSerial";
         private const string SessionDeviceFirmwareKey = "ControlID_DeviceFirmware";
         private const string SessionSessionStringKey = "ControlID_SessionString";
+        private const string SessionConnectionOriginKey = "ControlID_ConnectionOrigin";
         private const int RecentActivitySourceLimit = 4;
         private const string DashboardLocalMetricsTimingName = "dashboard-local-metrics";
 
         public HomeController(
             ILogger<HomeController> logger,
             OfficialControlIdApiService officialApi,
+            IControlIdSystemClient systemClient,
             OfficialApiCatalogService officialApiCatalogService,
             MonitorEventRepository monitorEventRepository,
             PushCommandRepository pushCommandRepository,
@@ -44,6 +47,7 @@ namespace Integracao.ControlID.PoC.Controllers
         {
             _logger = logger;
             _officialApi = officialApi;
+            _systemClient = systemClient;
             _officialApiCatalogService = officialApiCatalogService;
             _monitorEventRepository = monitorEventRepository;
             _pushCommandRepository = pushCommandRepository;
@@ -186,7 +190,9 @@ namespace Integracao.ControlID.PoC.Controllers
 
             try
             {
-                var (result, document) = await _officialApi.InvokeJsonDirectAsync("system-information", baseUrl);
+                var (result, document) = await _systemClient.GetInformationDirectAsync(
+                    baseUrl,
+                    HttpContext.RequestAborted);
 
                 if (!result.Success)
                 {
@@ -233,6 +239,11 @@ namespace Integracao.ControlID.PoC.Controllers
                     HttpContext.Session.SetString(SessionDeviceNameKey, deviceName);
                     HttpContext.Session.SetString(SessionDeviceSerialKey, serial ?? string.Empty);
                     HttpContext.Session.SetString(SessionDeviceFirmwareKey, version ?? string.Empty);
+                    HttpContext.Session.SetString(
+                        SessionConnectionOriginKey,
+                        deviceName.Contains("Stub", StringComparison.OrdinalIgnoreCase)
+                            ? "simulated"
+                            : "physical-unverified");
 
                     TempData["StatusMessage"] = $"Conectado com sucesso ao equipamento: {deviceName} (Serial: {serial ?? "n/d"})";
                     TempData["StatusType"] = "success";

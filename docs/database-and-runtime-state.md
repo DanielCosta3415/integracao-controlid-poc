@@ -1,6 +1,6 @@
 # Banco de dados e estado de execução
 
-> **Documento vivo** · Público: desenvolvimento e operação · Responsável: engenharia de dados · Última validação: 2026-08-03.
+> **Documento vivo** · Público: desenvolvimento e operação · Responsável: engenharia de dados · Última validação: 2026-08-04.
 
 Este projeto usa SQLite local por padrão. A cadeia de conexão `DefaultConnection` fica em `appsettings.json` e aponta para `integracao_controlid.db`.
 
@@ -17,6 +17,14 @@ Os arquivos abaixo são estado local e não devem ser versionados:
 - `obj/`
 
 Esses caminhos já estão cobertos por `.gitignore`.
+
+### Política de concorrência
+
+Em cada conexão, a PoC aplica espera ocupada de 5 segundos, chaves estrangeiras
+e `synchronous=NORMAL`. No início, `SqliteRuntimePolicy` solicita
+`journal_mode=WAL`, que permite leitores durante uma gravação e reduz falhas de
+contenção. O arquivo continua local; compartilhamento de rede e sincronização em
+nuvem não são topologias homologadas para o banco em uso.
 
 ## Aplicação do esquema
 
@@ -40,7 +48,8 @@ Use estes comandos para validação sem tocar em dados de produção:
 ```powershell
 dotnet restore .\Integracao.ControlID.PoC.sln --locked-mode
 dotnet build .\Integracao.ControlID.PoC.sln --no-restore -v:minimal
-dotnet test .\Integracao.ControlID.PoC.sln --no-build -v:minimal
+dotnet test .\tests\Integracao.ControlID.PoC.Tests\Integracao.ControlID.PoC.Tests.csproj --no-build -v:minimal
+dotnet test .\tests\Integracao.ControlID.PoC.E2E\Integracao.ControlID.PoC.E2E.csproj --no-build -v:minimal
 dotnet format .\Integracao.ControlID.PoC.sln --verify-no-changes --no-restore -v:minimal
 dotnet list .\Integracao.ControlID.PoC.sln package --vulnerable --include-transitive
 ```

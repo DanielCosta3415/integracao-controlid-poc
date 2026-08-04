@@ -1,6 +1,7 @@
 [CmdletBinding()]
 param(
     [switch]$RunCoverage,
+    [switch]$RunPerformanceBaseline,
     [switch]$RunSupplyChainAudit,
     [switch]$RunSmoke,
     [switch]$RunContainerBuild,
@@ -26,6 +27,7 @@ $artifactsRoot = Join-Path $root "artifacts\test-readiness"
 
 if ($ReleaseGate) {
     $RunCoverage = $true
+    $RunPerformanceBaseline = $true
     $RunSupplyChainAudit = $true
     $RunSmoke = $true
     $RunContainerBuild = $true
@@ -67,8 +69,14 @@ try {
         dotnet build ".\Integracao.ControlID.PoC.sln" --no-restore -v:minimal -m:1 -nr:false
     }
 
-    Invoke-Step "tests" {
-        dotnet test ".\Integracao.ControlID.PoC.sln" --no-build -v:minimal -m:1 -nr:false
+    Invoke-Step "unit-tests" {
+        dotnet test ".\tests\Integracao.ControlID.PoC.Tests\Integracao.ControlID.PoC.Tests.csproj" `
+            --no-build -v:minimal -m:1 -nr:false
+    }
+
+    Invoke-Step "e2e-tests" {
+        dotnet test ".\tests\Integracao.ControlID.PoC.E2E\Integracao.ControlID.PoC.E2E.csproj" `
+            --no-build -v:minimal -m:1 -nr:false
     }
 
     Invoke-Step "format-check" {
@@ -81,6 +89,10 @@ try {
 
     Invoke-Step "documentation-validation" {
         powershell -ExecutionPolicy Bypass -File ".\tools\validate-documentation.ps1"
+    }
+
+    Invoke-Step "maintainability" {
+        powershell -ExecutionPolicy Bypass -File ".\tools\maintainability-check.ps1"
     }
 
     Invoke-Step "secret-scan" {
@@ -147,16 +159,31 @@ try {
         }
 
         Invoke-Step "coverage-collector" {
-            dotnet test ".\Integracao.ControlID.PoC.sln" --no-build --collect "Code Coverage" --results-directory $coverageDir -v:minimal
+            dotnet test ".\tests\Integracao.ControlID.PoC.Tests\Integracao.ControlID.PoC.Tests.csproj" `
+                --no-build `
+                --collect "XPlat Code Coverage" `
+                --settings ".\tools\coverage.runsettings" `
+                --results-directory $coverageDir `
+                -v:minimal
         }
 
-        $coverageFiles = Get-ChildItem -Path $coverageDir -Recurse -File -Include "*.coverage", "*.xml", "*.cobertura.xml" -ErrorAction SilentlyContinue
+        $coverageFiles = Get-ChildItem -Path $coverageDir -Recurse -File -Filter "coverage.cobertura.xml" -ErrorAction SilentlyContinue
         if (-not $coverageFiles) {
             throw "Coverage collector completed but no coverage artifact was produced under $coverageDir."
         }
 
         Write-Host "Coverage artifacts:"
         $coverageFiles | ForEach-Object { Write-Host " - $($_.FullName)" }
+
+        Invoke-Step "coverage-threshold" {
+            powershell -ExecutionPolicy Bypass -File ".\tools\validate-coverage.ps1" -CoveragePath $coverageDir
+        }
+    }
+
+    if ($RunPerformanceBaseline) {
+        Invoke-Step "performance-baseline" {
+            powershell -ExecutionPolicy Bypass -File ".\tools\performance-baseline.ps1" -FailOnBudget
+        }
     }
 
     if ($RunSupplyChainAudit) {

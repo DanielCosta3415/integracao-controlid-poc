@@ -9,6 +9,7 @@ namespace Integracao.ControlID.PoC.Models.ControlIDApi
         public string ResponseBody { get; set; } = string.Empty;
         public byte[]? ResponseBytes { get; set; }
         public bool ResponseBodyIsBase64 { get; set; }
+        public long ResponseBodyLength { get; set; }
         public string ErrorMessage { get; set; } = string.Empty;
     }
 }

@@ -47,6 +47,7 @@ public class OfficialApiInvokerServiceTests
             {
                 Enabled = false
             })),
+            CreateConcurrencyLimiter(),
             new HttpContextAccessor { HttpContext = httpContext },
             new ConfigurationBuilder()
                 .AddInMemoryCollection(new Dictionary<string, string?>
@@ -90,6 +91,7 @@ public class OfficialApiInvokerServiceTests
             {
                 Enabled = false
             })),
+            CreateConcurrencyLimiter(),
             new HttpContextAccessor { HttpContext = httpContext },
             new ConfigurationBuilder()
                 .AddInMemoryCollection(new Dictionary<string, string?>
@@ -133,6 +135,7 @@ public class OfficialApiInvokerServiceTests
             NullLogger<OfficialApiInvokerService>.Instance,
             new ControlIdInputSanitizer(),
             new OfficialApiCircuitBreaker(Microsoft.Extensions.Options.Options.Create(new ControlIdCircuitBreakerOptions { Enabled = false })),
+            CreateConcurrencyLimiter(),
             new HttpContextAccessor { HttpContext = new DefaultHttpContext() },
             new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
             {
@@ -157,5 +160,114 @@ public class OfficialApiInvokerServiceTests
         Assert.Equal(new byte[] { 1, 2, 3, 4 }, Assert.Single(handler.Requests).BodyBytes);
         Assert.Equal(new byte[] { 9, 8, 7 }, result.ResponseBytes);
         Assert.Empty(result.ResponseBody);
+    }
+
+    [Fact]
+    public async Task InvokeToStreamAsync_CopiesBinaryResponseWithoutRetainingItInMemoryResult()
+    {
+        var responseBytes = Enumerable.Range(0, 256 * 1024)
+            .Select(static index => (byte)(index % 251))
+            .ToArray();
+        var handler = new RecordingHttpMessageHandler();
+        handler.EnqueueResponse(new HttpResponseMessage(System.Net.HttpStatusCode.OK)
+        {
+            Content = new ByteArrayContent(responseBytes)
+            {
+                Headers = { ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/octet-stream") }
+            }
+        });
+        var invoker = new OfficialApiInvokerService(
+            new StaticHttpClientFactory(handler),
+            NullLogger<OfficialApiInvokerService>.Instance,
+            new ControlIdInputSanitizer(),
+            new OfficialApiCircuitBreaker(Microsoft.Extensions.Options.Options.Create(new ControlIdCircuitBreakerOptions { Enabled = false })),
+            CreateConcurrencyLimiter(),
+            new HttpContextAccessor { HttpContext = new DefaultHttpContext() },
+            new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["ControlIDApi:ConnectionTimeoutSeconds"] = "5",
+                ["ControlIDApi:MaxStreamingResponseBytes"] = (512 * 1024).ToString(System.Globalization.CultureInfo.InvariantCulture)
+            }).Build());
+        await using var destination = new MemoryStream();
+        OfficialApiStreamMetadata? metadata = null;
+
+        var result = await invoker.InvokeToStreamAsync(
+            new OfficialApiEndpointDefinition
+            {
+                Id = "binary-download",
+                Method = "GET",
+                Path = "/binary.fcgi"
+            },
+            "http://device.local",
+            string.Empty,
+            string.Empty,
+            string.Empty,
+            destination,
+            (value, _) =>
+            {
+                metadata = value;
+                return ValueTask.CompletedTask;
+            },
+            TestContext.Current.CancellationToken);
+
+        Assert.True(result.Success);
+        Assert.Equal(responseBytes.LongLength, result.ResponseBodyLength);
+        Assert.Null(result.ResponseBytes);
+        Assert.NotNull(metadata);
+        Assert.Equal("application/octet-stream", metadata.ContentType);
+        Assert.Equal(responseBytes, destination.ToArray());
+    }
+
+    [Fact]
+    public async Task InvokeToStreamAsync_RejectsKnownOversizedResponseBeforeApplyingHeaders()
+    {
+        var handler = new RecordingHttpMessageHandler();
+        handler.EnqueueResponse(new HttpResponseMessage(System.Net.HttpStatusCode.OK)
+        {
+            Content = new ByteArrayContent(new byte[64 * 1024 + 1])
+        });
+        var invoker = new OfficialApiInvokerService(
+            new StaticHttpClientFactory(handler),
+            NullLogger<OfficialApiInvokerService>.Instance,
+            new ControlIdInputSanitizer(),
+            new OfficialApiCircuitBreaker(Microsoft.Extensions.Options.Options.Create(new ControlIdCircuitBreakerOptions { Enabled = false })),
+            CreateConcurrencyLimiter(),
+            new HttpContextAccessor { HttpContext = new DefaultHttpContext() },
+            new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["ControlIDApi:ConnectionTimeoutSeconds"] = "5",
+                ["ControlIDApi:MaxStreamingResponseBytes"] = (64 * 1024).ToString(System.Globalization.CultureInfo.InvariantCulture)
+            }).Build());
+        await using var destination = new MemoryStream();
+        var headersApplied = false;
+
+        var result = await invoker.InvokeToStreamAsync(
+            new OfficialApiEndpointDefinition
+            {
+                Id = "oversized-download",
+                Method = "GET",
+                Path = "/large.fcgi"
+            },
+            "http://device.local",
+            string.Empty,
+            string.Empty,
+            string.Empty,
+            destination,
+            (_, _) =>
+            {
+                headersApplied = true;
+                return ValueTask.CompletedTask;
+            },
+            TestContext.Current.CancellationToken);
+
+        Assert.False(result.Success);
+        Assert.Equal(StatusCodes.Status502BadGateway, result.StatusCode);
+        Assert.False(headersApplied);
+        Assert.Equal(0, destination.Length);
+    }
+
+    private static OfficialApiConcurrencyLimiter CreateConcurrencyLimiter()
+    {
+        return new OfficialApiConcurrencyLimiter(Microsoft.Extensions.Options.Options.Create(new ControlIdConcurrencyOptions()));
     }
 }

@@ -33,6 +33,7 @@ jobs:
           cache-dependency-path: |
             packages.lock.json
             tests/Integracao.ControlID.PoC.Tests/packages.lock.json
+            tests/Integracao.ControlID.PoC.E2E/packages.lock.json
             tools/ControlIdDeviceStub/packages.lock.json
             tools/ControlIdCallbackSigningProxy/packages.lock.json
 
@@ -57,8 +58,29 @@ jobs:
       - name: Build signing proxy
         run: dotnet build .\tools\ControlIdCallbackSigningProxy\ControlIdCallbackSigningProxy.csproj --no-restore -v:minimal
 
-      - name: Test
-        run: dotnet test .\Integracao.ControlID.PoC.sln --no-build -v:minimal
+      - name: Install Playwright Chromium
+        shell: pwsh
+        run: .\tests\Integracao.ControlID.PoC.E2E\bin\Debug\net10.0\playwright.ps1 install chromium
+
+      - name: Unit tests
+        run: dotnet test .\tests\Integracao.ControlID.PoC.Tests\Integracao.ControlID.PoC.Tests.csproj --no-build -v:minimal
+
+      - name: Browser E2E tests
+        run: dotnet test .\tests\Integracao.ControlID.PoC.E2E\Integracao.ControlID.PoC.E2E.csproj --no-build -v:minimal
+
+      - name: Coverage gate
+        shell: pwsh
+        run: |
+          dotnet test .\tests\Integracao.ControlID.PoC.Tests\Integracao.ControlID.PoC.Tests.csproj --no-build --collect "XPlat Code Coverage" --settings .\tools\coverage.runsettings --results-directory .\artifacts\test-readiness\coverage -v:minimal
+          .\tools\validate-coverage.ps1
+
+      - name: Maintainability gate
+        shell: pwsh
+        run: .\tools\maintainability-check.ps1
+
+      - name: Performance baseline
+        shell: pwsh
+        run: .\tools\performance-baseline.ps1 -FailOnBudget
 
       - name: Localhost smoke test
         shell: pwsh
@@ -142,6 +164,10 @@ jobs:
             artifacts/finops-capacity/**/*.md
             artifacts/reports/**/*.md
             artifacts/sbom/**/*.json
+            artifacts/e2e/**/*
+            artifacts/performance/**/*
+            artifacts/maintainability/**/*
+            artifacts/test-readiness/coverage/**/*
 
   container-build:
     runs-on: ubuntu-latest

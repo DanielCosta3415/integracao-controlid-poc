@@ -29,6 +29,7 @@ public static class OfficialApiTestFactory
             {
                 Enabled = false
             })),
+            new OfficialApiConcurrencyLimiter(Microsoft.Extensions.Options.Options.Create(new ControlIdConcurrencyOptions())),
             new HttpContextAccessor { HttpContext = httpContext },
             configuration);
 

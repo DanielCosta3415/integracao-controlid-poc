@@ -1,6 +1,6 @@
 # Implantação, ambientes e resiliência
 
-> **Guia operacional vivo** · Público: plataforma, SRE e release · Responsável: Platform/SRE · Última validação: 2026-08-03.
+> **Guia operacional vivo** · Público: plataforma, SRE e release · Responsável: Platform/SRE · Última validação: 2026-08-04.
 
 Escopo: PoC ASP.NET Core 10 MVC/Razor com SQLite local e integração com equipamento
 Control iD. Este documento descreve execução reproduzível fora do ambiente local
@@ -31,6 +31,8 @@ Variáveis mínimas:
 - `AllowedHosts` com host real, sem `*`, `localhost` ou placeholders.
 - `ConnectionStrings__DefaultConnection=Data Source=/app/data/integracao_controlid.db`
   ou caminho de volume persistente equivalente.
+- `DataProtection__KeyPath=/app/data/data-protection-keys` no mesmo volume
+  persistente, para preservar cookies e antiforgery entre reinicializações.
 - `Database__ApplyMigrationsOnStartup=false` na instancia que atende tráfego.
 - `Database__ExitAfterMigrations=false` na execução normal.
 - `CallbackSecurity__RequireSharedKey=true`.
@@ -80,7 +82,8 @@ Health checks:
 ## Procedimento de implantação
 
 1. Criar ou atualizar `.env` fora do Git com base em `.env.example`.
-2. Garantir volume persistente para `/app/data` e `/app/Logs`.
+2. Garantir volume persistente para `/app/data` e `/app/Logs`; a cópia de
+   `/app/data` deve preservar tanto o SQLite quanto as chaves de Data Protection.
 3. Validar a configuração sem iniciar:
 
 ```powershell
@@ -164,6 +167,7 @@ powershell -ExecutionPolicy Bypass -File .\tools\backup-sqlite-operational.ps1 -
 | Equipamento físico não disponível na CI | Alta | `-RequireHardwareContract` e `-ReleaseGate` bloqueiam release quando exigido. |
 | Secrets reais fora do Git | Alta | `.env.example`, User Secrets, secret scan e validação contra placeholders. |
 | SQLite local em container sem volume | Alta | Compose usa volume nomeado para `/app/data`; docs exigem volume persistente. |
+| Chaves de sessão perdidas na reinicialização | Alta | Chaves de Data Protection persistem em `/app/data/data-protection-keys`; o volume deve ter acesso restrito e criptografia em repouso no provedor. |
 | Forwarded headers com proxy não confiável | Alta | Desabilitado por padrão; exige `KnownProxies` fora de Development. |
 
 ## Topologia de referência independente de provedor

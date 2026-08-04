@@ -65,4 +65,42 @@ public class ControlIdInputSanitizerTests
         Assert.False(success);
         Assert.Contains("allowlist", errorMessage, StringComparison.OrdinalIgnoreCase);
     }
+
+    [Fact]
+    public void NormalizeAdditionalQuery_RemainsSafeAcrossDeterministicAdversarialInputs()
+    {
+        var random = new Random(20260804);
+        const string alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 %&=+?#\\\r\n<>\"'";
+
+        for (var iteration = 0; iteration < 500; iteration++)
+        {
+            var length = random.Next(0, 160);
+            var input = new string(Enumerable.Range(0, length)
+                .Select(_ => alphabet[random.Next(alphabet.Length)])
+                .ToArray());
+
+            try
+            {
+                var normalized = _sanitizer.NormalizeAdditionalQuery(input);
+                Assert.DoesNotContain('\r', normalized);
+                Assert.DoesNotContain('\n', normalized);
+                Assert.DoesNotContain(' ', normalized);
+                Assert.DoesNotContain('#', normalized);
+            }
+            catch (InvalidOperationException)
+            {
+                // Rejeição explícita também é um resultado seguro para entradas sem estrutura válida.
+            }
+        }
+    }
+
+    [Theory]
+    [InlineData("http://127.0.0.1:80\r\nX-Injected: yes")]
+    [InlineData("http://[::1]garbage")]
+    [InlineData("file:///etc/passwd")]
+    [InlineData("javascript:alert(1)")]
+    public void NormalizeDeviceAddress_RejectsMalformedOrUnsafeAddresses(string address)
+    {
+        Assert.Throws<InvalidOperationException>(() => _sanitizer.NormalizeDeviceAddress(address));
+    }
 }

@@ -17,6 +17,7 @@ namespace Integracao.ControlID.PoC.Controllers
         private readonly OfficialControlIdApiService _officialApi;
         private readonly ILogger<SessionController> _logger;
         private const string SessionDeviceAddressKey = "ControlID_DeviceAddress";
+        private const string SessionConnectionOriginKey = "ControlID_ConnectionOrigin";
         private const string SessionSessionStringKey = "ControlID_SessionString";
 
         public SessionController(OfficialControlIdApiService officialApi, ILogger<SessionController> logger)
@@ -105,6 +106,7 @@ namespace Integracao.ControlID.PoC.Controllers
         {
             HttpContext.Session.Remove(SessionSessionStringKey);
             HttpContext.Session.Remove(SessionDeviceAddressKey);
+            HttpContext.Session.Remove(SessionConnectionOriginKey);
 
             TempData["StatusMessage"] = "Sessão local removida com sucesso.";
             TempData["StatusType"] = "success";

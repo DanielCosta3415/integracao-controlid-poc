@@ -1,6 +1,6 @@
 # Validação externa de segurança, dependências, DAST e acessibilidade
 
-> **Guia operacional vivo** · Público: QA, AppSec e release · Responsável: Security/QA · Última validação: 2026-08-03.
+> **Guia operacional vivo** · Público: QA, AppSec e release · Responsável: Security/QA · Última validação: 2026-08-04.
 
 Escopo: padronizar execução de SAST, OSV, DAST baseline e acessibilidade sem
 versionar credenciais, sem enviar payloads pessoais a terceiros e sem depender de
@@ -41,6 +41,11 @@ Em outro terminal:
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\tools\external-security-scans.ps1 -BaseUrl http://127.0.0.1:5000/Auth/LocalLogin
 ```
+
+O orquestrador executa axe antes do ZAP para que a varredura ativa não esgote o
+rate limit antes da auditoria de acessibilidade. Depois do ZAP, o gate interpreta
+o resumo HTML e falha quando houver alerta alto ou médio; alertas baixos e
+informativos permanecem no artefato para revisão humana.
 
 Bloquear release quando qualquer ferramenta ou URL obrigatória faltar:
 

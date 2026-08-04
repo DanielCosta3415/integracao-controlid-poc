@@ -151,7 +151,8 @@ Siga `equipment-contingency-runbook.md` para continuidade física.
 
 ```powershell
 dotnet build .\Integracao.ControlID.PoC.sln --no-restore -v:minimal
-dotnet test .\Integracao.ControlID.PoC.sln --no-build -v:minimal
+dotnet test .\tests\Integracao.ControlID.PoC.Tests\Integracao.ControlID.PoC.Tests.csproj --no-build -v:minimal
+dotnet test .\tests\Integracao.ControlID.PoC.E2E\Integracao.ControlID.PoC.E2E.csproj --no-build -v:minimal
 powershell -ExecutionPolicy Bypass -File .\tools\contract-controlid-stub.ps1
 powershell -ExecutionPolicy Bypass -File .\tools\observability-check.ps1 -OfflineValidateOnly
 powershell -ExecutionPolicy Bypass -File .\tools\scan-secrets.ps1

@@ -42,7 +42,6 @@ public static class OfficialObjectPaging
         if (root == null)
             return payload;
 
-        using var document = JsonDocument.Parse(root.ToJsonString());
-        return new OfficialApiJsonPayload(document.RootElement.Clone());
+        return new OfficialApiJsonPayload(JsonSerializer.SerializeToElement(root));
     }
 }

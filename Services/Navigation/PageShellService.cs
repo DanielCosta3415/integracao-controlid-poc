@@ -13,6 +13,7 @@ namespace Integracao.ControlID.PoC.Services.Navigation
         private const string SessionDeviceSerialKey = "ControlID_DeviceSerial";
         private const string SessionDeviceFirmwareKey = "ControlID_DeviceFirmware";
         private const string SessionSessionStringKey = "ControlID_SessionString";
+        private const string SessionConnectionOriginKey = "ControlID_ConnectionOrigin";
 
         private readonly NavigationCatalogService _navigationCatalogService;
         private readonly ControlIdInputSanitizer _inputSanitizer;
@@ -60,7 +61,8 @@ namespace Integracao.ControlID.PoC.Services.Navigation
                 IsSessionActive = !string.IsNullOrWhiteSpace(session?.GetString(SessionSessionStringKey)),
                 DeviceName = session?.GetString(SessionDeviceNameKey) ?? string.Empty,
                 DeviceSerial = session?.GetString(SessionDeviceSerialKey) ?? string.Empty,
-                DeviceFirmware = session?.GetString(SessionDeviceFirmwareKey) ?? string.Empty
+                DeviceFirmware = session?.GetString(SessionDeviceFirmwareKey) ?? string.Empty,
+                ConnectionOrigin = session?.GetString(SessionConnectionOriginKey) ?? "physical-unverified"
             };
 
             if (Uri.TryCreate(baseAddress, UriKind.Absolute, out var uri))

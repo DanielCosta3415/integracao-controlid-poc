@@ -105,6 +105,8 @@ docker compose up --build
 4. Para trabalhar sem hardware, execute o stub em outro terminal; ele escuta em
    `http://127.0.0.1:6600` e aceita `stub-admin`/`stub-password`.
 5. Em `/Auth/Login`, conecte a aplicação ao stub e confirme `/Auth/Status`.
+6. Como administrador local em `Development`, abra `/Development/Simulator`
+   para trocar cenário, perfil e massa sem reiniciar processos.
 
 Nunca reutilize essas credenciais fictícias fora do stub. O resultado esperado é
 um shell autenticado, `/health/ready` saudável e o catálogo oficial acessível.
@@ -143,7 +145,8 @@ Checks básicos:
 
 ```powershell
 dotnet build .\Integracao.ControlID.PoC.sln --no-restore -v:minimal
-dotnet test .\Integracao.ControlID.PoC.sln --no-build -v:minimal
+dotnet test .\tests\Integracao.ControlID.PoC.Tests\Integracao.ControlID.PoC.Tests.csproj --no-build -v:minimal
+dotnet test .\tests\Integracao.ControlID.PoC.E2E\Integracao.ControlID.PoC.E2E.csproj --no-build -v:minimal
 dotnet format .\Integracao.ControlID.PoC.sln --verify-no-changes --no-restore -v:minimal
 git diff --check
 powershell -ExecutionPolicy Bypass -File .\tools\validate-documentation.ps1

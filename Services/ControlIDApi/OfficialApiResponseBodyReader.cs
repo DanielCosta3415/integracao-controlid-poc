@@ -49,6 +49,42 @@ internal static class OfficialApiResponseBodyReader
         }
     }
 
+    public static async Task<long> CopyToAsync(
+        HttpContent content,
+        Stream destination,
+        long maxResponseBodyBytes,
+        CancellationToken cancellationToken)
+    {
+        if (content.Headers.ContentLength > maxResponseBodyBytes)
+            throw new InvalidDataException("Response Content-Length exceeds the configured streaming limit.");
+
+        await using var stream = await content.ReadAsStreamAsync(cancellationToken);
+        var buffer = ArrayPool<byte>.Shared.Rent(81920);
+        long totalBytes = 0;
+
+        try
+        {
+            while (true)
+            {
+                var bytesRead = await stream.ReadAsync(buffer.AsMemory(0, buffer.Length), cancellationToken);
+                if (bytesRead == 0)
+                    break;
+
+                totalBytes += bytesRead;
+                if (totalBytes > maxResponseBodyBytes)
+                    throw new InvalidDataException("Chunked response exceeds the configured streaming limit.");
+
+                await destination.WriteAsync(buffer.AsMemory(0, bytesRead), cancellationToken);
+            }
+
+            return totalBytes;
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(buffer);
+        }
+    }
+
     public static string DecodeText(HttpContent content, byte[] responseBytes)
     {
         var charset = content.Headers.ContentType?.CharSet?.Trim('"');

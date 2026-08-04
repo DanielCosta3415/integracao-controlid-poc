@@ -53,6 +53,8 @@ namespace Integracao.ControlID.PoC.ViewModels.Shared
         public string DeviceName { get; set; } = string.Empty;
         public string DeviceSerial { get; set; } = string.Empty;
         public string DeviceFirmware { get; set; } = string.Empty;
+        public string ConnectionOrigin { get; set; } = "physical-unverified";
+        public bool IsSimulated => string.Equals(ConnectionOrigin, "simulated", StringComparison.OrdinalIgnoreCase);
     }
 
     public class PageShellContextViewModel

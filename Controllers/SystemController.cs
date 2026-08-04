@@ -20,15 +20,18 @@ namespace Integracao.ControlID.PoC.Controllers
         private const long MaxVpnFileBytes = 10L * 1024 * 1024;
 
         private readonly OfficialControlIdApiService _apiService;
+        private readonly IControlIdSystemClient _systemClient;
         private readonly UploadedFileBase64Encoder _fileEncoder;
         private readonly ILogger<SystemController> _logger;
 
         public SystemController(
             OfficialControlIdApiService apiService,
+            IControlIdSystemClient systemClient,
             UploadedFileBase64Encoder fileEncoder,
             ILogger<SystemController> logger)
         {
             _apiService = apiService;
+            _systemClient = systemClient;
             _fileEncoder = fileEncoder;
             _logger = logger;
         }
@@ -47,7 +50,7 @@ namespace Integracao.ControlID.PoC.Controllers
 
             try
             {
-                var (result, document) = await _apiService.InvokeJsonAsync("system-information");
+                var (result, document) = await _systemClient.GetInformationAsync(HttpContext.RequestAborted);
                 if (!result.Success)
                 {
                     model.ErrorMessage = BuildErrorMessage(result, "Erro ao consultar informações do sistema");
@@ -287,7 +290,7 @@ namespace Integracao.ControlID.PoC.Controllers
 
             try
             {
-                var (result, document) = await _apiService.InvokeJsonAsync("system-information");
+                var (result, document) = await _systemClient.GetInformationAsync(HttpContext.RequestAborted);
                 if (result.Success && document != null)
                 {
                     var root = document.RootElement;
@@ -534,17 +537,27 @@ namespace Integracao.ControlID.PoC.Controllers
 
             try
             {
-                var result = await _apiService.InvokeAsync("get-vpn-file");
-                if (!result.Success || result.ResponseBytes is not { Length: > 0 } bytes)
+                var result = await _apiService.InvokeToStreamAsync(
+                    "get-vpn-file",
+                    Response.Body,
+                    (metadata, _) =>
+                    {
+                        var extension = metadata.ContentType.Contains("zip", StringComparison.OrdinalIgnoreCase) ? "zip" : "bin";
+                        return OfficialApiDownloadResponse.ApplyAsync(
+                            Response,
+                            metadata,
+                            $"openvpn_example.{extension}",
+                            "application/zip");
+                    },
+                    cancellationToken: HttpContext.RequestAborted);
+                if (!result.Success)
                 {
                     TempData["StatusMessage"] = BuildErrorMessage(result, "Erro ao baixar arquivo exemplo do OpenVPN");
                     TempData["StatusType"] = "danger";
                     return RedirectToAction(nameof(Vpn));
                 }
 
-                var contentType = string.IsNullOrWhiteSpace(result.ResponseContentType) ? "application/zip" : result.ResponseContentType;
-                var extension = contentType.Contains("zip", StringComparison.OrdinalIgnoreCase) ? "zip" : "bin";
-                return File(bytes, contentType, $"openvpn_example.{extension}");
+                return new EmptyResult();
             }
             catch (Exception ex)
             {

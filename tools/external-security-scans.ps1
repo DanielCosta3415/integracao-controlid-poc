@@ -248,7 +248,7 @@ if ($availability["semgrep"]) {
     $ok = Invoke-ExternalCommand `
         -Name "semgrep-sast" `
         -CommandPath (Resolve-ExternalCommand -CommandName "semgrep") `
-        -Arguments @("scan", "--config", ".\.semgrep.yml", "--error", "--json", "--output", $semgrepJson, ".") `
+        -Arguments @("scan", "--metrics", "off", "--config", ".\.semgrep.yml", "--error", "--json", "--output", $semgrepJson, ".") `
         -ArtifactPath ".\artifacts\external-scans\semgrep.console.txt"
     if (-not $ok) { $hasFailure = $true }
 }
@@ -258,7 +258,7 @@ if ($availability["osv-scanner"]) {
     $ok = Invoke-ExternalCommand `
         -Name "osv-dependency-scan" `
         -CommandPath (Resolve-ExternalCommand -CommandName "osv-scanner") `
-        -Arguments @("scan", "source", "--recursive", "--format", "json", "--output", $osvJson, ".") `
+        -Arguments @("scan", "source", "--recursive", "--format", "json", "--output-file", $osvJson, ".") `
         -ArtifactPath ".\artifacts\external-scans\osv-scanner.console.txt"
     if (-not $ok) { $hasFailure = $true }
 }
@@ -268,26 +268,6 @@ if ($onlineScansNeedBaseUrl -and [string]::IsNullOrWhiteSpace($BaseUrl)) {
     $status = if ($RequireTools) { "FAIL" } else { "SKIP" }
     Add-Result -Name "online-scan-base-url" -Status $status -Detail "Configure EXTERNAL_SCAN_BASE_URL ou passe -BaseUrl para DAST/a11y."
     if ($RequireTools) { $hasFailure = $true }
-}
-
-if (-not $SkipDast -and -not [string]::IsNullOrWhiteSpace($BaseUrl) -and $availability["zap-baseline.py"]) {
-    $zapHtml = Resolve-RepoPath ".\artifacts\external-scans\zap-baseline.html"
-    $zapJson = Resolve-RepoPath ".\artifacts\external-scans\zap-baseline.json"
-    $zapCommand = Resolve-ExternalCommand -CommandName "zap-baseline.py"
-    $zapArguments = if ([IO.Path]::GetFileName($zapCommand).Equals("zap.bat", [StringComparison]::OrdinalIgnoreCase)) {
-        @("-cmd", "-quickurl", $BaseUrl, "-quickout", $zapHtml, "-quickprogress")
-    }
-    else {
-        @("-t", $BaseUrl, "-r", $zapHtml, "-J", $zapJson)
-    }
-
-    $ok = Invoke-ExternalCommand `
-        -Name "zap-dast-baseline" `
-        -CommandPath $zapCommand `
-        -Arguments $zapArguments `
-        -ArtifactPath ".\artifacts\external-scans\zap-baseline.console.txt" `
-        -WorkingDirectory (Split-Path -Parent $zapCommand)
-    if (-not $ok) { $hasFailure = $true }
 }
 
 if (-not $SkipAccessibility -and -not [string]::IsNullOrWhiteSpace($BaseUrl) -and $availability["axe"]) {
@@ -308,6 +288,50 @@ if (-not $SkipAccessibility -and -not [string]::IsNullOrWhiteSpace($BaseUrl) -an
         -Arguments $axeArguments `
         -ArtifactPath ".\artifacts\external-scans\axe.console.txt"
     if (-not $ok) { $hasFailure = $true }
+}
+
+if (-not $SkipDast -and -not [string]::IsNullOrWhiteSpace($BaseUrl) -and $availability["zap-baseline.py"]) {
+    $zapHtml = Resolve-RepoPath ".\artifacts\external-scans\zap-baseline.html"
+    $zapJson = Resolve-RepoPath ".\artifacts\external-scans\zap-baseline.json"
+    $zapCommand = Resolve-ExternalCommand -CommandName "zap-baseline.py"
+    $zapArguments = if ([IO.Path]::GetFileName($zapCommand).Equals("zap.bat", [StringComparison]::OrdinalIgnoreCase)) {
+        @("-cmd", "-quickurl", $BaseUrl, "-quickout", $zapHtml, "-quickprogress")
+    }
+    else {
+        @("-t", $BaseUrl, "-r", $zapHtml, "-J", $zapJson)
+    }
+
+    $ok = Invoke-ExternalCommand `
+        -Name "zap-dast-baseline" `
+        -CommandPath $zapCommand `
+        -Arguments $zapArguments `
+        -ArtifactPath ".\artifacts\external-scans\zap-baseline.console.txt" `
+        -WorkingDirectory (Split-Path -Parent $zapCommand)
+    if (-not $ok) { $hasFailure = $true }
+
+    if ($ok -and (Test-Path -LiteralPath $zapHtml -PathType Leaf)) {
+        $zapContent = [IO.File]::ReadAllText($zapHtml, [Text.Encoding]::UTF8)
+        $highMatch = [regex]::Match($zapContent, '(?s)<td class="risk-3">.*?<div>High</div>.*?</td>\s*<td[^>]*>.*?<div>(\d+)</div>')
+        $mediumMatch = [regex]::Match($zapContent, '(?s)<td class="risk-2">.*?<div>Medium</div>.*?</td>\s*<td[^>]*>.*?<div>(\d+)</div>')
+        $lowMatch = [regex]::Match($zapContent, '(?s)<td class="risk-1">.*?<div>Low</div>.*?</td>\s*<td[^>]*>.*?<div>(\d+)</div>')
+
+        if (-not $highMatch.Success -or -not $mediumMatch.Success -or -not $lowMatch.Success) {
+            Add-Result -Name "zap-severity-gate" -Status "FAIL" -Detail "Nao foi possivel interpretar o resumo de severidade do relatorio HTML."
+            $hasFailure = $true
+        }
+        else {
+            $highCount = [int]$highMatch.Groups[1].Value
+            $mediumCount = [int]$mediumMatch.Groups[1].Value
+            $lowCount = [int]$lowMatch.Groups[1].Value
+            if ($highCount -gt 0 -or $mediumCount -gt 0) {
+                Add-Result -Name "zap-severity-gate" -Status "FAIL" -Detail "Alertas encontrados: altos=$highCount, medios=$mediumCount, baixos=$lowCount."
+                $hasFailure = $true
+            }
+            else {
+                Add-Result -Name "zap-severity-gate" -Status "PASS" -Detail "Nenhum alerta alto ou medio; baixos=$lowCount."
+            }
+        }
+    }
 }
 
 Write-Report

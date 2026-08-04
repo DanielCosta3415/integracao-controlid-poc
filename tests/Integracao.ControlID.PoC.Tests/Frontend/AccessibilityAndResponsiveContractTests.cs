@@ -86,8 +86,13 @@ public class AccessibilityAndResponsiveContractTests
     {
         var layout = ReadRepoFile("Views", "Shared", "_Layout.cshtml");
         var css = ReadRepoFile("wwwroot", "css", "site.css") +
+                  ReadRepoFile("wwwroot", "css", "site-content.css") +
+                  ReadRepoFile("wwwroot", "css", "site-shell.css") +
                   ReadRepoFile("wwwroot", "css", "site-shell-responsive.css");
 
+        Assert.Contains("~/css/site.css", layout, StringComparison.Ordinal);
+        Assert.Contains("~/css/site-content.css", layout, StringComparison.Ordinal);
+        Assert.Contains("~/css/site-shell.css", layout, StringComparison.Ordinal);
         Assert.Contains("~/css/site-shell-responsive.css", layout, StringComparison.Ordinal);
         Assert.Contains("@media (max-width: 1199px)", css);
         Assert.Contains("@media (max-width: 991px)", css);

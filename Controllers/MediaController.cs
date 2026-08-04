@@ -141,11 +141,20 @@ namespace Integracao.ControlID.PoC.Controllers
             if (id == null)
                 return NotFound();
 
-            var result = await _officialApi.InvokeAsync("user-get-image", additionalQuery: $"user_id={id.Value}");
-            if (!result.Success || result.ResponseBytes is not { Length: > 0 } imageBytes)
+            var result = await _officialApi.InvokeToStreamAsync(
+                "user-get-image",
+                Response.Body,
+                (metadata, _) => OfficialApiDownloadResponse.ApplyAsync(
+                    Response,
+                    metadata,
+                    BuildFileName(metadata.ContentType, "user-photo"),
+                    "image/jpeg"),
+                additionalQuery: $"user_id={id.Value}",
+                cancellationToken: HttpContext.RequestAborted);
+            if (!result.Success)
                 return NotFound();
 
-            return File(imageBytes, GetContentType(result.ResponseContentType, "image/jpeg"), BuildFileName(result.ResponseContentType, "user-photo"));
+            return new EmptyResult();
         }
 
         public IActionResult Delete(long? id)

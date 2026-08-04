@@ -1,6 +1,6 @@
 # AGENTS.md
 
-> **Política de governança viva** · Público: agentes de código e mantenedores · Responsável: liderança técnica · Última validação: 2026-08-03.
+> **Política de governança viva** · Público: agentes de código e mantenedores · Responsável: liderança técnica · Última validação: 2026-08-04.
 
 Regras permanentes para Codex e outros agentes de código neste repositório.
 
@@ -18,7 +18,7 @@ Trate o projeto como uma PoC operacional com pontos sensíveis de segurança, da
 - Banco: SQLite via Entity Framework Core.
 - Logs: Serilog em console e arquivo.
 - OpenAPI/Swagger: Swashbuckle habilitado apenas em `Development` quando `OpenApi:Enabled=true`.
-- Testes: xUnit.
+- Testes: xUnit, Playwright e axe.
 - Verificação integrada/E2E local: PowerShell + simulador em `tools/ControlIdDeviceStub`.
 - Proxy assinador: `tools/ControlIdCallbackSigningProxy` para equipamentos sem HMAC nativo.
 - CI: GitHub Actions em `.github/workflows/ci.yml`.
@@ -104,7 +104,9 @@ dotnet build .\tools\ControlIdDeviceStub\ControlIdDeviceStub.csproj --no-restore
 dotnet build .\tools\ControlIdCallbackSigningProxy\ControlIdCallbackSigningProxy.csproj --no-restore -v:minimal
 dotnet format .\Integracao.ControlID.PoC.sln --verify-no-changes --no-restore -v:minimal
 dotnet format .\tools\ControlIdCallbackSigningProxy\ControlIdCallbackSigningProxy.csproj --verify-no-changes --no-restore -v:minimal
-dotnet test .\Integracao.ControlID.PoC.sln --no-build -v:minimal
+dotnet test .\tests\Integracao.ControlID.PoC.Tests\Integracao.ControlID.PoC.Tests.csproj --no-build -v:minimal
+pwsh .\tests\Integracao.ControlID.PoC.E2E\bin\Debug\net10.0\playwright.ps1 install chromium
+dotnet test .\tests\Integracao.ControlID.PoC.E2E\Integracao.ControlID.PoC.E2E.csproj --no-build -v:minimal
 dotnet list .\Integracao.ControlID.PoC.sln package --vulnerable --include-transitive
 dotnet list .\tools\ControlIdCallbackSigningProxy\ControlIdCallbackSigningProxy.csproj package --vulnerable --include-transitive
 powershell -ExecutionPolicy Bypass -File .\tools\audit-supply-chain.ps1
@@ -115,6 +117,8 @@ powershell -ExecutionPolicy Bypass -File .\tools\observability-check.ps1 -Offlin
 powershell -ExecutionPolicy Bypass -File .\tools\operational-readiness-check.ps1
 powershell -ExecutionPolicy Bypass -File .\tools\finops-capacity-check.ps1
 powershell -ExecutionPolicy Bypass -File .\tools\contract-controlid-stub.ps1
+powershell -ExecutionPolicy Bypass -File .\tools\maintainability-check.ps1
+powershell -ExecutionPolicy Bypass -File .\tools\performance-baseline.ps1 -FailOnBudget
 powershell -ExecutionPolicy Bypass -File .\tools\external-security-scans.ps1 -InventoryOnly
 powershell -ExecutionPolicy Bypass -File .\tools\test-readiness-gates.ps1 -RunCoverage
 powershell -ExecutionPolicy Bypass -File .\tools\test-readiness-gates.ps1 -RunContainerBuild
@@ -135,6 +139,8 @@ Notas:
 - O gate `test-readiness-gates.ps1` executa observabilidade offline por padrão; contra app rodando, use `OBSERVABILITY_BASE_URL` e credencial local para `/metrics` quando necessário.
 - `ops.example.json` define o contrato de ownership, on-call, backup externo, RTO/RPO, FinOps e contingência física. Copie para `ops.local.json` fora do Git para releases reais; `-ReleaseGate` exige essa configuração sem placeholders.
 - `test-readiness-gates.ps1 -ReleaseGate` é o modo estrito para liberação: exige teste integrado, cobertura, cadeia de suprimentos, construção do contêiner, observabilidade on-line, configuração operacional, FinOps/capacidade, contrato físico e analisadores externos.
+- A cobertura unitária usa Cobertura XML, com pisos de 28% de linhas e 16% de
+  ramificações em `tools/validate-coverage.ps1`.
 - Docker/Compose são artefatos de execução reproduzível local/em contêiner; não fazem implantação automática nem configuram provedor de nuvem.
 - Scanners externos (`semgrep`, `osv-scanner`, `zap-baseline.py`, `axe`) são orquestrados por `tools/external-security-scans.ps1`; a instalação das CLIs fica no ambiente e deve ser justificada/registrada.
 - O contrato com equipamento real é opcional, deve ser habilitado explicitamente e exige as variáveis `CONTROLID_DEVICE_URL`, `CONTROLID_USERNAME` e `CONTROLID_PASSWORD`: `powershell -ExecutionPolicy Bypass -File .\tools\contract-controlid-device.ps1`.
@@ -176,6 +182,9 @@ Notas:
   firmware, licença ou modo.
 - Consulte `docs/network-topologies.md` antes de alterar URL, porta, callback,
   Monitor, Push, proxy, DNS ou direção de comunicação.
+- Consulte `docs/stub-scenarios.md`, `docs/validation-without-device.md` e
+  `docs/endpoint-validation-matrix.md` antes de promover evidência simulada para
+  compatibilidade física.
 - Preserve compatibilidade de callbacks oficiais e endpoints push (`/push`, `/result`, `Push/Receive`).
 - Normalize entradas de URL, consulta, corpo e arquivo usando utilitários existentes quando disponíveis.
 - Quando usar `ControlIdCallbackSigningProxy`, mantenha allowlist de IP, limite de body e remoção/reassinatura de headers sensíveis antes do encaminhamento.
@@ -213,6 +222,8 @@ Notas:
 ### Desempenho
 
 - Preserve compressão de resposta e evite carregar catálogos/payloads grandes desnecessariamente.
+- Preserve o limitador por equipamento, o streaming binário e a política SQLite
+  documentados em `docs/performance-baseline.md`.
 - Não adicione chamadas HTTP em loop sem timeout, cancelamento ou limite claro.
 - Evite leitura integral de payloads grandes fora dos leitores com limite.
 
@@ -237,6 +248,9 @@ Notas:
 ### Infraestrutura
 
 - Dockerfile/Compose existem para execução reproduzível e validação de container; mantenha usuário não root, porta 8080, volumes `/app/data` e `/app/Logs`, e healthcheck em `/health/ready`.
+- Fora de `Development`, preserve `DataProtection:KeyPath` em armazenamento
+  persistente; em contêiner, `/app/data/data-protection-keys` deve acompanhar o
+  SQLite nos procedimentos de backup, restauração e rollback.
 - Não versione `ops.local.json`; ele pode conter nomes, canais privados, local de evidências e detalhes operacionais.
 - Não crie implantação automática, DNS real ou provedor de nuvem sem pedido explícito.
 - Não reduza retenção, registros de segurança ou redundância operacional apenas por custo; documente a contrapartida em `docs/finops-capacity.md`.

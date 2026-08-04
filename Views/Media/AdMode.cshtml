@@ -27,7 +27,7 @@
                 </div>
             </div>
 
-            <form asp-action="UploadAdVideo" method="post" enctype="multipart/form-data" autocomplete="off" class="form-section">
+            <form asp-action="UploadAdVideo" method="post" enctype="multipart/form-data" autocomplete="off" class="form-section" data-upload-progress>
                 <div class="app-upload-field">
                     <label asp-for="VideoFile" class="form-label"></label>
                     <input asp-for="VideoFile" class="form-control" type="file" accept=".mp4,video/mp4" />
@@ -55,7 +55,16 @@
                     </span>
                 </label>
 
-                <div class="form-actions"><button type="submit" class="btn btn-primary">Enviar vídeo</button></div>
+                <div class="app-stack" data-upload-status hidden aria-live="polite" aria-atomic="true">
+                    <div class="progress" role="progressbar" aria-label="Progresso do envio do vídeo" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                        <div class="progress-bar" data-upload-progress-bar style="width: 0%"></div>
+                    </div>
+                    <small data-upload-status-text>Preparando envio...</small>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Enviar vídeo</button>
+                    <button type="button" class="btn btn-outline-danger" data-upload-cancel hidden>Cancelar envio</button>
+                </div>
             </form>
         </section>
 

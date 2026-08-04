@@ -12,6 +12,8 @@ services:
       ASPNETCORE_URLS: "http://+:8080"
       AllowedHosts: "${AllowedHosts:?set AllowedHosts in .env}"
       Host__ShutdownTimeoutSeconds: "${Host__ShutdownTimeoutSeconds:-30}"
+      DataProtection__ApplicationName: "${DataProtection__ApplicationName:-Integracao.ControlID.PoC}"
+      DataProtection__KeyPath: "${DataProtection__KeyPath:-/app/data/data-protection-keys}"
       ConnectionStrings__DefaultConnection: "${ConnectionStrings__DefaultConnection:-Data Source=/app/data/integracao_controlid.db}"
       Database__ApplyMigrationsOnStartup: "${Database__ApplyMigrationsOnStartup:-false}"
       Database__ExitAfterMigrations: "${Database__ExitAfterMigrations:-false}"

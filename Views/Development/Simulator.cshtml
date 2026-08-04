@@ -1,0 +1,157 @@
+@model Integracao.ControlID.PoC.ViewModels.Development.SimulatorViewModel
+@{
+    ViewData["Title"] = "Central do simulador";
+    ViewData["Subtitle"] = "Cenários determinísticos para validação local sem equipamento físico.";
+}
+
+<div class="container mt-5 app-stack">
+    <header class="app-page-header">
+        <div>
+            <span class="app-eyebrow">Ambiente de desenvolvimento</span>
+            <h1>Central do simulador</h1>
+            <p>Controle o estado do dispositivo simulado em loopback.</p>
+        </div>
+        <span class="app-chip @(Model.IsReachable ? "app-chip--success" : "app-chip--danger")">
+            @(Model.IsReachable ? "Simulador disponível" : "Simulador indisponível")
+        </span>
+    </header>
+
+    @if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
+    {
+        <div class="alert alert-@Model.StatusType" role="status" aria-live="polite">@Model.StatusMessage</div>
+    }
+
+    <section class="catalog-stat-grid" aria-label="Estado atual do simulador">
+        <article class="catalog-stat-card">
+            <span>Origem</span>
+            <strong>Simulada</strong>
+            <small>@Model.StubUrl</small>
+        </article>
+        <article class="catalog-stat-card">
+            <span>Cenário</span>
+            <strong>@Model.Scenario</strong>
+            <small>Resposta ativa no motor determinístico.</small>
+        </article>
+        <article class="catalog-stat-card">
+            <span>Perfil</span>
+            <strong>@Model.Profile</strong>
+            <small>Linha de produto representada.</small>
+        </article>
+        <article class="catalog-stat-card">
+            <span>Massa</span>
+            <strong>@Model.DatasetSize</strong>
+            <small>Registros sintéticos em memória.</small>
+        </article>
+    </section>
+
+    <section class="app-grid-two">
+        <article class="app-surface-card app-stack">
+            <div class="app-page-section__heading">
+                <div>
+                    <strong>Injeção de falha</strong>
+                    <p>Aplique o comportamento a todos os endpoints ou a um caminho específico.</p>
+                </div>
+            </div>
+            <form asp-action="ApplyScenario" method="post" class="form-section" data-pending-label="Aplicando cenário...">
+                <div>
+                    <label asp-for="SelectedScenario" class="form-label">Cenário</label>
+                    <select asp-for="SelectedScenario" class="form-select">
+                        @foreach (var scenario in Model.AvailableScenarios)
+                        {
+                            <option value="@scenario">@scenario</option>
+                        }
+                    </select>
+                </div>
+                <div class="app-grid-two">
+                    <div>
+                        <label asp-for="DelayMilliseconds" class="form-label">Atraso (ms)</label>
+                        <input asp-for="DelayMilliseconds" class="form-control" inputmode="numeric" />
+                    </div>
+                    <div>
+                        <label asp-for="ResponseBytes" class="form-label">Tamanho da resposta</label>
+                        <input asp-for="ResponseBytes" class="form-control" inputmode="numeric" />
+                    </div>
+                </div>
+                <div>
+                    <label asp-for="Endpoint" class="form-label">Endpoint alvo</label>
+                    <input asp-for="Endpoint" class="form-control" placeholder="/system_information.fcgi" />
+                </div>
+                <button type="submit" class="btn btn-primary">Aplicar cenário</button>
+            </form>
+        </article>
+
+        <article class="app-surface-card app-stack">
+            <div class="app-page-section__heading">
+                <div>
+                    <strong>Estado determinístico</strong>
+                    <p>Recrie o dispositivo com um perfil e uma massa conhecidos.</p>
+                </div>
+            </div>
+            <form asp-action="ResetSimulator" method="post" class="form-section" data-pending-label="Reinicializando...">
+                <div>
+                    <label asp-for="SelectedProfile" class="form-label">Perfil de produto</label>
+                    <select asp-for="SelectedProfile" class="form-select">
+                        @foreach (var profile in Model.AvailableProfiles)
+                        {
+                            <option value="@profile">@profile</option>
+                        }
+                    </select>
+                </div>
+                <div>
+                    <label asp-for="SelectedDatasetSize" class="form-label">Quantidade de registros</label>
+                    <select asp-for="SelectedDatasetSize" class="form-select">
+                        @foreach (var size in Model.AvailableDatasetSizes)
+                        {
+                            <option value="@size">@size.ToString("N0")</option>
+                        }
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-outline-secondary">Reinicializar simulador</button>
+            </form>
+        </article>
+    </section>
+
+    <section class="app-surface-card app-stack">
+        <div class="app-page-section__heading">
+            <div>
+                <strong>Requisições observadas</strong>
+                <p>Contadores e latência acumulados desde a última reinicialização.</p>
+            </div>
+            <a class="btn btn-quiet" asp-action="Simulator">Atualizar</a>
+        </div>
+        @if (Model.Requests.Count == 0)
+        {
+            <div class="app-empty-state" role="status">Nenhuma requisição registrada neste ciclo.</div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead>
+                        <tr>
+                            <th scope="col">Endpoint</th>
+                            <th scope="col">Chamadas</th>
+                            <th scope="col">Média</th>
+                            <th scope="col">Máxima</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var request in Model.Requests)
+                        {
+                            <tr>
+                                <td><code>@request.Path</code></td>
+                                <td>@request.Count</td>
+                                <td>@request.AverageMilliseconds.ToString("N2") ms</td>
+                                <td>@request.MaximumMilliseconds.ToString("N2") ms</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </section>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

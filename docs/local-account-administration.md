@@ -161,7 +161,8 @@ não apenas a conta. Isso é destrutivo e exige confirmação explícita.
 ## Validação relacionada
 
 ```powershell
-dotnet test .\Integracao.ControlID.PoC.sln --no-build -v:minimal
+dotnet test .\tests\Integracao.ControlID.PoC.Tests\Integracao.ControlID.PoC.Tests.csproj --no-build -v:minimal
+dotnet test .\tests\Integracao.ControlID.PoC.E2E\Integracao.ControlID.PoC.E2E.csproj --no-build -v:minimal
 powershell -ExecutionPolicy Bypass -File .\tools\scan-secrets.ps1
 ```
 

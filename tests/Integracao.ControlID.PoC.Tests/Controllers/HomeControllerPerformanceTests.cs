@@ -47,6 +47,7 @@ public class HomeControllerPerformanceTests
         var controller = new HomeController(
             NullLogger<HomeController>.Instance,
             officialApi: null!,
+            systemClient: null!,
             new OfficialApiCatalogService(),
             new MonitorEventRepository(database.Context, NullLogger<MonitorEventRepository>.Instance),
             new PushCommandRepository(database.Context, NullLogger<PushCommandRepository>.Instance),

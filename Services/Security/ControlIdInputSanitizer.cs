@@ -50,8 +50,7 @@ namespace Integracao.ControlID.PoC.Services.Security
             }
 
             var effectiveScheme = string.Equals(scheme, "https", StringComparison.OrdinalIgnoreCase) ? "https" : "http";
-            var uriCandidate = candidate.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
-                               candidate.StartsWith("https://", StringComparison.OrdinalIgnoreCase)
+            var uriCandidate = candidate.Contains("://", StringComparison.Ordinal)
                 ? candidate
                 : $"{effectiveScheme}://{candidate}";
 
@@ -70,6 +69,13 @@ namespace Integracao.ControlID.PoC.Services.Security
             if (!string.IsNullOrWhiteSpace(parsedUri.UserInfo) || !string.IsNullOrWhiteSpace(parsedUri.Fragment))
             {
                 errorMessage = "A URL do equipamento não pode conter credenciais embutidas ou fragmentos.";
+                return false;
+            }
+
+            if ((parsedUri.AbsolutePath.Length > 1 && parsedUri.AbsolutePath != "/") ||
+                !string.IsNullOrWhiteSpace(parsedUri.Query))
+            {
+                errorMessage = "Informe somente o protocolo, o host e a porta do equipamento, sem caminho ou consulta.";
                 return false;
             }
 

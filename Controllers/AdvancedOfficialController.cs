@@ -52,18 +52,20 @@ namespace Integracao.ControlID.PoC.Controllers
 
             try
             {
-                var result = await _apiService.InvokeAsync("export-objects", new { @object = model.ObjectName });
+                var result = await _apiService.InvokeToStreamAsync(
+                    "export-objects",
+                    Response.Body,
+                    (metadata, _) => OfficialApiDownloadResponse.ApplyAsync(
+                        Response,
+                        metadata,
+                        $"{model.ObjectName}-export.bin",
+                        "application/octet-stream"),
+                    new { @object = model.ObjectName },
+                    cancellationToken: HttpContext.RequestAborted);
                 if (!result.Success)
                     throw new InvalidOperationException(BuildErrorMessage(result, "Erro ao exportar objetos"));
 
-                if (result.ResponseBytes is { Length: > 0 } exportBytes)
-                {
-                    return File(exportBytes, GetContentType(result.ResponseContentType, "application/octet-stream"), $"{model.ObjectName}-export.bin");
-                }
-
-                model.ResultMessage = "Exportação concluída.";
-                model.ResultStatusType = "success";
-                model.ResponseJson = result.ResponseBody;
+                return new EmptyResult();
             }
             catch (Exception ex)
             {

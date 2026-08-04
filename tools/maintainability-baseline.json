@@ -1,0 +1,17 @@
+{
+  "globalLimits": {
+    ".cs": 600,
+    ".cshtml": 500,
+    ".css": 2500,
+    ".js": 500
+  },
+  "exceptions": {
+    "Controllers/SystemController.cs": 900,
+    "Controllers/OperationModesController.cs": 800,
+    "Controllers/MediaController.cs": 650,
+    "Controllers/DocumentedFeaturesController.cs": 650,
+    "Views/ProductSpecific/Index.cshtml": 850,
+    "wwwroot/js/site.js": 750,
+    "tools/ControlIdDeviceStub/StubState.cs": 1000
+  }
+}

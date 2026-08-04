@@ -1,6 +1,6 @@
 # Critérios de aceite, requisitos e rastreabilidade
 
-> **Documento vivo** · Público: produto, QA e desenvolvimento · Responsável: Product Owner/QA · Última validação: 2026-08-03.
+> **Documento vivo** · Público: produto, QA e desenvolvimento · Responsável: Product Owner/QA · Última validação: 2026-08-04.
 
 Este documento transforma o mapeamento de produto, os fluxos críticos e as regras observadas no código em critérios de aceite objetivos e rastreáveis.
 
@@ -236,8 +236,8 @@ Critérios:
 - Estados esperados: startup permitido, startup bloqueado, callback aceito/rejeitado.
 - Erros esperados: falha de configuração no startup, rejeição de ingress.
 - Permissões esperadas: gestão de configuração por operador técnico; segredo nunca versionado.
-- Testes existentes: testes de avaliação e assinatura de callbacks, contratos de segurança de inicialização e rate limit, auditoria NuGet e varredura de segredos na CI.
-- Testes ausentes: validação de DAST e homologação da configuração em um ambiente de staging controlado.
+- Testes existentes: testes de avaliação e assinatura de callbacks, contratos de segurança de inicialização e rate limit, auditoria NuGet, varredura de segredos na CI e DAST local com gate de severidade ZAP.
+- Testes ausentes: homologação da configuração e repetição do DAST em um ambiente de staging controlado.
 
 ### REQ-009 - Banco local e esquema
 

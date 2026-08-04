@@ -1,6 +1,6 @@
 # Guia operacional de observabilidade e operabilidade
 
-> **Guia operacional vivo** · Público: desenvolvimento e SRE · Responsável: Observability/SRE · Última validação: 2026-08-03.
+> **Guia operacional vivo** · Público: desenvolvimento e SRE · Responsável: Observability/SRE · Última validação: 2026-08-04.
 
 Escopo: PoC ASP.NET Core MVC/Razor para integração com a Access API Control iD.
 Este guia operacional define sinais, eventos críticos, métricas, alertas e
@@ -211,6 +211,12 @@ powershell -ExecutionPolicy Bypass -File .\tools\observability-check.ps1 -Requir
 ```
 
 O relatório padrão fica em `artifacts/observability/`, fora do Git.
+
+Na validação local de 2026-08-04, o modo on-line processou 25 séries de métricas,
+15 regras de alerta e seis painéis sem violar limiares. O leitor aceita valores
+numéricos e unidades `B`, `KB`, `MB` e `GB`, funciona no Windows PowerShell 5.1 e
+não exige cabeçalhos quando `/metrics` está autorizado anonimamente no ambiente
+controlado.
 
 ## Controles para dependências externas
 

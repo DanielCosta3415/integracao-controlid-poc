@@ -31,6 +31,8 @@ public class ObservabilityEndpointContractTests
         Assert.Contains("\"FIN-001\"", alerts);
         Assert.Contains("OfflineValidateOnly", script);
         Assert.Contains("RequireHardwareContract", script);
+        Assert.Contains("ConvertTo-ThresholdValue", script);
+        Assert.Contains("$metricMatch.Groups['name'].Value", script);
     }
 
     private static string ReadRepoFile(params string[] segments)
