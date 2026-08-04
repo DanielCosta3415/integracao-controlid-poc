@@ -11,6 +11,11 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
+& dotnet tool restore
+if ($LASTEXITCODE -ne 0) {
+    exit $LASTEXITCODE
+}
+
 function Invoke-DotNetPackageCheck {
     param(
         [Parameter(Mandatory = $true)][string]$Target,

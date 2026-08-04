@@ -2,7 +2,7 @@
 
 > **Guia operacional vivo** · Público: plataforma, SRE e release · Responsável: Platform/SRE · Última validação: 2026-08-03.
 
-Escopo: PoC ASP.NET Core 8 MVC/Razor com SQLite local e integração com equipamento
+Escopo: PoC ASP.NET Core 10 MVC/Razor com SQLite local e integração com equipamento
 Control iD. Este documento descreve execução reproduzível fora do ambiente local
 sem criar implantação automática, DNS real ou credenciais versionadas.
 

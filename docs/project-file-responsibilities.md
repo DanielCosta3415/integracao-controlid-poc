@@ -41,6 +41,7 @@ Observações de escopo:
 | Arquivo | Responsabilidade |
 | --- | --- |
 | `.github/dependabot.yml` | Agenda a revisão automatizada de dependências NuGet e GitHub Actions. |
+| `.config/dotnet-tools.json` | Pina o `dotnet-ef` local na mesma versão do Entity Framework Core. |
 | `.github/workflows/ci.yml` | Executa os gates de compilação, testes, documentação, auditoria e contêiner em pull requests e na ramificação principal. |
 
 ## Properties
@@ -592,6 +593,7 @@ As views Razor compõem a interface web da PoC. Em geral, cada pasta espelha um 
 | `docs/adrs/0002-secure-controlid-ingress-and-egress.md` | Registra os limites seguros das comunicações com o equipamento. |
 | `docs/adrs/0003-in-process-observability-and-readiness-gates.md` | Registra a estratégia de observabilidade e prontidão no processo. |
 | `docs/adrs/0004-release-governance-with-local-scripts.md` | Registra a governança de liberação por scripts locais e CI. |
+| `docs/adrs/0005-dotnet-10-lts-runtime.md` | Registra a migração coordenada de SDK, runtime, pacotes e contêiner para .NET 10 LTS. |
 | `docs/api-error-catalog.md` | Cataloga erros por camada, status, conduta e evidência segura. |
 | `docs/architecture-overview.md` | Descreve camadas, fluxos críticos, fronteiras de confiança e contratos. |
 | `docs/brand.md` | Define identidade, tokens, componentes e acessibilidade visual. |

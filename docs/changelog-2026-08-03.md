@@ -124,3 +124,43 @@ separar correções de documentação, código, dados e operação.
 
 Esses números representam esta execução e devem ser produzidos novamente no
 commit candidato à liberação.
+
+## Migração coordenada para .NET 10 LTS
+
+> **Estado:** alteração técnica posterior à linha de base histórica deste
+> documento. A validação final deve citar o commit publicado da migração.
+
+- SDK pinado em `10.0.302` e os quatro projetos migrados para `net10.0`.
+- ASP.NET Core, Entity Framework Core, provedor SQLite, ferramentas e projeto de
+  testes alinhados em `10.0.10`.
+- Serilog, Swashbuckle e SQLitePCLRaw atualizados dentro da mesma janela de
+  regressão; o import de `OpenApiInfo` foi adaptado ao Microsoft.OpenApi 2.x.
+- O OpenAPI passou a incluir apenas ações com verbo HTTP explícito, eliminando
+  falha de geração causada por páginas MVC convencionais ambíguas.
+- Referências diretas redundantes a `Microsoft.Extensions.Configuration` e
+  `Microsoft.Extensions.Logging` foram removidas após o SDK emitir `NU1510`.
+- `dotnet-ef` `10.0.10` foi pinado em manifesto local e restaurado na CI, sem
+  dependência da versão global instalada na estação.
+- Dockerfile atualizado para as imagens SDK/runtime .NET 10 Alpine, preservando
+  usuário não root, porta, volumes e healthcheck.
+- Dependabot passou a agrupar patch/minor, limitar PRs e ignorar major; mudanças
+  major exigem migração coordenada e ADR.
+- A decisão, os contratos preservados e o procedimento de reversão estão em
+  `docs/adrs/0005-dotnet-10-lts-runtime.md`.
+
+### Validação da migração
+
+- restauração bloqueada e `dotnet tool restore`: aprovados;
+- compilação da solução, simulador e proxy: zero avisos e zero erros;
+- suíte xUnit: 212 aprovados, zero reprovados e zero ignorados, incluindo
+  documento OpenAPI no pipeline real;
+- smoke integrado: 388 aprovados, zero reprovados e 55 desvios intencionais por
+  ausência de hardware/ambiente externo;
+- contrato do simulador, cobertura, formatação, documentação, segredos,
+  observabilidade, prontidão operacional e FinOps: aprovados;
+- cadeia de suprimentos: zero vulnerabilidades ou pacotes preteridos; SBOM com
+  102 pacotes NuGet, incluindo a ferramenta local, e quatro vendors;
+- SQLite temporário: migrações, backup e restauração aprovados com
+  `dotnet-ef` local `10.0.10`;
+- Compose: configuração aprovada; construção local da imagem bloqueada por `EOF`
+  do registro MCR e deve ser confirmada pela CI remota no commit publicado.

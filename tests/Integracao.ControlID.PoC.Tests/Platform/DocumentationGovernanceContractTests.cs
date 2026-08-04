@@ -33,6 +33,7 @@ public class DocumentationGovernanceContractTests
         var securityAdr = ReadRepoFile("docs", "adrs", "0002-secure-controlid-ingress-and-egress.md");
         var observabilityAdr = ReadRepoFile("docs", "adrs", "0003-in-process-observability-and-readiness-gates.md");
         var releaseAdr = ReadRepoFile("docs", "adrs", "0004-release-governance-with-local-scripts.md");
+        var runtimeAdr = ReadRepoFile("docs", "adrs", "0005-dotnet-10-lts-runtime.md");
         var changelog = ReadRepoFile("docs", "changelog-2026-05-01.md");
         var prSummary = ReadRepoFile("docs", "pr-summary-2026-05-01.md");
         var audit = ReadRepoFile("docs", "documentation-audit-2026-05-01.md");
@@ -42,9 +43,38 @@ public class DocumentationGovernanceContractTests
         Assert.Contains("Fluxos Control iD de entrada e saída", securityAdr, StringComparison.Ordinal);
         Assert.Contains("Observabilidade no processo", observabilityAdr, StringComparison.Ordinal);
         Assert.Contains("Governança de liberação", releaseAdr, StringComparison.Ordinal);
+        Assert.Contains("Adoção coordenada do .NET 10 LTS", runtimeAdr, StringComparison.Ordinal);
         Assert.Contains("Como validar", changelog, StringComparison.Ordinal);
         Assert.Contains("Pendências conhecidas", prSummary, StringComparison.Ordinal);
         Assert.Contains("Lacunas restantes", audit, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void RuntimeBaseline_IsCoordinatedAcrossProjectsPackagesAndContainer()
+    {
+        var globalJson = ReadRepoFile("global.json");
+        var applicationProject = ReadRepoFile("Integracao.ControlID.PoC.csproj");
+        var testProject = ReadRepoFile("tests", "Integracao.ControlID.PoC.Tests", "Integracao.ControlID.PoC.Tests.csproj");
+        var stubProject = ReadRepoFile("tools", "ControlIdDeviceStub", "ControlIdDeviceStub.csproj");
+        var proxyProject = ReadRepoFile("tools", "ControlIdCallbackSigningProxy", "ControlIdCallbackSigningProxy.csproj");
+        var dockerfile = ReadRepoFile("Dockerfile");
+        var toolManifest = ReadRepoFile(".config", "dotnet-tools.json");
+        var sbomGenerator = ReadRepoFile("tools", "generate-sbom.ps1");
+
+        Assert.Contains("\"version\": \"10.0.302\"", globalJson, StringComparison.Ordinal);
+        Assert.Contains("\"rollForward\": \"latestPatch\"", globalJson, StringComparison.Ordinal);
+        Assert.All(
+            new[] { applicationProject, testProject, stubProject, proxyProject },
+            project => Assert.Contains("<TargetFramework>net10.0</TargetFramework>", project, StringComparison.Ordinal));
+        Assert.Contains("Microsoft.EntityFrameworkCore\" Version=\"10.0.10\"", applicationProject, StringComparison.Ordinal);
+        Assert.Contains("Microsoft.EntityFrameworkCore.Sqlite\" Version=\"10.0.10\"", applicationProject, StringComparison.Ordinal);
+        Assert.Contains("Microsoft.EntityFrameworkCore.Tools\" Version=\"10.0.10\"", applicationProject, StringComparison.Ordinal);
+        Assert.Contains("Microsoft.AspNetCore.Mvc.Testing\" Version=\"10.0.10\"", testProject, StringComparison.Ordinal);
+        Assert.Contains("ARG DOTNET_VERSION=10.0", dockerfile, StringComparison.Ordinal);
+        Assert.Contains("\"dotnet-ef\"", toolManifest, StringComparison.Ordinal);
+        Assert.Contains("\"version\": \"10.0.10\"", toolManifest, StringComparison.Ordinal);
+        Assert.Contains("ToolManifestPath", sbomGenerator, StringComparison.Ordinal);
+        Assert.Contains("Type = \"DotnetTool\"", sbomGenerator, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -57,7 +87,7 @@ public class DocumentationGovernanceContractTests
 
         Assert.Contains(".\\tools\\validate-documentation.ps1", workflow, StringComparison.Ordinal);
         Assert.Contains("documentation-validation", releaseGate, StringComparison.Ordinal);
-        Assert.Contains("ExpectedMarkdownCount = 58", validator, StringComparison.Ordinal);
+        Assert.Contains("ExpectedMarkdownCount = 59", validator, StringComparison.Ordinal);
         Assert.Contains("[switch]$CheckExternalUrls", validator, StringComparison.Ordinal);
         Assert.Contains("Missing local Markdown anchor", validator, StringComparison.Ordinal);
         Assert.Contains("Documentation file missing from docs index", validator, StringComparison.Ordinal);

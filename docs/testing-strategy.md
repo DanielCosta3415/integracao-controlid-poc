@@ -104,8 +104,9 @@ Um limite numérico ainda exige ferramenta de leitura ou relatório compatível 
 
 Na linha de base documental de 2026-08-03, a solução possuía 209 testes aprovados
 e 49 arquivos Markdown. A ampliação do primeiro contato elevou o inventário para
-58 arquivos e atualizou o mesmo contrato automatizado de governança. As contagens
-são referências, não metas fixas; novos comportamentos devem aumentar ou
+58 arquivos e atualizou o mesmo contrato automatizado de governança. A decisão
+de runtime .NET 10 elevou o estado atual a 212 testes e 59 arquivos Markdown.
+As contagens são referências, não metas fixas; novos comportamentos devem aumentar ou
 substituir cobertura relevante sem remover cenários válidos.
 
 ```powershell

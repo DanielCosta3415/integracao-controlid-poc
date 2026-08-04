@@ -14,7 +14,7 @@ toda a base técnica, use `README.md`.
 
 ### 1. O que é esta PoC?
 
-É uma aplicação ASP.NET Core 8 MVC/Razor que demonstra integração com a Access
+É uma aplicação ASP.NET Core 10 MVC/Razor que demonstra integração com a Access
 API dos equipamentos de controle de acesso da Control iD. Ela reúne conexão,
 sessão, catálogo de endpoints, objetos, ações, callbacks, Monitor, Push,
 persistência SQLite e recursos de diagnóstico em uma interface única.

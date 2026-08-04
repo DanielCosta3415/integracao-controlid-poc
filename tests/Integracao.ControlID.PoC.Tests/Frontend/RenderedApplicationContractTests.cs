@@ -42,6 +42,21 @@ public sealed class RenderedApplicationContractTests : IClassFixture<PocWebAppli
 
         response.EnsureSuccessStatusCode();
     }
+
+    [Fact]
+    public async Task OpenApi_RendersVersionedDocumentInIsolatedDevelopmentPipeline()
+    {
+        using var client = _factory.CreateClient();
+
+        using var response = await client.GetAsync("/swagger/v1/swagger.json", TestContext.Current.CancellationToken);
+        var document = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+
+        response.EnsureSuccessStatusCode();
+        Assert.Equal("application/json", response.Content.Headers.ContentType?.MediaType);
+        Assert.Contains("\"title\": \"Integracao Control iD PoC\"", document, StringComparison.Ordinal);
+        Assert.Contains("\"version\": \"v1\"", document, StringComparison.Ordinal);
+        Assert.Contains("\"paths\"", document, StringComparison.Ordinal);
+    }
 }
 
 public sealed class PocWebApplicationFactory : WebApplicationFactory<Program>
@@ -65,7 +80,7 @@ public sealed class PocWebApplicationFactory : WebApplicationFactory<Program>
                 ["CallbackSecurity:RequireSharedKey"] = "false",
                 ["CallbackSecurity:RequireSignedRequests"] = "false",
                 ["ControlIDApi:RequireAllowedDeviceHosts"] = "false",
-                ["OpenApi:Enabled"] = "false"
+                ["OpenApi:Enabled"] = "true"
             });
         });
     }

@@ -136,6 +136,7 @@ ADRs atuais:
 - `docs/adrs/0002-secure-controlid-ingress-and-egress.md`
 - `docs/adrs/0003-in-process-observability-and-readiness-gates.md`
 - `docs/adrs/0004-release-governance-with-local-scripts.md`
+- `docs/adrs/0005-dotnet-10-lts-runtime.md`
 
 Crie novo ADR quando uma decisão alterar padrão de arquitetura, provedor,
 persistência, segurança, observabilidade, liberação ou contrato público.

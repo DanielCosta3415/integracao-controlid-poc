@@ -223,7 +223,9 @@ Não há loader `.env` configurado. Use `appsettings.json`, User Secrets ou vari
 - Endpoint: `/swagger/v1/swagger.json` e `/swagger`.
 - Ambiente: habilitado automaticamente em `Development`; fora de Development exige `OpenApi:Enabled=true`.
 - Autenticação/autorização: não adiciona autenticação própria; não habilite fora de rede controlada sem proteção externa.
-- DTO/schema: gerado pelo Swashbuckle a partir dos controllers MVC e metadados ASP.NET Core.
+- DTO/schema: gerado pelo Swashbuckle a partir das ações com método HTTP
+  explícito e metadados ASP.NET Core. Rotas MVC convencionais sem verbo declarado
+  são omitidas porque não formam contrato OpenAPI inequívoco.
 - Dados sensíveis: exemplos reais não devem ser colocados em atributos, docs ou responses.
 
 ### INT-011 - Check opt-in de contrato com equipamento real

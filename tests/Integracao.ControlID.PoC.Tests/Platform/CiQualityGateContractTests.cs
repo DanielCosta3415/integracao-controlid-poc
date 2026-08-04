@@ -16,6 +16,7 @@ public class CiQualityGateContractTests
         Assert.Contains("global-json-file: global.json", workflow, StringComparison.Ordinal);
         Assert.Contains("cache-dependency-path:", workflow, StringComparison.Ordinal);
         Assert.Contains("dotnet restore .\\Integracao.ControlID.PoC.sln --locked-mode", workflow, StringComparison.Ordinal);
+        Assert.Contains("dotnet tool restore", workflow, StringComparison.Ordinal);
         Assert.Contains("dotnet build .\\Integracao.ControlID.PoC.sln --no-restore", workflow, StringComparison.Ordinal);
         Assert.Contains("dotnet test .\\Integracao.ControlID.PoC.sln --no-build", workflow, StringComparison.Ordinal);
         Assert.Contains(".\\tools\\smoke-localhost.ps1", workflow, StringComparison.Ordinal);

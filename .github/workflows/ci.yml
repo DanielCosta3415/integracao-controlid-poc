@@ -45,6 +45,9 @@ jobs:
       - name: Restore signing proxy
         run: dotnet restore .\tools\ControlIdCallbackSigningProxy\ControlIdCallbackSigningProxy.csproj --locked-mode
 
+      - name: Restore local .NET tools
+        run: dotnet tool restore
+
       - name: Build
         run: dotnet build .\Integracao.ControlID.PoC.sln --no-restore -v:minimal
 

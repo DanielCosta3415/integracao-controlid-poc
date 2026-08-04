@@ -29,7 +29,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using Serilog;
 using System;
 using System.IO.Compression;
@@ -86,6 +86,8 @@ builder.Services.AddRazorPages();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
+    // Rotas MVC convencionais sem verbo explícito não formam um contrato OpenAPI inequívoco.
+    options.DocInclusionPredicate((_, description) => !string.IsNullOrWhiteSpace(description.HttpMethod));
     options.SwaggerDoc("v1", new OpenApiInfo
     {
         Title = "Integracao Control iD PoC",

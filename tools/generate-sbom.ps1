@@ -6,6 +6,7 @@ param(
         ".\tools\ControlIdDeviceStub\packages.lock.json",
         ".\tools\ControlIdCallbackSigningProxy\packages.lock.json"
     ),
+    [string]$ToolManifestPath = ".\.config\dotnet-tools.json",
     [string]$VendorManifestPath = ".\wwwroot\lib\vendor-dependencies.json",
     [string]$OutputPath = ".\artifacts\sbom\sbom.spdx.json"
 )
@@ -151,6 +152,30 @@ foreach ($lockfilePath in $Lockfile) {
 
             $packageMap[$key].SourceLockfiles.Add((Resolve-Path -LiteralPath $lockfilePath).Path)
         }
+    }
+}
+
+if (Test-Path -LiteralPath $ToolManifestPath) {
+    $toolManifest = Get-Content -LiteralPath $ToolManifestPath -Raw | ConvertFrom-Json
+    foreach ($tool in $toolManifest.tools.PSObject.Properties) {
+        $id = $tool.Name
+        $version = [string]$tool.Value.version
+        if ([string]::IsNullOrWhiteSpace($version)) {
+            continue
+        }
+
+        $key = "$id@$version"
+        if (-not $packageMap.Contains($key)) {
+            $packageMap[$key] = [ordered]@{
+                Id = $id
+                Version = $version
+                Type = "DotnetTool"
+                SourceLockfiles = [System.Collections.Generic.List[string]]::new()
+                Metadata = Get-NuspecMetadata -Id $id -Version $version
+            }
+        }
+
+        $packageMap[$key].SourceLockfiles.Add((Resolve-Path -LiteralPath $ToolManifestPath).Path)
     }
 }
 

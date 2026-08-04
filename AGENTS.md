@@ -6,14 +6,14 @@ Regras permanentes para Codex e outros agentes de código neste repositório.
 
 ## Visão geral
 
-Este repositório é uma PoC web ASP.NET Core 8 MVC/Razor para integração operacional e técnica com a Access API da Control iD. A aplicação permite conexão com equipamento, autenticação, catálogo de endpoints oficiais, fluxos de hardware, cadastros, callbacks, monitoramento, fila push e persistência local em SQLite.
+Este repositório é uma PoC web ASP.NET Core 10 MVC/Razor para integração operacional e técnica com a Access API da Control iD. A aplicação permite conexão com equipamento, autenticação, catálogo de endpoints oficiais, fluxos de hardware, cadastros, callbacks, monitoramento, fila push e persistência local em SQLite.
 
 Trate o projeto como uma PoC operacional com pontos sensíveis de segurança, dados pessoais e integração com dispositivo físico. Diagnostique antes de alterar e registre falhas preexistentes separadamente de falhas introduzidas.
 
 ## Tecnologias detectadas
 
 - Linguagem: C#, Razor, HTML, CSS, JavaScript e PowerShell.
-- Runtime/SDK: .NET 8, SDK pinado em `global.json`.
+- Runtime/SDK: .NET 10 LTS, SDK `10.0.302` pinado em `global.json`.
 - Framework: ASP.NET Core MVC/Razor.
 - Banco: SQLite via Entity Framework Core.
 - Logs: Serilog em console e arquivo.
@@ -50,6 +50,7 @@ Execute comandos a partir da raiz do repositório, em PowerShell.
 dotnet restore .\Integracao.ControlID.PoC.sln --locked-mode
 dotnet restore .\tools\ControlIdDeviceStub\ControlIdDeviceStub.csproj --locked-mode
 dotnet restore .\tools\ControlIdCallbackSigningProxy\ControlIdCallbackSigningProxy.csproj --locked-mode
+dotnet tool restore
 ```
 
 Para desenvolvimento local, configure segredos fora do repositório, usando placeholders:
@@ -207,7 +208,7 @@ Notas:
 - Use NuGet lockfiles. A CI usa restore em modo locked.
 - Atualização de pacote exige compilação, testes, verificação de formatação e auditoria da cadeia de suprimentos.
 - Dependências frontend vendorizadas em `wwwroot/lib` devem estar declaradas em `wwwroot/lib/vendor-dependencies.json` e validadas por `tools/audit-vendor-dependencies.ps1`.
-- Preferir patches compatíveis com .NET 8 a upgrades amplos de major version.
+- Preferir patches compatíveis com .NET 10 a atualizações amplas de versão major.
 
 ### Desempenho
 

@@ -66,6 +66,7 @@ ADRs atuais:
 - `docs/adrs/0002-secure-controlid-ingress-and-egress.md`: limites de entrada e saída.
 - `docs/adrs/0003-in-process-observability-and-readiness-gates.md`: sinais operacionais.
 - `docs/adrs/0004-release-governance-with-local-scripts.md`: gates de release.
+- `docs/adrs/0005-dotnet-10-lts-runtime.md`: runtime .NET 10 LTS coordenado.
 
 ## Produto e requisitos
 
@@ -165,7 +166,7 @@ Catálogo de evidências históricas:
   a CI mantém o modo off-line para evitar falhas causadas por terceiros.
 - Todo documento autoral deve informar classificação, público, responsável e
   data de validação logo após o título principal.
-- O inventário atual possui 58 arquivos Markdown: 57 documentos autorais e uma
+- O inventário atual possui 59 arquivos Markdown: 58 documentos autorais e uma
   licença vendorizada que deve permanecer literal.
 
 ## Rotas de leitura e cadência

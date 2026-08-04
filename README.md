@@ -2,7 +2,7 @@
 
 > **Documento vivo** · Público: novos usuários, desenvolvimento e operação · Responsável: mantenedores · Última validação: 2026-08-03.
 
-PoC web em ASP.NET Core 8 MVC/Razor para exploração operacional e técnica da
+PoC web em ASP.NET Core 10 MVC/Razor para exploração operacional e técnica da
 Access API da Control iD. A aplicação ajuda um time técnico a conectar um
 equipamento, autenticar, navegar pelo catálogo oficial, testar fluxos de
 hardware, receber callbacks, operar Push, persistir estado local em SQLite e
@@ -50,7 +50,7 @@ Leitura recomendada para um novo desenvolvedor:
 | Área | Tecnologia |
 | --- | --- |
 | Linguagens | C#, Razor, HTML, CSS, JavaScript e PowerShell |
-| Runtime/SDK | .NET 8, SDK pinado em `global.json` |
+| Runtime/SDK | .NET 10 LTS, SDK `10.0.302` pinado em `global.json` |
 | Web | ASP.NET Core MVC/Razor |
 | Banco | SQLite com Entity Framework Core |
 | Logs | Serilog em console e arquivo rolling |
@@ -101,6 +101,7 @@ Restaure dependências a partir da raiz:
 dotnet restore .\Integracao.ControlID.PoC.sln --locked-mode
 dotnet restore .\tools\ControlIdDeviceStub\ControlIdDeviceStub.csproj --locked-mode
 dotnet restore .\tools\ControlIdCallbackSigningProxy\ControlIdCallbackSigningProxy.csproj --locked-mode
+dotnet tool restore
 ```
 
 Configure segredos fora do repositório. Para desenvolvimento local, prefira User
@@ -324,7 +325,7 @@ Sinais disponíveis:
 
 Artefatos versionados:
 
-- `Dockerfile`: multi-stage .NET 8, runtime Alpine, usuário não root, porta 8080
+- `Dockerfile`: multi-stage .NET 10, runtime Alpine, usuário não root, porta 8080
   e healthcheck em `/health/ready`.
 - `.dockerignore`: remove Git, logs, artefatos, SQLite local e `.env` do contexto.
 - `docker-compose.yml`: volumes persistentes para `/app/data` e `/app/Logs`.

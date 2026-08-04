@@ -7,8 +7,11 @@ Baseline para revisoes de dependências, licenças e SBOM deste repositório.
 ## Escopo
 
 - Gerenciador principal: NuGet.
-- Runtime: .NET 8 definido em `global.json`.
+- Runtime: .NET 10 LTS, SDK `10.0.302` definido em `global.json`.
 - Lockfiles: `packages.lock.json` na raiz, em `tests/Integracao.ControlID.PoC.Tests/` e nos dois projetos em `tools/`.
+- Ferramenta local: `dotnet-ef` `10.0.10` pinado em
+  `.config/dotnet-tools.json`; não dependa de instalação global para migração ou
+  teste de restauração.
 - Frontend: bibliotecas estáticas vendorizadas em `wwwroot/lib`; não há `package.json`, `npm`, `pnpm` ou `yarn`.
 - Outras stacks auditadas: não há arquivos de dependências Python, Cargo ou Node no repositório.
 
@@ -18,6 +21,7 @@ Execute a partir da raiz:
 
 ```powershell
 dotnet restore .\Integracao.ControlID.PoC.sln --locked-mode
+dotnet tool restore
 .\tools\audit-supply-chain.ps1
 dotnet list .\Integracao.ControlID.PoC.sln package --vulnerable --include-transitive
 dotnet list .\Integracao.ControlID.PoC.sln package --deprecated
@@ -29,7 +33,7 @@ powershell -ExecutionPolicy Bypass -File .\tools\scan-secrets.ps1
 
 ## Política de atualização
 
-- Preferir patch/minor compatível com `net8.0`.
+- Preferir patch/minor compatível com `net10.0`.
 - Não atualizar major automaticamente.
 - O Dependabot limita cada ecossistema a dois PRs abertos, agrupa patch/minor e
   ignora major; migrações major são executadas como mudanças coordenadas.
@@ -53,7 +57,8 @@ artifacts/sbom/sbom.spdx.json
 
 O diretório `artifacts/` e ignorado pelo Git para evitar versionar artefatos locais. Publique o SBOM apenas em canal controlado de release/auditoria.
 
-O SBOM cobre pacotes NuGet lockados e dependências vendorizadas declaradas em `wwwroot/lib/vendor-dependencies.json`.
+O SBOM cobre pacotes NuGet lockados, o `dotnet-ef` do manifesto local e
+dependências vendorizadas declaradas em `wwwroot/lib/vendor-dependencies.json`.
 
 ## Dependências vendorizadas da interface
 

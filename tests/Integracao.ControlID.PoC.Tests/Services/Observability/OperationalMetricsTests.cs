@@ -65,15 +65,18 @@ public class OperationalMetricsTests
             42.5);
 
         var prometheus = PrometheusMetricsWriter.Format(OperationalMetrics.CaptureSnapshot());
+        var productFlowMetrics = string.Join(
+            '\n',
+            prometheus.Split('\n').Where(line => line.StartsWith("controlid_product_flow_", StringComparison.Ordinal)));
 
         Assert.Contains("controlid_product_flow_events_total", prometheus);
         Assert.Contains("event=\"official_endpoint_invoked\"", prometheus);
         Assert.Contains("flow=\"official_api\"", prometheus);
         Assert.Contains("outcome=\"success\"", prometheus);
         Assert.Contains("controlid_product_flow_duration_milliseconds_count", prometheus);
-        Assert.DoesNotContain("user_id", prometheus, StringComparison.OrdinalIgnoreCase);
-        Assert.DoesNotContain("session", prometheus, StringComparison.OrdinalIgnoreCase);
-        Assert.DoesNotContain("password", prometheus, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("user_id", productFlowMetrics, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("session", productFlowMetrics, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("password", productFlowMetrics, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]

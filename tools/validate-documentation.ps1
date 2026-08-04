@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-    [int]$ExpectedMarkdownCount = 58,
+    [int]$ExpectedMarkdownCount = 59,
     [switch]$CheckExternalUrls
 )
 

@@ -56,6 +56,7 @@ Não há tarefa de implantação, liberação, publicação, marcação ou envio
 | SDK pinado | `actions/setup-dotnet@v6` com `global.json` | SDK .NET correto não resolve. |
 | Cache seguro | `cache: true` usando `packages.lock.json` | Lockfiles mudam sem restore consistente. |
 | Restauração bloqueada | `dotnet restore ... --locked-mode` | O arquivo de bloqueio está ausente ou desatualizado. |
+| Ferramentas locais | `dotnet tool restore` | O `dotnet-ef` pinado não pode ser restaurado. |
 | Compilação/verificação de tipos | `dotnet build ... --no-restore` | Erro de compilação ou aviso tratado como erro. |
 | Testes | `dotnet test ... --no-build` | Qualquer teste xUnit falha. |
 | Verificação integrada local | `tools/smoke-localhost.ps1` | Aplicação, simulador ou fluxos locais não respondem. |
@@ -95,6 +96,7 @@ Use os comandos abaixo a partir da raiz:
 dotnet restore .\Integracao.ControlID.PoC.sln --locked-mode
 dotnet restore .\tools\ControlIdDeviceStub\ControlIdDeviceStub.csproj --locked-mode
 dotnet restore .\tools\ControlIdCallbackSigningProxy\ControlIdCallbackSigningProxy.csproj --locked-mode
+dotnet tool restore
 dotnet build .\Integracao.ControlID.PoC.sln --no-restore -v:minimal
 dotnet build .\tools\ControlIdDeviceStub\ControlIdDeviceStub.csproj --no-restore -v:minimal
 dotnet build .\tools\ControlIdCallbackSigningProxy\ControlIdCallbackSigningProxy.csproj --no-restore -v:minimal

@@ -37,12 +37,17 @@ dotnet --version
 dotnet --list-sdks
 ```
 
+Resultado esperado: `dotnet --version` informa `10.0.302`, conforme
+`global.json`. Instale o SDK .NET 10 por um canal oficial da Microsoft antes de
+prosseguir; não altere o arquivo para contornar a ausência do SDK.
+
 2. Restaure dependências:
 
 ```powershell
 dotnet restore .\Integracao.ControlID.PoC.sln --locked-mode
 dotnet restore .\tools\ControlIdDeviceStub\ControlIdDeviceStub.csproj --locked-mode
 dotnet restore .\tools\ControlIdCallbackSigningProxy\ControlIdCallbackSigningProxy.csproj --locked-mode
+dotnet tool restore
 ```
 
 3. Configure segredos fora do Git:
@@ -58,9 +63,10 @@ Para container, copie `.env.example` para `.env` fora do Git e substitua todos o
 placeholders.
 
 Resultado esperado: restores concluídos em modo locked, sem alteração nos
-`packages.lock.json`. Falha de restore indica SDK incompatível, lockfile
-inconsistente ou indisponibilidade do NuGet; não remova o modo locked para
-contornar o problema.
+`packages.lock.json`, e `dotnet-ef` local `10.0.10` disponível pelo manifesto
+`.config/dotnet-tools.json`. Falha de restore indica SDK incompatível, lockfile,
+manifesto inconsistente ou indisponibilidade do NuGet; não remova o modo locked
+para contornar o problema.
 
 ## Execução
 
