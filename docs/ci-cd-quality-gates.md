@@ -30,8 +30,10 @@ Disparos:
 - agenda semanal, segunda-feira;
 - disparo manual por `workflow_dispatch`.
 
-O Dependabot em `.github/dependabot.yml` abre PRs semanais para NuGet e GitHub
-Actions, agrupando apenas atualizações patch/minor compatíveis para revisão humana.
+O Dependabot em `.github/dependabot.yml` abre no máximo dois PRs semanais por
+ecossistema para NuGet e GitHub Actions. Atualizações patch/minor compatíveis são
+agrupadas; atualizações major são ignoradas pela automação e exigem uma tarefa de
+migração coordenada, com análise de contratos e regressão completa.
 
 Permissões:
 
@@ -50,8 +52,8 @@ Não há tarefa de implantação, liberação, publicação, marcação ou envio
 
 | Gate | Comando/step | Falha quando |
 | --- | --- | --- |
-| Checkout reprodutível | `actions/checkout@v4` | Repositório não pode ser lido. |
-| SDK pinado | `actions/setup-dotnet@v4` com `global.json` | SDK .NET correto não resolve. |
+| Checkout reprodutível | `actions/checkout@v7` | Repositório não pode ser lido. |
+| SDK pinado | `actions/setup-dotnet@v6` com `global.json` | SDK .NET correto não resolve. |
 | Cache seguro | `cache: true` usando `packages.lock.json` | Lockfiles mudam sem restore consistente. |
 | Restauração bloqueada | `dotnet restore ... --locked-mode` | O arquivo de bloqueio está ausente ou desatualizado. |
 | Compilação/verificação de tipos | `dotnet build ... --no-restore` | Erro de compilação ou aviso tratado como erro. |
@@ -221,4 +223,7 @@ responsável e prazo; não adote repetição automática ilimitada.
 A configuração de proteção da ramificação não está versionada neste repositório.
 O mantenedor deve conferir os nomes na interface ou API do GitHub após renomear
 workflow ou job; um contexto antigo não protege a ramificação. Ações de terceiros
-devem permanecer fixadas por versão ou SHA revisado.
+devem permanecer fixadas por versão ou SHA revisado. A CI usa
+`actions/checkout@v7`, `actions/setup-dotnet@v6` e
+`actions/upload-artifact@v7`; qualquer mudança de versão major deve atualizar o
+teste contratual e este documento na mesma entrega.

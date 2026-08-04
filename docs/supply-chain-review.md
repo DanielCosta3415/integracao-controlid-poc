@@ -31,6 +31,8 @@ powershell -ExecutionPolicy Bypass -File .\tools\scan-secrets.ps1
 
 - Preferir patch/minor compatível com `net8.0`.
 - Não atualizar major automaticamente.
+- O Dependabot limita cada ecossistema a dois PRs abertos, agrupa patch/minor e
+  ignora major; migrações major são executadas como mudanças coordenadas.
 - Não remover dependência sem busca de uso, impacto e checks.
 - Atualizações devem manter lockfile consistente.
 - Pacotes de teste podem evoluir dentro da linha atual, mas migrações de framework, como xUnit v3, exigem tarefa separada.

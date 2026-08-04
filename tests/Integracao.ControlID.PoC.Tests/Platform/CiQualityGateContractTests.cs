@@ -11,6 +11,8 @@ public class CiQualityGateContractTests
         Assert.Contains("pull_request:", workflow, StringComparison.Ordinal);
         Assert.Contains("contents: read", workflow, StringComparison.Ordinal);
         Assert.Contains("concurrency:", workflow, StringComparison.Ordinal);
+        Assert.Contains("actions/checkout@v7", workflow, StringComparison.Ordinal);
+        Assert.Contains("actions/setup-dotnet@v6", workflow, StringComparison.Ordinal);
         Assert.Contains("global-json-file: global.json", workflow, StringComparison.Ordinal);
         Assert.Contains("cache-dependency-path:", workflow, StringComparison.Ordinal);
         Assert.Contains("dotnet restore .\\Integracao.ControlID.PoC.sln --locked-mode", workflow, StringComparison.Ordinal);
@@ -28,11 +30,24 @@ public class CiQualityGateContractTests
         Assert.Contains(".\\tools\\audit-supply-chain.ps1", workflow, StringComparison.Ordinal);
         Assert.Contains(".\\tools\\external-security-scans.ps1 -InventoryOnly", workflow, StringComparison.Ordinal);
         Assert.Contains("dotnet list $target package --vulnerable --include-transitive", workflow, StringComparison.Ordinal);
-        Assert.Contains("actions/upload-artifact@v4", workflow, StringComparison.Ordinal);
+        Assert.Contains("actions/upload-artifact@v7", workflow, StringComparison.Ordinal);
         Assert.Contains("docker compose config", workflow, StringComparison.Ordinal);
         Assert.Contains("docker build --pull", workflow, StringComparison.Ordinal);
         Assert.DoesNotContain("deploy", workflow, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("environment:", workflow, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Dependabot_GroupsCompatibleUpdatesAndBlocksAutomaticMajorUpdates()
+    {
+        var dependabot = ReadRepoFile(".github", "dependabot.yml");
+
+        Assert.Contains("package-ecosystem: nuget", dependabot, StringComparison.Ordinal);
+        Assert.Contains("package-ecosystem: github-actions", dependabot, StringComparison.Ordinal);
+        Assert.Contains("open-pull-requests-limit: 2", dependabot, StringComparison.Ordinal);
+        Assert.Contains("dotnet-compatible-updates:", dependabot, StringComparison.Ordinal);
+        Assert.Contains("github-actions-compatible-updates:", dependabot, StringComparison.Ordinal);
+        Assert.Equal(2, CountOccurrences(dependabot, "version-update:semver-major"));
     }
 
     [Fact]
@@ -74,6 +89,20 @@ public class CiQualityGateContractTests
     private static string ReadRepoFile(params string[] segments)
     {
         return File.ReadAllText(Path.Combine(FindRepositoryRoot(), Path.Combine(segments)));
+    }
+
+    private static int CountOccurrences(string value, string searchValue)
+    {
+        var count = 0;
+        var index = 0;
+
+        while ((index = value.IndexOf(searchValue, index, StringComparison.Ordinal)) >= 0)
+        {
+            count++;
+            index += searchValue.Length;
+        }
+
+        return count;
     }
 
     private static string FindRepositoryRoot()
