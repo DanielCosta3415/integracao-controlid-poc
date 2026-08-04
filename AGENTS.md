@@ -170,6 +170,11 @@ Notas:
 ### APIs e integrações
 
 - Trate a Access API Control iD como contrato externo. Não renomeie endpoints, campos ou rotas `.fcgi` sem evidência.
+- Consulte `docs/device-compatibility-matrix.md` e
+  `docs/official-api-version-governance.md` antes de declarar suporte a produto,
+  firmware, licença ou modo.
+- Consulte `docs/network-topologies.md` antes de alterar URL, porta, callback,
+  Monitor, Push, proxy, DNS ou direção de comunicação.
 - Preserve compatibilidade de callbacks oficiais e endpoints push (`/push`, `/result`, `Push/Receive`).
 - Normalize entradas de URL, consulta, corpo e arquivo usando utilitários existentes quando disponíveis.
 - Quando usar `ControlIdCallbackSigningProxy`, mantenha allowlist de IP, limite de body e remoção/reassinatura de headers sensíveis antes do encaminhamento.
@@ -184,6 +189,8 @@ Notas:
 
 ### Segurança
 
+- Preserve a separação entre conta local da PoC e sessão oficial do equipamento;
+  a matriz atual de papéis está em `docs/local-account-administration.md`.
 - Fora de `Development`, `AllowedHosts` não pode ser `*`, `OpenApi:Enabled` deve ser `false`, `CallbackSecurity:RequireSharedKey` e `CallbackSecurity:RequireSignedRequests` devem ser `true`, `SharedKey` deve existir e `ControlIDApi:RequireAllowedDeviceHosts` deve listar hosts permitidos.
 - Preserve validação de callbacks, push e `user_get_image.fcgi` via `CallbackSecurityEvaluator` e `CallbackSignatureValidator`.
 - Não enfraqueça headers de segurança, validação antiforgery ou sanitização sem justificativa forte.
@@ -238,12 +245,18 @@ Notas:
 
 ### Documentação
 
+- Use `docs/faq.md` como resposta canônica de primeiro contato e
+  `docs/persona-guides.md` como percurso por público; evite duplicar respostas
+  extensas em documentos especializados.
 - Atualize README/docs quando mudar setup, comando, segurança, banco, contrato externo, FinOps/capacidade ou fluxo operacional.
 - Atualize `docs/README.md` quando criar, remover ou renomear documento técnico.
 - Registre decisão estrutural em `docs/adrs/` quando alterar padrão de arquitetura, persistência, segurança, observabilidade, release ou provedor.
 - Atualize `docs/changelog-YYYY-MM-DD.md` ou `docs/pr-summary-YYYY-MM-DD.md` em rodadas amplas de governança/documentação.
 - Atualize `docs/residual-risk-closure.md` quando uma lacuna externa virar gate, aprovação, exceção ou risco aceito.
 - Atualize `docs/product-acceptance-criteria.md` quando um fluxo crítico ganhar, perder ou mudar critério verificável.
+- Atualize `docs/api-error-catalog.md`, `docs/troubleshooting-controlid.md` e
+  `docs/data-synchronization-ownership.md` quando mudar erro, diagnóstico ou fonte
+  de verdade.
 - Relatórios em `docs/reports/` podem ser gerados por smoke/auditoria; registre data e resultado.
 - Não documente comandos que não existem no repositório.
 - Preserve a classificação documental logo após o H1; documentos vivos devem

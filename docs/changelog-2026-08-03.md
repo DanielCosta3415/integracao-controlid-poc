@@ -89,3 +89,38 @@ garantia permanente. Reexecute os critérios no commit candidato.
 Esta entrada encerra a rodada registrada, não o histórico do projeto. Mudanças
 posteriores devem criar nova seção datada ou novo arquivo, citar o commit-base e
 separar correções de documentação, código, dados e operação.
+
+## Ampliação documental para primeiro contato
+
+> **Estado:** alteração documental corrente, posterior à linha de base histórica
+> descrita acima. Não altera contratos nem comportamento da aplicação.
+
+- Foram acrescentados guias sobre perguntas frequentes, administração de contas
+  locais, compatibilidade de equipamentos, topologias de rede, diagnóstico,
+  sincronização e titularidade de dados, erros da API, percursos por perfil e
+  governança das fontes oficiais.
+- O inventário passou a registrar 58 arquivos Markdown: 57 documentos autorais e
+  uma licença vendorizada. O índice técnico cataloga todos os documentos em
+  `docs/` e o validador rejeita documentos novos que não sejam indexados.
+- O `README.md` passou a distinguir a conta local da sessão da Access API e a
+  indicar percursos de leitura conforme a necessidade do leitor.
+- Permissões, limites da PoC e afirmações de compatibilidade foram alinhados ao
+  código, aos testes e à documentação oficial disponível da Control iD. Recursos
+  físicos continuam condicionados ao modelo, ao firmware, à licença, aos módulos
+  instalados e à homologação com equipamento real.
+- Links, caminhos, cercas de código, codificação UTF-8, ortografia, terminologia e
+  ausência de dados sensíveis devem ser revalidados pelos gates documentais antes
+  de qualquer liberação.
+
+### Validação do adendo
+
+- inventário e estrutura: 58 arquivos Markdown, dos quais 57 são autorais e um é
+  uma licença vendorizada;
+- links externos: 36 URLs verificadas, incluindo as fontes oficiais da Control iD;
+- compilação: zero avisos e zero erros;
+- testes: 209 aprovados, zero reprovados e zero ignorados;
+- formatação, espaços em branco, codificação, vínculos locais e varredura de
+  segredos: aprovados.
+
+Esses números representam esta execução e devem ser produzidos novamente no
+commit candidato à liberação.

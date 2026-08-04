@@ -102,10 +102,11 @@ Um limite numérico ainda exige ferramenta de leitura ou relatório compatível 
 
 ## Linha de base e comandos direcionados
 
-Na validação documental de 2026-08-03, a solução possuía 209 testes aprovados,
-incluindo o contrato automatizado do inventário dos 49 documentos.
-Essa contagem é uma linha de base, não uma meta fixa; novos comportamentos devem
-aumentar ou substituir cobertura relevante sem remover cenários válidos.
+Na linha de base documental de 2026-08-03, a solução possuía 209 testes aprovados
+e 49 arquivos Markdown. A ampliação do primeiro contato elevou o inventário para
+58 arquivos e atualizou o mesmo contrato automatizado de governança. As contagens
+são referências, não metas fixas; novos comportamentos devem aumentar ou
+substituir cobertura relevante sem remover cenários válidos.
 
 ```powershell
 dotnet test .\Integracao.ControlID.PoC.sln --no-build --filter FullyQualifiedName~Controllers

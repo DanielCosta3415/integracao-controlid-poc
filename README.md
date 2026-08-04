@@ -6,11 +6,11 @@ PoC web em ASP.NET Core 8 MVC/Razor para exploração operacional e técnica da
 Access API da Control iD. A aplicação ajuda um time técnico a conectar um
 equipamento, autenticar, navegar pelo catálogo oficial, testar fluxos de
 hardware, receber callbacks, operar Push, persistir estado local em SQLite e
-validar readiness antes de evoluir a integração.
+validar a prontidão antes de evoluir a integração.
 
 Trate este repositório como uma PoC operacional: ele pode lidar com dados
 pessoais, credenciais, sessões, fotos, biometria, cartões, QR Codes, logs de
-acesso e payloads de callbacks. Use dados fictícios em desenvolvimento e mantenha
+acesso e cargas úteis de callbacks. Use dados fictícios em desenvolvimento e mantenha
 segredos fora do Git.
 
 ## Estado, escopo e não objetivos
@@ -18,7 +18,7 @@ segredos fora do Git.
 | Item | Estado atual |
 | --- | --- |
 | Maturidade | PoC operacional, adequada para desenvolvimento, demonstração e homologação controlada |
-| Equipamentos | Contrato simulado pelo stub; compatibilidade física depende de modelo, firmware e licença |
+| Equipamentos | Contrato simulado pelo simulador local; compatibilidade física depende de modelo, firmware e licença |
 | Persistência | SQLite local para uma instância; não representa arquitetura distribuída |
 | Implantação | Contêiner reproduzível, sem provedor de produção escolhido |
 | Privacidade | Controles técnicos presentes; decisões jurídicas e do controlador permanecem externas |
@@ -32,16 +32,18 @@ como concluídas sem evidência humana e ambiental.
 
 Leitura recomendada para um novo desenvolvedor:
 
-1. `README.md`: resumo, setup, comandos e links principais.
-2. `AGENTS.md`: regras permanentes para agentes e contribuidores automatizados.
-3. `docs/README.md`: índice da documentação técnica.
-4. `docs/developer-onboarding.md`: trilha completa para configurar, executar,
+1. `README.md`: resumo, configuração, comandos e links principais.
+2. `docs/faq.md`: respostas diretas sobre acesso, compatibilidade, rede e API.
+3. `docs/persona-guides.md`: percurso conforme o papel e o objetivo.
+4. `AGENTS.md`: regras permanentes para agentes e contribuidores automatizados.
+5. `docs/README.md`: índice da documentação técnica.
+6. `docs/developer-onboarding.md`: trilha completa para configurar, executar,
    testar, diagnosticar e entregar com segurança.
-5. `docs/architecture-overview.md`: camadas, fluxos críticos e limites de
+7. `docs/architecture-overview.md`: camadas, fluxos críticos e limites de
    arquitetura.
-6. `docs/product-acceptance-criteria.md`: requisitos, critérios de aceite e
+8. `docs/product-acceptance-criteria.md`: requisitos, critérios de aceite e
    rastreabilidade.
-7. `docs/adrs/`: decisões arquiteturais registradas.
+9. `docs/adrs/`: decisões arquiteturais registradas.
 
 ## Tecnologias
 
@@ -52,9 +54,9 @@ Leitura recomendada para um novo desenvolvedor:
 | Web | ASP.NET Core MVC/Razor |
 | Banco | SQLite com Entity Framework Core |
 | Logs | Serilog em console e arquivo rolling |
-| Observabilidade | Health checks, `/metrics` Prometheus text e `System.Diagnostics.Metrics` |
+| Observabilidade | Verificações de saúde, `/metrics` em texto Prometheus e `System.Diagnostics.Metrics` |
 | Testes | xUnit |
-| Smoke/contrato | PowerShell com stub local em `tools/ControlIdDeviceStub` |
+| Teste integrado/contrato | PowerShell com simulador local em `tools/ControlIdDeviceStub` |
 | CI | GitHub Actions em `.github/workflows/ci.yml` |
 | Container | `Dockerfile` e `docker-compose.yml` |
 | Dependências | NuGet com `packages.lock.json` |
@@ -66,7 +68,7 @@ parte do fluxo do projeto.
 
 | Caminho | Papel |
 | --- | --- |
-| `Program.cs` | Bootstrap da aplicação, DI, middlewares, rotas, health checks, SQLite e validações de runtime |
+| `Program.cs` | Inicialização da aplicação, DI, middlewares, rotas, verificações de saúde, SQLite e validações de execução |
 | `Controllers/` | Rotas MVC, callbacks, Push, catálogo oficial e fluxos operacionais |
 | `Services/` | Integrações Control iD, regras reutilizáveis, repositórios, observabilidade, segurança e factories |
 | `Data/` | `IntegracaoControlIDContext` e migrations EF Core |
@@ -76,7 +78,7 @@ parte do fluxo do projeto.
 | `Middlewares/` | Correlation ID, tratamento de erro, headers, sessão e request logging |
 | `Options/` | Opções de configuração tipadas |
 | `tests/` | Testes xUnit |
-| `tools/` | Scripts de smoke, readiness, auditoria, backup, scanners e stubs |
+| `tools/` | Scripts de teste integrado, prontidão, auditoria, cópia de segurança, analisadores e simuladores |
 | `docs/` | Documentação técnica, guias operacionais, ADRs, relatórios e registros de alterações |
 | `wwwroot/` | CSS/JS globais, assets e bibliotecas vendorizadas |
 
@@ -131,13 +133,13 @@ Aplicação principal:
 dotnet run --project .\Integracao.ControlID.PoC.csproj
 ```
 
-Stub local do equipamento:
+Simulador local do equipamento:
 
 ```powershell
 dotnet run --project .\tools\ControlIdDeviceStub\ControlIdDeviceStub.csproj --no-launch-profile
 ```
 
-Smoke local com app e stub:
+Teste integrado local com aplicação e simulador:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\tools\smoke-localhost.ps1
@@ -149,30 +151,50 @@ o script interrompe imediatamente se a compilação da aplicação ou do simulad
 Em `Development`, a especificação OpenAPI fica disponível em
 `/swagger/v1/swagger.json` e a UI em `/swagger` quando `OpenApi:Enabled=true`.
 
-## Primeira experiência com o stub
+## Primeira experiência com o simulador
 
 Este roteiro leva do clone ao primeiro fluxo autenticado sem equipamento físico:
 
-1. Execute o stub; ele escuta em `http://127.0.0.1:6600`.
-2. Configure `ControlIDApi:DefaultDeviceUrl` com essa URL. O stub aceita as
+1. Execute o simulador; ele escuta em `http://127.0.0.1:6600`.
+2. Configure `ControlIDApi:DefaultDeviceUrl` com essa URL. O simulador aceita as
    credenciais fictícias `stub-admin` e `stub-password`.
 3. Execute a aplicação e abra `http://localhost:5000` ou
    `https://localhost:5001`, conforme `Properties/launchSettings.json`.
 4. No primeiro acesso, abra `/Auth/Register`, cadastre dados fictícios e uma
    senha de 12 a 128 caracteres. O primeiro usuário local recebe o papel
    `Administrator`; cadastros seguintes exigem um administrador autenticado.
-5. Entre em `/Auth/LocalLogin`, conecte-se ao stub em `/Auth/Login` e confirme a
+5. Entre em `/Auth/LocalLogin`, conecte-se ao simulador em `/Auth/Login` e confirme a
    sessão em `/Auth/Status`.
 6. Abra `OfficialApi`, consulte `system_information.fcgi` e confirme resposta de
    sucesso sem dados pessoais reais.
 
-Resultado esperado: shell autenticado, sessão Control iD válida, readiness
+Resultado esperado: interface autenticada, sessão Control iD válida, prontidão
 saudável e nenhuma credencial registrada em logs ou arquivos versionados. Para
 uma validação automatizada equivalente, execute `tools/smoke-localhost.ps1`.
 
+## Conta local e sessão Control iD
+
+Sim, uma conta local é necessária para o acesso humano normal à interface. Ela
+protege a própria PoC e atribui um dos papéis locais:
+
+- `Administrator`: pode executar operações administrativas, escritas, ações
+  físicas e consultas sensíveis;
+- `Operator`: pode navegar, diagnosticar, conectar um equipamento e fazer login
+  oficial, mas não pode executar as operações administrativas protegidas.
+
+A conta local não substitui as credenciais do equipamento. Depois de entrar em
+`/Auth/LocalLogin`, conecte o terminal e use `/Auth/Login` para criar uma segunda
+sessão, emitida por `login.fcgi`. O primeiro cadastro local recebe
+`Administrator`; os seguintes são criados por um administrador e recebem
+`Operator`.
+
+Não existe recuperação de senha sem a senha atual, promoção/desativação de conta,
+SSO ou MFA. Consulte `docs/local-account-administration.md` para a matriz de
+permissões e `docs/faq.md` para as perguntas de primeiro contato.
+
 ## Comandos oficiais
 
-Build e testes:
+Compilação e testes:
 
 ```powershell
 dotnet build .\Integracao.ControlID.PoC.sln --no-restore -v:minimal
@@ -235,11 +257,11 @@ Configuração segue o padrão nativo ASP.NET Core (`Secao__Chave`).
 | `Database__ExitAfterMigrations` | `false` | Encerra o processo após uma execução de migration controlada |
 | `AllowedHosts` | `poc.example.internal` | Hosts aceitos fora de `Development`; não use `*` |
 | `ControlIDApi__DefaultDeviceUrl` | `http://<equipamento-ou-host>:8080` | Equipamento Control iD |
-| `ControlIDApi__ConnectionTimeoutSeconds` | `30` | Timeout das chamadas oficiais; normalizado entre 5 e 300 segundos |
+| `ControlIDApi__ConnectionTimeoutSeconds` | `30` | Tempo limite das chamadas oficiais; normalizado entre 5 e 300 segundos |
 | `ControlIDApi__MaxResponseBodyBytes` | `16777216` | Limite de resposta da API externa; normalizado entre 64 KiB e 64 MiB |
-| `ControlIDApi__RequireAllowedDeviceHosts` | `true` | Exige allowlist de egress |
+| `ControlIDApi__RequireAllowedDeviceHosts` | `true` | Exige lista de permissões de saída |
 | `ControlIDApi__AllowedDeviceHosts__0` | `<equipamento-ou-host>` | Primeiro host permitido do equipamento |
-| `CallbackSecurity__MaxBodyBytes` | `1048576` | Limite de payload para callbacks/monitor |
+| `CallbackSecurity__MaxBodyBytes` | `1048576` | Limite do corpo para callbacks/monitor |
 | `CallbackSecurity__RequireSharedKey` | `true` | Exige chave compartilhada em ingressos externos |
 | `CallbackSecurity__SharedKey` | `<segredo>` | Segredo fora do Git |
 | `CallbackSecurity__RequireSignedRequests` | `true` | Exige assinatura HMAC com timestamp e nonce |
@@ -284,7 +306,7 @@ Endpoints operacionais:
 | Endpoint | Finalidade | Exposição recomendada |
 | --- | --- | --- |
 | `GET /health/live` | Liveness do processo ASP.NET Core | Supervisor/load balancer |
-| `GET /health/ready` | Readiness do SQLite local | Readiness antes de tráfego |
+| `GET /health/ready` | Prontidão do SQLite local | Verificação antes de receber tráfego |
 | `GET /metrics` | Métricas Prometheus text | Administrador por padrão |
 
 Sinais disponíveis:
@@ -331,7 +353,7 @@ documentação operacional.
 - `ProductSpecific`: recursos por linha de equipamento.
 - `AdvancedOfficial`: câmera, exportação, intertravamento e recursos avançados.
 - `OfficialEvents`/`Monitor`: callbacks, monitoramento e eventos oficiais.
-- `PushCenter`: fila Push, polling e resultados.
+- `PushCenter`: fila Push, consultas periódicas e resultados.
 - `Privacy`: relatório minimizado de atendimento a titular.
 
 ## Contrato com equipamento real
@@ -345,15 +367,26 @@ $env:CONTROLID_PASSWORD = "<senha>"
 powershell -ExecutionPolicy Bypass -File .\tools\contract-controlid-device.ps1
 ```
 
-Use `tools/contract-controlid-stub.ps1` para validar contrato sem hardware.
+Use `tools/contract-controlid-stub.ps1` para validar o contrato sem hardware.
 
 ## Documentação principal
 
 - `docs/README.md`: índice de conhecimento.
+- `docs/faq.md`: 96 perguntas frequentes sobre produto, acesso, API e operação.
+- `docs/persona-guides.md`: percursos para avaliação, integração, operação e
+  liberação.
 - `docs/developer-onboarding.md`: guia de desenvolvimento e diagnóstico.
 - `docs/architecture-overview.md`: arquitetura e fluxos.
-- `docs/integration-contracts.md`: APIs, payloads e contratos.
-- `docs/data-model-and-recovery.md`: dados, migrations, índices, backup e restore.
+- `docs/local-account-administration.md`: contas, papéis, sessões e recuperação.
+- `docs/device-compatibility-matrix.md`: compatibilidade por produto, firmware e
+  licença.
+- `docs/network-topologies.md`: fluxos de rede, callbacks, Monitor e Push.
+- `docs/integration-contracts.md`: APIs, cargas úteis e contratos.
+- `docs/api-error-catalog.md`: erros por camada e resposta segura.
+- `docs/troubleshooting-controlid.md`: diagnóstico guiado da integração.
+- `docs/data-synchronization-ownership.md`: fontes de verdade e reconciliação.
+- `docs/official-api-version-governance.md`: revisão contínua da API e firmware.
+- `docs/data-model-and-recovery.md`: dados, migrações, índices, cópia de segurança e restauração.
 - `docs/security-hardening.md`: fortalecimento, HMAC, RBAC, cabeçalhos e segredos.
 - `docs/privacy-and-data-retention.md`: LGPD, dados pessoais e retenção.
 - `docs/testing-strategy.md`: estratégia de testes e gates.
@@ -374,8 +407,8 @@ Use `tools/contract-controlid-stub.ps1` para validar contrato sem hardware.
 
 - Confira esquema, IP e porta no painel de conexão.
 - Valide `ControlIDApi__ConnectionTimeoutSeconds`.
-- Confira allowlist `ControlIDApi__AllowedDeviceHosts`.
-- Veja logs do `OfficialApiInvokerService` para timeout, status e target
+- Confira a lista de permissões `ControlIDApi__AllowedDeviceHosts`.
+- Veja os registros do `OfficialApiInvokerService` para tempo limite, status e destino
   pseudonimizado.
 
 ### Callbacks não aparecem
@@ -407,22 +440,22 @@ Use `tools/contract-controlid-stub.ps1` para validar contrato sem hardware.
 
 ```mermaid
 flowchart LR
-    Clone["Clonar e restaurar"] --> Stub["Iniciar o stub fictício"]
+    Clone["Clonar e restaurar"] --> Stub["Iniciar o simulador fictício"]
     Stub --> LocalUser["Cadastrar usuário local fictício"]
-    LocalUser --> DeviceLogin["Autenticar no stub"]
+    LocalUser --> DeviceLogin["Autenticar no simulador"]
     DeviceLogin --> OfficialApi["Consultar system_information.fcgi"]
     OfficialApi --> Gates["Executar verificações locais"]
 ```
 
 O fluxo completo leva, em uma máquina já preparada, aproximadamente 10 a 20
-minutos. O primeiro resultado confiável é a consulta ao stub seguida do gate
+minutos. O primeiro resultado confiável é a consulta ao simulador seguida da verificação
 local aprovado; uma tela carregada isoladamente não comprova a integração.
 
 | Ambiente | Cobertura documentada |
 | --- | --- |
 | Windows + Windows PowerShell 5.1 | Caminho principal e scripts operacionais |
 | Windows + PowerShell 7 | Compatível com os comandos PowerShell documentados |
-| Linux/macOS + PowerShell 7 | Build e aplicação são portáveis; scripts que usam DPAPI ou ACL do Windows exigem alternativa registrada |
+| Linux/macOS + PowerShell 7 | Compilação e aplicação são portáveis; scripts que usam DPAPI ou ACL do Windows exigem alternativa registrada |
 | Contêiner Linux | Execução reproduzível da aplicação; operação real ainda depende de volumes, segredos e proxy configurados |
 
 ## Referências visuais

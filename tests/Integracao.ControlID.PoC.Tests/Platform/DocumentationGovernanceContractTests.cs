@@ -9,15 +9,20 @@ public class DocumentationGovernanceContractTests
         var docsIndex = ReadRepoFile("docs", "README.md");
         var onboarding = ReadRepoFile("docs", "developer-onboarding.md");
         var architecture = ReadRepoFile("docs", "architecture-overview.md");
+        var faq = ReadRepoFile("docs", "faq.md");
+        var accountAdministration = ReadRepoFile("docs", "local-account-administration.md");
         var agents = ReadRepoFile("AGENTS.md");
 
         Assert.Contains("docs/developer-onboarding.md", readme, StringComparison.Ordinal);
+        Assert.Contains("docs/faq.md", readme, StringComparison.Ordinal);
         Assert.Contains("docs/architecture-overview.md", readme, StringComparison.Ordinal);
         Assert.Contains("docs/residual-risk-closure.md", readme, StringComparison.Ordinal);
         Assert.Contains("docs/adrs/", readme, StringComparison.Ordinal);
         Assert.Contains("Leitura por papel", docsIndex, StringComparison.Ordinal);
         Assert.Contains("Critério estrito de liberação", onboarding, StringComparison.Ordinal);
         Assert.Contains("Fronteiras de confiança", architecture, StringComparison.Ordinal);
+        Assert.Contains("96. Que evidências", faq, StringComparison.Ordinal);
+        Assert.Contains("Papéis e permissões atuais", accountAdministration, StringComparison.Ordinal);
         Assert.Contains("docs/adrs/", agents, StringComparison.Ordinal);
     }
 
@@ -52,9 +57,10 @@ public class DocumentationGovernanceContractTests
 
         Assert.Contains(".\\tools\\validate-documentation.ps1", workflow, StringComparison.Ordinal);
         Assert.Contains("documentation-validation", releaseGate, StringComparison.Ordinal);
-        Assert.Contains("ExpectedMarkdownCount = 49", validator, StringComparison.Ordinal);
+        Assert.Contains("ExpectedMarkdownCount = 58", validator, StringComparison.Ordinal);
         Assert.Contains("[switch]$CheckExternalUrls", validator, StringComparison.Ordinal);
         Assert.Contains("Missing local Markdown anchor", validator, StringComparison.Ordinal);
+        Assert.Contains("Documentation file missing from docs index", validator, StringComparison.Ordinal);
         Assert.Contains("Invalid bare URL", validator, StringComparison.Ordinal);
         Assert.Contains("Vendored jquery-validation license hash", validator, StringComparison.Ordinal);
         Assert.Contains("Test file missing from project map", validator, StringComparison.Ordinal);

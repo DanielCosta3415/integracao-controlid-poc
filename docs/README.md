@@ -7,6 +7,18 @@ agentes de código no uso seguro da PoC `Integracao.ControlID.PoC`.
 
 Para escolher um percurso objetivo, consulte [Rotas de leitura e cadência](#rotas-de-leitura-e-cadência).
 
+## Primeiro contato
+
+- `docs/faq.md`: 96 respostas diretas sobre produto, contas, rede, API,
+  equipamentos, dados, segurança e operação.
+- `docs/persona-guides.md`: percursos de leitura e execução por perfil.
+- `docs/local-account-administration.md`: diferença entre conta local e sessão
+  Control iD, papéis e recuperação.
+- `docs/device-compatibility-matrix.md`: o que está implementado, validado com
+  stub ou pendente de equipamento físico.
+- `docs/network-topologies.md`: quem inicia cada conexão e quando a PoC precisa
+  ser alcançável pelo equipamento.
+
 ## Como a documentação está organizada
 
 1. `README.md` e `docs/developer-onboarding.md` formam a entrada para o projeto.
@@ -26,14 +38,15 @@ devem ser corrigidas, não apenas explicadas.
 
 | Papel | Comece por |
 | --- | --- |
+| Primeiro contato/avaliação | `docs/faq.md`, `docs/persona-guides.md`, `README.md` |
 | Novo desenvolvedor | `docs/developer-onboarding.md`, `docs/architecture-overview.md`, `docs/project-file-responsibilities.md` |
 | Maintainer | `AGENTS.md`, `docs/adrs/`, `docs/testing-strategy.md`, `docs/changelog-2026-05-01.md` |
 | QA/SDET | `docs/product-acceptance-criteria.md`, `docs/testing-strategy.md`, `docs/external-validation-runbook.md` |
-| SRE/Operação | `docs/observability-runbook.md`, `docs/deployment-runbook.md`, `docs/incident-response-and-dr.md` |
-| DevOps/Plataforma | `docs/ci-cd-quality-gates.md`, `.github/workflows/ci.yml`, `docs/deployment-runbook.md` |
+| SRE/Operação | `docs/troubleshooting-controlid.md`, `docs/observability-runbook.md`, `docs/incident-response-and-dr.md` |
+| DevOps/Plataforma | `docs/network-topologies.md`, `docs/ci-cd-quality-gates.md`, `docs/deployment-runbook.md` |
 | Segurança/AppSec | `docs/security-hardening.md`, `docs/integration-contracts.md`, `docs/external-validation-runbook.md` |
 | DPO/Privacidade | `docs/privacy-and-data-retention.md`, `docs/privacy-governance-runbook.md` |
-| Data/DB | `docs/data-model-and-recovery.md`, `docs/database-and-runtime-state.md` |
+| Data/DB | `docs/data-synchronization-ownership.md`, `docs/data-model-and-recovery.md`, `docs/database-and-runtime-state.md` |
 | Produto/Analytics | `docs/product-acceptance-criteria.md`, `docs/product-analytics.md` |
 | FinOps/Capacidade | `docs/finops-capacity.md`, `docs/observability-runbook.md` |
 | Liberação/Responsável | `docs/residual-risk-closure.md`, `docs/deployment-runbook.md`, `ops.example.json` |
@@ -56,6 +69,8 @@ ADRs atuais:
 
 ## Produto e requisitos
 
+- `docs/faq.md`: perguntas frequentes de primeiro contato e integração.
+- `docs/persona-guides.md`: percursos guiados por perfil e objetivo.
 - `docs/product-acceptance-criteria.md`: requisitos, fluxos, critérios de aceite,
   rastreabilidade, DoR e DoD.
 - `docs/product-analytics.md`: KPIs, eventos agregados, painéis e restrições de
@@ -64,8 +79,16 @@ ADRs atuais:
 
 ## Integrações e dados
 
+- `docs/device-compatibility-matrix.md`: compatibilidade por linha, firmware,
+  licença e nível de evidência.
+- `docs/network-topologies.md`: topologias, fluxos, portas e controles de rede.
 - `docs/integration-contracts.md`: inventário de integrações, contratos,
   payloads e riscos.
+- `docs/api-error-catalog.md`: catálogo de erros por camada e conduta segura.
+- `docs/data-synchronization-ownership.md`: fontes de verdade, sincronização,
+  conflitos e reconciliação.
+- `docs/official-api-version-governance.md`: fontes oficiais, cadência e
+  revalidação de firmware/contratos.
 - `docs/monitor-implementation.md`: callbacks, monitoramento e persistência de
   eventos.
 - `docs/push-implementation.md`: fila Push, polling, resultados e estados.
@@ -77,6 +100,8 @@ ADRs atuais:
 
 ## Segurança, privacidade e cadeia de suprimentos
 
+- `docs/local-account-administration.md`: contas locais, papéis, sessões e
+  limitações de recuperação.
 - `docs/security-hardening.md`: controles de autenticação, RBAC, HMAC, cabeçalhos,
   allowlist e estado local.
 - `docs/privacy-and-data-retention.md`: inventário de dados pessoais, tratamento,
@@ -90,6 +115,7 @@ ADRs atuais:
 
 ## Operação, liberação e continuidade
 
+- `docs/troubleshooting-controlid.md`: diagnóstico por sintoma e evidência segura.
 - `docs/testing-strategy.md`: testes, coverage, gates e validação externa.
 - `docs/ci-cd-quality-gates.md`: GitHub Actions, gates obrigatórios,
   artefatos, proteção recomendada da ramificação e reprodução local.
@@ -139,11 +165,14 @@ Catálogo de evidências históricas:
   a CI mantém o modo off-line para evitar falhas causadas por terceiros.
 - Todo documento autoral deve informar classificação, público, responsável e
   data de validação logo após o título principal.
+- O inventário atual possui 58 arquivos Markdown: 57 documentos autorais e uma
+  licença vendorizada que deve permanecer literal.
 
 ## Rotas de leitura e cadência
 
 | Objetivo | Tempo de leitura aproximado | Evidência de conclusão |
 | --- | ---: | --- |
+| Entender a PoC | 15 a 25 minutos | FAQ e percurso da persona concluídos |
 | Primeiro uso local | 20 a 30 minutos | Stub consultado e gate local aprovado |
 | Mudança funcional | 30 a 45 minutos | Requisito, fluxo, código e teste identificados |
 | Revisão de liberação | 45 a 90 minutos | Riscos externos, implantação, reversão e verificações registrados |

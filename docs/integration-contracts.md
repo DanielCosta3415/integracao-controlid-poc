@@ -199,6 +199,9 @@ Não há loader `.env` configurado. Use `appsettings.json`, User Secrets ou vari
 - Idempotência: logout/clear são tolerantes a ausência de sessão.
 - Dados sensíveis: session string oficial; não logar.
 - Controle: auth local global com RBAC por papel; session string oficial deve aparecer apenas mascarada em URLs de diagnóstico.
+- Permissões: qualquer usuário local autenticado pode conectar e executar
+  login/logout oficial pelo `AuthController`; ações do `SessionController`,
+  invocações por POST e operações administrativas exigem `Administrator`.
 
 ### INT-009 - Observabilidade Serilog
 

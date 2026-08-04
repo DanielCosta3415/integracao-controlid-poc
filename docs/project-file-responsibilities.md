@@ -58,7 +58,7 @@ Os controladores coordenam as rotas MVC, recebem a entrada da interface, acionam
 | `Controllers/AccessLogsController.cs` | Fluxos de listagem, detalhe e remoção de logs de acesso persistidos localmente. |
 | `Controllers/AccessRulesController.cs` | CRUD e visualização das regras de acesso locais usadas pela PoC. |
 | `Controllers/AdvancedOfficialController.cs` | Telas e execuções de cenários oficiais avançados, como captura, exportação e comandos especiais. |
-| `Controllers/AuthController.cs` | Fluxos de login, registro, logout, status e troca de senha relacionados a autenticação no equipamento. |
+| `Controllers/AuthController.cs` | Fluxos de cadastro/login local, troca de senha e login/logout/status da sessão oficial do equipamento. |
 | `Controllers/BiometricTemplatesController.cs` | Operações de listagem, detalhe, edição e remoção de templates biométricos. |
 | `Controllers/CardsController.cs` | Operações de gerenciamento local de cartões vinculados a usuários/acesso. |
 | `Controllers/CatraController.cs` | Fluxos específicos de catraca, eventos e abertura remota. |
@@ -587,38 +587,61 @@ As views Razor compõem a interface web da PoC. Em geral, cada pasta espelha um 
 
 | Arquivo/Pasta | Responsabilidade |
 | --- | --- |
-| `docs/README.md` | Índice central da documentação técnica por papel e por tema. |
-| `docs/adrs/` | Registros de decisões arquiteturais aceitas e suas consequências. |
-| `docs/architecture-overview.md` | Visão de camadas, fluxos críticos, dependências, fronteiras de confiança e contratos a preservar. |
-| `docs/changelog-2026-04-14.md` | Registro resumido de evoluções relevantes realizadas na PoC. |
-| `docs/changelog-2026-04-15.md` | Registro resumido das atualizações de documentação, comentários no código e observabilidade. |
-| `docs/changelog-2026-05-01.md` | Registro da rodada de documentação, integração técnica e ADRs. |
-| `docs/ci-cd-quality-gates.md` | Documenta GitHub Actions, critérios de qualidade, artefatos, proteção recomendada da ramificação e reprodução local. |
-| `docs/developer-onboarding.md` | Guia de configuração, execução, desenvolvimento, diagnóstico e entrega segura para novos contribuidores. |
-| `docs/deployment-runbook.md` | Mapeia ambientes, contêiner, variáveis obrigatórias, implantação, reversão e riscos de infraestrutura. |
-| `docs/documentation-audit-2026-05-01.md` | Auditoria de documentação, achados, consistência e lacunas restantes. |
-| `docs/equipment-contingency-runbook.md` | Define contingência operacional do equipamento Control iD, alternativa manual e validação de bancada. |
-| `docs/external-validation-runbook.md` | Padroniza SAST, OSV, DAST, acessibilidade e contrato com simulador/equipamento. |
-| `docs/finops-capacity.md` | Define inventário de custos, capacidade, limites, governança FinOps e sustentabilidade operacional. |
-| `docs/incident-response-and-dr.md` | Define matriz SEV, guias de incidentes, continuidade, cópia/restauração operacional, recuperação de desastres, comunicação e análise pós-incidente. |
-| `docs/monitor-implementation.md` | Documenta a implementação da funcionalidade Monitor, callbacks oficiais, segurança e persistência local. |
-| `docs/observability-runbook.md` | Define saúde, métricas, alertas, painéis e resposta a incidentes operacionais. |
-| `docs/observability/alert-rules.json` | Regras versionadas de alerta para o monitor local e ferramentas externas. |
-| `docs/observability/dashboard.json` | Especificação versionada de painéis independente de fornecedor. |
-| `docs/operation-modes-implementation.md` | Documenta a implementação dos modos Standalone, Pro e Enterprise, incluindo cargas úteis e transições. |
-| `docs/product-analytics.md` | Define objetivos, KPIs, funis, eventos, painéis e restrições de análise com privacidade. |
-| `docs/pr-summary-2026-05-01.md` | Resumo de PR e notas de liberação da rodada documental. |
-| `docs/project-file-responsibilities.md` | Este inventário de responsabilidades por pasta e arquivo. |
-| `docs/push-implementation.md` | Documenta a implementação da funcionalidade Push, fila persistida, polling e retorno de resultados. |
-| `docs/residual-risk-closure.md` | Mapeia riscos residuais externos para campos obrigatórios, critérios e evidências de liberação. |
-| `docs/reports/controlid-api-audit-2026-04-13.md` | Auditoria técnica da cobertura da API Control iD. |
-| `docs/reports/design-system-accessibility-audit-2026-04-14.md` | Auditoria do sistema de design e da acessibilidade da interface. |
-| `docs/reports/heuristic-ui-audit-2026-04-14.md` | Avaliação heurística inicial da interface. |
-| `docs/reports/localhost-smoke-test-2026-04-13.md` | Relatório de teste integrado local da rodada de 13/04/2026. |
-| `docs/reports/localhost-smoke-test-2026-04-14.md` | Relatório de teste integrado local da rodada de 14/04/2026. |
-| `docs/reports/operation-modes-e2e-runbook-2026-04-14.md` | Roteiro E2E para validação dos modos de operação. |
-| `docs/reports/operation-modes-homologation-matrix-2026-04-14.md` | Matriz de homologação dos modos Standalone, Pro e Enterprise. |
-| `docs/reports/visual-inventory-2026-04-14.md` | Inventário visual das telas e estados avaliados. |
+| `docs/README.md` | Índice central da documentação técnica por papel, tema e percurso. |
+| `docs/adrs/0001-local-sqlite-runtime-state.md` | Registra a decisão de usar SQLite como estado local da PoC. |
+| `docs/adrs/0002-secure-controlid-ingress-and-egress.md` | Registra os limites seguros das comunicações com o equipamento. |
+| `docs/adrs/0003-in-process-observability-and-readiness-gates.md` | Registra a estratégia de observabilidade e prontidão no processo. |
+| `docs/adrs/0004-release-governance-with-local-scripts.md` | Registra a governança de liberação por scripts locais e CI. |
+| `docs/api-error-catalog.md` | Cataloga erros por camada, status, conduta e evidência segura. |
+| `docs/architecture-overview.md` | Descreve camadas, fluxos críticos, fronteiras de confiança e contratos. |
+| `docs/brand.md` | Define identidade, tokens, componentes e acessibilidade visual. |
+| `docs/changelog-2026-04-14.md` | Registra evoluções técnicas da rodada de 14/04/2026. |
+| `docs/changelog-2026-04-15.md` | Registra documentação, comentários e observabilidade da rodada de 15/04/2026. |
+| `docs/changelog-2026-05-01.md` | Registra documentação, integração técnica e ADRs da rodada de 01/05/2026. |
+| `docs/changelog-2026-08-03.md` | Registra o fechamento dos 14 riscos da solução completa. |
+| `docs/ci-cd-quality-gates.md` | Documenta GitHub Actions, gates, artefatos e reprodução local. |
+| `docs/database-and-runtime-state.md` | Explica o estado SQLite de runtime e comandos de inspeção seguros. |
+| `docs/data-model-and-recovery.md` | Mapeia entidades, índices, migrações, backup e restauração. |
+| `docs/data-synchronization-ownership.md` | Define fontes de verdade, sincronização, conflitos e reconciliação. |
+| `docs/deployment-runbook.md` | Mapeia ambientes, contêiner, implantação, reversão e riscos. |
+| `docs/developer-onboarding.md` | Guia de configuração, execução, diagnóstico e entrega segura. |
+| `docs/device-compatibility-matrix.md` | Separa cobertura da PoC de homologação por produto, firmware e licença. |
+| `docs/documentation-audit-2026-05-01.md` | Preserva a auditoria documental histórica e suas lacunas. |
+| `docs/equipment-contingency-runbook.md` | Define contingência do equipamento, alternativa manual e teste de bancada. |
+| `docs/external-validation-runbook.md` | Padroniza SAST, OSV, DAST, acessibilidade e contrato físico/simulado. |
+| `docs/faq.md` | Responde às 96 perguntas frequentes de primeiro contato e integração. |
+| `docs/finops-capacity.md` | Define custos, capacidade, limites e governança FinOps. |
+| `docs/incident-response-and-dr.md` | Define severidade, incidentes, continuidade, DR e pós-incidente. |
+| `docs/integration-contracts.md` | Inventaria APIs, callbacks, sessões, persistências e contratos. |
+| `docs/local-account-administration.md` | Explica contas locais, papéis, sessões e recuperação de acesso. |
+| `docs/monitor-implementation.md` | Documenta Monitor, callbacks, segurança e persistência de eventos. |
+| `docs/network-topologies.md` | Mapeia direções de rede, portas, DNS/NAT, TLS e proxies. |
+| `docs/observability-runbook.md` | Define saúde, métricas, alertas, painéis e resposta operacional. |
+| `docs/observability/alert-rules.json` | Regras versionadas de alerta independentes de fornecedor. |
+| `docs/observability/dashboard.json` | Especificação versionada dos painéis operacionais. |
+| `docs/official-api-version-governance.md` | Define fontes, cadência e revalidação da Access API/firmware. |
+| `docs/operation-modes-implementation.md` | Documenta Standalone, Pro, Enterprise, cargas e transições. |
+| `docs/persona-guides.md` | Oferece percursos para avaliação, integração, segurança, QA e operação. |
+| `docs/privacy-and-data-retention.md` | Inventaria dados pessoais, tratamentos, retenção e lacunas LGPD. |
+| `docs/privacy-governance-runbook.md` | Define RACI, DSAR, RIPD, DPA e incidente de privacidade. |
+| `docs/product-acceptance-criteria.md` | Mapeia requisitos, fluxos, aceite, rastreabilidade, DoR e DoD. |
+| `docs/product-analytics.md` | Define objetivos, KPIs, eventos e restrições de analytics. |
+| `docs/project-file-responsibilities.md` | Mantém este inventário de responsabilidades por arquivo e pasta. |
+| `docs/pr-summary-2026-05-01.md` | Preserva o resumo de PR/notas de liberação da rodada documental. |
+| `docs/push-implementation.md` | Documenta fila Push, polling, resultados, estados e segurança. |
+| `docs/reports/controlid-api-audit-2026-04-13.md` | Preserva a auditoria histórica da cobertura da Access API. |
+| `docs/reports/design-system-accessibility-audit-2026-04-14.md` | Preserva a auditoria histórica de design e acessibilidade. |
+| `docs/reports/heuristic-ui-audit-2026-04-14.md` | Preserva a avaliação heurística histórica da interface. |
+| `docs/reports/localhost-smoke-test-2026-04-13.md` | Preserva o teste integrado local de 13/04/2026. |
+| `docs/reports/localhost-smoke-test-2026-04-14.md` | Preserva o teste integrado local de 14/04/2026. |
+| `docs/reports/operation-modes-e2e-runbook-2026-04-14.md` | Preserva o roteiro E2E histórico dos modos de operação. |
+| `docs/reports/operation-modes-homologation-matrix-2026-04-14.md` | Preserva a matriz histórica de homologação dos modos. |
+| `docs/reports/visual-inventory-2026-04-14.md` | Preserva o inventário visual histórico das telas. |
+| `docs/residual-risk-closure.md` | Mapeia riscos externos para gates, responsáveis e evidências. |
+| `docs/security-hardening.md` | Documenta autenticação, RBAC, HMAC, headers, allowlists e segredos. |
+| `docs/supply-chain-review.md` | Revisa NuGet, lockfiles, SBOM, vendors e licenças. |
+| `docs/testing-strategy.md` | Define estratégia, cobertura, contratos, smoke e gates. |
+| `docs/troubleshooting-controlid.md` | Organiza diagnóstico por sintoma e escalonamento seguro. |
 
 ## tests
 

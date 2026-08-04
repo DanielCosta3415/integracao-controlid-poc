@@ -25,7 +25,7 @@ Princípios para contribuir:
 0. Clone o repositório, entre na raiz e confirme que não há mudanças locais:
 
 ```powershell
-git clone https://github.com/DanielCosta3415/integracao-controlid-poc.git
+git clone <url-do-repositorio>
 Set-Location .\integracao-controlid-poc
 git status -sb
 ```
@@ -102,6 +102,12 @@ docker compose up --build
 
 Nunca reutilize essas credenciais fictícias fora do stub. O resultado esperado é
 um shell autenticado, `/health/ready` saudável e o catálogo oficial acessível.
+
+A conta local autentica a pessoa na PoC; o login em `/Auth/Login` cria uma sessão
+separada no equipamento ou stub. O papel `Operator` pode conectar e autenticar o
+equipamento, mas operações administrativas e escritas continuam restritas a
+`Administrator`. Consulte `local-account-administration.md` e `faq.md` antes de
+testar com hardware real.
 
 ### Depuração
 

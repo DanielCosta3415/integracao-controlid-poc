@@ -121,7 +121,9 @@ Critérios:
 - Dados inválidos: ausência de dispositivo, resposta sem `session`, sessão expirada.
 - Estados esperados: sem dispositivo, autenticado, sessão válida, sessão expirada, sessão limpa.
 - Erros esperados: falha de login, resposta inesperada, falha de validação de sessão.
-- Permissões esperadas: usuário local autenticado; ações de sessão do equipamento exigem o papel `Administrator`.
+- Permissões esperadas: usuário local autenticado pode conectar e fazer
+  login/logout oficial pelo `AuthController`; validação e limpeza administrativa
+  pelo `SessionController` exigem o papel `Administrator`.
 - Testes existentes: `AuthControllerTests.cs` e `SessionControllerTests.cs`.
 - Testes ausentes: homologação com equipamento real para expiração e encerramento da sessão oficial.
 

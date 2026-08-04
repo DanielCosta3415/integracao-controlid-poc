@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-    [int]$ExpectedMarkdownCount = 49,
+    [int]$ExpectedMarkdownCount = 58,
     [switch]$CheckExternalUrls
 )
 
@@ -99,27 +99,39 @@ function Get-MarkdownAnchors {
 function Test-ExternalUrlAvailable {
     param([Parameter(Mandatory = $true)][string]$Url)
 
+    $acceptedRestrictedStatuses = @(401, 403, 405, 429)
     $curlCommand = Get-Command curl.exe -CommandType Application -ErrorAction SilentlyContinue
     if ($null -eq $curlCommand) {
         $curlCommand = Get-Command curl -CommandType Application -ErrorAction SilentlyContinue
     }
     if ($null -ne $curlCommand) {
         $sink = if ($env:OS -eq 'Windows_NT') { 'NUL' } else { '/dev/null' }
-        $curlArguments = @('--silent')
-        $proxyValues = @($env:HTTP_PROXY, $env:HTTPS_PROXY, $env:ALL_PROXY) |
-            Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
-        if ($proxyValues | Where-Object { $_ -match '^https?://(127\.0\.0\.1|localhost)(:|/)' }) {
-            $curlArguments += @('--noproxy', '*')
-        }
-        $curlArguments += @('--location', '--head', '--max-time', '20', '--output', $sink, '--write-out', '%{http_code}', '--', $Url)
-        $statusOutput = @(& $curlCommand.Source @curlArguments 2>$null)
-        if ($LASTEXITCODE -eq 0 -and $statusOutput.Count -gt 0) {
+        foreach ($method in @('Head', 'Get')) {
+            $curlArguments = @(
+                '--silent', '--fail', '--location', '--connect-timeout', '5',
+                '--max-time', '15', '--retry', '2', '--retry-delay', '1',
+                '--retry-max-time', '20', '--output', $sink, '--write-out',
+                '%{http_code}'
+            )
+            if ($method -eq 'Head') {
+                $curlArguments += '--head'
+            }
+            else {
+                $curlArguments += @('--range', '0-0')
+            }
+            $curlArguments += @('--', $Url)
+
+            $statusOutput = @(& $curlCommand.Source @curlArguments 2>$null)
+            $curlExitCode = $LASTEXITCODE
             $statusCode = 0
-            if ([int]::TryParse($statusOutput[-1].Trim(), [ref]$statusCode)) {
-                return ($statusCode -ge 200 -and $statusCode -lt 400) -or
-                    $statusCode -in @(401, 403, 405, 429)
+            [void][int]::TryParse(($statusOutput -join '').Trim(), [ref]$statusCode)
+            Write-Verbose "External URL curl check: method=$method url=$Url exit=$curlExitCode status=$statusCode"
+            if ($curlExitCode -eq 0 -or $acceptedRestrictedStatuses -contains $statusCode) {
+                return $true
             }
         }
+
+        return $false
     }
 
     if ([Enum]::GetNames([Net.SecurityProtocolType]) -contains 'Tls12') {
@@ -127,7 +139,6 @@ function Test-ExternalUrlAvailable {
             [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
     }
 
-    $acceptedRestrictedStatuses = @(401, 403, 405, 429)
     foreach ($method in @('Head', 'Get')) {
         try {
             $parameters = @{
@@ -204,6 +215,20 @@ try {
     $markdownFiles = @($tracked + $untracked | Sort-Object -Unique)
     if ($markdownFiles.Count -ne $ExpectedMarkdownCount) {
         Add-DocumentationError "Expected $ExpectedMarkdownCount Markdown files, found $($markdownFiles.Count)."
+    }
+
+    $documentationIndexPath = Join-Path $root "docs/README.md"
+    $documentationIndexContent = [IO.File]::ReadAllText($documentationIndexPath, $strictUtf8)
+    foreach ($markdownPathValue in $markdownFiles) {
+        $markdownPath = Get-NormalizedRelativePath $markdownPathValue
+        if (-not $markdownPath.StartsWith("docs/", [StringComparison]::OrdinalIgnoreCase) -or
+            $markdownPath.Equals("docs/README.md", [StringComparison]::OrdinalIgnoreCase)) {
+            continue
+        }
+
+        if ($documentationIndexContent.IndexOf($markdownPath, [StringComparison]::OrdinalIgnoreCase) -lt 0) {
+            Add-DocumentationError "Documentation file missing from docs index: $markdownPath"
+        }
     }
 
     foreach ($relativePathValue in $markdownFiles) {
@@ -400,8 +425,90 @@ try {
     }
 
     if ($CheckExternalUrls) {
-        foreach ($url in ($externalUrls | Sort-Object)) {
-            if (-not (Test-ExternalUrlAvailable $url)) {
+        $sortedExternalUrls = @($externalUrls | Sort-Object)
+        $urlsToVerifyIndividually = $sortedExternalUrls
+        $curlCommand = Get-Command curl.exe -CommandType Application -ErrorAction SilentlyContinue
+        if ($null -eq $curlCommand) {
+            $curlCommand = Get-Command curl -CommandType Application -ErrorAction SilentlyContinue
+        }
+
+        if ($null -ne $curlCommand -and $sortedExternalUrls.Count -gt 0) {
+            $sink = if ($env:OS -eq 'Windows_NT') { 'NUL' } else { '/dev/null' }
+            $binaryDocumentUrls = @($sortedExternalUrls | Where-Object { ([Uri]$_).AbsolutePath -match '(?i)\.(pdf|zip)$' })
+            $urlsForBatch = @($sortedExternalUrls | Where-Object { $_ -notin $binaryDocumentUrls })
+            $urlsToVerifyIndividually = @()
+
+            foreach ($url in $binaryDocumentUrls) {
+                $url = $url.Trim()
+                $binaryArguments = @(
+                    '--silent', '--fail', '--location', '--head',
+                    '--connect-timeout', '5', '--max-time', '20', '--retry', '2',
+                    '--retry-delay', '1', '--output', $sink, '--', $url
+                )
+                & $curlCommand.Source @binaryArguments 2>$null
+                $binaryExitCode = $LASTEXITCODE
+                Write-Verbose "External binary check: url=$url length=$($url.Length) exit=$binaryExitCode"
+                if ($binaryExitCode -ne 0) {
+                    Add-DocumentationError "External binary document unavailable: $url"
+                }
+            }
+
+            $curlArguments = @(
+                '--silent', '--location', '--connect-timeout', '3',
+                '--max-time', '10', '--retry', '1', '--retry-delay', '1',
+                '--range', '0-0', '--max-filesize', '1048576', '--parallel',
+                '--parallel-max', '16', '--write-out',
+                "%{urlnum}`t%{http_code}`n"
+            )
+            foreach ($url in $urlsForBatch) {
+                $curlArguments += @('--output', $sink, '--url', $url)
+            }
+
+            $batchOutput = if ($urlsForBatch.Count -gt 0) {
+                @(& $curlCommand.Source @curlArguments 2>$null)
+            }
+            else {
+                @()
+            }
+            $statusesByIndex = @{}
+            foreach ($line in $batchOutput) {
+                if ($line -match '^(\d+)\s+(\d{3})$') {
+                    $statusesByIndex[[int]$Matches[1]] = [int]$Matches[2]
+                }
+            }
+
+            if ($urlsForBatch.Count -gt 0) {
+                foreach ($index in 0..($urlsForBatch.Count - 1)) {
+                    $statusCode = if ($statusesByIndex.ContainsKey($index)) {
+                        $statusesByIndex[$index]
+                    }
+                    else {
+                        0
+                    }
+                    if (($statusCode -lt 200 -or $statusCode -ge 400) -and
+                        $statusCode -notin @(401, 403, 405, 429)) {
+                        if ($statusCode -eq 0) {
+                            Add-DocumentationError "External URL unavailable without HTTP response: $($urlsForBatch[$index])"
+                        }
+                        else {
+                            Add-DocumentationError "External URL unavailable (HTTP $statusCode): $($urlsForBatch[$index])"
+                        }
+                    }
+                }
+            }
+        }
+
+        foreach ($url in $urlsToVerifyIndividually) {
+            $available = $false
+            foreach ($attempt in 1..3) {
+                if (Test-ExternalUrlAvailable $url) {
+                    $available = $true
+                    break
+                }
+                Start-Sleep -Seconds ([Math]::Pow(2, $attempt - 1))
+            }
+
+            if (-not $available) {
                 Add-DocumentationError "External URL unavailable: $url"
             }
         }

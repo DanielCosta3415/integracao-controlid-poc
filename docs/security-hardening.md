@@ -6,7 +6,12 @@
 
 - Autenticação local obrigatória por cookie para controllers MVC/Razor.
 - Bootstrap seguro: o primeiro usuário local cadastrado recebe papel `Administrator`; cadastros posteriores exigem administrador autenticado e recebem `Operator`.
-- RBAC para operações administrativas, dados sensíveis, sessões, biometria, cartões, mídia, configuração, hardware, objetos oficiais mutáveis, push manual e limpeza/expurgo de eventos.
+- RBAC para operações administrativas, dados sensíveis, gestão de sessão pelo
+  `SessionController`, biometria, cartões, mídia, configuração, hardware, objetos
+  oficiais mutáveis, Push manual e limpeza/expurgo de eventos. Conexão e
+  login/logout oficial pelo `AuthController` permanecem disponíveis a qualquer
+  usuário local autenticado; a matriz exata está em
+  `local-account-administration.md`.
 - Hash de senha local migrado para PBKDF2-HMAC-SHA256 com suporte de leitura para hashes SHA256 legados. Hash legado válido e regravado em PBKDF2 no próximo login local.
 - Endpoints externos de callback e Push permanecem anônimos para compatibilidade com o equipamento, mas passam por validação de IP, chave compartilhada e limite de requisições, além de poderem exigir assinatura HMAC.
 - Assinatura HMAC de ingressos externos usa `X-ControlID-Signature`, `X-ControlID-Timestamp` e `X-ControlID-Nonce`, com janela de tempo e cache anti-replay limitado por `CallbackSecurity:MaxTrackedNonces`.
