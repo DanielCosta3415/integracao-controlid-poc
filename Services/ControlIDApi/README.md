@@ -73,9 +73,10 @@ credenciais versionadas.
 1. Confirmar endpoint, método, parâmetros e compatibilidade na documentação do fabricante.
 2. Registrar o contrato no catálogo sem duplicar regra de URL ou autenticação.
 3. Reutilizar o invocador, timeout, limite de resposta e circuit breaker existentes.
-4. Converter resposta binária ou JSON em resultado público seguro, sem corpo bruto de erro.
-5. Criar testes de sucesso, sessão ausente, entrada inválida, timeout e resposta inesperada.
-6. Atualizar `docs/integration-contracts.md` e a rastreabilidade do requisito.
+4. Manter JSON como `JsonElement` independente e resposta binária como bytes, sem documento descartável ou conversão Base64 intermediária.
+5. Aplicar paginação com lookahead às listagens `load_objects` servidas por GET; operações técnicas POST preservam o payload explícito do operador.
+6. Criar testes de sucesso, sessão ausente, entrada inválida, timeout e resposta inesperada.
+7. Atualizar `docs/integration-contracts.md` e a rastreabilidade do requisito.
 
 Comando direcionado:
 

@@ -3,6 +3,8 @@ using System.Text;
 
 namespace Integracao.ControlID.PoC.Services.Files;
 
+public delegate bool UploadedFileContentValidator(ReadOnlySpan<byte> bytes, string extension);
+
 public sealed class UploadedFileBase64Encoder
 {
     private const long DefaultMaxBytes = 25L * 1024 * 1024;
@@ -74,13 +76,13 @@ public sealed class UploadedFileValidation
 
     private readonly HashSet<string> _allowedExtensions;
     private readonly HashSet<string> _allowedContentTypes;
-    private readonly Func<byte[], string, bool>? _contentValidator;
+    private readonly UploadedFileContentValidator? _contentValidator;
 
     private UploadedFileValidation(
         IEnumerable<string> allowedExtensions,
         IEnumerable<string> allowedContentTypes,
         string invalidMessage,
-        Func<byte[], string, bool>? contentValidator)
+        UploadedFileContentValidator? contentValidator)
     {
         _allowedExtensions = allowedExtensions
             .Select(extension => extension.StartsWith('.') ? extension.ToLowerInvariant() : $".{extension.ToLowerInvariant()}")
@@ -173,6 +175,11 @@ public sealed class UploadedFileValidation
 
     public void Validate(IFormFile file, byte[] bytes)
     {
+        Validate(file, bytes.AsSpan());
+    }
+
+    public void Validate(IFormFile file, ReadOnlySpan<byte> bytes)
+    {
         var fileName = Path.GetFileName(file.FileName ?? string.Empty);
         var extension = Path.GetExtension(fileName);
         if (string.IsNullOrWhiteSpace(extension) || !_allowedExtensions.Contains(extension))
@@ -215,22 +222,22 @@ public sealed class UploadedFileValidation
         return (separator >= 0 ? contentType[..separator] : contentType).Trim();
     }
 
-    private static bool HasPrefix(byte[] bytes, byte[] prefix)
+    private static bool HasPrefix(ReadOnlySpan<byte> bytes, ReadOnlySpan<byte> prefix)
     {
-        if (bytes.Length < prefix.Length)
+        return bytes.StartsWith(prefix);
+    }
+
+    private static bool LooksLikeText(ReadOnlySpan<byte> bytes)
+    {
+        if (bytes.IsEmpty)
             return false;
 
-        for (var index = 0; index < prefix.Length; index++)
+        foreach (var value in bytes)
         {
-            if (bytes[index] != prefix[index])
+            if (value == 0)
                 return false;
         }
 
         return true;
-    }
-
-    private static bool LooksLikeText(byte[] bytes)
-    {
-        return bytes.Length > 0 && !bytes.Any(static value => value == 0);
     }
 }

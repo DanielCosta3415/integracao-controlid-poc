@@ -45,6 +45,7 @@ namespace Integracao.ControlID.PoC.Services.Database
         public async Task<List<SyncLocal>> GetAllSyncsAsync()
         {
             return await _dbContext.Syncs
+                .AsNoTracking()
                 .OrderByDescending(s => s.StartedAt)
                 .Take(LocalDataQueryLimits.DefaultListLimit)
                 .ToListAsync();
@@ -83,7 +84,7 @@ namespace Integracao.ControlID.PoC.Services.Database
             DateTime? startDate = null,
             DateTime? endDate = null)
         {
-            IQueryable<SyncLocal> query = _dbContext.Syncs;
+            IQueryable<SyncLocal> query = _dbContext.Syncs.AsNoTracking();
 
             if (!string.IsNullOrWhiteSpace(syncType))
                 query = query.Where(s => s.SyncType == syncType);

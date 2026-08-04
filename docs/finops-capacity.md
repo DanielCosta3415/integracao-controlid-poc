@@ -5,7 +5,7 @@
 Escopo: PoC ASP.NET Core MVC/Razor com SQLite local, logs em arquivo, Docker/Compose,
 métricas internas e integração com equipamento Control iD. Este documento não
 altera provedor, plano, DNS ou dados reais; ele define controles de custo,
-capacidade e desperdicio para operação segura e reproduzível.
+capacidade e desperdício para operação segura e reproduzível.
 
 ## Inventário de custos
 
@@ -42,7 +42,7 @@ capacidade e desperdicio para operação segura e reproduzível.
 | Recurso | Risco | Controle atual | Limite inicial sugerido |
 | --- | --- | --- | --- |
 | CPU | Picos em endpoints oficiais, smoke, scanners e compressão | App MVC simples, timeout e circuit breaker | 1 vCPU para PoC; revisar se P95 subir ou smoke ficar lento. |
-| Memória | Payloads grandes, fotos/base64 e exportações | `CallbackSecurity:MaxBodyBytes`, leitores com limite | 512 MB a 1 GB para PoC; validar com fluxos de mídia. |
+| Memória | Payloads grandes, fotos e exportações | `CallbackSecurity:MaxBodyBytes`, leitores com limite, bytes binários sem Base64 intermediário e upload de vídeo fragmentado com buffer reutilizável | 512 MB a 1 GB para PoC; validar com fluxos de mídia. |
 | SQLite | Lock de arquivo, WAL grande, I/O em volume lento | Health `/health/ready`, índices e backups | Alertar acima de 512 MB locais ou 80% do volume. |
 | Storage | Logs, backups, artifacts e banco no mesmo host | Volumes separados em Compose | Orçar `/app/data` e `/app/Logs` separadamente; revisar mensalmente. |
 | Conexoes | Chamadas ao equipamento e browser local | HttpClient com timeout, rate limits | Evitar loops de chamada sem delay/backoff. |
@@ -57,7 +57,13 @@ capacidade e desperdicio para operação segura e reproduzível.
   `ops.example.json`.
 - `/metrics` publica gauges locais de capacidade para memória de processo, heap
   gerenciado, tamanho de SQLite/logs/artifacts/reports e espaço livre de disco,
-  usando apenas labels fixas e sem paths locais.
+  usando apenas labels fixas e sem paths locais. O snapshot que consulta o
+  sistema de arquivos é atualizado em segundo plano a cada 30 segundos por
+  padrão; a requisição de `/metrics` apenas serializa o estado em memória.
+- Downloads binários não passam por Base64 e o envio de vídeo reutiliza um
+  buffer limitado por bloco, reduzindo alocações proporcionais ao arquivo.
+- Listagens oficiais usam páginas de 100 itens com lookahead; galerias consultam
+  o inventário uma vez e carregam cada miniatura somente quando necessária.
 - `tools/test-readiness-gates.ps1` passa a executar o gate `finops-capacity` por
   padrão; em `-ReleaseGate`, warnings de capacidade bloqueiam a liberação.
 - `.github/workflows/ci.yml` valida os artefatos FinOps sem exigir provedor cloud.

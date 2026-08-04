@@ -7,13 +7,13 @@ namespace Integracao.ControlID.PoC.Tests.Services.ControlIDApi;
 public class OfficialApiBinaryFileResultFactoryTests
 {
     [Fact]
-    public void Create_DecodesBase64Payload_WhenResponseIsBinary()
+    public void Create_UsesBufferedBytesWithoutBase64RoundTrip_WhenResponseIsBinary()
     {
         var factory = new OfficialApiBinaryFileResultFactory();
         var result = new OfficialApiInvocationResult
         {
             ResponseBodyIsBase64 = true,
-            ResponseBody = "AQID",
+            ResponseBytes = [1, 2, 3],
             ResponseContentType = "audio/wav"
         };
 

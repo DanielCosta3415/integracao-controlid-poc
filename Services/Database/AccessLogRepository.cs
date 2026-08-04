@@ -45,6 +45,7 @@ namespace Integracao.ControlID.PoC.Services.Database
         public async Task<List<AccessLogLocal>> GetAllAccessLogsAsync()
         {
             return await _dbContext.AccessLogs
+                .AsNoTracking()
                 .OrderByDescending(l => l.Time)
                 .Take(LocalDataQueryLimits.DefaultListLimit)
                 .ToListAsync();
@@ -84,7 +85,7 @@ namespace Integracao.ControlID.PoC.Services.Database
             DateTime? startDate = null,
             DateTime? endDate = null)
         {
-            IQueryable<AccessLogLocal> query = _dbContext.AccessLogs;
+            IQueryable<AccessLogLocal> query = _dbContext.AccessLogs.AsNoTracking();
             int? parsedEventCode = null;
 
             if (userId.HasValue)

@@ -185,7 +185,7 @@ powershell -ExecutionPolicy Bypass -File .\tools\test-readiness-gates.ps1 -Relea
 | Banco/schema | `Models/Database/`, `Data/`, `Data/Migrations/`, `Services/Database/` |
 | Segurança | `Services/Security/`, `Middlewares/`, `Options/CallbackSecurityOptions.cs` |
 | Observabilidade | `Services/Observability/`, `Middlewares/RequestLoggingMiddleware.cs`, `docs/observability/` |
-| FinOps/capacidade | `Services/Observability/RuntimeCapacityMetricsProvider.cs`, `tools/finops-capacity-check.ps1` |
+| FinOps/capacidade | `Services/Observability/RuntimeCapacityMetricsProvider.cs`, `Services/Observability/RuntimeCapacityMetricsBackgroundService.cs`, `tools/finops-capacity-check.ps1` |
 | Docs/governança | `docs/`, `AGENTS.md`, `README.md`, `docs/adrs/` |
 
 ## Dados e privacidade

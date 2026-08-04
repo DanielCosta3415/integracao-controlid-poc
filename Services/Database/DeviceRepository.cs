@@ -45,6 +45,7 @@ namespace Integracao.ControlID.PoC.Services.Database
         public async Task<List<DeviceLocal>> GetAllDevicesAsync()
         {
             return await _dbContext.Devices
+                .AsNoTracking()
                 .OrderBy(d => d.Id)
                 .Take(LocalDataQueryLimits.DefaultListLimit)
                 .ToListAsync();
@@ -79,7 +80,7 @@ namespace Integracao.ControlID.PoC.Services.Database
         /// </summary>
         public async Task<List<DeviceLocal>> SearchDevicesAsync(string? name = null, string? ip = null)
         {
-            IQueryable<DeviceLocal> query = _dbContext.Devices;
+            IQueryable<DeviceLocal> query = _dbContext.Devices.AsNoTracking();
 
             if (!string.IsNullOrWhiteSpace(name))
                 query = query.Where(d => d.Name.Contains(name));

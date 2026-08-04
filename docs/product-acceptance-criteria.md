@@ -29,7 +29,7 @@ Critérios:
 - AC-F02-02: Dado que o endpoint selecionado é servido pela própria PoC, como callback, monitor ou push, quando o usuário tenta invocá-lo pela tela técnica, então a PoC deve informar que ele é um endpoint de entrada local e não deve chamar o equipamento.
 - AC-F02-03: Dado que a chamada oficial exige sessão, quando não há sessão Control iD ativa, então a PoC deve bloquear a invocação com mensagem segura.
 - AC-F02-04: Dado que o corpo JSON informado é inválido, quando o usuário tenta invocar endpoint com corpo, então a PoC deve rejeitar a entrada antes de chamar o equipamento.
-- AC-F02-05: Dado que a resposta oficial é binária ou não textual, quando a chamada retorna, então a PoC deve preservar o conteúdo em Base64/download e não tentar renderizar como texto inseguro.
+- AC-F02-05: Dado que a resposta oficial é binária ou não textual, quando a chamada retorna, então a PoC deve preservar os bytes para download sem conversão Base64 intermediária e não deve renderizá-los como texto inseguro.
 
 ### F03 - Objetos oficiais
 

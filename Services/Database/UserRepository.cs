@@ -131,6 +131,7 @@ namespace Integracao.ControlID.PoC.Services.Database
         public async Task<List<UserLocal>> GetAllUsersAsync()
         {
             return await _dbContext.Users
+                .AsNoTracking()
                 .OrderBy(u => u.Id)
                 .Take(LocalDataQueryLimits.DefaultListLimit)
                 .ToListAsync();
@@ -167,7 +168,7 @@ namespace Integracao.ControlID.PoC.Services.Database
         /// </summary>
         public async Task<List<UserLocal>> SearchUsersAsync(string? name = null, string? registration = null)
         {
-            IQueryable<UserLocal> query = _dbContext.Users;
+            IQueryable<UserLocal> query = _dbContext.Users.AsNoTracking();
 
             if (!string.IsNullOrWhiteSpace(name))
                 query = query.Where(u => u.Name.Contains(name));

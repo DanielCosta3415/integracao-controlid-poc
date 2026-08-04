@@ -56,10 +56,9 @@ namespace Integracao.ControlID.PoC.Controllers
                 if (!result.Success)
                     throw new InvalidOperationException(BuildErrorMessage(result, "Erro ao exportar objetos"));
 
-                if (result.ResponseBodyIsBase64 && !string.IsNullOrWhiteSpace(result.ResponseBody))
+                if (result.ResponseBytes is { Length: > 0 } exportBytes)
                 {
-                    var bytes = Convert.FromBase64String(result.ResponseBody);
-                    return File(bytes, GetContentType(result.ResponseContentType, "application/octet-stream"), $"{model.ObjectName}-export.bin");
+                    return File(exportBytes, GetContentType(result.ResponseContentType, "application/octet-stream"), $"{model.ObjectName}-export.bin");
                 }
 
                 model.ResultMessage = "Exportação concluída.";
@@ -144,9 +143,9 @@ namespace Integracao.ControlID.PoC.Controllers
                 model.ResultMessage = "Imagem capturada com sucesso.";
                 model.ResultStatusType = "success";
 
-                if (result.ResponseBodyIsBase64)
+                if (result.ResponseBytes is { Length: > 0 } imageBytes)
                 {
-                    model.Base64Image = result.ResponseBody;
+                    model.Base64Image = Convert.ToBase64String(imageBytes);
                     model.ImageContentType = GetSafeImageContentType(result.ResponseContentType);
                     model.ResponseJson = $"Imagem retornada em {model.ImageContentType}.";
                 }
@@ -391,7 +390,7 @@ namespace Integracao.ControlID.PoC.Controllers
             return SecurityTextHelper.BuildApiFailureMessage(result, prefix);
         }
 
-        private static string FormatJson(string rawJson, JsonDocument? document)
+        private static string FormatJson(string rawJson, OfficialApiJsonPayload? document)
         {
             if (document == null)
                 return rawJson;

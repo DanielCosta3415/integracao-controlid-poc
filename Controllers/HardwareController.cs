@@ -429,7 +429,7 @@ namespace Integracao.ControlID.PoC.Controllers
             return "A API retornou dados de porta, mas sem um campo `open` claramente identificável.";
         }
 
-        private static string FormatJson(string rawJson, JsonDocument? document)
+        private static string FormatJson(string rawJson, OfficialApiJsonPayload? document)
         {
             if (document == null)
                 return rawJson;

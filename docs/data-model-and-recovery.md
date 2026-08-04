@@ -65,7 +65,9 @@ Justificativa: reduzir full scans prováveis em telas de histórico, callbacks, 
 
 ## Limites de consulta e expurgo
 
-Repositórios locais aplicam `LocalDataQueryLimits.DefaultListLimit` em listagens e buscas para evitar full scans e renderização de volumes excessivos por acidente. Fluxos de limpeza confirmados usam operações específicas de delete em banco, sem carregar toda a tabela em memória.
+Repositórios locais aplicam `LocalDataQueryLimits.DefaultListLimit` em listagens e buscas para evitar full scans e renderização de volumes excessivos por acidente. Consultas somente leitura usam `AsNoTracking()`; fluxos de edição continuam carregando entidades rastreadas. Fluxos de limpeza confirmados usam operações específicas de delete em banco, sem carregar toda a tabela em memória.
+
+Listagens remotas baseadas em `load_objects.fcgi` e abertas por GET usam páginas de 100 registros com um item adicional de lookahead. A exploração técnica por POST preserva o payload informado e não recebe paginação implícita.
 
 Fluxos com expurgo guiado:
 
@@ -156,7 +158,7 @@ Sem parâmetro, o script usa a cópia de segurança mais recente em `artifacts/b
 | Média | Dados sensíveis podem existir no SQLite, nos logs e nas cópias de segurança locais | `.gitignore`, cópias protegidas por DPAPI por padrão, fortalecimento de permissões locais, documentação de privacidade e expurgo confirmado de Monitor e Push | Executar `tools/harden-local-state.ps1` no host-alvo e revisar o mascaramento nos logs a cada novo fluxo. |
 | Baixa | Restore precisa ser exercitado de forma recorrente | Procedimento documentado e smoke de restore em cópia temporária, incluindo backups `.protected` | Executar smoke regularmente antes de mudanças de schema e em preparações de release. |
 | Média | Ausência de chaves estrangeiras entre tabelas locais | Preserva compatibilidade com IDs remotos | Definir o contrato relacional antes de criar restrições. |
-| Média | Consultas de listagem ainda podem carregar muitos registros | Índices adicionados, limite padrão nos repositórios e aviso de listagem truncada em Monitor e Push | Avaliar paginação por tela quando houver volume real. |
+| Baixa | Listagens remotas podem mudar entre páginas durante alterações concorrentes no equipamento | Paginação por `limit`/`offset`, lookahead de um registro, limite local e `AsNoTracking()` em leituras SQLite | Homologar ordenação estável e volume máximo por firmware no equipamento físico. |
 | Média | `Ip` e `IpAddress` duplicam a finalidade em `Devices` | Campo preservado para compatibilidade; consultas novas usam `Ip`, e ambos ficam indexados | Planejar consolidação versionada sem remoção destrutiva. |
 | Baixa | Sem dados iniciais formais | Testes criam dados em memória | Criar fixtures fictícias se surgirem testes de integração mais amplos. |
 

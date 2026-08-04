@@ -7,13 +7,12 @@ namespace Integracao.ControlID.PoC.Services.Observability;
 public static class PrometheusMetricsWriter
 {
     /// <summary>
-    /// Renders the current in-process metrics snapshot and refreshes local
-    /// capacity gauges at scrape time to avoid background jobs in the PoC.
+    /// Renders the current in-process metrics snapshot. Capacity gauges are
+    /// refreshed periodically outside the request path.
     /// </summary>
     public static async Task WriteAsync(HttpContext context)
     {
         context.Response.ContentType = "text/plain; version=0.0.4; charset=utf-8";
-        RuntimeCapacityMetricsProvider.RecordSnapshot(context.RequestServices);
         var payload = Format(OperationalMetrics.CaptureSnapshot());
         await context.Response.WriteAsync(payload, context.RequestAborted);
     }

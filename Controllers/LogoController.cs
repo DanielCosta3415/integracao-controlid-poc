@@ -135,19 +135,10 @@ namespace Integracao.ControlID.PoC.Controllers
                 return NotFound();
 
             var result = await _officialApi.InvokeAsync("logo-get", additionalQuery: $"id={id.Value}");
-            if (!result.Success || !result.ResponseBodyIsBase64 || string.IsNullOrWhiteSpace(result.ResponseBody))
+            if (!result.Success || result.ResponseBytes is not { Length: > 0 } imageBytes)
                 return NotFound();
 
-            try
-            {
-                var imageBytes = Convert.FromBase64String(result.ResponseBody);
-                return File(imageBytes, GetContentType(result.ResponseContentType), $"logo_slot_{id.Value}.{GetFileExtension(result.ResponseContentType)}");
-            }
-            catch (FormatException ex)
-            {
-                _logger.LogError(ex, "Resposta inválida ao baixar o logo do slot {SlotId}.", id.Value);
-                return NotFound();
-            }
+            return File(imageBytes, GetContentType(result.ResponseContentType), $"logo_slot_{id.Value}.{GetFileExtension(result.ResponseContentType)}");
         }
 
         public async Task<IActionResult> Delete(long? id)
@@ -214,13 +205,13 @@ namespace Integracao.ControlID.PoC.Controllers
             try
             {
                 var result = await _officialApi.InvokeAsync("logo-get", additionalQuery: $"id={slotId}");
-                if (!result.Success || !result.ResponseBodyIsBase64 || string.IsNullOrWhiteSpace(result.ResponseBody))
+                if (!result.Success || result.ResponseBytes is not { Length: > 0 } imageBytes)
                     return null;
 
                 return new LogoViewModel
                 {
                     Id = slotId,
-                    Base64Image = result.ResponseBody,
+                    Base64Image = Convert.ToBase64String(imageBytes),
                     ContentType = GetContentType(result.ResponseContentType),
                     FileName = $"logo_slot_{slotId}.{GetFileExtension(result.ResponseContentType)}",
                     Format = GetFileExtension(result.ResponseContentType),

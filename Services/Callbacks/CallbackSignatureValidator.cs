@@ -12,15 +12,19 @@ namespace Integracao.ControlID.PoC.Services.Callbacks
     {
         private readonly CallbackSecurityOptions _options;
         private readonly ILogger<CallbackSignatureValidator> _logger;
+        private readonly TimeProvider _timeProvider;
         private readonly Dictionary<string, DateTimeOffset> _seenNonces = new(StringComparer.Ordinal);
+        private readonly PriorityQueue<string, DateTimeOffset> _nonceExpirations = new();
         private readonly object _nonceGate = new();
 
         public CallbackSignatureValidator(
             IOptions<CallbackSecurityOptions> options,
-            ILogger<CallbackSignatureValidator> logger)
+            ILogger<CallbackSignatureValidator> logger,
+            TimeProvider? timeProvider = null)
         {
             _options = options.Value;
             _logger = logger;
+            _timeProvider = timeProvider ?? TimeProvider.System;
         }
 
         public CallbackSignatureValidationResult Validate(HttpRequest request, string body)
@@ -55,7 +59,7 @@ namespace Integracao.ControlID.PoC.Services.Callbacks
                 return CallbackSignatureValidationResult.Reject(StatusCodes.Status401Unauthorized, "Callback timestamp is invalid.");
 
             var maxSkew = TimeSpan.FromSeconds(Math.Clamp(_options.MaxClockSkewSeconds, 30, 3600));
-            var now = DateTimeOffset.UtcNow;
+            var now = _timeProvider.GetUtcNow();
             if (requestTimestamp < now.Subtract(maxSkew) || requestTimestamp > now.Add(maxSkew))
                 return CallbackSignatureValidationResult.Reject(StatusCodes.Status401Unauthorized, "Callback timestamp is outside the accepted window.");
 
@@ -84,7 +88,9 @@ namespace Integracao.ControlID.PoC.Services.Callbacks
                         "Callback replay protection is temporarily unavailable.");
                 }
 
-                _seenNonces.Add(nonce, now.AddSeconds(Math.Clamp(_options.NonceTtlSeconds, 60, 3600)));
+                var expiresAt = now.AddSeconds(Math.Clamp(_options.NonceTtlSeconds, 60, 3600));
+                _seenNonces.Add(nonce, expiresAt);
+                _nonceExpirations.Enqueue(nonce, expiresAt);
             }
 
             return CallbackSignatureValidationResult.Allow();
@@ -157,13 +163,13 @@ namespace Integracao.ControlID.PoC.Services.Callbacks
 
         private void RemoveExpiredNonces(DateTimeOffset now)
         {
-            var expiredNonces = _seenNonces
-                .Where(item => item.Value <= now)
-                .Select(item => item.Key)
-                .ToList();
+            while (_nonceExpirations.TryPeek(out var nonce, out var expiresAt) && expiresAt <= now)
+            {
+                _nonceExpirations.Dequeue();
 
-            foreach (var nonce in expiredNonces)
-                _seenNonces.Remove(nonce);
+                if (_seenNonces.TryGetValue(nonce, out var trackedExpiration) && trackedExpiration <= now)
+                    _seenNonces.Remove(nonce);
+            }
         }
     }
 

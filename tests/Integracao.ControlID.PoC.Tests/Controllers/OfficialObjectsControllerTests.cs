@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Integracao.ControlID.PoC.Controllers;
 using Integracao.ControlID.PoC.Helpers;
 using Integracao.ControlID.PoC.Tests.TestSupport;
@@ -74,8 +75,9 @@ public class OfficialObjectsControllerTests
         Assert.Equal("Index", view.ViewName);
         Assert.Equal("success", model.ResultStatusType);
         Assert.Contains("/load_objects.fcgi", request.Url, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("\"object\":\"users\"", request.Body, StringComparison.Ordinal);
-        Assert.Contains("\"where\":{\"users\":{\"id\":101}}", request.Body, StringComparison.Ordinal);
+        using var payload = JsonDocument.Parse(request.Body);
+        Assert.Equal("users", payload.RootElement.GetProperty("object").GetString());
+        Assert.Equal(101, payload.RootElement.GetProperty("where").GetProperty("users").GetProperty("id").GetInt64());
     }
 
     private static OfficialObjectsController CreateController(RecordingHttpMessageHandler handler, bool connected)

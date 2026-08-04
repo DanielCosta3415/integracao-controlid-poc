@@ -11,9 +11,11 @@ namespace Integracao.ControlID.PoC.Services.ControlIDApi
         {
             var contentType = NormalizeContentType(result.ResponseContentType, fallbackContentType);
 
-            var payload = result.ResponseBodyIsBase64 && !string.IsNullOrWhiteSpace(result.ResponseBody)
-                ? Convert.FromBase64String(result.ResponseBody)
-                : Encoding.UTF8.GetBytes(result.ResponseBody ?? string.Empty);
+            var payload = result.ResponseBodyIsBase64 && result.ResponseBytes is { Length: > 0 }
+                ? result.ResponseBytes
+                : result.ResponseBodyIsBase64 && !string.IsNullOrWhiteSpace(result.ResponseBody)
+                    ? Convert.FromBase64String(result.ResponseBody)
+                    : Encoding.UTF8.GetBytes(result.ResponseBody ?? string.Empty);
 
             return new FileContentResult(payload, contentType)
             {

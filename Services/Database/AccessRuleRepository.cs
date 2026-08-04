@@ -45,6 +45,7 @@ namespace Integracao.ControlID.PoC.Services.Database
         public async Task<List<AccessRuleLocal>> GetAllAccessRulesAsync()
         {
             return await _dbContext.AccessRules
+                .AsNoTracking()
                 .OrderBy(r => r.Id)
                 .Take(LocalDataQueryLimits.DefaultListLimit)
                 .ToListAsync();
@@ -79,7 +80,7 @@ namespace Integracao.ControlID.PoC.Services.Database
         /// </summary>
         public async Task<List<AccessRuleLocal>> SearchAccessRulesAsync(string? name = null, string? status = null, int? priority = null)
         {
-            IQueryable<AccessRuleLocal> query = _dbContext.AccessRules;
+            IQueryable<AccessRuleLocal> query = _dbContext.AccessRules.AsNoTracking();
 
             if (!string.IsNullOrWhiteSpace(name))
                 query = query.Where(r => r.Name.Contains(name));

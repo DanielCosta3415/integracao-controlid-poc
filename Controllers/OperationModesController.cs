@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
+using Integracao.ControlID.PoC.Models.ControlIDApi;
 using Integracao.ControlID.PoC.Helpers;
 using Integracao.ControlID.PoC.Models.Database;
 using Integracao.ControlID.PoC.Services.ControlIDApi;
@@ -657,7 +658,7 @@ namespace Integracao.ControlID.PoC.Controllers
         /// </summary>
         /// <param name="document">Documento JSON retornado pela API oficial.</param>
         /// <returns>Primeiro id numerico encontrado ou null quando o contrato nao contem ids validos.</returns>
-        private static long? ReadFirstId(JsonDocument? document)
+        private static long? ReadFirstId(OfficialApiJsonPayload? document)
         {
             if (document == null || !document.RootElement.TryGetProperty("ids", out var ids) || ids.ValueKind != JsonValueKind.Array || ids.GetArrayLength() == 0)
             {

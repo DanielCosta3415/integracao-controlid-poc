@@ -45,6 +45,7 @@ namespace Integracao.ControlID.PoC.Services.Database
         public async Task<List<LogoLocal>> GetAllLogosAsync()
         {
             return await _dbContext.Logos
+                .AsNoTracking()
                 .OrderBy(l => l.Id)
                 .Take(LocalDataQueryLimits.DefaultListLimit)
                 .ToListAsync();
@@ -83,7 +84,7 @@ namespace Integracao.ControlID.PoC.Services.Database
             DateTime? startDate = null,
             DateTime? endDate = null)
         {
-            IQueryable<LogoLocal> query = _dbContext.Logos;
+            IQueryable<LogoLocal> query = _dbContext.Logos.AsNoTracking();
 
             if (!string.IsNullOrWhiteSpace(format))
                 query = query.Where(l => l.Format == format);

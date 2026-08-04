@@ -168,6 +168,7 @@ Modelos que representam contratos, cargas úteis e respostas próximas da API Co
 | `Models/ControlIDApi/MonitorEvent.cs` | Representa eventos monitorados em tempo real ou via callback. |
 | `Models/ControlIDApi/OfficialApiEndpointDefinition.cs` | Define metadados de endpoints oficiais, parâmetros, método HTTP e documentação visual. |
 | `Models/ControlIDApi/OfficialApiInvocationResult.cs` | Representa o resultado de uma invocação genérica da API oficial. |
+| `Models/ControlIDApi/OfficialApiJsonPayload.cs` | Preserva um `JsonElement` independente do ciclo de vida do `JsonDocument` usado no parse. |
 | `Models/ControlIDApi/Photo.cs` | Representa foto ou imagem associada a usuário/mídia. |
 | `Models/ControlIDApi/PushCommand.cs` | Representa comandos push enfileirados ou recebidos. |
 | `Models/ControlIDApi/QRCode.cs` | Representa QR Codes de acesso. |
@@ -246,6 +247,7 @@ Entidades persistidas no SQLite local para histórico, cache operacional, simula
 | `Services/ControlIDApi/OfficialApiDocumentationSeedCatalog.cs` | Semeia metadados e documentação base dos endpoints oficiais. |
 | `Services/ControlIDApi/OfficialApiDocumentationService.cs` | Consolida documentação, exemplos e metadados para exibição na UI. |
 | `Services/ControlIDApi/OfficialApiInvokerService.cs` | Executa chamadas genéricas aos endpoints oficiais a partir do catálogo. |
+| `Services/ControlIDApi/OfficialObjectPaging.cs` | Aplica limite, offset, lookahead e estado de navegação às listagens oficiais abertas por GET. |
 | `Services/ControlIDApi/OfficialApiResponseBodyReader.cs` | Lê respostas externas com limite, cancelamento, charset e classificação binária. |
 | `Services/ControlIDApi/OfficialApiParameterDocumentationUtilities.cs` | Utilitários para documentar parâmetros, tipos e obrigatoriedade. |
 | `Services/ControlIDApi/OfficialApiQueryParameterStrategy.cs` | Define estratégia de montagem de parâmetros via query string. |
@@ -294,6 +296,7 @@ Repositórios que encapsulam acesso ao SQLite local para cada entidade da PoC.
 | `Services/Observability/OperationalMetrics.cs` | Publica métricas via `System.Diagnostics.Metrics` para coleta futura. |
 | `Services/Observability/PrometheusMetricsWriter.cs` | Renderiza snapshot de métricas locais em formato Prometheus text para `/metrics`. |
 | `Services/Observability/RuntimeCapacityMetricsProvider.cs` | Coleta gauges seguros de memória, storage local e disco para FinOps/capacidade. |
+| `Services/Observability/RuntimeCapacityMetricsBackgroundService.cs` | Atualiza o snapshot de capacidade em segundo plano para evitar varredura de disco por requisição de métricas. |
 | `Services/Observability/SqliteReadinessHealthCheck.cs` | Verifica readiness do SQLite local usado como estado runtime. |
 | `Services/OperationModes/OperationModesPayloadFactory.cs` | Monta payloads demonstrativos dos modos Standalone, Pro e Enterprise. |
 | `Services/OperationModes/OperationModesProfileResolver.cs` | Resolve perfis, comportamento esperado e transições dos modos de operação. |
@@ -548,6 +551,7 @@ As views Razor compõem a interface web da PoC. Em geral, cada pasta espelha um 
 | `Views/Shared/_NavBar.cshtml` | Parcial da barra de navegação principal. |
 | `Views/Shared/_NavBar.cshtml.css` | Estilos escopados da barra de navegação. |
 | `Views/Shared/_NotFound.cshtml` | Parcial de recurso não encontrado. |
+| `Views/Shared/_OfficialObjectPagination.cshtml` | Exibe navegação anterior/próxima preservando os parâmetros da consulta oficial. |
 | `Views/Shared/_RawResponsePanel.cshtml` | Parcial de exibição de resposta bruta JSON/texto. |
 | `Views/Shared/_ServerError.cshtml` | Parcial de erro interno. |
 | `Views/Shared/_StatusMessage.cshtml` | Parcial de mensagens de status/sucesso/erro. |
@@ -601,6 +605,7 @@ As views Razor compõem a interface web da PoC. Em geral, cada pasta espelha um 
 | `docs/changelog-2026-04-15.md` | Registra documentação, comentários e observabilidade da rodada de 15/04/2026. |
 | `docs/changelog-2026-05-01.md` | Registra documentação, integração técnica e ADRs da rodada de 01/05/2026. |
 | `docs/changelog-2026-08-03.md` | Registra o fechamento dos 14 riscos da solução completa. |
+| `docs/changelog-2026-08-04.md` | Registra as otimizações dos 11 gargalos e a validação funcional/visual subsequente. |
 | `docs/ci-cd-quality-gates.md` | Documenta GitHub Actions, gates, artefatos e reprodução local. |
 | `docs/database-and-runtime-state.md` | Explica o estado SQLite de runtime e comandos de inspeção seguros. |
 | `docs/data-model-and-recovery.md` | Mapeia entidades, índices, migrações, backup e restauração. |
@@ -691,6 +696,7 @@ a arquivos removidos fazem o gate documental falhar.
 | `tests/Integracao.ControlID.PoC.Tests/Services/ControlIDApi/OfficialApiCircuitBreakerTests.cs` | Valida serviços da área `ControlIDApi` e os casos de borda cobertos por `OfficialApiCircuitBreakerTests`. |
 | `tests/Integracao.ControlID.PoC.Tests/Services/ControlIDApi/OfficialApiContractDocumentationServiceTests.cs` | Valida serviços da área `ControlIDApi` e os casos de borda cobertos por `OfficialApiContractDocumentationServiceTests`. |
 | `tests/Integracao.ControlID.PoC.Tests/Services/ControlIDApi/OfficialApiInvokerServiceTests.cs` | Valida serviços da área `ControlIDApi` e os casos de borda cobertos por `OfficialApiInvokerServiceTests`. |
+| `tests/Integracao.ControlID.PoC.Tests/Services/ControlIDApi/OfficialObjectPagingTests.cs` | Valida limite, offset, lookahead e metadados da paginação oficial. |
 | `tests/Integracao.ControlID.PoC.Tests/Services/Database/DeviceRepositoryTests.cs` | Valida serviços da área `Database` e os casos de borda cobertos por `DeviceRepositoryTests`. |
 | `tests/Integracao.ControlID.PoC.Tests/Services/Database/MonitorEventRepositoryTests.cs` | Valida serviços da área `Database` e os casos de borda cobertos por `MonitorEventRepositoryTests`. |
 | `tests/Integracao.ControlID.PoC.Tests/Services/Database/PushCommandRepositoryTests.cs` | Valida serviços da área `Database` e os casos de borda cobertos por `PushCommandRepositoryTests`. |
@@ -708,6 +714,7 @@ a arquivos removidos fazem o gate documental falhar.
 | `tests/Integracao.ControlID.PoC.Tests/Services/Privacy/PrivacySubjectReportServiceTests.cs` | Valida serviços da área `Privacy` e os casos de borda cobertos por `PrivacySubjectReportServiceTests`. |
 | `tests/Integracao.ControlID.PoC.Tests/Services/ProductSpecific/ProductSpecificConfigurationPayloadFactoryTests.cs` | Valida serviços da área `ProductSpecific` e os casos de borda cobertos por `ProductSpecificConfigurationPayloadFactoryTests`. |
 | `tests/Integracao.ControlID.PoC.Tests/Services/ProductSpecific/ProductSpecificJsonReaderTests.cs` | Valida serviços da área `ProductSpecific` e os casos de borda cobertos por `ProductSpecificJsonReaderTests`. |
+| `tests/Integracao.ControlID.PoC.Tests/Services/ProductSpecific/ProductSpecificSnapshotServiceTests.cs` | Valida a consolidação e o paralelismo seguro das leituras de configuração e estado por produto. |
 | `tests/Integracao.ControlID.PoC.Tests/Services/Push/PushCommandWorkflowServiceTests.cs` | Valida serviços da área `Push` e os casos de borda cobertos por `PushCommandWorkflowServiceTests`. |
 | `tests/Integracao.ControlID.PoC.Tests/Services/Push/PushIdempotencyKeyResolverTests.cs` | Valida serviços da área `Push` e os casos de borda cobertos por `PushIdempotencyKeyResolverTests`. |
 | `tests/Integracao.ControlID.PoC.Tests/Services/Security/ControlIdInputSanitizerTests.cs` | Valida serviços da área `Security` e os casos de borda cobertos por `ControlIdInputSanitizerTests`. |

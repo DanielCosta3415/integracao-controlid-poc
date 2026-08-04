@@ -23,6 +23,12 @@ exige `AdministratorOnly` por padrão. `Observability:Metrics:AllowAnonymous=tru
 só deve ser usado em `Development`; fora de `Development` a aplicação bloqueia o
 startup se essa opção estiver ativa.
 
+As métricas que consultam memória, disco e diretórios locais são atualizadas pelo
+`RuntimeCapacityMetricsBackgroundService`. O intervalo padrão é 30 segundos e
+pode ser configurado por `Observability:CapacitySnapshotIntervalSeconds` entre
+10 e 300 segundos. Assim, cada leitura de `/metrics` não repete varreduras do
+sistema de arquivos.
+
 ## Correlação e rastreamento
 
 - Header inbound/outbound: `X-Correlation-ID`.

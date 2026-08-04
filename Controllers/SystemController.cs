@@ -535,14 +535,13 @@ namespace Integracao.ControlID.PoC.Controllers
             try
             {
                 var result = await _apiService.InvokeAsync("get-vpn-file");
-                if (!result.Success || !result.ResponseBodyIsBase64 || string.IsNullOrWhiteSpace(result.ResponseBody))
+                if (!result.Success || result.ResponseBytes is not { Length: > 0 } bytes)
                 {
                     TempData["StatusMessage"] = BuildErrorMessage(result, "Erro ao baixar arquivo exemplo do OpenVPN");
                     TempData["StatusType"] = "danger";
                     return RedirectToAction(nameof(Vpn));
                 }
 
-                var bytes = Convert.FromBase64String(result.ResponseBody);
                 var contentType = string.IsNullOrWhiteSpace(result.ResponseContentType) ? "application/zip" : result.ResponseContentType;
                 var extension = contentType.Contains("zip", StringComparison.OrdinalIgnoreCase) ? "zip" : "bin";
                 return File(bytes, contentType, $"openvpn_example.{extension}");
@@ -836,7 +835,7 @@ namespace Integracao.ControlID.PoC.Controllers
             };
         }
 
-        private static string FormatJson(string rawJson, JsonDocument? document)
+        private static string FormatJson(string rawJson, OfficialApiJsonPayload? document)
         {
             if (document == null)
                 return rawJson;

@@ -236,6 +236,7 @@ builder.Services.AddScoped<DocumentedFeaturesPayloadFactory>();
 builder.Services.AddScoped<PushCommandWorkflowService>();
 builder.Services.AddScoped<PushIdempotencyKeyResolver>();
 builder.Services.AddScoped<PrivacySubjectReportService>();
+builder.Services.AddHostedService<RuntimeCapacityMetricsBackgroundService>();
 
 // Repositórios de banco local
 builder.Services.AddScoped<UserRepository>();

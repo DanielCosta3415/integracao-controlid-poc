@@ -815,14 +815,22 @@ sealed class StubState
         var objectName = body?["object"]?.GetValue<string>() ?? string.Empty;
         var array = GetObjectArray(objectName);
         var where = body?["where"]?[objectName] as JsonObject;
+        var offset = (int)Math.Clamp(TryGetInt64(body?["offset"]) ?? 0, 0, 1_000_000);
+        var limit = (int)Math.Clamp(TryGetInt64(body?["limit"]) ?? 10_000, 1, 10_000);
 
         var filtered = new JsonArray();
+        var skipped = 0;
         foreach (var item in array)
         {
             if (!MatchesWhere(item as JsonObject, where))
                 continue;
 
+            if (skipped++ < offset)
+                continue;
+
             filtered.Add(item?.DeepClone());
+            if (filtered.Count >= limit)
+                break;
         }
 
         return new Dictionary<string, object?>
@@ -837,11 +845,13 @@ sealed class StubState
         var values = body?["values"];
         var ids = new List<long>();
         var array = GetObjectArray(objectName);
+        var nextId = GetNextId(array);
 
         foreach (var node in EnumerateNodes(values))
         {
             var clone = (node?.DeepClone() as JsonObject) ?? new JsonObject();
-            var id = TryGetInt64(clone["id"]) ?? GetNextId(array);
+            var id = TryGetInt64(clone["id"]) ?? nextId++;
+            nextId = Math.Max(nextId, id + 1);
             clone["id"] = id;
             ids.Add(id);
             array.Add(clone);
@@ -856,11 +866,18 @@ sealed class StubState
         var values = body?["values"];
         var array = GetObjectArray(objectName);
         var changes = 0;
+        var matchKeys = GetMatchKeys(objectName);
+        var existingByKey = array
+            .OfType<JsonObject>()
+            .GroupBy(item => BuildMatchKey(item, matchKeys), StringComparer.Ordinal)
+            .ToDictionary(group => group.Key, group => group.First(), StringComparer.Ordinal);
+        var nextId = UsesNumericIdentity(objectName) ? GetNextId(array) : 0;
 
         foreach (var node in EnumerateNodes(values))
         {
             var incoming = (node?.DeepClone() as JsonObject) ?? new JsonObject();
-            var existing = FindExistingObject(array, incoming, objectName);
+            var matchKey = BuildMatchKey(incoming, matchKeys);
+            existingByKey.TryGetValue(matchKey, out var existing);
 
             if (existing != null)
             {
@@ -871,9 +888,10 @@ sealed class StubState
 
             var id = TryGetInt64(incoming["id"]);
             if (!id.HasValue && UsesNumericIdentity(objectName))
-                incoming["id"] = GetNextId(array);
+                incoming["id"] = nextId++;
 
             array.Add(incoming);
+            existingByKey[BuildMatchKey(incoming, matchKeys)] = incoming;
             changes++;
         }
 
@@ -1055,16 +1073,9 @@ sealed class StubState
         return maxId + 1;
     }
 
-    private static JsonObject? FindExistingObject(JsonArray array, JsonObject incoming, string objectName)
+    private static string BuildMatchKey(JsonObject item, IReadOnlyList<string> matchKeys)
     {
-        foreach (var item in array.OfType<JsonObject>())
-        {
-            var matchKeys = GetMatchKeys(objectName);
-            if (matchKeys.All(key => string.Equals(item[key]?.ToJsonString() ?? string.Empty, incoming[key]?.ToJsonString() ?? string.Empty, StringComparison.Ordinal)))
-                return item;
-        }
-
-        return null;
+        return string.Join('\u001f', matchKeys.Select(key => item[key]?.ToJsonString() ?? string.Empty));
     }
 
     private static bool MatchesWhere(JsonObject? item, JsonObject? where)

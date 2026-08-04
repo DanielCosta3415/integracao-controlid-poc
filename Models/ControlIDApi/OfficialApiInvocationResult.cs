@@ -7,6 +7,7 @@ namespace Integracao.ControlID.PoC.Models.ControlIDApi
         public int StatusCode { get; set; }
         public string ResponseContentType { get; set; } = string.Empty;
         public string ResponseBody { get; set; } = string.Empty;
+        public byte[]? ResponseBytes { get; set; }
         public bool ResponseBodyIsBase64 { get; set; }
         public string ErrorMessage { get; set; } = string.Empty;
     }

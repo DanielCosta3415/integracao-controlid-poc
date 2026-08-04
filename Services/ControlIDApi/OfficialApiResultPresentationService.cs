@@ -25,7 +25,7 @@ namespace Integracao.ControlID.PoC.Services.ControlIDApi
             throw new InvalidOperationException($"{message} (status HTTP {result.StatusCode}).");
         }
 
-        public string FormatJson(string rawJson, JsonDocument? document)
+        public string FormatJson(string rawJson, OfficialApiJsonPayload? document)
         {
             if (document == null)
             {

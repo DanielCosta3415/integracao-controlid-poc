@@ -45,6 +45,7 @@ namespace Integracao.ControlID.PoC.Services.Database
         public async Task<List<QRCodeLocal>> GetAllQRCodesAsync()
         {
             return await _dbContext.QRCodes
+                .AsNoTracking()
                 .OrderBy(q => q.Id)
                 .Take(LocalDataQueryLimits.DefaultListLimit)
                 .ToListAsync();
@@ -79,7 +80,7 @@ namespace Integracao.ControlID.PoC.Services.Database
         /// </summary>
         public async Task<List<QRCodeLocal>> SearchQRCodesAsync(long? userId = null, string? status = null)
         {
-            IQueryable<QRCodeLocal> query = _dbContext.QRCodes;
+            IQueryable<QRCodeLocal> query = _dbContext.QRCodes.AsNoTracking();
 
             if (userId.HasValue)
                 query = query.Where(q => q.UserId == userId.Value);

@@ -68,9 +68,37 @@ namespace Integracao.ControlID.PoC.Services.ControlIDApi
         /// <param name="payload">Payload opcional que sera serializado para JSON quando necessario.</param>
         /// <param name="additionalQuery">Query string extra aplicada a chamada oficial.</param>
         /// <returns>Resultado normalizado da invocacao.</returns>
-        public async Task<OfficialApiInvocationResult> InvokeAsync(string endpointId, object? payload = null, string additionalQuery = "")
+        public async Task<OfficialApiInvocationResult> InvokeAsync(
+            string endpointId,
+            object? payload = null,
+            string additionalQuery = "",
+            CancellationToken cancellationToken = default)
         {
-            return await InvokeDirectAsync(endpointId, GetDeviceAddress(), GetSessionString(), payload, additionalQuery);
+            return await InvokeDirectAsync(endpointId, GetDeviceAddress(), GetSessionString(), payload, additionalQuery, cancellationToken);
+        }
+
+        public async Task<OfficialApiInvocationResult> InvokeBinaryAsync(
+            string endpointId,
+            ReadOnlyMemory<byte> payload,
+            string additionalQuery = "",
+            CancellationToken cancellationToken = default)
+        {
+            var endpoint = _catalogService.GetById(endpointId);
+            if (endpoint == null)
+            {
+                return new OfficialApiInvocationResult
+                {
+                    ErrorMessage = $"Endpoint oficial '{endpointId}' não encontrado."
+                };
+            }
+
+            return await _invokerService.InvokeBinaryAsync(
+                endpoint,
+                GetDeviceAddress(),
+                GetSessionString(),
+                additionalQuery,
+                payload,
+                cancellationToken);
         }
 
         /// <summary>
@@ -87,7 +115,8 @@ namespace Integracao.ControlID.PoC.Services.ControlIDApi
             string deviceAddress,
             string sessionString = "",
             object? payload = null,
-            string additionalQuery = "")
+            string additionalQuery = "",
+            CancellationToken cancellationToken = default)
         {
             var endpoint = _catalogService.GetById(endpointId);
             if (endpoint == null)
@@ -102,12 +131,17 @@ namespace Integracao.ControlID.PoC.Services.ControlIDApi
                 };
             }
 
+            var serializedPayload = SerializePayload(payload);
+            if (ShouldApplyObjectPaging(endpointId, out var page))
+                serializedPayload = OfficialObjectPaging.ApplyRequest(serializedPayload, page);
+
             return await _invokerService.InvokeAsync(
                 endpoint,
                 deviceAddress,
                 sessionString,
                 additionalQuery,
-                SerializePayload(payload));
+                serializedPayload,
+                cancellationToken);
         }
 
         /// <summary>
@@ -117,12 +151,13 @@ namespace Integracao.ControlID.PoC.Services.ControlIDApi
         /// <param name="payload">Payload opcional que sera serializado para JSON quando necessario.</param>
         /// <param name="additionalQuery">Query string extra aplicada a chamada oficial.</param>
         /// <returns>Tupla com o resultado bruto e o documento JSON quando o parse for possivel.</returns>
-        public async Task<(OfficialApiInvocationResult Result, JsonDocument? Document)> InvokeJsonAsync(
+        public async Task<(OfficialApiInvocationResult Result, OfficialApiJsonPayload? Document)> InvokeJsonAsync(
             string endpointId,
             object? payload = null,
-            string additionalQuery = "")
+            string additionalQuery = "",
+            CancellationToken cancellationToken = default)
         {
-            return await InvokeJsonDirectAsync(endpointId, GetDeviceAddress(), GetSessionString(), payload, additionalQuery);
+            return await InvokeJsonDirectAsync(endpointId, GetDeviceAddress(), GetSessionString(), payload, additionalQuery, cancellationToken);
         }
 
         /// <summary>
@@ -134,14 +169,15 @@ namespace Integracao.ControlID.PoC.Services.ControlIDApi
         /// <param name="payload">Payload opcional que sera serializado para JSON quando necessario.</param>
         /// <param name="additionalQuery">Query string extra aplicada a chamada oficial.</param>
         /// <returns>Tupla contendo o resultado original e o documento JSON parseado quando possivel.</returns>
-        public async Task<(OfficialApiInvocationResult Result, JsonDocument? Document)> InvokeJsonDirectAsync(
+        public async Task<(OfficialApiInvocationResult Result, OfficialApiJsonPayload? Document)> InvokeJsonDirectAsync(
             string endpointId,
             string deviceAddress,
             string sessionString = "",
             object? payload = null,
-            string additionalQuery = "")
+            string additionalQuery = "",
+            CancellationToken cancellationToken = default)
         {
-            var result = await InvokeDirectAsync(endpointId, deviceAddress, sessionString, payload, additionalQuery);
+            var result = await InvokeDirectAsync(endpointId, deviceAddress, sessionString, payload, additionalQuery, cancellationToken);
 
             if (!result.Success || result.ResponseBodyIsBase64 || string.IsNullOrWhiteSpace(result.ResponseBody))
             {
@@ -150,7 +186,12 @@ namespace Integracao.ControlID.PoC.Services.ControlIDApi
 
             try
             {
-                return (result, JsonDocument.Parse(result.ResponseBody));
+                using var document = JsonDocument.Parse(result.ResponseBody);
+                var payloadDocument = new OfficialApiJsonPayload(document.RootElement.Clone());
+                if (ShouldApplyObjectPaging(endpointId, out var page) && _httpContextAccessor.HttpContext is { } httpContext)
+                    payloadDocument = OfficialObjectPaging.ApplyResponse(payloadDocument, page, httpContext);
+
+                return (result, payloadDocument);
             }
             catch (JsonException ex)
             {
@@ -171,6 +212,18 @@ namespace Integracao.ControlID.PoC.Services.ControlIDApi
                 string stringPayload => stringPayload,
                 _ => JsonSerializer.Serialize(payload)
             };
+        }
+
+        private bool ShouldApplyObjectPaging(string endpointId, out int page)
+        {
+            var httpContext = _httpContextAccessor.HttpContext;
+            var isPagedRequest = string.Equals(endpointId, "load-objects", StringComparison.Ordinal) &&
+                                 httpContext != null &&
+                                 HttpMethods.IsGet(httpContext.Request.Method);
+            page = isPagedRequest && int.TryParse(httpContext?.Request.Query["page"], out var requestedPage)
+                ? OfficialObjectPaging.NormalizePage(requestedPage)
+                : 1;
+            return isPagedRequest;
         }
     }
 }

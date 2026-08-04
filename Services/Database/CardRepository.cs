@@ -45,6 +45,7 @@ namespace Integracao.ControlID.PoC.Services.Database
         public async Task<List<CardLocal>> GetAllCardsAsync()
         {
             return await _dbContext.Cards
+                .AsNoTracking()
                 .OrderBy(c => c.Id)
                 .Take(LocalDataQueryLimits.DefaultListLimit)
                 .ToListAsync();
@@ -79,7 +80,7 @@ namespace Integracao.ControlID.PoC.Services.Database
         /// </summary>
         public async Task<List<CardLocal>> SearchCardsAsync(long? userId = null, string? status = null)
         {
-            IQueryable<CardLocal> query = _dbContext.Cards;
+            IQueryable<CardLocal> query = _dbContext.Cards.AsNoTracking();
 
             if (userId.HasValue)
                 query = query.Where(c => c.UserId == userId.Value);

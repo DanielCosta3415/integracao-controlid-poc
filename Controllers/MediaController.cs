@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.Globalization;
 using System.Text.Json;
 using Integracao.ControlID.PoC.Models.ControlIDApi;
@@ -69,16 +70,12 @@ namespace Integracao.ControlID.PoC.Controllers
             return View(model);
         }
 
-        public async Task<IActionResult> Details(long? id)
+        public IActionResult Details(long? id)
         {
             if (id == null)
                 return NotFound();
 
-            var photo = await GetPhotoByUserIdAsync(id.Value);
-            if (photo == null || !photo.HasImage)
-                return NotFound();
-
-            return View(photo);
+            return View(CreatePhotoPlaceholder(id.Value));
         }
 
         public IActionResult Upload()
@@ -145,35 +142,22 @@ namespace Integracao.ControlID.PoC.Controllers
                 return NotFound();
 
             var result = await _officialApi.InvokeAsync("user-get-image", additionalQuery: $"user_id={id.Value}");
-            if (!result.Success || !result.ResponseBodyIsBase64 || string.IsNullOrWhiteSpace(result.ResponseBody))
+            if (!result.Success || result.ResponseBytes is not { Length: > 0 } imageBytes)
                 return NotFound();
 
-            try
-            {
-                var imageBytes = Convert.FromBase64String(result.ResponseBody);
-                return File(imageBytes, GetContentType(result.ResponseContentType, "image/jpeg"), BuildFileName(result.ResponseContentType, "user-photo"));
-            }
-            catch (FormatException ex)
-            {
-                _logger.LogError(ex, "Resposta inválida ao baixar foto do usuário {UserRef}.", PrivacyLogHelper.PseudonymizeIdentifier(id.Value));
-                return NotFound();
-            }
+            return File(imageBytes, GetContentType(result.ResponseContentType, "image/jpeg"), BuildFileName(result.ResponseContentType, "user-photo"));
         }
 
-        public async Task<IActionResult> Delete(long? id)
+        public IActionResult Delete(long? id)
         {
             if (id == null)
                 return NotFound();
 
-            var photo = await GetPhotoByUserIdAsync(id.Value);
-            if (photo == null || !photo.HasImage)
-                return NotFound();
-
             return View(new PhotoDeleteViewModel
             {
-                Id = photo.Id,
-                UserId = photo.UserId,
-                FileName = photo.FileName
+                Id = id.Value,
+                UserId = id.Value,
+                FileName = "user-photo.jpg"
             });
         }
 
@@ -242,29 +226,43 @@ namespace Integracao.ControlID.PoC.Controllers
 
             try
             {
-                var videoBytes = await _fileEncoder.ReadValidatedBytesAsync(
-                    model.VideoFile,
-                    "Selecione um arquivo MP4 valido para envio.",
-                    MaxAdVideoBytes,
-                    UploadedFileValidation.Mp4("Envie um arquivo MP4 valido de ate 256 MB."));
+                if (model.VideoFile.Length > MaxAdVideoBytes)
+                    throw new InvalidOperationException("Envie um arquivo MP4 válido de até 256 MB.");
+
                 var chunkSize = model.ChunkSizeKb * 1024;
-                var totalChunks = (int)Math.Ceiling(videoBytes.Length / (double)chunkSize);
+                var totalChunks = checked((int)((model.VideoFile.Length + chunkSize - 1) / chunkSize));
+                var validation = UploadedFileValidation.Mp4("Envie um arquivo MP4 válido de até 256 MB.");
+                var buffer = ArrayPool<byte>.Shared.Rent(chunkSize);
 
                 OfficialApiInvocationResult? lastResult = null;
-                for (var chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++)
+                try
                 {
-                    var offset = chunkIndex * chunkSize;
-                    var length = Math.Min(chunkSize, videoBytes.Length - offset);
-                    var chunkBytes = new byte[length];
-                    Array.Copy(videoBytes, offset, chunkBytes, 0, length);
+                    await using var stream = model.VideoFile.OpenReadStream();
+                    for (var chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++)
+                    {
+                        var length = await ReadChunkAsync(
+                            stream,
+                            buffer.AsMemory(0, chunkSize),
+                            HttpContext.RequestAborted);
+                        if (length == 0)
+                            throw new InvalidDataException("O arquivo MP4 terminou antes do tamanho declarado.");
 
-                    lastResult = await _officialApi.InvokeAsync(
-                        "send-video",
-                        Convert.ToBase64String(chunkBytes),
-                        $"current={chunkIndex + 1}&total={totalChunks}");
+                        if (chunkIndex == 0)
+                            validation.Validate(model.VideoFile, buffer.AsSpan(0, length));
 
-                    if (!lastResult.Success)
-                        throw new InvalidOperationException(BuildErrorMessage("Erro ao enviar bloco do vídeo", lastResult));
+                        lastResult = await _officialApi.InvokeBinaryAsync(
+                            "send-video",
+                            buffer.AsMemory(0, length),
+                            $"current={chunkIndex + 1}&total={totalChunks}",
+                            HttpContext.RequestAborted);
+
+                        if (!lastResult.Success)
+                            throw new InvalidOperationException(BuildErrorMessage("Erro ao enviar bloco do vídeo", lastResult));
+                    }
+                }
+                finally
+                {
+                    ArrayPool<byte>.Shared.Return(buffer, clearArray: true);
                 }
 
                 if (model.EnableAfterUpload)
@@ -384,41 +382,10 @@ namespace Integracao.ControlID.PoC.Controllers
             if (document == null)
                 return [];
 
-            var photos = new List<PhotoViewModel>();
-
-            foreach (var userId in ExtractUserIds(document.RootElement).OrderBy(value => value))
-            {
-                var photo = await GetPhotoByUserIdAsync(userId);
-                photos.Add(photo ?? CreatePhotoPlaceholder(userId));
-            }
-
-            return photos;
-        }
-
-        private async Task<PhotoViewModel?> GetPhotoByUserIdAsync(long userId)
-        {
-            try
-            {
-                var result = await _officialApi.InvokeAsync("user-get-image", additionalQuery: $"user_id={userId}");
-                if (!result.Success || !result.ResponseBodyIsBase64 || string.IsNullOrWhiteSpace(result.ResponseBody))
-                    return null;
-
-                return new PhotoViewModel
-                {
-                    Id = userId,
-                    UserId = userId,
-                    Base64Image = result.ResponseBody,
-                    ContentType = GetContentType(result.ResponseContentType, "image/jpeg"),
-                    FileName = BuildFileName(result.ResponseContentType, "user-photo"),
-                    Format = GetFileExtension(result.ResponseContentType, "jpg"),
-                    HasImage = true
-                };
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Não foi possível obter a imagem do usuário {UserRef}.", PrivacyLogHelper.PseudonymizeIdentifier(userId));
-                return null;
-            }
+            return ExtractUserIds(document.RootElement)
+                .OrderBy(static value => value)
+                .Select(CreatePhotoPlaceholder)
+                .ToList();
         }
 
         private async Task PopulateAdModeStateAsync(AdVideoManageViewModel model)
@@ -551,8 +518,26 @@ namespace Integracao.ControlID.PoC.Controllers
                 FileName = "user-photo.jpg",
                 Format = "jpg",
                 ContentType = "image/jpeg",
-                HasImage = false
+                HasImage = true
             };
+        }
+
+        private static async ValueTask<int> ReadChunkAsync(
+            Stream stream,
+            Memory<byte> buffer,
+            CancellationToken cancellationToken)
+        {
+            var totalRead = 0;
+            while (totalRead < buffer.Length)
+            {
+                var read = await stream.ReadAsync(buffer[totalRead..], cancellationToken);
+                if (read == 0)
+                    break;
+
+                totalRead += read;
+            }
+
+            return totalRead;
         }
 
         private static string BuildErrorMessage(string prefix, OfficialApiInvocationResult result)
@@ -627,7 +612,7 @@ namespace Integracao.ControlID.PoC.Controllers
             };
         }
 
-        private static string FormatJson(string rawJson, JsonDocument? document)
+        private static string FormatJson(string rawJson, OfficialApiJsonPayload? document)
         {
             if (document == null)
                 return rawJson;

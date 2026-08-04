@@ -45,6 +45,7 @@ namespace Integracao.ControlID.PoC.Services.Database
         public async Task<List<PhotoLocal>> GetAllPhotosAsync()
         {
             return await _dbContext.Photos
+                .AsNoTracking()
                 .OrderBy(p => p.Id)
                 .Take(LocalDataQueryLimits.DefaultListLimit)
                 .ToListAsync();
@@ -83,7 +84,7 @@ namespace Integracao.ControlID.PoC.Services.Database
             DateTime? startDate = null,
             DateTime? endDate = null)
         {
-            IQueryable<PhotoLocal> query = _dbContext.Photos;
+            IQueryable<PhotoLocal> query = _dbContext.Photos.AsNoTracking();
 
             if (userId.HasValue)
                 query = query.Where(p => p.UserId == userId.Value);

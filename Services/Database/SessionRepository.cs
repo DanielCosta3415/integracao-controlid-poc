@@ -45,6 +45,7 @@ namespace Integracao.ControlID.PoC.Services.Database
         public async Task<List<SessionLocal>> GetAllSessionsAsync()
         {
             return await _dbContext.Sessions
+                .AsNoTracking()
                 .OrderByDescending(s => s.CreatedAt)
                 .Take(LocalDataQueryLimits.DefaultListLimit)
                 .ToListAsync();
@@ -80,6 +81,7 @@ namespace Integracao.ControlID.PoC.Services.Database
         public async Task<List<SessionLocal>> GetActiveSessionsAsync()
         {
             return await _dbContext.Sessions
+                .AsNoTracking()
                 .Where(s => s.IsActive)
                 .OrderByDescending(s => s.CreatedAt)
                 .Take(LocalDataQueryLimits.DefaultListLimit)
@@ -92,6 +94,7 @@ namespace Integracao.ControlID.PoC.Services.Database
         public async Task<SessionLocal?> GetActiveSessionForDeviceAsync(string deviceAddress)
         {
             return await _dbContext.Sessions
+                .AsNoTracking()
                 .Where(s => s.DeviceAddress == deviceAddress && s.IsActive)
                 .OrderByDescending(s => s.CreatedAt)
                 .FirstOrDefaultAsync();

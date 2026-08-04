@@ -45,6 +45,7 @@ namespace Integracao.ControlID.PoC.Services.Database
         public async Task<List<ChangeLogLocal>> GetAllChangeLogsAsync()
         {
             return await _dbContext.ChangeLogs
+                .AsNoTracking()
                 .OrderByDescending(l => l.Timestamp)
                 .Take(LocalDataQueryLimits.DefaultListLimit)
                 .ToListAsync();
@@ -84,7 +85,7 @@ namespace Integracao.ControlID.PoC.Services.Database
             DateTime? startDate = null,
             DateTime? endDate = null)
         {
-            IQueryable<ChangeLogLocal> query = _dbContext.ChangeLogs;
+            IQueryable<ChangeLogLocal> query = _dbContext.ChangeLogs.AsNoTracking();
 
             if (!string.IsNullOrWhiteSpace(operationType))
                 query = query.Where(l => l.OperationType == operationType);

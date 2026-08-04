@@ -534,7 +534,7 @@ namespace Integracao.ControlID.PoC.Controllers
             }
         }
 
-        private static string FormatResponse(string rawJson, JsonDocument? document)
+        private static string FormatResponse(string rawJson, OfficialApiJsonPayload? document)
         {
             if (document == null)
                 return rawJson;

@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Integracao.ControlID.PoC.Models.ControlIDApi;
 using Integracao.ControlID.PoC.Services.ControlIDApi;
 using Integracao.ControlID.PoC.Services.DocumentedFeatures;
 using Integracao.ControlID.PoC.Services.Security;
@@ -289,7 +290,7 @@ namespace Integracao.ControlID.PoC.Controllers
 
             try
             {
-                JsonDocument.Parse(model.ReportPayload);
+                using var _ = JsonDocument.Parse(model.ReportPayload);
                 var result = await _apiService.InvokeAsync("report-generate", model.ReportPayload);
                 _resultPresentationService.EnsureSuccess(result, "Erro ao gerar relatorio customizado");
                 return _binaryFileResultFactory.Create(result, "report-generate.txt", "text/plain");
@@ -354,93 +355,135 @@ namespace Integracao.ControlID.PoC.Controllers
 
         private async Task PopulateAllAsync(DocumentedFeaturesViewModel model)
         {
-            await PopulateAttendanceAsync(model);
-            await PopulateOnlineAsync(model);
-            await PopulateSecurityAsync(model);
-            await PopulateVisitorsAsync(model);
-            await PopulateIdCloudAsync(model);
-            await PopulateAlarmAsync(model);
-        }
-
-        private async Task PopulateAttendanceAsync(DocumentedFeaturesViewModel model)
-        {
-            var (_, document) = await _apiService.InvokeJsonAsync("get-configuration", new
+            var (_, configuration) = await _apiService.InvokeJsonAsync("get-configuration", new
             {
-                general = new[] { "attendance_mode", "clear_expired_users" },
-                identifier = new[] { "log_type" }
+                general = new[]
+                {
+                    "attendance_mode", "clear_expired_users", "online", "local_identification",
+                    "ssh_enabled", "usb_port_enabled", "web_server_enabled"
+                },
+                identifier = new[] { "log_type" },
+                online_client = new[] { "server_id", "extract_template", "max_request_attempts" },
+                snmp_agent = new[] { "snmp_enabled" },
+                sec_box = new[] { "catra_collect_visitor_card" },
+                push_server = new[] { "push_remote_address", "push_request_timeout", "push_request_period" },
+                alarm = new[]
+                {
+                    "device_violation_enabled", "door_sensor_alarm_timeout_after_closure", "door_sensor_delay",
+                    "door_sensor_enabled", "forced_access_debounce", "forced_access_enabled", "panic_card_enabled",
+                    "panic_finger_delay", "panic_finger_enabled", "panic_password_enabled", "panic_pin_enabled"
+                }
             });
 
-            if (document == null)
-                return;
-
-            model.AttendanceModeEnabled = GetConfigBool(document.RootElement, "general", "attendance_mode");
-            model.AttendanceCustomLogTypesEnabled = GetConfigBool(document.RootElement, "identifier", "log_type");
-            model.AttendanceClearExpiredUsers = GetConfigString(document.RootElement, "general", "clear_expired_users", model.AttendanceClearExpiredUsers);
+            var root = configuration?.RootElement;
+            await Task.WhenAll(
+                PopulateAttendanceAsync(model, root),
+                PopulateOnlineAsync(model, root),
+                PopulateSecurityAsync(model, root),
+                PopulateVisitorsAsync(model, root),
+                PopulateIdCloudAsync(model, root),
+                PopulateAlarmAsync(model, root));
         }
 
-        private async Task PopulateOnlineAsync(DocumentedFeaturesViewModel model)
+        private async Task PopulateAttendanceAsync(DocumentedFeaturesViewModel model, JsonElement? configuration = null)
         {
-            var (_, document) = await _apiService.InvokeJsonAsync("get-configuration", new
+            if (!configuration.HasValue)
             {
-                general = new[] { "online", "local_identification" },
-                online_client = new[] { "server_id", "extract_template", "max_request_attempts" }
-            });
+                var (_, document) = await _apiService.InvokeJsonAsync("get-configuration", new
+                {
+                    general = new[] { "attendance_mode", "clear_expired_users" },
+                    identifier = new[] { "log_type" }
+                });
+                configuration = document?.RootElement;
+            }
 
-            if (document == null)
+            if (!configuration.HasValue)
                 return;
 
-            model.OnlineEnabled = GetConfigBool(document.RootElement, "general", "online");
-            model.OnlineLocalIdentification = GetConfigBool(document.RootElement, "general", "local_identification", true);
-            model.OnlineExtractTemplate = GetConfigBool(document.RootElement, "online_client", "extract_template");
-            model.OnlineMaxRequestAttempts = GetConfigInt(document.RootElement, "online_client", "max_request_attempts", model.OnlineMaxRequestAttempts);
-            model.OnlineCurrentServerId = GetConfigLong(document.RootElement, "online_client", "server_id");
+            model.AttendanceModeEnabled = GetConfigBool(configuration.Value, "general", "attendance_mode");
+            model.AttendanceCustomLogTypesEnabled = GetConfigBool(configuration.Value, "identifier", "log_type");
+            model.AttendanceClearExpiredUsers = GetConfigString(configuration.Value, "general", "clear_expired_users", model.AttendanceClearExpiredUsers);
+        }
+
+        private async Task PopulateOnlineAsync(DocumentedFeaturesViewModel model, JsonElement? configuration = null)
+        {
+            if (!configuration.HasValue)
+            {
+                var (_, document) = await _apiService.InvokeJsonAsync("get-configuration", new
+                {
+                    general = new[] { "online", "local_identification" },
+                    online_client = new[] { "server_id", "extract_template", "max_request_attempts" }
+                });
+                configuration = document?.RootElement;
+            }
+
+            if (!configuration.HasValue)
+                return;
+
+            model.OnlineEnabled = GetConfigBool(configuration.Value, "general", "online");
+            model.OnlineLocalIdentification = GetConfigBool(configuration.Value, "general", "local_identification", true);
+            model.OnlineExtractTemplate = GetConfigBool(configuration.Value, "online_client", "extract_template");
+            model.OnlineMaxRequestAttempts = GetConfigInt(configuration.Value, "online_client", "max_request_attempts", model.OnlineMaxRequestAttempts);
+            model.OnlineCurrentServerId = GetConfigLong(configuration.Value, "online_client", "server_id");
             model.OnlineExistingDeviceId = model.OnlineCurrentServerId;
         }
 
-        private async Task PopulateSecurityAsync(DocumentedFeaturesViewModel model)
+        private async Task PopulateSecurityAsync(DocumentedFeaturesViewModel model, JsonElement? configuration = null)
         {
-            var (_, document) = await _apiService.InvokeJsonAsync("get-configuration", new
+            if (!configuration.HasValue)
             {
-                general = new[] { "ssh_enabled", "usb_port_enabled", "web_server_enabled" },
-                snmp_agent = new[] { "snmp_enabled" }
-            });
+                var (_, document) = await _apiService.InvokeJsonAsync("get-configuration", new
+                {
+                    general = new[] { "ssh_enabled", "usb_port_enabled", "web_server_enabled" },
+                    snmp_agent = new[] { "snmp_enabled" }
+                });
+                configuration = document?.RootElement;
+            }
 
-            if (document == null)
+            if (!configuration.HasValue)
                 return;
 
-            model.SecuritySshEnabled = GetConfigBool(document.RootElement, "general", "ssh_enabled");
-            model.SecurityUsbPortEnabled = GetConfigBool(document.RootElement, "general", "usb_port_enabled", true);
-            model.SecurityWebServerEnabled = GetConfigBool(document.RootElement, "general", "web_server_enabled", true);
-            model.SecuritySnmpEnabled = GetConfigBool(document.RootElement, "snmp_agent", "snmp_enabled");
+            model.SecuritySshEnabled = GetConfigBool(configuration.Value, "general", "ssh_enabled");
+            model.SecurityUsbPortEnabled = GetConfigBool(configuration.Value, "general", "usb_port_enabled", true);
+            model.SecurityWebServerEnabled = GetConfigBool(configuration.Value, "general", "web_server_enabled", true);
+            model.SecuritySnmpEnabled = GetConfigBool(configuration.Value, "snmp_agent", "snmp_enabled");
         }
 
-        private async Task PopulateVisitorsAsync(DocumentedFeaturesViewModel model)
+        private async Task PopulateVisitorsAsync(DocumentedFeaturesViewModel model, JsonElement? configuration = null)
         {
-            var (_, document) = await _apiService.InvokeJsonAsync("get-configuration", new
+            if (!configuration.HasValue)
             {
-                general = new[] { "clear_expired_users" },
-                sec_box = new[] { "catra_collect_visitor_card" }
-            });
+                var (_, document) = await _apiService.InvokeJsonAsync("get-configuration", new
+                {
+                    general = new[] { "clear_expired_users" },
+                    sec_box = new[] { "catra_collect_visitor_card" }
+                });
+                configuration = document?.RootElement;
+            }
 
-            if (document == null)
+            if (!configuration.HasValue)
                 return;
 
-            model.VisitorsClearExpiredUsers = GetConfigString(document.RootElement, "general", "clear_expired_users", model.VisitorsClearExpiredUsers);
-            model.VisitorsCollectCardOnExit = GetConfigBool(document.RootElement, "sec_box", "catra_collect_visitor_card");
+            model.VisitorsClearExpiredUsers = GetConfigString(configuration.Value, "general", "clear_expired_users", model.VisitorsClearExpiredUsers);
+            model.VisitorsCollectCardOnExit = GetConfigBool(configuration.Value, "sec_box", "catra_collect_visitor_card");
         }
 
-        private async Task PopulateIdCloudAsync(DocumentedFeaturesViewModel model)
+        private async Task PopulateIdCloudAsync(DocumentedFeaturesViewModel model, JsonElement? configuration = null)
         {
-            var (_, configDocument) = await _apiService.InvokeJsonAsync("get-configuration", new
+            if (!configuration.HasValue)
             {
-                push_server = new[] { "push_remote_address", "push_request_timeout", "push_request_period" }
-            });
+                var (_, configDocument) = await _apiService.InvokeJsonAsync("get-configuration", new
+                {
+                    push_server = new[] { "push_remote_address", "push_request_timeout", "push_request_period" }
+                });
+                configuration = configDocument?.RootElement;
+            }
 
-            if (configDocument != null)
+            if (configuration.HasValue)
             {
-                model.IdCloudPushRemoteAddress = GetConfigString(configDocument.RootElement, "push_server", "push_remote_address", model.IdCloudPushRemoteAddress);
-                model.IdCloudPushRequestTimeout = GetConfigInt(configDocument.RootElement, "push_server", "push_request_timeout", model.IdCloudPushRequestTimeout);
-                model.IdCloudPushRequestPeriod = GetConfigInt(configDocument.RootElement, "push_server", "push_request_period", model.IdCloudPushRequestPeriod);
+                model.IdCloudPushRemoteAddress = GetConfigString(configuration.Value, "push_server", "push_remote_address", model.IdCloudPushRemoteAddress);
+                model.IdCloudPushRequestTimeout = GetConfigInt(configuration.Value, "push_server", "push_request_timeout", model.IdCloudPushRequestTimeout);
+                model.IdCloudPushRequestPeriod = GetConfigInt(configuration.Value, "push_server", "push_request_period", model.IdCloudPushRequestPeriod);
             }
 
             var (_, systemDocument) = await _apiService.InvokeJsonAsync("system-information");
@@ -448,7 +491,7 @@ namespace Integracao.ControlID.PoC.Controllers
                 model.IdCloudVerificationCode = GetRootString(systemDocument.RootElement, "iDCloud_code", "idcloud_code");
         }
 
-        private async Task PopulateAlarmAsync(DocumentedFeaturesViewModel model)
+        private async Task PopulateAlarmAsync(DocumentedFeaturesViewModel model, JsonElement? configuration = null)
         {
             var (_, statusDocument) = await _apiService.InvokeJsonAsync("alarm-status", new { });
             if (statusDocument != null)
@@ -457,38 +500,42 @@ namespace Integracao.ControlID.PoC.Controllers
                 model.AlarmCause = GetRootInt(statusDocument.RootElement, "cause", 0);
             }
 
-            var (_, configDocument) = await _apiService.InvokeJsonAsync("get-configuration", new
+            if (!configuration.HasValue)
             {
-                alarm = new[]
+                var (_, configDocument) = await _apiService.InvokeJsonAsync("get-configuration", new
                 {
-                    "device_violation_enabled",
-                    "door_sensor_alarm_timeout_after_closure",
-                    "door_sensor_delay",
-                    "door_sensor_enabled",
-                    "forced_access_debounce",
-                    "forced_access_enabled",
-                    "panic_card_enabled",
-                    "panic_finger_delay",
-                    "panic_finger_enabled",
-                    "panic_password_enabled",
-                    "panic_pin_enabled"
-                }
-            });
+                    alarm = new[]
+                    {
+                        "device_violation_enabled",
+                        "door_sensor_alarm_timeout_after_closure",
+                        "door_sensor_delay",
+                        "door_sensor_enabled",
+                        "forced_access_debounce",
+                        "forced_access_enabled",
+                        "panic_card_enabled",
+                        "panic_finger_delay",
+                        "panic_finger_enabled",
+                        "panic_password_enabled",
+                        "panic_pin_enabled"
+                    }
+                });
+                configuration = configDocument?.RootElement;
+            }
 
-            if (configDocument == null)
+            if (!configuration.HasValue)
                 return;
 
-            model.AlarmDeviceViolationEnabled = GetConfigBool(configDocument.RootElement, "alarm", "device_violation_enabled");
-            model.AlarmDoorSensorAlarmTimeoutAfterClosure = GetConfigInt(configDocument.RootElement, "alarm", "door_sensor_alarm_timeout_after_closure", 0);
-            model.AlarmDoorSensorDelay = GetConfigInt(configDocument.RootElement, "alarm", "door_sensor_delay", model.AlarmDoorSensorDelay);
-            model.AlarmDoorSensorEnabled = GetConfigBool(configDocument.RootElement, "alarm", "door_sensor_enabled", true);
-            model.AlarmForcedAccessDebounce = GetConfigInt(configDocument.RootElement, "alarm", "forced_access_debounce", model.AlarmForcedAccessDebounce);
-            model.AlarmForcedAccessEnabled = GetConfigBool(configDocument.RootElement, "alarm", "forced_access_enabled");
-            model.AlarmPanicCardEnabled = GetConfigBool(configDocument.RootElement, "alarm", "panic_card_enabled", true);
-            model.AlarmPanicFingerDelay = GetConfigInt(configDocument.RootElement, "alarm", "panic_finger_delay", model.AlarmPanicFingerDelay);
-            model.AlarmPanicFingerEnabled = GetConfigBool(configDocument.RootElement, "alarm", "panic_finger_enabled", true);
-            model.AlarmPanicPasswordEnabled = GetConfigBool(configDocument.RootElement, "alarm", "panic_password_enabled", true);
-            model.AlarmPanicPinEnabled = GetConfigBool(configDocument.RootElement, "alarm", "panic_pin_enabled", true);
+            model.AlarmDeviceViolationEnabled = GetConfigBool(configuration.Value, "alarm", "device_violation_enabled");
+            model.AlarmDoorSensorAlarmTimeoutAfterClosure = GetConfigInt(configuration.Value, "alarm", "door_sensor_alarm_timeout_after_closure", 0);
+            model.AlarmDoorSensorDelay = GetConfigInt(configuration.Value, "alarm", "door_sensor_delay", model.AlarmDoorSensorDelay);
+            model.AlarmDoorSensorEnabled = GetConfigBool(configuration.Value, "alarm", "door_sensor_enabled", true);
+            model.AlarmForcedAccessDebounce = GetConfigInt(configuration.Value, "alarm", "forced_access_debounce", model.AlarmForcedAccessDebounce);
+            model.AlarmForcedAccessEnabled = GetConfigBool(configuration.Value, "alarm", "forced_access_enabled");
+            model.AlarmPanicCardEnabled = GetConfigBool(configuration.Value, "alarm", "panic_card_enabled", true);
+            model.AlarmPanicFingerDelay = GetConfigInt(configuration.Value, "alarm", "panic_finger_delay", model.AlarmPanicFingerDelay);
+            model.AlarmPanicFingerEnabled = GetConfigBool(configuration.Value, "alarm", "panic_finger_enabled", true);
+            model.AlarmPanicPasswordEnabled = GetConfigBool(configuration.Value, "alarm", "panic_password_enabled", true);
+            model.AlarmPanicPinEnabled = GetConfigBool(configuration.Value, "alarm", "panic_pin_enabled", true);
         }
 
         private bool EnsureConnected(DocumentedFeaturesViewModel model)
@@ -500,7 +547,7 @@ namespace Integracao.ControlID.PoC.Controllers
             return false;
         }
 
-        private static long? ReadFirstId(JsonDocument? document)
+        private static long? ReadFirstId(OfficialApiJsonPayload? document)
         {
             if (document == null || !document.RootElement.TryGetProperty("ids", out var ids) || ids.ValueKind != JsonValueKind.Array || ids.GetArrayLength() == 0)
                 return null;

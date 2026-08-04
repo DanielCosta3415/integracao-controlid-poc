@@ -92,6 +92,29 @@ public class CallbackSignatureValidatorTests
     }
 
     [Fact]
+    public void Validate_ReleasesExpiredNoncesWithoutScanningActiveEntries()
+    {
+        var options = CreateRequiredOptions();
+        options.MaxTrackedNonces = 100;
+        options.NonceTtlSeconds = 60;
+        var timeProvider = new AdjustableTimeProvider(DateTimeOffset.UtcNow);
+        var validator = CreateValidator(options, timeProvider);
+
+        for (var index = 0; index < options.MaxTrackedNonces; index++)
+        {
+            var context = CreateContext("/result", "{}");
+            Sign(context.Request, "{}", validator, options, $"nonce-{index}", timeProvider.GetUtcNow());
+            Assert.True(validator.Validate(context.Request, "{}").IsAllowed);
+        }
+
+        timeProvider.Advance(TimeSpan.FromSeconds(options.NonceTtlSeconds + 1));
+        var replacement = CreateContext("/result", "{}");
+        Sign(replacement.Request, "{}", validator, options, "nonce-replacement", timeProvider.GetUtcNow());
+
+        Assert.True(validator.Validate(replacement.Request, "{}").IsAllowed);
+    }
+
+    [Fact]
     public void Validate_RejectsTamperedBody()
     {
         var options = CreateRequiredOptions();
@@ -136,9 +159,14 @@ public class CallbackSignatureValidatorTests
         };
     }
 
-    private static CallbackSignatureValidator CreateValidator(CallbackSecurityOptions options)
+    private static CallbackSignatureValidator CreateValidator(
+        CallbackSecurityOptions options,
+        TimeProvider? timeProvider = null)
     {
-        return new CallbackSignatureValidator(Microsoft.Extensions.Options.Options.Create(options), NullLogger<CallbackSignatureValidator>.Instance);
+        return new CallbackSignatureValidator(
+            Microsoft.Extensions.Options.Options.Create(options),
+            NullLogger<CallbackSignatureValidator>.Instance,
+            timeProvider);
     }
 
     private static DefaultHttpContext CreateContext(string path, string body, string query = "")
@@ -157,11 +185,21 @@ public class CallbackSignatureValidatorTests
         string body,
         CallbackSignatureValidator validator,
         CallbackSecurityOptions options,
-        string nonce)
+        string nonce,
+        DateTimeOffset? now = null)
     {
-        var timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(System.Globalization.CultureInfo.InvariantCulture);
+        var timestamp = (now ?? DateTimeOffset.UtcNow).ToUnixTimeSeconds().ToString(System.Globalization.CultureInfo.InvariantCulture);
         request.Headers[options.TimestampHeaderName] = timestamp;
         request.Headers[options.NonceHeaderName] = nonce;
         request.Headers[options.SignatureHeaderName] = validator.ComputeSignature(request, body, timestamp, nonce);
+    }
+
+    private sealed class AdjustableTimeProvider(DateTimeOffset utcNow) : TimeProvider
+    {
+        private DateTimeOffset _utcNow = utcNow;
+
+        public override DateTimeOffset GetUtcNow() => _utcNow;
+
+        public void Advance(TimeSpan elapsed) => _utcNow = _utcNow.Add(elapsed);
     }
 }

@@ -1,6 +1,6 @@
 # Índice da documentação técnica
 
-> **Índice vivo** · Público: todos os papéis · Responsável: mantenedores · Última validação: 2026-08-03.
+> **Índice vivo** · Público: todos os papéis · Responsável: mantenedores · Última validação: 2026-08-04.
 
 Este índice orienta desenvolvedores, mantenedores, SREs, QA, DPO/privacidade e
 agentes de código no uso seguro da PoC `Integracao.ControlID.PoC`.
@@ -135,6 +135,7 @@ ADRs atuais:
 - `docs/changelog-2026-04-15.md`: comentários e observabilidade.
 - `docs/changelog-2026-05-01.md`: documentação, governança e readiness.
 - `docs/changelog-2026-08-03.md`: fechamento dos 14 riscos da solução completa.
+- `docs/changelog-2026-08-04.md`: otimizações dos 11 gargalos e validação funcional/visual.
 - `docs/pr-summary-2026-05-01.md`: resumo de PR/release notes da rodada.
 - `docs/documentation-audit-2026-05-01.md`: auditoria documental e lacunas.
 - `docs/reports/`: relatórios históricos de smoke, UX, design e auditorias. Use
@@ -166,7 +167,7 @@ Catálogo de evidências históricas:
   a CI mantém o modo off-line para evitar falhas causadas por terceiros.
 - Todo documento autoral deve informar classificação, público, responsável e
   data de validação logo após o título principal.
-- O inventário atual possui 59 arquivos Markdown: 58 documentos autorais e uma
+- O inventário atual possui 60 arquivos Markdown: 59 documentos autorais e uma
   licença vendorizada que deve permanecer literal.
 
 ## Rotas de leitura e cadência

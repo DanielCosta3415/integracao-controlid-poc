@@ -45,6 +45,7 @@ namespace Integracao.ControlID.PoC.Services.Database
         public async Task<List<ConfigLocal>> GetAllConfigsAsync()
         {
             return await _dbContext.Configs
+                .AsNoTracking()
                 .OrderBy(c => c.Id)
                 .Take(LocalDataQueryLimits.DefaultListLimit)
                 .ToListAsync();
@@ -79,7 +80,7 @@ namespace Integracao.ControlID.PoC.Services.Database
         /// </summary>
         public async Task<List<ConfigLocal>> SearchConfigsAsync(string? group = null, string? key = null, string? value = null)
         {
-            IQueryable<ConfigLocal> query = _dbContext.Configs;
+            IQueryable<ConfigLocal> query = _dbContext.Configs.AsNoTracking();
 
             if (!string.IsNullOrWhiteSpace(group))
                 query = query.Where(c => c.Group == group);

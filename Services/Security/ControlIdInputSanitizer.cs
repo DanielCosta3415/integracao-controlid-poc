@@ -171,9 +171,18 @@ namespace Integracao.ControlID.PoC.Services.Security
         private static HttpContent BuildJsonContent(string? requestBody)
         {
             var rawJson = string.IsNullOrWhiteSpace(requestBody) ? "{}" : requestBody.Trim();
-            using var document = JsonDocument.Parse(rawJson);
-            var normalizedJson = JsonSerializer.Serialize(document.RootElement);
-            return new StringContent(normalizedJson, Encoding.UTF8, "application/json");
+            using var _ = JsonDocument.Parse(rawJson);
+            return new StringContent(rawJson, Encoding.UTF8, "application/json");
+        }
+
+        public HttpContent BuildBinaryContent(ReadOnlyMemory<byte> payloadBytes)
+        {
+            if (payloadBytes.IsEmpty || payloadBytes.Length > MaxBinaryPayloadBytes)
+                throw new InvalidOperationException("O payload binário é vazio ou excede o limite de segurança configurado pela PoC.");
+
+            var content = new ReadOnlyMemoryContent(payloadBytes);
+            content.Headers.ContentType = MediaTypeHeaderValue.Parse("application/octet-stream");
+            return content;
         }
 
         private HttpContent BuildFormContent(string? requestBody)

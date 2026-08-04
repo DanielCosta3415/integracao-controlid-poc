@@ -319,8 +319,8 @@ public sealed class ProductSpecificCommandService
         string failureMessage,
         string successMessage,
         string logMessage,
-        Func<Task<(OfficialApiInvocationResult Result, JsonDocument? Document)>> action,
-        Func<JsonDocument?, Task> applyDocumentAsync,
+        Func<Task<(OfficialApiInvocationResult Result, OfficialApiJsonPayload? Document)>> action,
+        Func<OfficialApiJsonPayload?, Task> applyDocumentAsync,
         Func<Task>? postSuccessAsync = null)
     {
         model.ActiveSection = section;

@@ -22,10 +22,10 @@
 
     <section class="app-surface-card app-detail-shell">
         <div class="app-action-row">
-            @if (Model.HasImage && !string.IsNullOrEmpty(Model.Base64Image))
+            @if (Model.HasImage)
             {
                 <span class="app-media-preview app-media-preview--lg">
-                    <img src="data:image/@Model.Format;base64,@Model.Base64Image"
+                    <img src="@Url.Action("Download", new { id = Model.UserId })"
                          alt="Foto do usuário @Model.UserId"
                          loading="lazy"
                          decoding="async" />

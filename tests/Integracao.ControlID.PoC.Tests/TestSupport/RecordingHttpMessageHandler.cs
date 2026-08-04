@@ -24,14 +24,16 @@ public sealed class RecordingHttpMessageHandler : HttpMessageHandler
 
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
-        var body = request.Content == null
-            ? string.Empty
-            : await request.Content.ReadAsStringAsync(cancellationToken);
+        var bodyBytes = request.Content == null
+            ? []
+            : await request.Content.ReadAsByteArrayAsync(cancellationToken);
+        var body = Encoding.UTF8.GetString(bodyBytes);
 
         Requests.Add(new RecordedHttpRequest(
             request.Method.Method,
             request.RequestUri?.ToString() ?? string.Empty,
             body,
+            bodyBytes,
             request.Content?.Headers.ContentType?.MediaType ?? string.Empty,
             request.Headers.ToDictionary(
                 header => header.Key,
@@ -51,5 +53,6 @@ public sealed record RecordedHttpRequest(
     string Method,
     string Url,
     string Body,
+    byte[] BodyBytes,
     string ContentType,
     IReadOnlyDictionary<string, string> Headers);

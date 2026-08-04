@@ -108,6 +108,15 @@ public class UploadedFileBase64EncoderTests
         Assert.Equal(Convert.ToBase64String(bytes), result);
     }
 
+    [Fact]
+    public void Validation_AcceptsMp4HeaderFromReadOnlySpan()
+    {
+        var bytes = new byte[] { 0, 0, 0, 24, 102, 116, 121, 112, 105, 115, 111, 109 };
+        var file = CreateFormFile(bytes, "ad.mp4", "video/mp4");
+
+        UploadedFileValidation.Mp4("Video invalido.").Validate(file, bytes.AsSpan(0, 12));
+    }
+
     private static IFormFile CreateFormFile(string content)
     {
         return CreateFormFile(Encoding.UTF8.GetBytes(content));

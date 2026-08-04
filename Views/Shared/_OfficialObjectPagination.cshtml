@@ -1,0 +1,33 @@
+@using Microsoft.AspNetCore.WebUtilities
+@using Integracao.ControlID.PoC.Services.ControlIDApi
+@{
+    var currentPage = Context.Items[OfficialObjectPaging.CurrentPageItemKey] as int? ?? 1;
+    var hasNextPage = Context.Items[OfficialObjectPaging.HasNextPageItemKey] as bool? ?? false;
+    var query = Context.Request.Query.ToDictionary<KeyValuePair<string, Microsoft.Extensions.Primitives.StringValues>, string, string?>(
+        static item => item.Key,
+        static item => item.Value.ToString(),
+        StringComparer.OrdinalIgnoreCase);
+
+    string BuildPageUrl(int page)
+    {
+        query["page"] = page.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        return QueryHelpers.AddQueryString(Context.Request.Path, query);
+    }
+}
+
+@if (currentPage > 1 || hasNextPage)
+{
+    <nav class="app-pagination" aria-label="Paginação da consulta ao equipamento">
+        <span class="app-note" aria-live="polite">Página @currentPage · até @OfficialObjectPaging.PageSize registros por página</span>
+        <div class="app-action-row">
+            @if (currentPage > 1)
+            {
+                <a class="btn btn-outline-secondary" href="@BuildPageUrl(currentPage - 1)" rel="prev">Página anterior</a>
+            }
+            @if (hasNextPage)
+            {
+                <a class="btn btn-outline-primary" href="@BuildPageUrl(currentPage + 1)" rel="next">Próxima página</a>
+            }
+        </div>
+    </nav>
+}

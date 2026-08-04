@@ -45,6 +45,7 @@ namespace Integracao.ControlID.PoC.Services.Database
         public async Task<List<GroupLocal>> GetAllGroupsAsync()
         {
             return await _dbContext.Groups
+                .AsNoTracking()
                 .OrderBy(g => g.Id)
                 .Take(LocalDataQueryLimits.DefaultListLimit)
                 .ToListAsync();
@@ -79,7 +80,7 @@ namespace Integracao.ControlID.PoC.Services.Database
         /// </summary>
         public async Task<List<GroupLocal>> SearchGroupsAsync(string? name = null, string? status = null)
         {
-            IQueryable<GroupLocal> query = _dbContext.Groups;
+            IQueryable<GroupLocal> query = _dbContext.Groups.AsNoTracking();
 
             if (!string.IsNullOrWhiteSpace(name))
                 query = query.Where(g => g.Name.Contains(name));

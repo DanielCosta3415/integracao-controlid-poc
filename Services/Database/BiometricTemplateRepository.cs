@@ -45,6 +45,7 @@ namespace Integracao.ControlID.PoC.Services.Database
         public async Task<List<BiometricTemplateLocal>> GetAllTemplatesAsync()
         {
             return await _dbContext.BiometricTemplates
+                .AsNoTracking()
                 .OrderBy(t => t.Id)
                 .Take(LocalDataQueryLimits.DefaultListLimit)
                 .ToListAsync();
@@ -80,6 +81,7 @@ namespace Integracao.ControlID.PoC.Services.Database
         public async Task<List<BiometricTemplateLocal>> GetTemplatesByUserIdAsync(long userId)
         {
             return await _dbContext.BiometricTemplates
+                .AsNoTracking()
                 .Where(t => t.UserId == userId)
                 .OrderBy(t => t.Id)
                 .Take(LocalDataQueryLimits.DefaultListLimit)
@@ -91,7 +93,7 @@ namespace Integracao.ControlID.PoC.Services.Database
         /// </summary>
         public async Task<List<BiometricTemplateLocal>> SearchTemplatesAsync(string? type = null)
         {
-            IQueryable<BiometricTemplateLocal> query = _dbContext.BiometricTemplates;
+            IQueryable<BiometricTemplateLocal> query = _dbContext.BiometricTemplates.AsNoTracking();
 
             if (!string.IsNullOrWhiteSpace(type))
             {

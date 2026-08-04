@@ -116,4 +116,46 @@ public class OfficialApiInvokerServiceTests
         Assert.Equal(StatusCodes.Status502BadGateway, result.StatusCode);
         Assert.Contains("excedeu o limite", result.ErrorMessage, StringComparison.OrdinalIgnoreCase);
     }
+
+    [Fact]
+    public async Task InvokeBinaryAsync_SendsExactBytesAndKeepsBinaryResponseOutOfBase64()
+    {
+        var handler = new RecordingHttpMessageHandler();
+        handler.EnqueueResponse(new HttpResponseMessage(System.Net.HttpStatusCode.OK)
+        {
+            Content = new ByteArrayContent([9, 8, 7])
+            {
+                Headers = { ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/octet-stream") }
+            }
+        });
+        var invoker = new OfficialApiInvokerService(
+            new StaticHttpClientFactory(handler),
+            NullLogger<OfficialApiInvokerService>.Instance,
+            new ControlIdInputSanitizer(),
+            new OfficialApiCircuitBreaker(Microsoft.Extensions.Options.Options.Create(new ControlIdCircuitBreakerOptions { Enabled = false })),
+            new HttpContextAccessor { HttpContext = new DefaultHttpContext() },
+            new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["ControlIDApi:ConnectionTimeoutSeconds"] = "5"
+            }).Build());
+
+        var result = await invoker.InvokeBinaryAsync(
+            new OfficialApiEndpointDefinition
+            {
+                Id = "send-video",
+                Method = "POST",
+                Path = "/send_video.fcgi",
+                BodyKind = "binary",
+                RequiresSession = true
+            },
+            "http://device.local",
+            "session-1",
+            "current=1&total=1",
+            new byte[] { 1, 2, 3, 4 },
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal(new byte[] { 1, 2, 3, 4 }, Assert.Single(handler.Requests).BodyBytes);
+        Assert.Equal(new byte[] { 9, 8, 7 }, result.ResponseBytes);
+        Assert.Empty(result.ResponseBody);
+    }
 }

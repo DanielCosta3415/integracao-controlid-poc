@@ -19,20 +19,29 @@ public sealed class ProductSpecificSnapshotService
 
     public async Task PopulateAllAsync(ProductSpecificViewModel model)
     {
-        await PopulateFacialAsync(model);
-        await PopulateQrAsync(model);
-        await PopulatePowerAsync(model);
-        await PopulateStreamingAsync(model);
-        await PopulateSipAsync(model);
-        await PopulateSipAudioAsync(model);
-        await PopulateAccessAudioAsync(model);
-        await PopulateSignalsAsync(model);
-    }
-
-    public async Task PopulateSipAsync(ProductSpecificViewModel model)
-    {
-        var (_, configDocument) = await _apiService.InvokeJsonAsync("get-configuration", new
+        var (_, configuration) = await _apiService.InvokeJsonAsync("get-configuration", new
         {
+            general = new[]
+            {
+                "screen_always_on", "screenshot_resize", "energy_mode", "energy_display_custom",
+                "energy_sound_custom", "energy_ir_custom", "energy_led_custom", "sec_box_out_mode",
+                "relay_out_mode", "relay1_enabled", "relay1_auto_close", "relay1_timeout",
+                "gpio_ext1_mode", "gpio_ext1_idle", "gpio_ext2_mode", "gpio_ext2_idle",
+                "gpio_ext3_mode", "gpio_ext3_idle"
+            },
+            identifier = new[] { "card_identification_enabled", "face_identification_enabled", "qrcode_identification_enabled", "pin_identification_enabled" },
+            face_id = new[]
+            {
+                "mask_detection_enabled", "vehicle_mode", "max_identified_duration",
+                "limit_identification_to_display_region", "min_detect_bounds_width",
+                "qrcode_legacy_mode_enabled", "totp_enabled", "totp_window_size", "totp_window_num",
+                "totp_single_use", "totp_tz_offset"
+            },
+            camera_overlay = new[] { "zoom", "vertical_crop" },
+            face_module = new[] { "light_threshold_led_activation" },
+            led_white = new[] { "brightness" },
+            barras = new[] { "qrcode_legacy_mode_enabled", "totp_enabled", "totp_window_size", "totp_window_num", "totp_single_use", "totp_tz_offset" },
+            onvif = new[] { "rtsp_enabled", "rtsp_port", "rtsp_username", "rtsp_password", "rtsp_rgb", "rtsp_codec", "onvif_enabled", "onvif_port", "rtsp_flipped", "rtsp_watermark_enabled", "rtsp_watermark_logo_enabled", "rtsp_watermark_custom_logo_enabled" },
             pjsip = new[]
             {
                 "enabled", "server_ip", "server_port", "server_outbound_port", "server_outbound_port_range",
@@ -42,12 +51,45 @@ public sealed class ProductSpecificSnapshotService
                 "dialing_display_mode", "auto_call_target", "custom_identifier_auto_call", "video_enabled",
                 "pjsip_custom_audio_enabled", "custom_audio_volume_gain", "mic_volume", "speaker_volume",
                 "open_door_enabled", "open_door_command", "facial_id_during_call_enabled"
-            }
+            },
+            buzzer = new[] { "audio_message_not_identified", "audio_message_authorized", "audio_message_not_authorized", "audio_message_use_mask", "audio_message_volume_gain" }
         });
 
-        if (configDocument != null)
+        var root = configuration?.RootElement;
+        await Task.WhenAll(
+            PopulateFacialAsync(model, root),
+            PopulateQrAsync(model, root),
+            PopulatePowerAsync(model, root),
+            PopulateStreamingAsync(model, root),
+            PopulateSipAsync(model, root),
+            PopulateSipAudioAsync(model),
+            PopulateAccessAudioAsync(model, root),
+            PopulateSignalsAsync(model, root));
+    }
+
+    public async Task PopulateSipAsync(ProductSpecificViewModel model, JsonElement? configuration = null)
+    {
+        if (!configuration.HasValue)
         {
-            var root = configDocument.RootElement;
+            var (_, configDocument) = await _apiService.InvokeJsonAsync("get-configuration", new
+            {
+                pjsip = new[]
+                {
+                    "enabled", "server_ip", "server_port", "server_outbound_port", "server_outbound_port_range",
+                    "numeric_branch_enabled", "branch", "login", "password", "peer_to_peer_enabled",
+                    "reg_status_query_period", "server_retry_interval", "max_call_time", "push_button_debounce",
+                    "auto_answer_enabled", "auto_answer_delay", "auto_call_button_enabled", "rex_enabled",
+                    "dialing_display_mode", "auto_call_target", "custom_identifier_auto_call", "video_enabled",
+                    "pjsip_custom_audio_enabled", "custom_audio_volume_gain", "mic_volume", "speaker_volume",
+                    "open_door_enabled", "open_door_command", "facial_id_during_call_enabled"
+                }
+            });
+            configuration = configDocument?.RootElement;
+        }
+
+        if (configuration.HasValue)
+        {
+            var root = configuration.Value;
             model.SipEnabled = _reader.GetConfigBool(root, "pjsip", "enabled");
             model.SipServerIp = _reader.GetConfigString(root, "pjsip", "server_ip", model.SipServerIp);
             model.SipServerPort = _reader.GetConfigInt(root, "pjsip", "server_port", model.SipServerPort);
@@ -94,16 +136,20 @@ public sealed class ProductSpecificSnapshotService
             model.SipAudioExists = _reader.GetRootBool(document.RootElement, "file_exists");
     }
 
-    public async Task PopulateAccessAudioAsync(ProductSpecificViewModel model)
+    public async Task PopulateAccessAudioAsync(ProductSpecificViewModel model, JsonElement? configuration = null)
     {
-        var (_, configDocument) = await _apiService.InvokeJsonAsync("get-configuration", new
+        if (!configuration.HasValue)
         {
-            buzzer = new[] { "audio_message_not_identified", "audio_message_authorized", "audio_message_not_authorized", "audio_message_use_mask", "audio_message_volume_gain" }
-        });
+            var (_, configDocument) = await _apiService.InvokeJsonAsync("get-configuration", new
+            {
+                buzzer = new[] { "audio_message_not_identified", "audio_message_authorized", "audio_message_not_authorized", "audio_message_use_mask", "audio_message_volume_gain" }
+            });
+            configuration = configDocument?.RootElement;
+        }
 
-        if (configDocument != null)
+        if (configuration.HasValue)
         {
-            var root = configDocument.RootElement;
+            var root = configuration.Value;
             model.AccessAudioNotIdentified = _reader.GetConfigString(root, "buzzer", "audio_message_not_identified", model.AccessAudioNotIdentified);
             model.AccessAudioAuthorized = _reader.GetConfigString(root, "buzzer", "audio_message_authorized", model.AccessAudioAuthorized);
             model.AccessAudioNotAuthorized = _reader.GetConfigString(root, "buzzer", "audio_message_not_authorized", model.AccessAudioNotAuthorized);
@@ -121,22 +167,26 @@ public sealed class ProductSpecificSnapshotService
         model.AccessAudioHasUseMask = _reader.GetRootBool(statusDocument.RootElement, "use_mask");
     }
 
-    private async Task PopulateFacialAsync(ProductSpecificViewModel model)
+    private async Task PopulateFacialAsync(ProductSpecificViewModel model, JsonElement? configuration = null)
     {
-        var (_, document) = await _apiService.InvokeJsonAsync("get-configuration", new
+        if (!configuration.HasValue)
         {
-            general = new[] { "screen_always_on" },
-            identifier = new[] { "card_identification_enabled", "face_identification_enabled", "qrcode_identification_enabled", "pin_identification_enabled" },
-            face_id = new[] { "mask_detection_enabled", "vehicle_mode", "max_identified_duration", "limit_identification_to_display_region", "min_detect_bounds_width" },
-            camera_overlay = new[] { "zoom", "vertical_crop" },
-            face_module = new[] { "light_threshold_led_activation" },
-            led_white = new[] { "brightness" }
-        });
+            var (_, document) = await _apiService.InvokeJsonAsync("get-configuration", new
+            {
+                general = new[] { "screen_always_on" },
+                identifier = new[] { "card_identification_enabled", "face_identification_enabled", "qrcode_identification_enabled", "pin_identification_enabled" },
+                face_id = new[] { "mask_detection_enabled", "vehicle_mode", "max_identified_duration", "limit_identification_to_display_region", "min_detect_bounds_width" },
+                camera_overlay = new[] { "zoom", "vertical_crop" },
+                face_module = new[] { "light_threshold_led_activation" },
+                led_white = new[] { "brightness" }
+            });
+            configuration = document?.RootElement;
+        }
 
-        if (document == null)
+        if (!configuration.HasValue)
             return;
 
-        var root = document.RootElement;
+        var root = configuration.Value;
         model.FaceScreenAlwaysOn = _reader.GetConfigBool(root, "general", "screen_always_on", true);
         model.IdentifierCardEnabled = _reader.GetConfigBool(root, "identifier", "card_identification_enabled", true);
         model.IdentifierFaceEnabled = _reader.GetConfigBool(root, "identifier", "face_identification_enabled", true);
@@ -153,18 +203,22 @@ public sealed class ProductSpecificSnapshotService
         model.FaceLedBrightness = _reader.GetConfigInt(root, "led_white", "brightness", model.FaceLedBrightness);
     }
 
-    private async Task PopulateQrAsync(ProductSpecificViewModel model)
+    private async Task PopulateQrAsync(ProductSpecificViewModel model, JsonElement? configuration = null)
     {
-        var (_, document) = await _apiService.InvokeJsonAsync("get-configuration", new
+        if (!configuration.HasValue)
         {
-            face_id = new[] { "qrcode_legacy_mode_enabled", "totp_enabled", "totp_window_size", "totp_window_num", "totp_single_use", "totp_tz_offset" },
-            barras = new[] { "qrcode_legacy_mode_enabled", "totp_enabled", "totp_window_size", "totp_window_num", "totp_single_use", "totp_tz_offset" }
-        });
+            var (_, document) = await _apiService.InvokeJsonAsync("get-configuration", new
+            {
+                face_id = new[] { "qrcode_legacy_mode_enabled", "totp_enabled", "totp_window_size", "totp_window_num", "totp_single_use", "totp_tz_offset" },
+                barras = new[] { "qrcode_legacy_mode_enabled", "totp_enabled", "totp_window_size", "totp_window_num", "totp_single_use", "totp_tz_offset" }
+            });
+            configuration = document?.RootElement;
+        }
 
-        if (document == null)
+        if (!configuration.HasValue)
             return;
 
-        var root = document.RootElement;
+        var root = configuration.Value;
         var module = root.TryGetProperty("barras", out var barras) &&
             barras.ValueKind == JsonValueKind.Object &&
             barras.TryGetProperty("qrcode_legacy_mode_enabled", out _)
@@ -180,17 +234,21 @@ public sealed class ProductSpecificSnapshotService
         model.QrTotpTzOffset = _reader.GetConfigInt(root, module, "totp_tz_offset", model.QrTotpTzOffset);
     }
 
-    private async Task PopulatePowerAsync(ProductSpecificViewModel model)
+    private async Task PopulatePowerAsync(ProductSpecificViewModel model, JsonElement? configuration = null)
     {
-        var (_, document) = await _apiService.InvokeJsonAsync("get-configuration", new
+        if (!configuration.HasValue)
         {
-            general = new[] { "screenshot_resize", "energy_mode", "energy_display_custom", "energy_sound_custom", "energy_ir_custom", "energy_led_custom" }
-        });
+            var (_, document) = await _apiService.InvokeJsonAsync("get-configuration", new
+            {
+                general = new[] { "screenshot_resize", "energy_mode", "energy_display_custom", "energy_sound_custom", "energy_ir_custom", "energy_led_custom" }
+            });
+            configuration = document?.RootElement;
+        }
 
-        if (document == null)
+        if (!configuration.HasValue)
             return;
 
-        var root = document.RootElement;
+        var root = configuration.Value;
         model.ScreenshotResize = _reader.GetConfigString(root, "general", "screenshot_resize", model.ScreenshotResize);
         model.EnergyMode = _reader.GetConfigString(root, "general", "energy_mode", model.EnergyMode);
         model.EnergyDisplayCustom = _reader.GetConfigString(root, "general", "energy_display_custom", model.EnergyDisplayCustom);
@@ -199,17 +257,21 @@ public sealed class ProductSpecificSnapshotService
         model.EnergyLedCustom = _reader.GetConfigString(root, "general", "energy_led_custom", model.EnergyLedCustom);
     }
 
-    private async Task PopulateStreamingAsync(ProductSpecificViewModel model)
+    private async Task PopulateStreamingAsync(ProductSpecificViewModel model, JsonElement? configuration = null)
     {
-        var (_, document) = await _apiService.InvokeJsonAsync("get-configuration", new
+        if (!configuration.HasValue)
         {
-            onvif = new[] { "rtsp_enabled", "rtsp_port", "rtsp_username", "rtsp_password", "rtsp_rgb", "rtsp_codec", "onvif_enabled", "onvif_port", "rtsp_flipped", "rtsp_watermark_enabled", "rtsp_watermark_logo_enabled", "rtsp_watermark_custom_logo_enabled" }
-        });
+            var (_, document) = await _apiService.InvokeJsonAsync("get-configuration", new
+            {
+                onvif = new[] { "rtsp_enabled", "rtsp_port", "rtsp_username", "rtsp_password", "rtsp_rgb", "rtsp_codec", "onvif_enabled", "onvif_port", "rtsp_flipped", "rtsp_watermark_enabled", "rtsp_watermark_logo_enabled", "rtsp_watermark_custom_logo_enabled" }
+            });
+            configuration = document?.RootElement;
+        }
 
-        if (document == null)
+        if (!configuration.HasValue)
             return;
 
-        var root = document.RootElement;
+        var root = configuration.Value;
         model.StreamingRtspEnabled = _reader.GetConfigBool(root, "onvif", "rtsp_enabled");
         model.StreamingRtspPort = _reader.GetConfigInt(root, "onvif", "rtsp_port", model.StreamingRtspPort);
         model.StreamingRtspUsername = _reader.GetConfigString(root, "onvif", "rtsp_username", model.StreamingRtspUsername);
@@ -224,21 +286,25 @@ public sealed class ProductSpecificSnapshotService
         model.StreamingWatermarkCustomLogoEnabled = _reader.GetConfigBool(root, "onvif", "rtsp_watermark_custom_logo_enabled");
     }
 
-    private async Task PopulateSignalsAsync(ProductSpecificViewModel model)
+    private async Task PopulateSignalsAsync(ProductSpecificViewModel model, JsonElement? configuration = null)
     {
-        var (_, document) = await _apiService.InvokeJsonAsync("get-configuration", new
+        if (!configuration.HasValue)
         {
-            general = new[]
+            var (_, document) = await _apiService.InvokeJsonAsync("get-configuration", new
             {
-                "sec_box_out_mode", "relay_out_mode", "relay1_enabled", "relay1_auto_close", "relay1_timeout",
-                "gpio_ext1_mode", "gpio_ext1_idle", "gpio_ext2_mode", "gpio_ext2_idle", "gpio_ext3_mode", "gpio_ext3_idle"
-            }
-        });
+                general = new[]
+                {
+                    "sec_box_out_mode", "relay_out_mode", "relay1_enabled", "relay1_auto_close", "relay1_timeout",
+                    "gpio_ext1_mode", "gpio_ext1_idle", "gpio_ext2_mode", "gpio_ext2_idle", "gpio_ext3_mode", "gpio_ext3_idle"
+                }
+            });
+            configuration = document?.RootElement;
+        }
 
-        if (document == null)
+        if (!configuration.HasValue)
             return;
 
-        var root = document.RootElement;
+        var root = configuration.Value;
         model.SignalSecBoxOutMode = _reader.GetConfigString(root, "general", "sec_box_out_mode", model.SignalSecBoxOutMode);
         model.SignalRelayOutMode = _reader.GetConfigString(root, "general", "relay_out_mode", model.SignalRelayOutMode);
         model.SignalRelayEnabled = _reader.GetConfigBool(root, "general", "relay1_enabled", true);

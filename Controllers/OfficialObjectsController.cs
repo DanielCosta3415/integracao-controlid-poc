@@ -105,7 +105,7 @@ namespace Integracao.ControlID.PoC.Controllers
 
             try
             {
-                JsonDocument.Parse(model.CreateValuesJson);
+                using var _ = JsonDocument.Parse(model.CreateValuesJson);
 
                 var payload = $$"""
                 {
@@ -141,7 +141,7 @@ namespace Integracao.ControlID.PoC.Controllers
 
             try
             {
-                JsonDocument.Parse(model.UpsertValuesJson);
+                using var _ = JsonDocument.Parse(model.UpsertValuesJson);
 
                 var payload = $$"""
                 {
@@ -177,8 +177,8 @@ namespace Integracao.ControlID.PoC.Controllers
 
             try
             {
-                JsonDocument.Parse(model.ModifyWhereJson);
-                JsonDocument.Parse(model.ModifyValuesJson);
+                using var whereDocument = JsonDocument.Parse(model.ModifyWhereJson);
+                using var valuesDocument = JsonDocument.Parse(model.ModifyValuesJson);
 
                 var payload = $$"""
                 {
@@ -222,7 +222,7 @@ namespace Integracao.ControlID.PoC.Controllers
 
             try
             {
-                JsonDocument.Parse(model.DestroyWhereJson);
+                using var _ = JsonDocument.Parse(model.DestroyWhereJson);
 
                 var payload = $$"""
                 {
@@ -343,7 +343,7 @@ namespace Integracao.ControlID.PoC.Controllers
             throw new InvalidOperationException($"{message} (status HTTP {result.StatusCode}).");
         }
 
-        private static string FormatJson(string rawJson, JsonDocument? document)
+        private static string FormatJson(string rawJson, OfficialApiJsonPayload? document)
         {
             if (document == null)
                 return rawJson;

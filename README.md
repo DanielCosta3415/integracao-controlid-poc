@@ -269,6 +269,7 @@ Configuração segue o padrão nativo ASP.NET Core (`Secao__Chave`).
 | `CallbackSecurity__MaxTrackedNonces` | `10000` | Limite em memória da proteção contra replay |
 | `CallbackSecurity__AllowedRemoteIps__0` | `192.168.0.10` | Primeiro IP permitido para callbacks |
 | `OpenApi__Enabled` | `false` | Swagger/OpenAPI fora de Development apenas com decisão explícita |
+| `Observability__CapacitySnapshotIntervalSeconds` | `30` | Intervalo, entre 10 e 300 segundos, da coleta local de capacidade em segundo plano |
 | `Observability__Metrics__Enabled` | `true` | Habilita `/metrics` |
 | `Observability__Metrics__AllowAnonymous` | `false` | Deve ser `false` fora de Development |
 | `Serilog__WriteTo__1__Args__retainedFileCountLimit` | `14` | Retenção de arquivos rolling |

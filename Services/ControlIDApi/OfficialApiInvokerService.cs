@@ -48,13 +48,50 @@ namespace Integracao.ControlID.PoC.Services.ControlIDApi
         /// <param name="additionalQuery">Query string adicional montada pela PoC para filtros ou ids.</param>
         /// <param name="requestBody">Payload bruto ja serializado para o corpo da requisicao.</param>
         /// <returns>Resultado padronizado da chamada, incluindo status, payload e mensagem de erro segura.</returns>
-        public async Task<OfficialApiInvocationResult> InvokeAsync(
+        public Task<OfficialApiInvocationResult> InvokeAsync(
             OfficialApiEndpointDefinition endpoint,
             string deviceAddress,
             string sessionString,
             string additionalQuery,
             string requestBody,
             CancellationToken cancellationToken = default)
+        {
+            return InvokeCoreAsync(
+                endpoint,
+                deviceAddress,
+                sessionString,
+                additionalQuery,
+                () => _inputSanitizer.BuildSanitizedContent(endpoint, requestBody),
+                cancellationToken);
+        }
+
+        public Task<OfficialApiInvocationResult> InvokeBinaryAsync(
+            OfficialApiEndpointDefinition endpoint,
+            string deviceAddress,
+            string sessionString,
+            string additionalQuery,
+            ReadOnlyMemory<byte> requestBody,
+            CancellationToken cancellationToken = default)
+        {
+            if (!string.Equals(endpoint.BodyKind, "binary", StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException("O endpoint informado não aceita conteúdo binário direto.");
+
+            return InvokeCoreAsync(
+                endpoint,
+                deviceAddress,
+                sessionString,
+                additionalQuery,
+                () => _inputSanitizer.BuildBinaryContent(requestBody),
+                cancellationToken);
+        }
+
+        private async Task<OfficialApiInvocationResult> InvokeCoreAsync(
+            OfficialApiEndpointDefinition endpoint,
+            string deviceAddress,
+            string sessionString,
+            string additionalQuery,
+            Func<HttpContent?> contentFactory,
+            CancellationToken cancellationToken)
         {
             var result = new OfficialApiInvocationResult();
             var stopwatch = Stopwatch.StartNew();
@@ -146,7 +183,7 @@ namespace Integracao.ControlID.PoC.Services.ControlIDApi
 
                 using var request = new HttpRequestMessage(new HttpMethod(endpoint.Method), requestUrl)
                 {
-                    Content = _inputSanitizer.BuildSanitizedContent(endpoint, requestBody)
+                    Content = contentFactory()
                 };
 
                 AddCorrelationHeader(request);
@@ -169,7 +206,7 @@ namespace Integracao.ControlID.PoC.Services.ControlIDApi
 
                 if (OfficialApiResponseBodyReader.IsBinaryContentType(responseContentType))
                 {
-                    result.ResponseBody = Convert.ToBase64String(responseBytes);
+                    result.ResponseBytes = responseBytes;
                     result.ResponseBodyIsBase64 = true;
                 }
                 else

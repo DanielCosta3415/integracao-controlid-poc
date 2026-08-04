@@ -64,7 +64,7 @@ Não há loader `.env` configurado. Use `appsettings.json`, User Secrets ou vari
 - Headers: `Content-Type` conforme `OfficialApiEndpointDefinition.ContentType`; session vai na query real `session=...` quando requerida, mas URLs exibidas em tela/logs devem mascarar esse valor.
 - Autenticação: login oficial retorna `session`; endpoints com `RequiresSession=true` exigem sessão ativa.
 - Request: JSON, multipart, binário/base64 ou vazio, conforme `BodyKind`.
-- Response: texto/JSON ou binário preservado em Base64 quando Content-Type não parece texto/json/xml; leitura em streaming e rejeição `502` acima do limite configurado.
+- Response: texto/JSON ou bytes binários mantidos fora de `ResponseBody`; a leitura é limitada, cancelável e rejeitada com `502` acima do limite configurado. Base64 só é produzido nas telas que precisam montar uma URL de dados, nunca no transporte interno de downloads.
 - DTO/schema: `OfficialApiEndpointDefinition`, `OfficialApiInvocationResult`; schemas de payload são inferidos do catálogo e docs oficiais.
 - Status codes: propagados do equipamento em `OfficialApiInvocationResult.StatusCode`.
 - Erros esperados: endpoint ausente no catálogo, device address inválido, sessão ausente, timeout, HTTP não 2xx, JSON inesperado.
