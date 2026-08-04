@@ -127,8 +127,8 @@ commit candidato à liberação.
 
 ## Migração coordenada para .NET 10 LTS
 
-> **Estado:** alteração técnica posterior à linha de base histórica deste
-> documento. A validação final deve citar o commit publicado da migração.
+> **Estado:** alteração técnica publicada no commit `fe0e6d2`. A execução CI
+> `30875200484` aprovou os jobs `build-test-audit` e `container-build`.
 
 - SDK pinado em `10.0.302` e os quatro projetos migrados para `net10.0`.
 - ASP.NET Core, Entity Framework Core, provedor SQLite, ferramentas e projeto de
@@ -162,5 +162,7 @@ commit candidato à liberação.
   102 pacotes NuGet, incluindo a ferramenta local, e quatro vendors;
 - SQLite temporário: migrações, backup e restauração aprovados com
   `dotnet-ef` local `10.0.10`;
-- Compose: configuração aprovada; construção local da imagem bloqueada por `EOF`
-  do registro MCR e deve ser confirmada pela CI remota no commit publicado.
+- Compose: configuração aprovada; a construção local foi bloqueada por `EOF` do
+  registro MCR, mas a CI remota construiu a imagem Linux no commit `fe0e6d2`.
+- PRs Dependabot `#1` a `#8`: encerrados automaticamente sem merge após a nova
+  política e a atualização direta da `main`; nenhum conteúdo pendente permaneceu.
