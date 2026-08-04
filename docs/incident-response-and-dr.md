@@ -1,25 +1,41 @@
-# Resposta a incidentes, continuidade e DR
+# Resposta a incidentes, continuidade e recuperação de desastres
+
+> **Guia operacional vivo** · Público: resposta a incidentes, SRE e DPO · Responsável: Incident Commander/SRE · Última validação: 2026-08-03.
 
 Escopo: operação da PoC ASP.NET Core MVC/Razor de integração Control iD, com
 SQLite local, callbacks/push, observabilidade local e execução containerizada.
-Este runbook complementa `docs/observability-runbook.md`,
+Este guia operacional complementa `docs/observability-runbook.md`,
 `docs/deployment-runbook.md`, `docs/data-model-and-recovery.md` e
 `docs/privacy-governance-runbook.md`. Para uso real, copie `ops.example.json`
 para `ops.local.json` fora do Git e preencha donos, canais, evidências, backup
 externo, RTO/RPO e contingência física.
 
-Este documento não autoriza rollback real, alteração de produção, deleção de
+Este documento não autoriza reversão real, alteração de produção, exclusão de
 evidências, comunicação externa oficial ou restauração destrutiva sem decisão
 humana responsável.
+
+## Navegação rápida
+
+| Necessidade | Seção |
+| --- | --- |
+| Classificar impacto | Matriz de severidade |
+| Organizar pessoas e comunicação | Funções, escalonamento e plano geral |
+| Diagnosticar indisponibilidade ou desempenho | IR-01 a IR-04 |
+| Tratar autenticação ou autorização | IR-05 e IR-06 |
+| Tratar equipamento, callback e Push | IR-07 a IR-09 |
+| Reverter mudança ou migração | IR-10 e IR-11 |
+| Tratar dados ou segredo | IR-12 a IR-14 |
+| Recuperar serviço e dados | Continuidade operacional e RTO/RPO |
+| Aprender após incidente | Modelo de análise pós-incidente |
 
 ## Princípios de comando
 
 - Proteger pessoas, dados e continuidade antes de corrigir código.
-- Preservar evidências: logs, timestamps, correlation IDs, artefatos de deploy,
+- Preservar evidências: registros, marcas de tempo, identificadores de correlação, artefatos de implantação,
   versão, configuração efetiva e manifests de backup.
-- Não copiar payloads pessoais, biometria, fotos, cartões, QR codes, senhas,
-  session strings, shared keys ou headers de auth para tickets e chats.
-- Registrar hipoteses como hipoteses até existir evidência.
+- Não copiar payloads pessoais, biometria, fotos, cartões, QR Codes, senhas,
+  strings de sessão, chaves compartilhadas ou headers de autenticação para tickets e chats.
+- Registrar hipóteses como hipóteses até existir evidência.
 - Fazer contenção reversível sempre que possível.
 - Validar normalização com `/health/live`, `/health/ready`, logs, métricas e
   smoke/check relevante antes de encerrar.
@@ -38,9 +54,9 @@ humana responsável.
 | Papel | Responsabilidade |
 | --- | --- |
 | Incident Commander | Classifica SEV, coordena sala/canal, controla linha do tempo, aprova encerramento. |
-| SRE/Operação | Diagnostica saúde, logs, métricas, container, host, rede, banco e rollback técnico. |
+| SRE/Operação | Diagnostica saúde, registros, métricas, contêiner, host, rede, banco e reversão técnica. |
 | Tech Lead/Maintainer | Avalia código, contrato, migrações, hotfix e risco de regressão. |
-| Release Engineer | Controla versões, artefatos, tags, deploy/rollback e gates de readiness. |
+| Engenharia de liberação | Controla versões, artefatos, marcações, implantação/reversão e critérios de prontidão. |
 | DPO/Jurídico | Decide comunicação externa, ANPD/titulares, base legal e preservação de evidências de dados. |
 | Negócio/Produto | Define impacto funcional, usuários afetados e comunicação interna. |
 
@@ -52,7 +68,7 @@ de autorização que permita acesso indevido.
 
 1. Declarar incidente com horário, severidade inicial, sistema, versão e impacto.
 2. Designar Incident Commander e responsáveis técnicos.
-3. Congelar mudanças não essenciais; não fazer deploy paralelo sem autorização.
+3. Congelar mudanças não essenciais; não fazer implantação paralela sem autorização.
 4. Coletar evidências minimizadas: `X-Correlation-ID`, horários UTC/local, rota,
    status, duração, evento operacional, commit/tag, imagem container, host e
    alerta acionado.
@@ -60,7 +76,7 @@ de autorização que permita acesso indevido.
    equipamento, bloquear origem, voltar versão, isolar host ou rotacionar segredo.
 6. Mitigar causa provável e validar saúde.
 7. Comunicar status interno de forma objetiva, sem dados sensíveis.
-8. Encerrar somente após normalização validada e criação de postmortem.
+8. Encerrar somente após normalização validada e criação de análise pós-incidente.
 
 ## Guias operacionais por cenário
 
@@ -72,10 +88,10 @@ de autorização que permita acesso indevido.
 | Severidade | SEV1 se indisponibilidade total; SEV2 se há instancia alternativa funcional. |
 | Impacto | UI, callbacks, push, métricas e operação local indisponíveis. |
 | Como detectar | Alerta `OBS-001`, probe de `/health/live`, logs de supervisor/container. |
-| Métricas/logs | `controlid_http_requests_total`, logs de startup, stdout/stderr, eventos de deploy. |
+| Métricas/registros | `controlid_http_requests_total`, registros de inicialização, saída/erro padrão e eventos de implantação. |
 | Diagnóstico | Confirmar processo, porta 8080/porta configurada, variáveis obrigatórias, último commit/tag, `AllowedHosts`, shared key e paths de volume. |
 | Contenção | Pausar novo tráfego, remover instancia quebrada do balanceador ou voltar para imagem anterior se existir. |
-| Mitigação | Corrigir configuração ausente, reiniciar processo/container ou aplicar rollback técnico documentado. |
+| Mitigação | Corrigir configuração ausente, reiniciar processo/contêiner ou aplicar reversão técnica documentada. |
 | Recuperação | Validar `/health/live`, `/health/ready`, login local e uma rota segura de leitura. |
 | Comunicação | Informar indisponibilidade, impacto funcional, workaround e próxima atualização interna. |
 | Escalonamento | SRE, Release Engineer e Tech Lead; SEV1 aciona Incident Commander. |
@@ -127,12 +143,12 @@ de autorização que permita acesso indevido.
 | Impacto | Fluxos críticos falham e podem ocultar falha de integração ou banco. |
 | Como detectar | Alerta `OBS-003`, logs do `ExceptionHandlingMiddleware`, correlation ID. |
 | Métricas/logs | `controlid_http_requests_total{status_group="5xx"}`, rota, trace id, stack no log interno. |
-| Diagnóstico | Agrupar por rota, commit, entrada, usuário role e dependência. Verificar se há release recente. |
-| Contenção | Desabilitar operação afetada por orientação operacional ou rollback se novo deploy causou falha. |
+| Diagnóstico | Agrupar por rota, commit, entrada, papel do usuário e dependência. Verificar se há liberação recente. |
+| Contenção | Desabilitar a operação afetada por orientação operacional ou reverter se nova implantação causou falha. |
 | Mitigação | Corrigir configuração, dependência indisponível ou bug; não expor stack trace ao usuário. |
 | Recuperação | Build/teste/smoke relacionado e queda sustentada de 5xx. |
 | Comunicação | Informar rotas afetadas e workaround. |
-| Escalonamento | Tech Lead + Release Engineer se houver hotfix/rollback. |
+| Escalonamento | Liderança técnica + engenharia de liberação se houver correção emergencial/reversão. |
 | Validação | Sem 5xx novos por janela definida e fluxo validado manualmente quando aplicável. |
 | Pós-incidente | Criar teste regressivo para a rota/entrada que quebrou. |
 
@@ -161,10 +177,10 @@ de autorização que permita acesso indevido.
 | Sintoma | 403 indevido, usuário acessa tela/ação sem permissão ou operação administrativa exposta. |
 | Severidade | SEV1 se houver acesso indevido; SEV2 se bloqueio indevido amplo. |
 | Impacto | Risco de ação sensível, privacidade, integridade ou indisponibilidade operacional. |
-| Como detectar | Logs 401/403, relato de operador, testes de RBAC, dashboard de segurança. |
+| Como detectar | Registros 401/403, relato de operador, testes de RBAC e painel de segurança. |
 | Métricas/logs | `controlid_http_requests_total` por 401/403, rota, role, correlation ID. |
-| Diagnóstico | Verificar policy/attribute, role do usuário, rota, método HTTP, antiforgery e último deploy. |
-| Contenção | Revogar sessão/usuário afetado, restringir acesso no proxy ou rollback se regressão recente. |
+| Diagnóstico | Verificar política/atributo, papel do usuário, rota, método HTTP, antiforgery e última implantação. |
+| Contenção | Revogar sessão/usuário afetado, restringir acesso no proxy ou reverter se a regressão for recente. |
 | Mitigação | Corrigir policy/autorização em camada confiável e adicionar teste de permissão. |
 | Recuperação | Validar usuário autorizado e não autorizado no fluxo afetado. |
 | Comunicação | Informar impacto interno; se acesso indevido a dado pessoal for possível, acionar DPO. |
@@ -197,7 +213,7 @@ de autorização que permita acesso indevido.
 | Sintoma | Callbacks rejeitados, monitor sem eventos, push ingress falhando ou status 4xx/5xx. |
 | Severidade | SEV2; SEV1 se bloqueio expuser dado ou causar perda de evento crítico. |
 | Impacto | Eventos de acesso, monitoramento e fila push podem ficar incompletos. |
-| Como detectar | Alerta `OBS-007`, logs de `CallbackIngressService`, dashboards de ingressos externos. |
+| Como detectar | Alerta `OBS-007`, registros de `CallbackIngressService` e painéis de ingressos externos. |
 | Métricas/logs | `controlid_callback_ingress_total`, path, event family, outcome, status group. |
 | Diagnóstico | Validar chave compartilhada, assinatura HMAC, carimbo de data e hora, nonce, IP permitido, tamanho do payload, URL pública e proxy assinador, se utilizado. |
 | Contenção | Bloquear origem suspeita, pausar equipamento afetado ou voltar configuração anterior segura. |
@@ -231,15 +247,15 @@ de autorização que permita acesso indevido.
 | Campo | Procedimento |
 | --- | --- |
 | Sintoma | Falha após nova versão: health falha, 5xx, regressão de UI/API ou startup bloqueado por config. |
-| Severidade | SEV1 se indisponível; SEV2 se degradação com rollback possível. |
+| Severidade | SEV1 se indisponível; SEV2 se houver degradação com reversão possível. |
 | Impacto | Pode afetar todos os fluxos e dados locais. |
-| Como detectar | Falha em readiness, smoke, alertas após deploy ou relato de operador. |
+| Como detectar | Falha de prontidão, teste integrado, alertas após implantação ou relato de operador. |
 | Métricas/logs | Commit/tag, imagem, logs de startup, health, métricas antes/depois. |
 | Diagnóstico | Comparar versão anterior, diff de config, variáveis, migrations e resultado dos gates. |
-| Contenção | Parar rollout, manter evidência, acionar rollback técnico para imagem anterior com mesmo volume. |
-| Mitigação | Corrigir config/hotfix em branch separado ou manter rollback até validar. |
+| Contenção | Parar a distribuição, manter evidência e acionar reversão técnica para a imagem anterior com o mesmo volume. |
+| Mitigação | Corrigir configuração/correção emergencial em ramificação separada ou manter a reversão até validar. |
 | Recuperação | Reexecutar `tools/test-readiness-gates.ps1` e smoke do fluxo afetado. |
-| Comunicação | Informar versão afetada, rollback/hotfix e risco residual. |
+| Comunicação | Informar versão afetada, reversão/correção emergencial e risco residual. |
 | Escalonamento | Release Engineer + Tech Lead + Incident Commander em SEV1. |
 | Validação | Versão anterior ou hotfix saudável e checks relevantes passando. |
 | Pós-incidente | Revisar gate que não capturou regressão e adicionar teste/alerta. |
@@ -251,11 +267,11 @@ de autorização que permita acesso indevido.
 | Sintoma | Startup falha em `Database.Migrate()`, schema inconsistente ou consulta quebra após migration. |
 | Severidade | SEV1 se bloqueia app ou corrompe dado; SEV2 se fluxo parcial. |
 | Impacto | Banco local pode ficar indisponível ou com dados incompletos. |
-| Como detectar | Logs EF/SQLite, readiness falhando, erro após deploy. |
+| Como detectar | Registros EF/SQLite, prontidão falhando e erro após implantação. |
 | Métricas/logs | Logs de startup/migration, manifest de backup, migration id. |
 | Diagnóstico | Identificar migration, validar em cópia restaurada, checar se houve operação destrutiva ou campo obrigatório novo. |
 | Contenção | Parar app, preservar `.db`, `-wal`, `-shm`, gerar backup e não executar novas tentativas destrutivas. |
-| Mitigação | Aplicar rollback de app se schema permitir; corrigir migration em ambiente controlado antes de tocar dado real. |
+| Mitigação | Reverter a aplicação se o esquema permitir; corrigir a migração em ambiente controlado antes de tocar dados reais. |
 | Recuperação | Restore somente com confirmação humana e após smoke em cópia. |
 | Comunicação | Informar risco de dados e janela de indisponibilidade. |
 | Escalonamento | Data/Backend + SRE + DPO se dados pessoais estiverem em risco. |
@@ -320,15 +336,15 @@ de autorização que permita acesso indevido.
 
 | Item | Estado atual | Procedimento |
 | --- | --- | --- |
-| Backup SQLite | Manual, DPAPI por padrão, em `tools/backup-sqlite.ps1` | Executar antes de mudança de schema, deploy com risco de dados ou investigação que possa exigir rollback. |
+| Cópia de segurança SQLite | Manual, DPAPI por padrão, em `tools/backup-sqlite.ps1` | Executar antes de mudança de esquema, implantação com risco de dados ou investigação que possa exigir reversão. |
 | Restore SQLite | Smoke em cópia com `tools/restore-smoke-sqlite.ps1`; restore real exige confirmação humana | Validar backup em cópia, parar app, preservar estado atual e restaurar somente com autorização. |
 | Volume container | `docker-compose.yml` usa `controlid-data:/app/data` e `controlid-logs:/app/Logs` | Nunca executar container de ambiente persistente sem volume durável. |
-| Rollback app | Documentado em `docs/deployment-runbook.md` | Manter imagem anterior tagueada e reusar mesmo `.env`/volumes quando rollback for aprovado. |
+| Reversão da aplicação | Documentada em `docs/deployment-runbook.md` | Manter a imagem anterior marcada e reutilizar o mesmo `.env` e os volumes quando a reversão for aprovada. |
 | Equipamento Control iD | Dependência externa/física | Manter procedimento manual de contingência do cliente/operação fora do repo. |
 | Observabilidade | Health, métricas, alertas JSON e monitor local | Usar `tools/observability-check.ps1` offline/online conforme ambiente. |
 | Configuração operacional | `ops.example.json` versionado e `ops.local.json` ignorado pelo Git | Validar com `tools/operational-readiness-check.ps1 -RequireConfig` antes de release real. |
 | Backup operacional | `tools/backup-sqlite-operational.ps1` envolve backup DPAPI, mirror opcional, restore-smoke e retenção confirmada | Definir `CONTROLID_BACKUP_MIRROR_DIRECTORY` ou `-MirrorDirectory` para cópia fora do host. |
-| Contingência física | `docs/equipment-contingency-runbook.md` | Testar manual fallback em bancada e registrar dono em `ops.local.json`. |
+| Contingência física | `docs/equipment-contingency-runbook.md` | Testar contingência manual em bancada e registrar dono em `ops.local.json`. |
 
 ## RTO/RPO
 
@@ -339,7 +355,7 @@ replicação.
 | Cenário | RTO alvo inicial | RPO alvo inicial | Status |
 | --- | --- | --- | --- |
 | Falha de processo/container sem corrupção | Até 30 minutos após detecção | 0 se volume SQLite intacto | Necessita validação em ambiente alvo. |
-| Deploy ruim com imagem anterior disponível | Até 60 minutos após decisão de rollback | 0 se schema compatível e volume intacto | Depende de imagem anterior e gate de rollback. |
+| Implantação malsucedida com imagem anterior disponível | Até 60 minutos após a decisão de reversão | 0 se o esquema for compatível e o volume estiver intacto | Depende da imagem anterior e do critério de reversão. |
 | SQLite corrompido com backup válido | Até 4 horas após decisão de restore | Desde o último backup válido | Não garantido; restore real não homologado. |
 | Vazamento/secret comprometido | Contenção inicial em até 30 minutos | N/A | Depende de rotação no provedor/equipamento. |
 | Perda total do host sem backup externo | Indefinido | Indefinido | Lacuna crítica até haver backup fora do host. |
@@ -350,7 +366,7 @@ Lacunas para produção real:
 - Automatizar a chamada de `tools/backup-sqlite-operational.ps1` no host alvo e testar restore periódico.
 - Definir RTO/RPO aprovados por negócio e DPO em `ops.local.json`.
 - Validar `docs/equipment-contingency-runbook.md` com a operação física.
-- Definir canal oficial de incidentes, on-call e calendario de revisão.
+- Definir canal oficial de incidentes, plantão e calendário de revisão.
 
 ## Incidentes de segurança e LGPD
 
@@ -367,7 +383,7 @@ Procedimento:
 2. Preservar evidências em local restrito; não colar payload bruto em tickets.
 3. Identificar categorias de dados, titulares possivelmente afetados, período,
    causa provável, terceiros e ambiente.
-4. Rotacionar credenciais, shared keys, sessões e secrets afetados.
+4. Rotacionar credenciais, chaves compartilhadas, sessões e segredos afetados.
 5. Executar `powershell -ExecutionPolicy Bypass -File .\tools\scan-secrets.ps1`.
 6. Acionar DPO/Jurídico para decidir ANPD/titulares e prazos.
 7. Registrar decisão, mitigação, comunicação, risco residual e revisão preventiva.
@@ -377,7 +393,7 @@ Procedimento:
 Use mensagens curtas e verificáveis:
 
 - Status: investigando, contido, mitigado, recuperado ou encerrado.
-- Severidade atual e criterio.
+- Severidade atual e critério.
 - Impacto funcional sem expor dados pessoais.
 - Inicio do incidente e próxima atualização.
 - Ação esperada de operadores, se houver.
@@ -385,8 +401,8 @@ Use mensagens curtas e verificáveis:
 
 Não publicar:
 
-- Senhas, tokens, shared keys, session strings, biometria, fotos, documentos,
-  payloads completos, headers de auth ou banco/backups.
+- Senhas, tokens, chaves compartilhadas, strings de sessão, biometria, fotos,
+  documentos, payloads completos, headers de autenticação ou banco/backups.
 - Comunicação externa oficial sem aprovação DPO/Jurídico/controlador.
 
 ## Modelo de análise pós-incidente
@@ -398,7 +414,7 @@ Data:
 Severidade:
 Comandante do incidente:
 Sistemas/versões afetados:
-Status final:
+Estado final:
 
 ## Resumo
 
@@ -464,8 +480,34 @@ Status final:
 
 | Risco | Severidade | Mitigação atual | Próxima ação |
 | --- | --- | --- | --- |
-| Sem provedor produtivo/on-call formal | Alta | `ops.example.json`, `ops.local.json` ignorado e `operational-readiness-check.ps1 -RequireConfig` bloqueando release sem donos/canais reais | Preencher e aprovar `ops.local.json` antes de uso real. |
+| Sem provedor produtivo ou plantão formal | Alta | `ops.example.json`, `ops.local.json` ignorado e `operational-readiness-check.ps1 -RequireConfig` bloqueando release sem donos/canais reais | Preencher e aprovar `ops.local.json` antes de uso real. |
 | Backup automático fora do host ausente | Alta | `backup-sqlite-operational.ps1` com mirror opcional, restore-smoke e retenção confirmada | Agendar o script no host alvo com destino externo seguro. |
-| RTO/RPO não homologados | Alta | Gate exige `rtoRpo.validationStatus` aprovado/validado em `ops.local.json` | Executar exercicio real em staging/produção com dados fictícios. |
-| Dependência de equipamento físico | Alta | `docs/equipment-contingency-runbook.md` e contrato físico via gate | Testar fallback manual com operação física e fornecedor. |
-| Comunicação externa LGPD depende de decisão humana | Alta | `ops.local.json` exige DPO/privacy owner, canal de escalonamento e repositório de evidências | DPO/Jurídico devem aprovar canal, prazo e template externo. |
+| RTO/RPO não homologados | Alta | Gate exige `rtoRpo.validationStatus` aprovado/validado em `ops.local.json` | Executar exercício real em homologação/produção com dados fictícios. |
+| Dependência de equipamento físico | Alta | `docs/equipment-contingency-runbook.md` e contrato físico via gate | Testar contingência manual com operação física e fornecedor. |
+| Comunicação externa LGPD depende de decisão humana | Alta | `ops.local.json` exige DPO/responsável por privacidade, canal de escalonamento e repositório de evidências | DPO/Jurídico devem aprovar canal, prazo e modelo externo. |
+
+## Exercícios recomendados
+
+| Exercício | Frequência proposta | Critério de sucesso | Responsável |
+| --- | --- | --- | --- |
+| API indisponível e 5xx | Trimestral | Detecção, contenção e normalização dentro do objetivo aprovado | SRE |
+| Restauração SQLite | Trimestral e antes de migração relevante | Cópia restaurada, migrada e validada sem tocar produção | Dados/SRE |
+| Falha do equipamento | Semestral | Contingência manual e reconciliação registradas | Operação |
+| Segredo comprometido | Semestral | Rotação, revogação e validação sem exposição | AppSec/SRE |
+| Incidente LGPD | Anual ou por mudança de tratamento | Evidência preservada e decisão DPO simulada | DPO/Incident Commander |
+
+Frequências só entram em vigor após aprovação em `ops.local.json`. Cada exercício
+deve produzir linha do tempo, resultado, ações corretivas, dono e prazo em
+repositório restrito.
+
+## Cartão de ação inicial
+
+1. Classifique a severidade pelo impacto observado, não pela causa presumida.
+2. Preserve horário, correlação, versão e sinais; não copie payload sensível.
+3. Contenha a expansão do impacto sem apagar banco, logs ou evidências.
+4. Acione o guia `IR-*` correspondente e atribua Incident Commander.
+5. Comunique fato, impacto, próxima atualização e canal oficial.
+6. Valide normalização por saúde, métricas e fluxo funcional antes de encerrar.
+
+O cartão acelera os primeiros minutos, mas não substitui diagnóstico, decisão do
+DPO, restauração testada nem a análise pós-incidente.

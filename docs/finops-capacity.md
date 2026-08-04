@@ -1,5 +1,7 @@
 # FinOps, capacidade e sustentabilidade operacional
 
+> **Documento vivo** · Público: FinOps, SRE e produto · Responsável: FinOps/Platform · Última validação: 2026-08-03.
+
 Escopo: PoC ASP.NET Core MVC/Razor com SQLite local, logs em arquivo, Docker/Compose,
 métricas internas e integração com equipamento Control iD. Este documento não
 altera provedor, plano, DNS ou dados reais; ele define controles de custo,
@@ -14,7 +16,7 @@ capacidade e desperdicio para operação segura e reproduzível.
 | Storage local | `/app/data`, `/app/Logs`, `artifacts/`, `docs/reports/` | Crescimento de banco, logs, backups, reports e restore-smoke | `.gitignore`, `.dockerignore`, rotação de logs e retenção confirmada de backups. |
 | Logs | Serilog console e arquivo rolling | Volume por nível, request logging e retenção | `retainedFileCountLimit=14` e `fileSizeLimitBytes=10000000` por padrão. |
 | Observabilidade | `/metrics`, health checks e JSONs versionados | Cardinalidade de labels, memória, storage e coleta externa futura | Labels allowlist, métricas runtime de capacidade, sem usuário/IP/payload, sem fornecedor externo. |
-| Analytics | Product analytics privacy-aware em métricas internas | Número de series por fluxo/evento/status | Eventos finitos por allowlist, sem tracking pessoal. |
+| Análise de produto | Métricas internas com privacidade | Número de séries por fluxo, evento e estado | Eventos finitos por lista de permissões, sem rastreamento pessoal. |
 | APIs externas | Equipamento Control iD na rede local | Chamadas oficiais, timeouts, retentativas humanas, falhas repetidas | Timeout, rate limit e circuit breaker por endpoint/equipamento. |
 | Filas/jobs | Fila Push persistida em SQLite, sem broker externo | Volume de `PushCommands`, polling e resultados | Idempotência local, índices e expurgo manual confirmado. |
 | Cópias de segurança | Scripts locais em `artifacts/backups` com espelhamento opcional | Cópias `.db`, `.wal`, `.shm`, proteção DPAPI e espelhamento fora do host | Teste smoke de restauração, DPAPI por padrão e simulação de retenção. |
@@ -28,7 +30,7 @@ capacidade e desperdicio para operação segura e reproduzível.
 | Severidade | Risco | Evidência | Mitigação aplicada ou recomendada |
 | --- | --- | --- | --- |
 | Alta | SQLite crescer com callbacks, Push, fotos, biometria e payloads brutos | `MonitorEvents`, `PushCommands`, `Photos`, `BiometricTemplates` | Limites de listagem, índices, expurgo confirmado e check `sqlite-runtime-size`. |
-| Alta | Backups locais/mirror sem retenção definida | `backup-sqlite-operational.ps1` permite retenção opt-in | Retenção seca por padrão; `ops.local.json` deve definir política e owner. |
+| Alta | Cópias locais/espelhadas sem retenção definida | `backup-sqlite-operational.ps1` permite retenção opcional | Retenção simulada por padrão; `ops.local.json` deve definir política e responsável. |
 | Média | Logs ruidosos elevarem o armazenamento e o custo de coleta externa | Serilog em console e arquivo, com registro de requisições | Rotação configurada, logs seguros, alertas `FIN-002` e revisão de nível. |
 | Média | DAST, scanners e smoke elevarem os minutos de compilação quando executados sempre | Gates externos são opcionais, e o gate de release é estrito | A CI mantém verificações essenciais; o gate de release executa validações caras mediante decisão. |
 | Média | Novas tentativas manuais contra equipamento indisponível gerarem ruído e tempo operacional | Chamadas oficiais com tempo limite e circuit breaker | Circuit breaker, tempo limite e alertas de expiração. |
@@ -50,7 +52,7 @@ capacidade e desperdicio para operação segura e reproduzível.
 ## Otimizações aplicadas
 
 - `tools/finops-capacity-check.ps1` mede, sem apagar nada, tamanho de SQLite local,
-  logs, artifacts e reports versionados; também valida runbook, alertas, dashboard,
+  registros, artefatos e relatórios versionados; também valida guia operacional, alertas, painel,
   limites de log, limites de consulta, retenção de backup e governança em
   `ops.example.json`.
 - `/metrics` publica gauges locais de capacidade para memória de processo, heap
@@ -127,11 +129,11 @@ O relatório gerado fica em `artifacts/finops-capacity/`, fora do Git.
 - Manter SQLite local reduz custo e complexidade, mas limita concorrência,
   escala horizontal e recuperação automatizada.
 - Logs em arquivo são baratos para PoC, mas exigem retenção curta; coletor externo
-  melhora busca e alertas, porem adiciona custo e governança de dados.
+  melhora busca e alertas, porém adiciona custo e governança de dados.
 - Scanners externos e smoke aumentam confiança, mas consomem tempo de build; por
   isso ficam opt-in e obrigatórios apenas no gate de release.
 - Expurgo reduz custo e risco de dados, mas pode remover evidências úteis; sempre
-  exige confirmação humana, backup e criterio de retenção.
+  exige confirmação humana, backup e critério de retenção.
 
 ## Riscos residuais
 
@@ -142,3 +144,38 @@ O relatório gerado fica em `artifacts/finops-capacity/`, fora do Git.
 | Média | Limites de armazenamento são estimativas iniciais da PoC | Ajustar depois de obter uma linha de base do volume real. |
 | Média | A CPU continua dependente do monitoramento do host ou provedor | Usar métricas de execução da aplicação para memória e armazenamento, além de monitoramento externo para CPU e saturação. |
 | Baixa | Sem custo de terceiros hoje, mas scanners/observabilidade futuros podem cobrar por uso | Exigir revisão FinOps antes de ativar qualquer fornecedor externo. |
+
+## Modelo de dimensionamento
+
+Sem carga real, use cenários e registre as premissas; não apresente estimativa como
+medição.
+
+| Cenário | Instância | Persistência | Retenção | Uso esperado |
+| --- | --- | --- | --- | --- |
+| Desenvolvimento | Um processo | SQLite local descartável | Curta | Uma pessoa e stub |
+| Bancada compartilhada | Um processo | Volume persistente e backup externo | Conforme política aprovada | Poucos operadores e um equipamento por vez |
+| Produção candidata | Não definido | Depende de RTO/RPO e volume | Aprovada por DPO/SRE | Exige teste de carga e provedor escolhido |
+
+Fórmulas mínimas:
+
+- armazenamento mensal = crescimento diário medido × dias de retenção × margem;
+- custo por fluxo = custo mensal atribuível / fluxos concluídos válidos;
+- margem livre = `(limite - pico observado) / limite`;
+- chamadas externas = throughput × tentativas, incluindo somente retries seguros.
+
+Revisão mensal deve registrar gasto real, previsão, variação, crescimento de
+SQLite, logs e backups, picos de memória, chamadas por fornecedor e decisão de
+dimensionamento. Alertas de custo nunca substituem limites técnicos de segurança.
+
+## Registro da linha de base
+
+| Medida | Unidade | Fonte | Valor atual |
+| --- | --- | --- | --- |
+| CPU e memória de pico | percentual/MiB | host ou contêiner | Não medido em provedor real |
+| Crescimento do SQLite | MiB/dia | arquivo do banco | Medir no ambiente candidato |
+| Logs e backups | MiB/dia | diretórios operacionais | Medir com retenção aprovada |
+| Chamadas Control iD | requisições/minuto | métricas internas | Medir por fluxo homologado |
+| Custo total | moeda/mês | faturamento do provedor | Indisponível sem provedor |
+
+Substitua “não medido” somente com janela, ambiente e fonte registrados. Uma
+estimativa sem data ou carga não deve ser usada para aprovar capacidade.

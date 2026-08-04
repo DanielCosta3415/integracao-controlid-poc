@@ -1,4 +1,6 @@
-# Guia E2E dos modos de operação
+# Guia de ponta a ponta dos modos de operação
+
+> **Protocolo histórico reutilizável** · Público: QA e integração · Referência temporal: 2026-04-14 · Responsável: QA/integração · Revalide rotas e firmware antes de executar.
 
 Data: 2026-04-14  
 Escopo: PoC `Integracao.ControlID.PoC`  
@@ -155,7 +157,7 @@ Objetivo: validar em bancada real os modos `Standalone`, `Pro` e `Enterprise` po
 - sinais recentes coerentes com o modo aplicado;
 - logs sem erro de licença, timeout ou incompatibilidade de produto.
 
-## Checklist de regressão após cada homologação
+## Lista de verificação de regressão após cada homologação
 
 - conexão continua funcional;
 - sessão continua válida;
@@ -204,10 +206,30 @@ Use o formato abaixo para cada execução real:
 
 ## Conclusão
 
-Com este runbook, a PoC passa a ter:
+Com este guia operacional, a PoC passa a ter:
 
 - implementação funcional dos modos dentro da própria interface;
 - matriz explícita de cobertura por linha de produto;
 - roteiro E2E para transformar implementação em homologação real.
 
 O que ainda depende do ambiente externo não é código adicional da PoC, e sim execução em hardware real com licença e firmware compatíveis.
+
+## Uso como protocolo
+
+Este arquivo preserva o roteiro de 2026-04-14. Antes de reutilizá-lo:
+
+1. compare rotas e campos com `docs/operation-modes-implementation.md`;
+2. registre commit, modelo, firmware, licença, rede e operador;
+3. execute somente em bancada autorizada e com plano de retorno;
+4. grave o resultado em artefato separado, sem sobrescrever o protocolo;
+5. vincule falhas à matriz de homologação e aos critérios F05/REQ-005.
+
+O roteiro não é evidência de execução. Cada resultado deve declarar modo inicial,
+modo solicitado, configuração relida, callbacks, reinicialização e risco residual.
+
+## Relação com o protocolo vivo
+
+Os passos invariantes foram consolidados em
+`docs/operation-modes-implementation.md`. Em conflito, prevalecem código, testes e
+esse documento vivo; este arquivo preserva detalhes históricos e o modelo de
+registro da bancada de 2026-04-14.

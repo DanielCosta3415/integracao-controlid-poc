@@ -1,4 +1,6 @@
-# Changelog técnico - 2026-04-15
+# Registro técnico de alterações - 2026-04-15
+
+> **Registro histórico** · Público: manutenção e auditoria · Referência temporal: 2026-04-15 · Responsável: mantenedores · Não representa sozinho o estado atual.
 
 ## O que mudou
 
@@ -16,7 +18,7 @@
 - Tornar a operação local mais previsível, especialmente em cenários com equipamento real, callbacks, Push e modos online.
 - Aumentar a capacidade de diagnóstico por console ou arquivo de log sem expor segredos, licenças ou payloads sensíveis.
 - Deixar claro quais variáveis de ambiente controlam conexão, sessão, callbacks, segurança e logs.
-- Preparar a PoC para evoluções futuras de monitoramento, como alertas, dashboards, coleta externa de logs ou SignalR.
+- Preparar a PoC para evoluções futuras de monitoramento, como alertas, painéis, coleta externa de registros ou SignalR.
 
 ## Impacto esperado
 
@@ -30,5 +32,21 @@
 - Nenhum segredo, senha ou licença deve ser versionado.
 - Os logs adicionados evitam registrar valores sensíveis e priorizam metadados operacionais.
 - Os testes automatizados devem ser executados com `dotnet test .\Integracao.ControlID.PoC.sln`.
-- O smoke test local continua disponível em `tools/smoke-localhost.ps1`.
+- O teste integrado local continua disponível em `tools/smoke-localhost.ps1`.
+
+## Referência histórica
+
+- Commit ou tag exatos: não registrados neste documento original.
+- Foco da rodada: comentários, observabilidade e manutenção.
+- Compatibilidade pública: nenhuma quebra declarada.
+- Estado atual: revalide logs e testes nos documentos vivos e na CI.
+
+Resultados citados pertencem à data da rodada e não substituem uma execução
+atual dos checks.
+
+## Critérios de invalidação
+
+Mudança em logging, correlação, tratamento de erro ou testes torna as conclusões
+desta rodada insuficientes para o estado atual. Reexecute os checks no commit
+candidato e produza novo registro, sem substituir este histórico.
 

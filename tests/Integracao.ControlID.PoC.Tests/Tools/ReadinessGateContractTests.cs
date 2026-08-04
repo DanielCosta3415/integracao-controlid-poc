@@ -8,6 +8,10 @@ public class ReadinessGateContractTests
         var script = ReadRepoFile("tools", "test-readiness-gates.ps1");
 
         Assert.Contains("observability-offline", script, StringComparison.Ordinal);
+        Assert.Contains("-m:1", script, StringComparison.Ordinal);
+        Assert.Contains("MSBUILDDISABLENODEREUSE", script, StringComparison.Ordinal);
+        Assert.Contains("DOTNET_CLI_USE_MSBUILD_SERVER", script, StringComparison.Ordinal);
+        Assert.Contains("-nr:false", script, StringComparison.Ordinal);
         Assert.Contains("observability-check.ps1\" -OfflineValidateOnly", script, StringComparison.Ordinal);
         Assert.Contains("RunObservabilityOnline", script, StringComparison.Ordinal);
         Assert.Contains("RequireObservabilityMetrics", script, StringComparison.Ordinal);
@@ -60,11 +64,11 @@ public class ReadinessGateContractTests
         var acceptance = ReadRepoFile("docs", "product-acceptance-criteria.md");
         var strategy = ReadRepoFile("docs", "testing-strategy.md");
 
-        Assert.Contains("Gates de aceite e valida", acceptance, StringComparison.Ordinal);
+        Assert.Contains("Critérios de aceite e valida", acceptance, StringComparison.Ordinal);
         Assert.Contains("-RequireHardwareContract", acceptance, StringComparison.Ordinal);
         Assert.Contains("-RunObservabilityOnline -RequireObservabilityMetrics", acceptance, StringComparison.Ordinal);
         Assert.Contains("-ReleaseGate", acceptance, StringComparison.Ordinal);
-        Assert.Contains("Gates de validação externa", strategy, StringComparison.Ordinal);
+        Assert.Contains("Critérios de validação externa", strategy, StringComparison.Ordinal);
     }
 
     private static string ReadRepoFile(params string[] segments)

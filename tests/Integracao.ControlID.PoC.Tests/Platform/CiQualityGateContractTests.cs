@@ -20,6 +20,7 @@ public class CiQualityGateContractTests
         Assert.Contains(".\\tools\\contract-controlid-stub.ps1", workflow, StringComparison.Ordinal);
         Assert.Contains("dotnet format .\\Integracao.ControlID.PoC.sln --verify-no-changes", workflow, StringComparison.Ordinal);
         Assert.Contains("git diff --check", workflow, StringComparison.Ordinal);
+        Assert.Contains(".\\tools\\validate-documentation.ps1", workflow, StringComparison.Ordinal);
         Assert.Contains(".\\tools\\scan-secrets.ps1", workflow, StringComparison.Ordinal);
         Assert.Contains(".\\tools\\observability-check.ps1 -OfflineValidateOnly", workflow, StringComparison.Ordinal);
         Assert.Contains(".\\tools\\operational-readiness-check.ps1", workflow, StringComparison.Ordinal);
@@ -47,8 +48,8 @@ public class CiQualityGateContractTests
         Assert.Contains("GitHub Actions", ciDocs, StringComparison.Ordinal);
         Assert.Contains("Critérios de qualidade obrigatórios", ciDocs, StringComparison.Ordinal);
         Assert.Contains("Reprodução local", ciDocs, StringComparison.Ordinal);
-        Assert.Contains("Proteção de branch recomendada", ciDocs, StringComparison.Ordinal);
-        Assert.Contains("A CI não executa deploy", ciDocs, StringComparison.Ordinal);
+        Assert.Contains("Proteção recomendada da ramificação", ciDocs, StringComparison.Ordinal);
+        Assert.Contains("A CI não executa implantação", ciDocs, StringComparison.Ordinal);
         Assert.Contains("docs/ci-cd-quality-gates.md", projectMap, StringComparison.Ordinal);
     }
 

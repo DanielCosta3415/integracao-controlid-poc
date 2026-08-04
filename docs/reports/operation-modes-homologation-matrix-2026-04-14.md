@@ -1,5 +1,7 @@
 # Matriz de homologação dos modos de operação
 
+> **Evidência histórica** · Público: QA e integração · Referência temporal: 2026-04-14 · Responsável: QA/integração · Homologação física permanece dependente do equipamento.
+
 Data: 2026-04-14  
 Escopo: PoC `Integracao.ControlID.PoC`  
 Objetivo: registrar, por linha de produto e por modo, o que já está coberto dentro da PoC e o que ainda precisa de homologação em equipamento real.
@@ -114,3 +116,25 @@ Então, o status correto desta data é:
 
 - `Implementação na PoC`: concluída
 - `Homologação física por linha de produto`: pendente
+
+## Evidência exigida por célula
+
+| Campo | Conteúdo |
+| --- | --- |
+| Equipamento | Linha, modelo e serial pseudonimizado |
+| Software embarcado | Firmware e licença |
+| Código da PoC | Commit e configuração relevante |
+| Transição | Estado anterior, solicitação e estado relido |
+| Sinais | Resposta oficial, callbacks, logs e correlation ID |
+| Resultado | Aprovado, ressalva, reprovado ou não aplicável |
+| Execução | Data, responsável e local restrito da evidência |
+
+Atualização de firmware, licença ou implementação invalida somente as células
+afetadas, que voltam a `Pendente de homologação real` até nova evidência.
+
+## Estado de preenchimento
+
+Nenhuma célula pendente deve ser promovida apenas pela existência de rota, stub
+ou teste unitário. O fechamento exige execução física, configuração relida e
+evidência restrita. Até isso ocorrer, a matriz informa cobertura implementada na
+PoC, não compatibilidade garantida pelo fabricante.

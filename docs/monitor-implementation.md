@@ -1,5 +1,7 @@
 # Monitor: implementação na PoC
 
+> **Documento vivo** · Público: desenvolvimento, QA e operação · Responsável: engenharia de integração · Última validação: 2026-08-03.
+
 Este documento explica como a funcionalidade Monitor foi implementada dentro da PoC de integração com a API de controle de acesso da Control iD.
 
 Na PoC, "Monitor" representa a trilha de recebimento, persistência e visualização de callbacks/notificações enviados pelo equipamento para a aplicação. Ele é diferente do Push: no Monitor, o equipamento envia eventos para a PoC; no Push, o equipamento consulta a PoC para buscar comandos pendentes.
@@ -123,7 +125,7 @@ Exemplos catalogados:
 | `/api/notifications/catra_event` | Receber evento de catraca. |
 | `/api/notifications/usb_drive` | Receber evento relacionado a USB. |
 
-## Pipeline de entrada
+## Fluxo de entrada
 
 A lógica principal fica em `CallbackIngressService.PersistAsync`.
 
@@ -292,3 +294,52 @@ O pipeline HTTP principal de callbacks usa `CallbackIngressService` diretamente.
 | Tempo real | A PoC persiste e lista eventos, mas ainda não publica eventos via SignalR/websocket. |
 | Processamento assíncrono | A fila em memória existe, mas o pipeline principal persiste diretamente no banco. |
 | Exposição pública | Para receber callbacks reais, a URL da PoC precisa estar acessível pelo equipamento. |
+
+## Fluxo ponta a ponta
+
+```mermaid
+sequenceDiagram
+    participant Device as Equipamento
+    participant Controller as Endpoint oficial
+    participant Security as Segurança de callback
+    participant Ingress as CallbackIngressService
+    participant Repo as MonitorEventRepository
+    participant UI as Monitor
+    Device->>Controller: Evento com corpo limitado
+    Controller->>Security: IP, chave, HMAC, timestamp e nonce
+    Security-->>Ingress: Bytes autenticados
+    Ingress->>Repo: Evento minimizado e envelope distinto
+    Repo-->>Controller: Commit concluído
+    UI->>Repo: Consulta recente com limite
+    Repo-->>UI: Eventos ordenados e truncados
+```
+
+## Ciclo de dados e diagnóstico
+
+| Etapa | Dado mantido | Controle | Sintoma de falha |
+| --- | --- | --- | --- |
+| Recepção | Bytes somente durante a requisição | Limite antes do parse | HTTP 413 ou rejeição de segurança |
+| Validação | Metadados criptográficos temporários | HMAC e proteção contra replay | HTTP 401/403 |
+| Persistência | Payload necessário e metadados do evento | `RawJson` apenas quando distinto | Evento ausente ou erro SQLite |
+| Consulta | Janela recente | Limite de listagem | Aviso de resultado truncado |
+| Expurgo | Registros confirmados pelo operador | Ação explícita e auditável | Crescimento de volume |
+
+Para diagnosticar, use o correlation ID e confirme, nesta ordem, conectividade,
+política `CallbackIngress`, assinatura, commit SQLite e consulta da UI. Não copie
+payload completo para tickets ou logs; use identificadores pseudonimizados.
+
+## Exemplo local sanitizado
+
+```json
+{
+  "eventType": "access_event_example",
+  "deviceId": "device-ref-example",
+  "userId": "subject-ref-example",
+  "status": "received",
+  "receivedAt": "2026-01-01T00:00:00Z"
+}
+```
+
+Este exemplo ilustra os metadados locais, não define o payload oficial de um
+firmware. Campos reais devem ser validados no contrato do equipamento, e
+`RawJson` ou `Payload` não devem ser copiados para documentação pública.

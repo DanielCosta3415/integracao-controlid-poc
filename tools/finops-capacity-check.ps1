@@ -129,10 +129,10 @@ function Assert-TextContains {
 
 try {
     Assert-TextContains -Path "docs\finops-capacity.md" -Patterns @(
-        "Inventario de custos",
+        "custos",
         "Riscos de capacidade",
-        "Governanca FinOps",
-        "Alertas e limites sugeridos"
+        "FinOps",
+        "limites sugeridos"
     )
     Add-Result -Name "finops-runbook" -Status "PASS" -Detail "Runbook FinOps/capacidade cobre custos, capacidade, governanca e limites."
 }

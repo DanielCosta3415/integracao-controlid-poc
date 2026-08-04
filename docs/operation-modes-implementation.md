@@ -1,5 +1,7 @@
 # Modos de operação: Standalone, Pro e Enterprise
 
+> **Documento vivo** · Público: produto, integração e QA · Responsável: engenharia de integração · Última validação: 2026-08-03.
+
 Este documento explica como a PoC representa, detecta e aplica os modos de operação Standalone, Pro e Enterprise da API de controle de acesso da Control iD.
 
 Ele complementa os relatórios de validação existentes em `docs/reports/operation-modes-e2e-runbook-2026-04-14.md` e `docs/reports/operation-modes-homologation-matrix-2026-04-14.md`. A diferença aqui é o foco: esta documentação descreve a implementação dentro da aplicação.
@@ -25,7 +27,7 @@ Essa regra de classificação está implementada em `Services/OperationModes/Ope
 | `Controllers/OperationModesController.cs` | Orquestra leitura do estado atual, aplicação dos perfis, validação de sessão, upgrades de licença e montagem da tela. |
 | `Services/OperationModes/OperationModesPayloadFactory.cs` | Cria os payloads enviados para `set-configuration` e `create-objects`. |
 | `Services/OperationModes/OperationModesProfileResolver.cs` | Traduz `online` e `local_identification` em Standalone, Pro ou Enterprise. |
-| `ViewModels/OperationModes/OperationModesViewModel.cs` | Carrega todos os dados exibidos na tela: estado atual, cards, callbacks, server_id, licenças e resposta bruta. |
+| `ViewModels/OperationModes/OperationModesViewModel.cs` | Carrega todos os dados exibidos na tela: estado atual, cartões, callbacks, `server_id`, licenças e resposta bruta. |
 | `Views/OperationModes/Index.cshtml` | Interface do hub de modos de operação. |
 | `Services/ControlIDApi/OfficialApiCatalogService.cs` | Cataloga os endpoints oficiais usados indiretamente pela funcionalidade. |
 | `Services/ControlIDApi/OfficialControlIdApiService.cs` | Executa as chamadas HTTP reais para a API do equipamento. |
@@ -222,4 +224,59 @@ Também existem roteiros e relatórios de smoke/homologação em `docs/reports/`
 | Histórico de mudança de modo | A PoC não persiste uma tabela de transições; ela consulta o estado atual no equipamento. |
 | Licença | A PoC dispara os endpoints de upgrade, mas não consegue simular a liberação real sem produto/licença compatível. |
 | Callbacks | A prontidão dos callbacks depende de a URL pública da PoC estar acessível pelo equipamento. |
+
+## Estados e transições
+
+```mermaid
+stateDiagram-v2
+    [*] --> Desconhecido: sem sessão ou leitura
+    Desconhecido --> Standalone: online=false
+    Desconhecido --> Pro: online=true e local_identification=true
+    Desconhecido --> Enterprise: online=true e local_identification=false
+    Standalone --> Pro: configuração e licença compatíveis
+    Standalone --> Enterprise: configuração e licença compatíveis
+    Pro --> Standalone: perfil local aplicado
+    Enterprise --> Standalone: perfil local aplicado
+    Pro --> Enterprise: perfil online alterado
+    Enterprise --> Pro: perfil online alterado
+```
+
+A PoC infere o modo pela configuração lida; não mantém uma máquina de estados
+persistida. Uma resposta de sucesso da API não substitui releitura do estado nem
+homologação física.
+
+## Matriz de compatibilidade viva
+
+| Linha | Standalone | Pro | Enterprise | Estado da evidência |
+| --- | --- | --- | --- | --- |
+| iDFace/iDFace Max | Implementado | Implementado quando suportado | Não é fluxo principal documentado | Pendente de homologação por firmware/licença |
+| iDFlex/iDAccess Nano | Implementado | Não é fluxo principal documentado | Implementado quando suportado | Pendente de homologação por firmware/licença |
+| Demais terminais | Implementado quando houver configuração compatível | Depende do produto | Depende do produto | Validar por modelo |
+
+Toda homologação deve registrar modelo, firmware, licença, modo anterior, modo
+solicitado, configuração relida, callbacks observados, data e evidência. A matriz
+histórica detalhada está em
+`docs/reports/operation-modes-homologation-matrix-2026-04-14.md`.
+
+## Cobertura a completar
+
+O comportamento de payload e resolução de perfil está automatizado em
+`OperationModesPayloadFactoryTests` e `OperationModesProfileResolverTests`. A
+orquestração de `OperationModesController` ainda deve ganhar teste com o stub
+para cada modo, incluindo sessão ausente, licença incompatível, resposta parcial
+e releitura da configuração. Essa lacuna não invalida a PoC, mas impede declarar
+homologação integral sem o roteiro físico.
+
+## Protocolo vivo de validação
+
+1. Registre modelo, firmware, licença e configuração atual antes da mudança.
+2. Execute os testes de payload e resolução de perfil.
+3. Valide a orquestração com o stub, sem credenciais nem dados pessoais reais.
+4. Aplique o modo em bancada somente com autorização e plano de retorno.
+5. Releia `online` e `local_identification`; não aceite apenas a resposta de escrita.
+6. Confirme callbacks, conectividade e fluxo de acesso esperados para o perfil.
+7. Atualize a matriz de homologação com data, resultado, evidência sanitizada e responsável.
+
+Qualquer divergência entre a releitura, os callbacks e a interface mantém o
+modelo/firmware como não homologado até diagnóstico conclusivo.
 

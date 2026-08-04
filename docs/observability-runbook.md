@@ -1,8 +1,10 @@
 # Guia operacional de observabilidade e operabilidade
 
+> **Guia operacional vivo** · Público: desenvolvimento e SRE · Responsável: Observability/SRE · Última validação: 2026-08-03.
+
 Escopo: PoC ASP.NET Core MVC/Razor para integração com a Access API Control iD.
-Este runbook define sinais operacionais, eventos críticos, métricas, alertas e
-dashboards sem expor dados pessoais, credenciais, payloads completos ou detalhes
+Este guia operacional define sinais, eventos críticos, métricas, alertas e
+painéis sem expor dados pessoais, credenciais, cargas úteis completas ou detalhes
 internos ao usuário final.
 
 ## Endpoints operacionais
@@ -13,7 +15,7 @@ internos ao usuário final.
 | `GET /health/ready` | Verifica se o SQLite local pode ser acessado | SQLite/runtime state | Usar para readiness antes de enviar tráfego |
 | `GET /metrics` | Exporta snapshot Prometheus text das métricas locais | Auth local/RBAC | Protegido por administrador por padrão |
 
-As respostas de health check são JSON minimizado com `status`, duração e nomes dos
+As respostas de verificação de saúde são JSON minimizado com `status`, duração e nomes dos
 checks. Exceções, paths locais, connection string e stack trace não são serializados.
 
 O endpoint `/metrics` fica habilitado por `Observability:Metrics:Enabled=true` e
@@ -156,8 +158,8 @@ Nunca registrar:
 ## Procedimento de incidente
 
 Runbooks detalhados por cenário, matriz SEV, continuidade, DR e template de
-postmortem ficam em `docs/incident-response-and-dr.md`. Use a sequência abaixo
-como triagem inicial e escale para o runbook dedicado quando houver alerta real.
+análise pós-incidente ficam em `docs/incident-response-and-dr.md`. Use a sequência abaixo
+como triagem inicial e escale para o guia dedicado quando houver alerta real.
 
 1. Copiar o `X-Correlation-ID` da resposta, log ou tela de erro.
 2. Buscar o correlation id em `Logs/app_log.txt` ou no coletor externo.
@@ -216,5 +218,53 @@ O relatório padrão fica em `artifacts/observability/`, fora do Git.
   observabilidade por padrão e pode bloquear a coleta online de `/metrics` com
   `-RunObservabilityOnline -RequireObservabilityMetrics`.
 - O modo `tools/test-readiness-gates.ps1 -ReleaseGate` torna essa validação
-  obrigatória junto com smoke, cobertura, supply chain, container build, contrato
+  obrigatória junto com teste integrado, cobertura, cadeia de suprimentos, construção do contêiner, contrato
   físico, FinOps/capacidade e scanners externos.
+
+## Indicadores, objetivos e orçamento de erro
+
+Os valores abaixo são propostas iniciais para bancada estável; produção exige
+linha de base e aprovação em `ops.local.json`.
+
+| SLI | Cálculo | Objetivo inicial | Janela | Ação ao violar |
+| --- | --- | --- | --- | --- |
+| Disponibilidade HTTP | respostas não 5xx / total | 99% | 24 h | Investigar rotas e dependências dominantes |
+| Prontidão | amostras saudáveis / total | 99% | 24 h | Bloquear tráfego e validar SQLite |
+| Login do equipamento | sucessos / tentativas | 95% em bancada | 1 h | Verificar rede, sessão e circuit breaker |
+| Callback aceito | persistidos / autenticados | 99% | 1 h | Verificar assinatura, limite e banco |
+| Push concluído | concluídos / enfileirados válidos | 95% em bancada | 24 h | Conciliar fila e equipamento |
+
+O orçamento de erro é `1 - objetivo`. Não agregue desenvolvimento a um SLO
+operacional nem use labels com usuário, IP, device ID livre ou endpoint arbitrário.
+
+Consultas de referência:
+
+```promql
+sum(rate(controlid_http_requests_total{status_group="5xx"}[5m]))
+/
+sum(rate(controlid_http_requests_total[5m]))
+```
+
+```promql
+sum(rate(controlid_callback_ingress_total{outcome="persisted"}[15m]))
+/
+sum(rate(controlid_callback_ingress_total[15m]))
+```
+
+Para correlação ponta a ponta, comece pelo `X-Correlation-ID`, localize o evento
+HTTP, siga somente identificadores operacionais pseudonimizados e compare
+métricas da mesma janela. Nunca transforme correlation ID em identificador de
+titular.
+
+## Registro de linha de base e painel
+
+| Sinal | Janela | Valor observado | Objetivo aprovado | Fonte |
+| --- | --- | --- | --- | --- |
+| Disponibilidade | 30 dias | A medir | A definir com o responsável | Health checks |
+| Latência p95 | 15 min e 24 h | A medir | A definir por fluxo | Métricas HTTP/Control iD |
+| Taxa de 5xx | 15 min | A medir | A definir por ambiente | `controlid_http_requests_total` |
+| Falha de integração | 15 min | A medir | A definir por fornecedor | Métricas Control iD |
+
+Um painel promovido para operação deve registrar versão, consultas, fonte,
+responsável e revisão. Limiares propostos neste guia são pontos de partida; só
+viram SLO após linha de base representativa e aprovação operacional.

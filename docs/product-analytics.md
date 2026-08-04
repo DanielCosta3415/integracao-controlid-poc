@@ -1,18 +1,20 @@
 # Análise de produto com privacidade
 
+> **Documento vivo** · Público: produto, dados e privacidade · Responsável: Product Analytics · Última validação: 2026-08-03.
+
 Escopo: medir valor, uso, funis e qualidade da PoC de integração Control iD sem
 coletar dados pessoais, dados sensíveis, payloads brutos, credenciais ou
 identificadores de equipamento/usuário.
 
 A instrumentação atual usa somente métricas internas em memória, expostas em
 `GET /metrics` quando habilitado e autorizado. Não há ferramenta externa de
-analytics, cookies de tracking, pixel, session replay ou envio para terceiros.
+análise externa, cookies de rastreamento, pixel, reprodução de sessão ou envio para terceiros.
 
 ## Objetivos de produto
 
 | Objetivo | Valor para usuário | Valor para negócio | Fluxos relacionados |
 | --- | --- | --- | --- |
-| Ativar uma bancada operacional | Operador entra na PoC, conecta equipamento e entende estado inicial | Reduz tempo de setup e suporte técnico | Login local, dashboard, sessão, device setup |
+| Ativar uma bancada operacional | Operador entra na PoC, conecta equipamento e entende o estado inicial | Reduz tempo de configuração e suporte técnico | Login local, painel, sessão, configuração do dispositivo |
 | Explorar a Access API com segurança | Time técnico consulta contrato, payload e resposta sem chamar endpoint indevido | Acelera homologação e reduz erro contra equipamento físico | Catálogo oficial, invocação, objetos oficiais |
 | Validar fluxos críticos do equipamento | Operador confirma modos, hardware, callbacks e push em ambiente controlado | Aumenta confiança de integração antes de produção | Operation modes, callbacks, push, hardware |
 | Diagnosticar falhas com rastreabilidade | Time encontra erro por correlation ID, status, flow e evento | Reduz MTTR e retrabalho | Observabilidade, auditoria, histórico |
@@ -42,7 +44,7 @@ Fluxos de abandono:
 | --- | --- | --- | --- | --- |
 | Taxa de ativação local | Usuários conseguem acessar a PoC? | `local_login_submitted` com outcome `success` | `flow`, `event`, `outcome` | Definir após baseline real |
 | Taxa de login no equipamento | Operadores conseguem criar sessão Control iD? | `device_login_submitted` e métricas de auth/device | `flow`, `event`, `outcome` | Definir por ambiente |
-| Uso do catálogo oficial | O catálogo e usado para exploração técnica? | `official_catalog_explored` | `action`, `outcome` | Crescimento esperado em homologação |
+| Uso do catálogo oficial | O catálogo é usado para exploração técnica? | `official_catalog_explored` | `action`, `outcome` | Crescimento esperado em homologação |
 | Conclusão de invocação oficial | Chamadas oficiais concluem sem erro? | `official_endpoint_invoked`, `controlid_official_api_invocations_total` | `endpoint_id` operacional, `outcome` | Alta taxa de sucesso em bancada estável |
 | Adoção de callbacks/monitor | Eventos externos chegam e persistem? | `event_monitoring_used`, `controlid_callback_ingress_total` | `event_family`, `outcome` | Validar por tipo em bancada |
 | Adoção do Push | Fila push entrega e recebe resultado? | `push_flow_used`, `controlid_push_operations_total` | `operation`, `outcome` | Validar ciclo completo |
@@ -173,6 +175,42 @@ Dados proibidos:
   identificadores/query.
 - Testes de `OperationalMetrics` garantem export Prometheus sem termos
   sensíveis comuns.
-- `tools/observability-check.ps1 -OfflineValidateOnly` valida dashboard versionado.
+- `tools/observability-check.ps1 -OfflineValidateOnly` valida o painel versionado.
 - `tools/test-readiness-gates.ps1` executa build, testes, format, scan de
   secrets, observabilidade e readiness operacional.
+
+## Fórmulas, qualidade e propriedade
+
+| Métrica | Fórmula | Janela inicial | Responsável | Regra de qualidade |
+| --- | --- | --- | --- | --- |
+| Ativação local | logins locais com sucesso / tentativas válidas | 7 dias | Produto/QA | Excluir health checks e automação identificada |
+| Login no equipamento | sessões criadas / tentativas de login | 7 dias por ambiente | Integração | Separar timeout, rejeição e circuito aberto |
+| Conclusão oficial | invocações `success` / invocações iniciadas | 24 h e 7 dias | Integração | Agrupar somente por endpoint allowlist |
+| Conclusão Push | comandos concluídos / comandos enfileirados | 24 h e 7 dias | Operação | Deduplicar pela chave idempotente |
+| Erro por fluxo | eventos com resultado diferente de sucesso / total | 24 h | Produto/SRE | Não usar identificador de pessoa ou equipamento |
+| P95 de fluxo | percentil 95 da duração agregada | 24 h | SRE | Exigir amostra mínima antes de comparar |
+
+Metas permanecem “a definir” até existir linha de base representativa. O responsável registra
+período, ambiente, tamanho da amostra, alterações de instrumentação e decisão;
+não use métricas de bancada como promessa de produção.
+
+Exemplo de consulta Prometheus sem dimensão pessoal:
+
+```promql
+sum(rate(controlid_product_flow_events_total{outcome!="success"}[15m]))
+/
+sum(rate(controlid_product_flow_events_total[15m]))
+```
+
+## Contrato de qualidade dos indicadores
+
+| Verificação | Regra |
+| --- | --- |
+| Completude | Eventos de sucesso e falha do mesmo fluxo usam o mesmo denominador documentado |
+| Cardinalidade | Rótulos pertencem a lista finita; não usar usuário, IP, URL, consulta ou dispositivo real |
+| Atualidade | Painel informa janela e atraso da fonte |
+| Comparabilidade | Mudança de nome, fórmula ou instrumento cria nova linha de base |
+| Privacidade | Amostra de métricas não contém dado pessoal nem segredo |
+
+Meta sem fonte, janela e responsável permanece hipótese. O produto não deve
+otimizar conversão às custas de segurança, consentimento ou minimização.

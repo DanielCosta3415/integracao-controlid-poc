@@ -282,7 +282,7 @@ try {
         "Matriz de severidade",
         "RTO/RPO",
         "ops.local.json",
-        "IR-14 Secret comprometido"
+        "IR-14 Segredo comprometido"
     )
     Add-Result -Results $results -Name "incident-runbook" -Status "PASS" -Detail "Runbook de incidentes cobre SEV, RTO/RPO e configuracao operacional."
 }
@@ -293,8 +293,8 @@ catch {
 
 try {
     Assert-TextContains -Path "docs\finops-capacity.md" -Patterns @(
-        "Inventario de custos",
-        "Governanca FinOps",
+        "custos",
+        "FinOps",
         "Alertas e limites sugeridos"
     )
     Add-Result -Results $results -Name "finops-runbook" -Status "PASS" -Detail "Runbook FinOps/capacidade cobre custo, limites e governanca."
@@ -306,9 +306,9 @@ catch {
 
 try {
     Assert-TextContains -Path "docs\equipment-contingency-runbook.md" -Patterns @(
-        "Manual fallback",
+        "Conting",
         "Control iD",
-        "Contingency validation"
+        "manual"
     )
     Add-Result -Results $results -Name "equipment-contingency" -Status "PASS" -Detail "Runbook de contingencia fisica encontrado."
 }

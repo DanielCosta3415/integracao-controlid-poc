@@ -1,5 +1,7 @@
 # Integração.ControlID.PoC
 
+> **Documento vivo** · Público: novos usuários, desenvolvimento e operação · Responsável: mantenedores · Última validação: 2026-08-03.
+
 PoC web em ASP.NET Core 8 MVC/Razor para exploração operacional e técnica da
 Access API da Control iD. A aplicação ajuda um time técnico a conectar um
 equipamento, autenticar, navegar pelo catálogo oficial, testar fluxos de
@@ -10,6 +12,21 @@ Trate este repositório como uma PoC operacional: ele pode lidar com dados
 pessoais, credenciais, sessões, fotos, biometria, cartões, QR Codes, logs de
 acesso e payloads de callbacks. Use dados fictícios em desenvolvimento e mantenha
 segredos fora do Git.
+
+## Estado, escopo e não objetivos
+
+| Item | Estado atual |
+| --- | --- |
+| Maturidade | PoC operacional, adequada para desenvolvimento, demonstração e homologação controlada |
+| Equipamentos | Contrato simulado pelo stub; compatibilidade física depende de modelo, firmware e licença |
+| Persistência | SQLite local para uma instância; não representa arquitetura distribuída |
+| Implantação | Contêiner reproduzível, sem provedor de produção escolhido |
+| Privacidade | Controles técnicos presentes; decisões jurídicas e do controlador permanecem externas |
+
+Não são objetivos desta PoC substituir o software oficial do fabricante, operar
+controle de acesso crítico sem homologação, oferecer alta disponibilidade ou
+declarar conformidade jurídica. O gate estrito impede tratar essas dependências
+como concluídas sem evidência humana e ambiental.
 
 ## Comece aqui
 
@@ -26,7 +43,7 @@ Leitura recomendada para um novo desenvolvedor:
    rastreabilidade.
 7. `docs/adrs/`: decisões arquiteturais registradas.
 
-## Stack
+## Tecnologias
 
 | Área | Tecnologia |
 | --- | --- |
@@ -42,7 +59,7 @@ Leitura recomendada para um novo desenvolvedor:
 | Container | `Dockerfile` e `docker-compose.yml` |
 | Dependências | NuGet com `packages.lock.json` |
 
-Não há frontend package manager configurado. `npm`, `pnpm` e `yarn` não fazem
+Não há gerenciador de pacotes do frontend configurado. `npm`, `pnpm` e `yarn` não fazem
 parte do fluxo do projeto.
 
 ## Estrutura
@@ -60,7 +77,7 @@ parte do fluxo do projeto.
 | `Options/` | Opções de configuração tipadas |
 | `tests/` | Testes xUnit |
 | `tools/` | Scripts de smoke, readiness, auditoria, backup, scanners e stubs |
-| `docs/` | Documentação técnica, runbooks, ADRs, relatórios e changelogs |
+| `docs/` | Documentação técnica, guias operacionais, ADRs, relatórios e registros de alterações |
 | `wwwroot/` | CSS/JS globais, assets e bibliotecas vendorizadas |
 
 Mapa detalhado: `docs/project-file-responsibilities.md`.
@@ -127,10 +144,31 @@ powershell -ExecutionPolicy Bypass -File .\tools\smoke-localhost.ps1
 ```
 
 O relatório mais recente é gravado em `artifacts/smoke/localhost-smoke-latest.md`;
-o script interrompe imediatamente se o build da app ou do stub falhar.
+o script interrompe imediatamente se a compilação da aplicação ou do simulador falhar.
 
 Em `Development`, a especificação OpenAPI fica disponível em
 `/swagger/v1/swagger.json` e a UI em `/swagger` quando `OpenApi:Enabled=true`.
+
+## Primeira experiência com o stub
+
+Este roteiro leva do clone ao primeiro fluxo autenticado sem equipamento físico:
+
+1. Execute o stub; ele escuta em `http://127.0.0.1:6600`.
+2. Configure `ControlIDApi:DefaultDeviceUrl` com essa URL. O stub aceita as
+   credenciais fictícias `stub-admin` e `stub-password`.
+3. Execute a aplicação e abra `http://localhost:5000` ou
+   `https://localhost:5001`, conforme `Properties/launchSettings.json`.
+4. No primeiro acesso, abra `/Auth/Register`, cadastre dados fictícios e uma
+   senha de 12 a 128 caracteres. O primeiro usuário local recebe o papel
+   `Administrator`; cadastros seguintes exigem um administrador autenticado.
+5. Entre em `/Auth/LocalLogin`, conecte-se ao stub em `/Auth/Login` e confirme a
+   sessão em `/Auth/Status`.
+6. Abra `OfficialApi`, consulte `system_information.fcgi` e confirme resposta de
+   sucesso sem dados pessoais reais.
+
+Resultado esperado: shell autenticado, sessão Control iD válida, readiness
+saudável e nenhuma credencial registrada em logs ou arquivos versionados. Para
+uma validação automatizada equivalente, execute `tools/smoke-localhost.ps1`.
 
 ## Comandos oficiais
 
@@ -141,7 +179,7 @@ dotnet build .\Integracao.ControlID.PoC.sln --no-restore -v:minimal
 dotnet test .\Integracao.ControlID.PoC.sln --no-build -v:minimal
 ```
 
-Format/lint/typecheck:
+Formatação, análise estática e verificação de tipos:
 
 ```powershell
 dotnet format .\Integracao.ControlID.PoC.sln --verify-no-changes --no-restore -v:minimal
@@ -150,15 +188,16 @@ git diff --check
 
 Observações:
 
-- Lint separado não existe; `dotnet build` com warnings como erro e
-  `dotnet format --verify-no-changes` são os checks oficiais.
-- Typecheck separado não existe; o typecheck é o próprio build C#.
+- Não existe análise estática separada; `dotnet build` com avisos como erro e
+  `dotnet format --verify-no-changes` são as verificações oficiais.
+- Não existe verificação de tipos separada; essa verificação é feita pela própria compilação C#.
 - Para corrigir formatação, use `dotnet format .\Integracao.ControlID.PoC.sln -v:minimal`
   e registre o efeito mecânico.
 
-Auditorias e readiness:
+Auditorias e prontidão:
 
 ```powershell
+powershell -ExecutionPolicy Bypass -File .\tools\validate-documentation.ps1
 powershell -ExecutionPolicy Bypass -File .\tools\scan-secrets.ps1
 powershell -ExecutionPolicy Bypass -File .\tools\audit-supply-chain.ps1
 powershell -ExecutionPolicy Bypass -File .\tools\observability-check.ps1 -OfflineValidateOnly
@@ -168,15 +207,19 @@ powershell -ExecutionPolicy Bypass -File .\tools\contract-controlid-stub.ps1
 powershell -ExecutionPolicy Bypass -File .\tools\test-readiness-gates.ps1
 ```
 
-Release gate estrito:
+O validador documental padrão é determinístico e não usa rede. Em uma auditoria
+conectada, acrescente `-CheckExternalUrls` para conferir também a disponibilidade
+das referências externas, sem alterar o gate off-line da CI.
+
+Critério estrito de liberação:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\tools\test-readiness-gates.ps1 -ReleaseGate
 ```
 
-`-ReleaseGate` exige smoke, cobertura, auditoria de supply chain, container build,
-observabilidade online, `ops.local.json` preenchido fora do Git, FinOps/capacidade
-sem warnings, contrato com equipamento físico e scanners externos. Se ambiente,
+`-ReleaseGate` exige teste integrado, cobertura, auditoria da cadeia de suprimentos,
+construção do contêiner, observabilidade on-line, `ops.local.json` preenchido fora
+do Git, FinOps/capacidade sem avisos, contrato com equipamento físico e analisadores externos. Se ambiente,
 credencial ou ferramenta estiver ausente, o gate deve falhar.
 
 ## Variáveis de ambiente principais
@@ -250,8 +293,8 @@ Sinais disponíveis:
 - Logs Serilog com dados sensíveis mascarados ou pseudonimizados.
 - Métricas HTTP, Access API, callbacks, Push, auth local, analytics de produto e
   capacidade runtime/FinOps.
-- Alertas e dashboards versionados em `docs/observability/`.
-- Runbooks em `docs/observability-runbook.md`,
+- Alertas e painéis versionados em `docs/observability/`.
+- Guias operacionais em `docs/observability-runbook.md`,
   `docs/incident-response-and-dr.md` e
   `docs/equipment-contingency-runbook.md`.
 
@@ -311,15 +354,15 @@ Use `tools/contract-controlid-stub.ps1` para validar contrato sem hardware.
 - `docs/architecture-overview.md`: arquitetura e fluxos.
 - `docs/integration-contracts.md`: APIs, payloads e contratos.
 - `docs/data-model-and-recovery.md`: dados, migrations, índices, backup e restore.
-- `docs/security-hardening.md`: hardening, HMAC, RBAC, headers e secrets.
+- `docs/security-hardening.md`: fortalecimento, HMAC, RBAC, cabeçalhos e segredos.
 - `docs/privacy-and-data-retention.md`: LGPD, dados pessoais e retenção.
 - `docs/testing-strategy.md`: estratégia de testes e gates.
 - `docs/ci-cd-quality-gates.md`: GitHub Actions, quality gates, artefatos e
-  branch protection recomendada.
-- `docs/observability-runbook.md`: logs, métricas, alertas e dashboards.
-- `docs/deployment-runbook.md`: ambientes, deploy, rollback e container.
-- `docs/incident-response-and-dr.md`: incidentes, DR e postmortem.
-- `docs/product-analytics.md`: KPIs e eventos sem tracking pessoal.
+  proteção recomendada da ramificação.
+- `docs/observability-runbook.md`: registros, métricas, alertas e painéis.
+- `docs/deployment-runbook.md`: ambientes, implantação, reversão e contêiner.
+- `docs/incident-response-and-dr.md`: incidentes, recuperação de desastres e análise pós-incidente.
+- `docs/product-analytics.md`: KPIs e eventos sem rastreamento pessoal.
 - `docs/finops-capacity.md`: custos, capacidade e sustentabilidade operacional.
 - `docs/residual-risk-closure.md`: lacunas externas, gates bloqueantes e
   evidências exigidas para release sem exceções.
@@ -356,6 +399,40 @@ Use `tools/contract-controlid-stub.ps1` para validar contrato sem hardware.
 
 ### O shell parece lento
 
-- Verifique se assets estáticos e compressão estão funcionando.
+- Verifique se os ativos estáticos e a compressão estão funcionando.
 - Use `OfficialApi` como referência para carga do catálogo.
 - Valide tamanho de banco/logs com `tools/finops-capacity-check.ps1`.
+
+## Mapa resumido do primeiro uso
+
+```mermaid
+flowchart LR
+    Clone["Clonar e restaurar"] --> Stub["Iniciar o stub fictício"]
+    Stub --> LocalUser["Cadastrar usuário local fictício"]
+    LocalUser --> DeviceLogin["Autenticar no stub"]
+    DeviceLogin --> OfficialApi["Consultar system_information.fcgi"]
+    OfficialApi --> Gates["Executar verificações locais"]
+```
+
+O fluxo completo leva, em uma máquina já preparada, aproximadamente 10 a 20
+minutos. O primeiro resultado confiável é a consulta ao stub seguida do gate
+local aprovado; uma tela carregada isoladamente não comprova a integração.
+
+| Ambiente | Cobertura documentada |
+| --- | --- |
+| Windows + Windows PowerShell 5.1 | Caminho principal e scripts operacionais |
+| Windows + PowerShell 7 | Compatível com os comandos PowerShell documentados |
+| Linux/macOS + PowerShell 7 | Build e aplicação são portáveis; scripts que usam DPAPI ou ACL do Windows exigem alternativa registrada |
+| Contêiner Linux | Execução reproduzível da aplicação; operação real ainda depende de volumes, segredos e proxy configurados |
+
+## Referências visuais
+
+As capturas abaixo foram produzidas em `Development`, com banco efêmero e dados
+fictícios. Elas ajudam a reconhecer a interface; testes e contratos continuam
+sendo a evidência funcional.
+
+![Tela de login local da PoC sem dados preenchidos](wwwroot/img/docs/local-login.png)
+
+![Painel inicial autenticado com usuário fictício e sem equipamento conectado](wwwroot/img/docs/authenticated-home.png)
+
+![Catálogo oficial da API com contagens e filtros visíveis](wwwroot/img/docs/official-api.png)

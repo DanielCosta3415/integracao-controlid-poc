@@ -1,7 +1,9 @@
 # Contingência operacional do equipamento Control iD
 
+> **Guia operacional vivo** · Público: operação, suporte e SRE · Responsável: operação física · Última validação: 2026-08-03.
+
 Escopo: continuidade operacional quando o equipamento Control iD, a rede, a
-Access API, callbacks, push ou mecanismos de identificação falham. Este runbook
+Access API, callbacks, push ou mecanismos de identificação falham. Este guia operacional
 não substitui procedimento físico aprovado pelo cliente, política de segurança
 patrimonial ou validação do fornecedor.
 
@@ -37,7 +39,7 @@ Use somente quando aprovado por responsável humano autorizado:
    manual, salvo exigência formal aprovada.
 5. Manter dupla aprovação para liberação excepcional quando envolver área crítica.
 6. Reconciliar o registro manual com a PoC/equipamento quando a integração voltar.
-7. Abrir postmortem se a contingência durar mais que a janela aprovada ou se
+7. Abrir análise pós-incidente se a contingência durar mais que a janela aprovada ou se
    houver divergência de auditoria.
 
 ## Diagnóstico seguro
@@ -72,10 +74,37 @@ powershell -ExecutionPolicy Bypass -File .\tools\contract-controlid-device.ps1
 Antes de uso real, executar em bancada:
 
 - Simular equipamento offline e validar escalonamento.
-- Simular perda de rede e validar manual fallback.
+- Simular perda de rede e validar contingência manual.
 - Simular callback rejeitado por assinatura/IP e validar diagnóstico.
 - Simular retorno do equipamento e reconciliação de registros manuais.
 - Registrar evidências minimizadas e atualizar `ops.local.json`.
 - Para release operacional, `tools/test-readiness-gates.ps1 -ReleaseGate` deve
   executar o contrato físico e `tools/operational-readiness-check.ps1 -RequireConfig`
   deve validar os campos `hardwareContract.*`.
+
+## Registro do exercício
+
+| Campo | Preenchimento obrigatório |
+| --- | --- |
+| Data, ambiente e responsável | Identificação operacional sem dado pessoal |
+| Equipamento | Modelo, firmware e licença; serial pseudonimizado |
+| Cenário | Indisponibilidade, rede, assinatura ou retorno |
+| Início e detecção | Horários e sinal que acionou o guia |
+| Contenção | Ação manual aprovada e responsável |
+| Reconciliação | Registros comparados e divergências |
+| Resultado | Aprovado, aprovado com ressalva ou reprovado |
+| Evidência | Local restrito informado em `ops.local.json` |
+| Próxima revisão | Data, dono e ação corretiva |
+
+Cadência, responsável e canal do fornecedor são decisões do ambiente. Um teste
+reprovado mantém `hardwareContract.validationStatus` bloqueante; não altere o gate
+para encerrar artificialmente o exercício.
+
+## Critérios de encerramento
+
+Uma contingência só pode ser encerrada quando o equipamento voltou ao estado
+esperado, operações manuais foram conciliadas, divergências têm responsável e
+prazo, e nenhuma evidência sensível foi anexada a canal público. Para cada
+exercício, registre também modelo, firmware, licença, janela, volume aproximado
+de operações manuais e tempo de recuperação. Valores reais permanecem em
+`ops.local.json` ou no repositório operacional restrito.

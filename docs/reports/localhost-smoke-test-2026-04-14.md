@@ -1,4 +1,6 @@
-﻿# Teste smoke local da PoC Control iD
+# Teste integrado local da PoC Control iD
+
+> **Evidência histórica arquivada** · Público: QA e auditoria · Execução: 2026-04-14 · Responsável: QA · Consulte `artifacts/smoke/localhost-smoke-latest.md` para a execução atual.
 
 Data: 2026-04-30 20:48:18 -03:00
 
@@ -272,6 +274,25 @@ Data: 2026-04-30 20:48:18 -03:00
 - [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
 - [PASS] http://localhost:5000/RemoteActions/Enroll: POST 200
 - [PASS] /PushCenter: GET 200
+
+## Proveniência da execução
+
+- Commit, SDK e sistema operacional: não registrados no relatório original.
+- Escopo diferencial: inclui os casos limítrofes descritos nesta execução.
+- Resultado atual: não inferir; use o smoke versionado e o relatório em `artifacts/`.
+- Integridade futura: registrar duração, código de saída, hash e ambiente sem
+  credencial, sessão ou dado pessoal.
+
+## Validade da evidência
+
+- Data da execução: 2026-04-14.
+- Commit, SDK e sistema operacional: não registrados no relatório original.
+- Resultado: fotografia histórica; `PASS` não garante comportamento atual.
+- Execução atual: `tools/smoke-localhost.ps1` usa banco temporário e grava
+  `artifacts/smoke/localhost-smoke-latest.md`.
+
+Compare totais, falhas, skips intencionais e ambiente da nova execução; não
+edite este relatório para simular resultado recente.
 - [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local não é executado durante o smoke para preservar a autenticação.
 - [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
 - [PASS] http://localhost:5000/PushCenter/Queue: POST 200

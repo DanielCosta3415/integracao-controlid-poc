@@ -1,6 +1,8 @@
 # Guia operacional de governança de privacidade
 
-Este runbook transforma as lacunas residuais de privacidade em atividades verificáveis. Ele não substitui validação jurídica, DPO/encarregado, contrato, DPA, RIPD aprovado ou decisão formal do controlador.
+> **Guia operacional vivo** · Público: DPO, jurídico e operação · Responsável: DPO/Privacy · Última validação técnica: 2026-08-03.
+
+Este guia operacional transforma as lacunas residuais de privacidade em atividades verificáveis. Ele não substitui validação jurídica, DPO/encarregado, contrato, DPA, RIPD aprovado ou decisão formal do controlador.
 
 ## Papéis e RACI
 
@@ -43,7 +45,7 @@ Preencha e aprove antes de usar dados reais.
 
 1. Registrar solicitação, data, canal, escopo e identidade do solicitante.
 2. Confirmar titularidade ou representação legal por meio aprovado pelo DPO.
-3. No sistema, acessar `Privacidade e LGPD` e gerar relatório por ID, matricula, usuário, e-mail ou telefone.
+3. No sistema, acessar `Privacidade e LGPD` e gerar relatório por ID, matrícula, usuário, e-mail ou telefone.
 4. Usar o relatório apenas como triagem minimizada: ele mostra categorias e contagens, não payload bruto.
 5. Validar com DPO/jurídico se há base para acesso, correção, bloqueio, eliminação, portabilidade ou negativa.
 6. Executar alterações apenas nas telas administrativas específicas e com confirmação humana quando houver impacto.
@@ -113,6 +115,39 @@ Política mínima até aprovação formal:
 - Relatório minimizado em `PrivacyController`.
 - Inventário de dados em `docs/privacy-and-data-retention.md`.
 - Modelo de dados em `docs/data-model-and-recovery.md`.
-- Hardening em `docs/security-hardening.md`.
+- Fortalecimento em `docs/security-hardening.md`.
 - Scan de secrets em `tools/scan-secrets.ps1`.
 - Expurgo confirmado em `OfficialEvents/Purge` e `PushCenter/Purge`.
+
+## Níveis de serviço e registro de decisão
+
+Os prazos abaixo são metas operacionais internas, não interpretação jurídica.
+O DPO deve substituí-los pelos prazos aprovados e registrar a fonte normativa.
+
+| Etapa | Meta interna | Responsável | Evidência |
+| --- | --- | --- | --- |
+| Receber e protocolar solicitação | 1 dia útil | Canal de privacidade | Número do caso sem dado excessivo |
+| Validar identidade e escopo | 3 dias úteis | DPO/atendimento | Método aprovado e resultado |
+| Localizar dados e terceiros | 5 dias úteis | Engenharia/DPO | Relatório minimizado |
+| Decidir e responder | Prazo aprovado pelo DPO | Controlador/DPO | Decisão, fundamento e comunicação |
+| Executar correção/eliminação | Após aprovação | Engenharia/Operação | Antes/depois, sem payload pessoal |
+
+Modelo mínimo do registro restrito:
+
+| Campo | Conteúdo esperado |
+| --- | --- |
+| ID do caso | Identificador não derivado de dado pessoal |
+| Direito solicitado | Acesso, correção, eliminação ou outro |
+| Identidade validada | Sim/não e método aprovado, sem cópia desnecessária |
+| Sistemas consultados | PoC, equipamento, SQLite, logs, backups e terceiros |
+| Decisão | Aprovada, parcial ou negada, com responsável |
+| Evidências | Local restrito definido em `ops.local.json` |
+| Prazo e encerramento | Datas, comunicação e risco residual |
+
+## Ensaio do processo de direitos
+
+Ao menos antes de uso real e após mudança relevante, execute um caso fictício de
+acesso, um de correção e um de eliminação bloqueada por retenção. Registre tempo,
+sistemas consultados, decisão, comunicação simulada e ausência de dados reais no
+artefato. O ensaio valida o processo; não autoriza eliminar registro verdadeiro
+nem define prazo jurídico sem aprovação.

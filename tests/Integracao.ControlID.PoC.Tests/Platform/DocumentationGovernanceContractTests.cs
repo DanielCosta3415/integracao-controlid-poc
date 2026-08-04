@@ -16,7 +16,7 @@ public class DocumentationGovernanceContractTests
         Assert.Contains("docs/residual-risk-closure.md", readme, StringComparison.Ordinal);
         Assert.Contains("docs/adrs/", readme, StringComparison.Ordinal);
         Assert.Contains("Leitura por papel", docsIndex, StringComparison.Ordinal);
-        Assert.Contains("Gate estrito de release", onboarding, StringComparison.Ordinal);
+        Assert.Contains("Critério estrito de liberação", onboarding, StringComparison.Ordinal);
         Assert.Contains("Fronteiras de confiança", architecture, StringComparison.Ordinal);
         Assert.Contains("docs/adrs/", agents, StringComparison.Ordinal);
     }
@@ -32,14 +32,37 @@ public class DocumentationGovernanceContractTests
         var prSummary = ReadRepoFile("docs", "pr-summary-2026-05-01.md");
         var audit = ReadRepoFile("docs", "documentation-audit-2026-05-01.md");
 
-        Assert.Contains("Status: Aceita", sqliteAdr, StringComparison.Ordinal);
+        Assert.Contains("Estado: aceita", sqliteAdr, StringComparison.Ordinal);
         Assert.Contains("SQLite local", sqliteAdr, StringComparison.Ordinal);
-        Assert.Contains("Ingress e egress Control iD", securityAdr, StringComparison.Ordinal);
+        Assert.Contains("Fluxos Control iD de entrada e saída", securityAdr, StringComparison.Ordinal);
         Assert.Contains("Observabilidade no processo", observabilityAdr, StringComparison.Ordinal);
-        Assert.Contains("Governança de release", releaseAdr, StringComparison.Ordinal);
+        Assert.Contains("Governança de liberação", releaseAdr, StringComparison.Ordinal);
         Assert.Contains("Como validar", changelog, StringComparison.Ordinal);
         Assert.Contains("Pendências conhecidas", prSummary, StringComparison.Ordinal);
         Assert.Contains("Lacunas restantes", audit, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void DocumentationValidation_CoversInventoryEncodingLinksTraceabilityAndSourceMap()
+    {
+        var workflow = ReadRepoFile(".github", "workflows", "ci.yml");
+        var releaseGate = ReadRepoFile("tools", "test-readiness-gates.ps1");
+        var validator = ReadRepoFile("tools", "validate-documentation.ps1");
+        var docsIndex = ReadRepoFile("docs", "README.md");
+
+        Assert.Contains(".\\tools\\validate-documentation.ps1", workflow, StringComparison.Ordinal);
+        Assert.Contains("documentation-validation", releaseGate, StringComparison.Ordinal);
+        Assert.Contains("ExpectedMarkdownCount = 49", validator, StringComparison.Ordinal);
+        Assert.Contains("[switch]$CheckExternalUrls", validator, StringComparison.Ordinal);
+        Assert.Contains("Missing local Markdown anchor", validator, StringComparison.Ordinal);
+        Assert.Contains("Invalid bare URL", validator, StringComparison.Ordinal);
+        Assert.Contains("Vendored jquery-validation license hash", validator, StringComparison.Ordinal);
+        Assert.Contains("Test file missing from project map", validator, StringComparison.Ordinal);
+        Assert.Contains("Source file missing from project map", validator, StringComparison.Ordinal);
+        Assert.Contains("Requirement traceability row must occur exactly once", validator, StringComparison.Ordinal);
+        Assert.Contains("Mapped source files", validator, StringComparison.Ordinal);
+        Assert.Contains("tools/validate-documentation.ps1", docsIndex, StringComparison.Ordinal);
+        Assert.Contains("-CheckExternalUrls", docsIndex, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -52,7 +75,7 @@ public class DocumentationGovernanceContractTests
         var releaseGate = ReadRepoFile("tools", "test-readiness-gates.ps1");
 
         Assert.Contains("docs/residual-risk-closure.md", docsIndex, StringComparison.Ordinal);
-        Assert.Contains("Gate estrito sem exceções", closure, StringComparison.Ordinal);
+        Assert.Contains("Critério estrito sem exceções", closure, StringComparison.Ordinal);
         Assert.Contains("deployment", opsExample, StringComparison.Ordinal);
         Assert.Contains("privacy", opsExample, StringComparison.Ordinal);
         Assert.Contains("externalValidation", opsExample, StringComparison.Ordinal);

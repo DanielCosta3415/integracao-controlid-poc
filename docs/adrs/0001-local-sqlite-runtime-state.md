@@ -1,8 +1,19 @@
 # ADR 0001 - SQLite local como estado de execução da PoC
 
-Status: Aceita
+> **Decisão aceita** · Público: arquitetura e dados · Responsável: liderança técnica · Última validação: 2026-08-03.
 
-Data: 2026-05-01
+Estado: aceita
+
+- Data da decisão: 2026-05-01
+- Substitui: nenhuma decisão
+- Substituída por: nenhuma decisão
+
+## Direcionadores
+
+- execução local sem infraestrutura obrigatória;
+- estado persistente suficiente para demonstração, testes e diagnóstico;
+- recuperação verificável sem versionar dados de execução;
+- custo operacional proporcional ao escopo de uma PoC de instância única.
 
 ## Contexto
 
@@ -38,3 +49,20 @@ Usar SQLite local via Entity Framework Core como estado runtime da PoC. O arquiv
 - `Data/Migrations/`
 - `docs/data-model-and-recovery.md`
 - `tools/backup-sqlite-operational.ps1`
+- `tests/Integracao.ControlID.PoC.Tests/Data/OperationalIndexMigrationTests.cs`
+- `tests/Integracao.ControlID.PoC.Tests/Services/Database/RepositoryFailureContractTests.cs`
+
+## Critério de revisão
+
+Reavalie esta decisão antes de múltiplas réplicas com escrita, banco remoto,
+requisitos de alta disponibilidade ou volume incompatível com os limites medidos
+em `docs/finops-capacity.md`.
+
+## Evolução da decisão
+
+- Substitui: nenhuma decisão anterior.
+- Substituída por: nenhuma até esta validação.
+- Gatilhos objetivos: mais de uma réplica gravadora, requisito de alta
+  disponibilidade ou SQLite acima do limite operacional de 512 MB.
+- Evidência para mudança: perfil de carga, plano de migração, compatibilidade de
+  reversão e teste de restauração no banco candidato.

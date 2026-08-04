@@ -1,5 +1,7 @@
 # Critérios de aceite, requisitos e rastreabilidade
 
+> **Documento vivo** · Público: produto, QA e desenvolvimento · Responsável: Product Owner/QA · Última validação: 2026-08-03.
+
 Este documento transforma o mapeamento de produto, os fluxos críticos e as regras observadas no código em critérios de aceite objetivos e rastreáveis.
 
 Escopo: PoC ASP.NET Core MVC para integração operacional com a Access API da Control iD. Este documento não cria regra de negócio nova; quando uma regra depende de equipamento real, licença, firmware ou decisão futura, ela é marcada como lacuna.
@@ -24,9 +26,9 @@ Critérios:
 Critérios:
 
 - AC-F02-01: Dado que um endpoint oficial existe no catálogo, quando o usuário abre a tela técnica, então a PoC deve exibir método, rota, query/body esperados e exemplos quando disponíveis.
-- AC-F02-02: Dado que o endpoint selecionado é servido pela própria PoC, como callback, monitor ou push, quando o usuário tenta invoca-lo pela tela técnica, então a PoC deve informar que ele é um endpoint de entrada local e não deve chamar o equipamento.
+- AC-F02-02: Dado que o endpoint selecionado é servido pela própria PoC, como callback, monitor ou push, quando o usuário tenta invocá-lo pela tela técnica, então a PoC deve informar que ele é um endpoint de entrada local e não deve chamar o equipamento.
 - AC-F02-03: Dado que a chamada oficial exige sessão, quando não há sessão Control iD ativa, então a PoC deve bloquear a invocação com mensagem segura.
-- AC-F02-04: Dado que o corpo JSON informado é inválido, quando o usuário tenta invocar endpoint com body, então a PoC deve rejeitar a entrada antes de chamar o equipamento.
+- AC-F02-04: Dado que o corpo JSON informado é inválido, quando o usuário tenta invocar endpoint com corpo, então a PoC deve rejeitar a entrada antes de chamar o equipamento.
 - AC-F02-05: Dado que a resposta oficial é binária ou não textual, quando a chamada retorna, então a PoC deve preservar o conteúdo em Base64/download e não tentar renderizar como texto inseguro.
 
 ### F03 - Objetos oficiais
@@ -217,7 +219,7 @@ Critérios:
 - Erros esperados: rejeição por segurança, erro de persistência, fila vazia retorna `{}`.
 - Permissões esperadas: usuário `Administrator` para enfileirar ou limpar; origem HTTP autorizada para `/push`, `/result` e `/Push/Receive`.
 - Testes existentes: `PushCenterControllerTests.cs`, `PushControllerTests.cs`, `PushCommandRepositoryTests.cs`, `PushIdempotencyKeyResolverTests.cs`.
-- Testes ausentes: E2E com equipamento real e smoke em ambiente exposto controlado; a concorrência entre consultas simultâneas já é coberta por reivindicação atômica no SQLite e teste dedicado.
+- Testes ausentes: E2E com equipamento real e teste integrado em ambiente exposto controlado; a concorrência entre consultas simultâneas já é coberta por reivindicação atômica no SQLite e teste dedicado.
 
 ### REQ-008 - Privacidade, segurança e execução fora de desenvolvimento
 
@@ -247,7 +249,7 @@ Critérios:
 - Dados inválidos: mudança de schema sem migration/script, exclusão sem plano de backup.
 - Estados esperados: banco criado, banco existente preservado, migration registrada.
 - Erros esperados: falha de acesso ao SQLite, schema incompatível pré-existente.
-- Permissões esperadas: escrita local no workspace; sem credencial de produção.
+- Permissões esperadas: escrita local na área de trabalho; sem credencial de produção.
 - Testes existentes: `SqliteTestDatabase.cs`, `PushCommandRepositoryTests.cs`, `CallbackIngressServiceTests.cs`, validação de script de migration.
 - Testes ausentes: teste automatizado aplicando migration em banco legado parcial.
 
@@ -255,15 +257,15 @@ Critérios:
 
 | Requisito | Fluxo | Código | Teste existente | Critérios | Risco | Mitigação |
 | --- | --- | --- | --- | --- | --- | --- |
-| REQ-001 | F01 | `AuthController`, `SessionController` | Ausente direto | AC-F01-01..06 | Sessão inválida liberar ação autenticada | Adicionar controller tests e smoke com stub |
-| REQ-002 | F02 | `OfficialApiController`, `Services/ControlIDApi/*` | Contract docs e binary result tests | AC-F02-01..05 | Chamar endpoint errado ou expor resposta insegura | Testes de controller e contrato por endpoint crítico |
-| REQ-003 | F03 | `OfficialObjectsController`, `HighImpactOperationGuard` | Guard tests | AC-F03-01..05 | Destruição acidental de registros remotos | Testar bloqueio de destroy e JSON inválido |
-| REQ-004 | F04 | `SystemController`, `OfficialEventsController`, `PushCenterController` | Guard, PushCenter e OfficialEvents tests | AC-F04-01..04 | Reboot/reset/rede por erro humano | Frase de confirmação e testes por ação |
-| REQ-005 | F05 | `OperationModesController`, `OperationModesPayloadFactory`, `OperationModesProfileResolver` | Payload/profile resolver tests | AC-F05-01..07 | Aplicar modo incorreto no equipamento | Testes de controller com stub e roteiro manual |
-| REQ-006 | F06 | `OfficialCallbacksController`, `CallbackIngressService`, `CallbackSecurityEvaluator`, `MonitorEventRepository` | Callback security/body/ingress tests | AC-F06-01..06 | Persistir payload não autorizado ou perder evento crítico | Shared key/IP/limite + teste E2E |
-| REQ-007 | F07 | `PushCenterController`, `PushController`, `PushCommandRepository` | Push controller/repository/idempotency tests | AC-F07-01..09 | Entrega duplicada, payload inválido ou fila apagada | Teste de concorrência e smoke com equipamento/stub |
-| REQ-008 | F08 | `Program.cs`, `CallbackSecurityOptions`, docs de privacidade | Security evaluator + secret scan | AC-F08-01..06 | Exposição pública sem shared key ou vazamento de dados | Startup tests, rate limit middleware test e revisão LGPD |
-| REQ-009 | F09 | `Data/Migrations/*`, `IntegracaoControlIDContext`, `Program.cs` | SQLite em memória e script validado | AC-F09-01..04 | Banco local incompatível ou schema não rastreado | Migration idempotente e teste de banco legado |
+| REQ-001 | F01 | `AuthController`, `SessionController` | `tests/Integracao.ControlID.PoC.Tests/Controllers/AuthControllerTests.cs`; `tests/Integracao.ControlID.PoC.Tests/Controllers/SessionControllerTests.cs` | AC-F01-01 a AC-F01-06 | Sessão inválida liberar ação autenticada | Manter testes dos controladores e smoke com stub; homologar expiração no equipamento real |
+| REQ-002 | F02 | `OfficialApiController`, `Services/ControlIDApi/*` | `tests/Integracao.ControlID.PoC.Tests/Services/ControlIDApi/OfficialApiContractDocumentationServiceTests.cs`; `tests/Integracao.ControlID.PoC.Tests/Services/ControlIDApi/OfficialApiInvokerServiceTests.cs` | AC-F02-01 a AC-F02-05 | Chamar endpoint errado ou expor resposta insegura | Ampliar contrato por endpoint crítico e cobrir a orquestração do controlador |
+| REQ-003 | F03 | `OfficialObjectsController`, `HighImpactOperationGuard` | `tests/Integracao.ControlID.PoC.Tests/Controllers/OfficialObjectsControllerTests.cs`; `tests/Integracao.ControlID.PoC.Tests/Helpers/HighImpactOperationGuardTests.cs` | AC-F03-01 a AC-F03-05 | Destruição acidental de registros remotos | Preservar bloqueios para confirmação, destruição e JSON inválido |
+| REQ-004 | F04 | `SystemController`, `OfficialEventsController`, `PushCenterController` | `tests/Integracao.ControlID.PoC.Tests/Controllers/SystemControllerTests.cs`; `tests/Integracao.ControlID.PoC.Tests/Controllers/OfficialEventsControllerTests.cs`; `tests/Integracao.ControlID.PoC.Tests/Controllers/PushCenterControllerTests.cs` | AC-F04-01 a AC-F04-04 | Reinicialização, restauração ou rede alterada por erro humano | Exigir frase de confirmação e manter testes por ação |
+| REQ-005 | F05 | `OperationModesController`, `OperationModesPayloadFactory`, `OperationModesProfileResolver` | `tests/Integracao.ControlID.PoC.Tests/Services/OperationModes/OperationModesPayloadFactoryTests.cs`; `tests/Integracao.ControlID.PoC.Tests/Services/OperationModes/OperationModesProfileResolverTests.cs` | AC-F05-01 a AC-F05-07 | Aplicar modo incorreto no equipamento | Adicionar teste do controlador com stub e preservar roteiro manual por firmware |
+| REQ-006 | F06 | `OfficialCallbacksController`, `CallbackIngressService`, `CallbackSecurityEvaluator`, `MonitorEventRepository` | `tests/Integracao.ControlID.PoC.Tests/Services/Callbacks/CallbackIngressServiceTests.cs`; `tests/Integracao.ControlID.PoC.Tests/Services/Callbacks/CallbackSecurityEvaluatorTests.cs`; `tests/Integracao.ControlID.PoC.Tests/Services/Callbacks/CallbackRequestBodyReaderTests.cs` | AC-F06-01 a AC-F06-06 | Persistir payload não autorizado ou perder evento crítico | Validar chave compartilhada, IP, assinatura, limite e fluxo integrado |
+| REQ-007 | F07 | `PushCenterController`, `PushController`, `PushCommandRepository` | `tests/Integracao.ControlID.PoC.Tests/Controllers/PushControllerTests.cs`; `tests/Integracao.ControlID.PoC.Tests/Controllers/PushCenterControllerTests.cs`; `tests/Integracao.ControlID.PoC.Tests/Services/Database/PushCommandRepositoryTests.cs` | AC-F07-01 a AC-F07-09 | Entrega duplicada, payload inválido ou fila apagada | Manter testes de concorrência e homologar com equipamento real |
+| REQ-008 | F08 | `Program.cs`, `CallbackSecurityOptions`, documentos de privacidade | `tests/Integracao.ControlID.PoC.Tests/Controllers/CallbackRateLimitingContractTests.cs`; `tests/Integracao.ControlID.PoC.Tests/Middlewares/SecurityHeadersMiddlewareTests.cs`; `tests/Integracao.ControlID.PoC.Tests/Helpers/PrivacyLogHelperTests.cs` | AC-F08-01 a AC-F08-06 | Exposição pública sem chave compartilhada ou vazamento de dados | Preservar testes de inicialização, limite de requisições, logs e revisão LGPD |
+| REQ-009 | F09 | `Data/Migrations/*`, `IntegracaoControlIDContext`, `Program.cs` | `tests/Integracao.ControlID.PoC.Tests/Data/OperationalIndexMigrationTests.cs`; `tests/Integracao.ControlID.PoC.Tests/Services/Database/RepositoryFailureContractTests.cs` | AC-F09-01 a AC-F09-04 | Banco local incompatível ou esquema não rastreado | Manter migração idempotente e adicionar cenário de banco legado parcial |
 
 ## Definição de Preparado
 
@@ -295,7 +297,7 @@ Uma mudança só está concluída quando:
 - riscos residuais e testes não executados foram documentados;
 - arquivos alterados foram listados no fechamento da tarefa.
 
-## Gates de aceite e validação externa
+## Critérios de aceite e validação externa
 
 | Lacuna | Impacto | Prioridade | Recomendação |
 | --- | --- | --- | --- |
@@ -355,4 +357,31 @@ Manual guiada:
 3. Homologar os papéis locais e decidir se um provedor corporativo de identidade será necessário fora do laboratório.
 4. Agendar operacionalmente o expurgo já disponível para `MonitorEvents` e `PushCommands`, com responsável e evidência.
 5. Manter o smoke local com chave compartilhada, assinatura, callbacks oficiais e ciclo Push completo com stub.
-6. Criar runbook de homologação física com equipamento real, incluindo versão de firmware, modo, rede e evidências esperadas.
+6. Criar guia operacional de homologação física com equipamento real, incluindo versão de firmware, modo, rede e evidências esperadas.
+
+## Estado verificável dos requisitos
+
+| Requisito | Estado técnico | Evidência automatizada | Evidência externa ainda necessária | Responsável |
+| --- | --- | --- | --- | --- |
+| REQ-001 | Implementado | `AuthControllerTests`, `SessionControllerTests` e smoke | Login físico em firmware-alvo | Backend/QA |
+| REQ-002 | Implementado | Testes de catálogo, invocador e contrato com stub | Variações reais da Access API | Integração |
+| REQ-003 | Implementado com guardas | `OfficialObjectsControllerTests` e `HighImpactOperationGuardTests` | CRUD controlado em bancada | Integração/QA |
+| REQ-004 | Implementado com RBAC | Testes de controllers e segurança | Aprovação operacional dos procedimentos | Product Owner |
+| REQ-005 | Implementado na PoC | Testes de payload e resolução de perfil | Homologação por modelo, firmware e licença | Integração |
+| REQ-006 | Implementado | Testes de callback, HMAC e repositório | Callback real e URL alcançável | Integração/AppSec |
+| REQ-007 | Implementado | Testes de workflow, idempotência, concorrência e stub | Ciclo físico completo | Integração/Operação |
+| REQ-008 | Implementado tecnicamente | Testes de segurança, privacidade e startup | Aprovação DPO/jurídico e ambiente | AppSec/DPO |
+| REQ-009 | Implementado | Testes de migração, repositórios e restore-smoke | RTO/RPO e restore no alvo | Dados/SRE |
+
+O estado só pode mudar quando a evidência correspondente estiver disponível. Uma
+linha “implementada” não transforma dependência externa em homologação concluída.
+Revisões devem manter o vínculo requisito → fluxo → código → teste → risco.
+
+## Manutenção automatizada da rastreabilidade
+
+Cada linha `REQ-*` da matriz deve citar ao menos um arquivo de teste existente.
+`tools/validate-documentation.ps1` verifica IDs, caminhos e ausência de referência
+obsoleta. A presença do arquivo não comprova o critério: a revisão humana deve
+confirmar que os testes exercitam o comportamento descrito e registrar lacunas
+como tais. Mudança de rota, regra, DTO ou teste exige atualizar esta matriz na
+mesma entrega.

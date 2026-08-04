@@ -18,6 +18,8 @@ param(
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
+$env:MSBUILDDISABLENODEREUSE = "1"
+$env:DOTNET_CLI_USE_MSBUILD_SERVER = "0"
 
 $root = Split-Path -Parent $PSScriptRoot
 $artifactsRoot = Join-Path $root "artifacts\test-readiness"
@@ -62,11 +64,11 @@ function Test-CommandAvailable {
 Push-Location $root
 try {
     Invoke-Step "build" {
-        dotnet build ".\Integracao.ControlID.PoC.sln" --no-restore -v:minimal
+        dotnet build ".\Integracao.ControlID.PoC.sln" --no-restore -v:minimal -m:1 -nr:false
     }
 
     Invoke-Step "tests" {
-        dotnet test ".\Integracao.ControlID.PoC.sln" --no-build -v:minimal
+        dotnet test ".\Integracao.ControlID.PoC.sln" --no-build -v:minimal -m:1 -nr:false
     }
 
     Invoke-Step "format-check" {
@@ -75,6 +77,10 @@ try {
 
     Invoke-Step "whitespace-check" {
         git diff --check
+    }
+
+    Invoke-Step "documentation-validation" {
+        powershell -ExecutionPolicy Bypass -File ".\tools\validate-documentation.ps1"
     }
 
     Invoke-Step "secret-scan" {

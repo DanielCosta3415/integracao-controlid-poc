@@ -1,4 +1,6 @@
-﻿# Teste smoke local da PoC Control iD
+# Teste integrado local da PoC Control iD
+
+> **Evidência histórica arquivada** · Público: QA e auditoria · Execução: 2026-04-13 · Responsável: QA · Consulte `artifacts/smoke/localhost-smoke-latest.md` para a execução atual.
 
 Data: 2026-04-14 03:55:55 -03:00
 
@@ -19,7 +21,7 @@ Data: 2026-04-14 03:55:55 -03:00
 - [PASS] /Session/Status: GET 200
 - [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
 - [PASS] http://localhost:5000/Session/Validate: POST 200
-- [SKIP] http://localhost:5000/Session/Clear: Sessão não é limpa durante o smoke test para preservar o contexto dos demais fluxos.
+- [SKIP] http://localhost:5000/Session/Clear: a sessão não é limpa durante o teste integrado para preservar o contexto dos demais fluxos.
 
 ## Callbacks
 
@@ -185,6 +187,25 @@ Data: 2026-04-14 03:55:55 -03:00
 - [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
 - [PASS] http://localhost:5000/RemoteActions/Enroll: POST 200
 - [PASS] /PushCenter: GET 200
+
+## Proveniência da execução
+
+- Commit, SDK, sistema operacional e duração: não registrados no relatório original.
+- Credenciais: fictícias; nenhum valor deve ser recuperado ou acrescentado.
+- Resultado atual: não inferir a partir desta lista; execute `tools/smoke-localhost.ps1`.
+- Integridade futura: relatórios novos devem registrar hash do artefato e caminhos
+  de logs sanitizados.
+
+## Validade da evidência
+
+- Data da execução: 2026-04-13.
+- Commit, SDK e sistema operacional: não registrados no relatório original.
+- Resultado: fotografia histórica; rotas e contagens podem ter mudado.
+- Execução atual: `tools/smoke-localhost.ps1` grava
+  `artifacts/smoke/localhost-smoke-latest.md` fora do Git.
+
+Não use esta lista como aprovação de release. Reexecute o smoke no commit
+candidato e preserve somente artefato sanitizado.
 - [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
 - [PASS] http://localhost:5000/PushCenter/Queue: POST 200
 - [PASS] http://localhost:5000/PushCenter/Clear: POST 200

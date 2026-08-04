@@ -1,5 +1,7 @@
 # Resumo da PR - documentação técnica e governança
 
+> **Evidência histórica** · Público: manutenção e auditoria · Referência temporal: 2026-05-01 · Responsável: mantenedores · Não substitui o estado atual nem um novo resumo de PR.
+
 ## Resumo
 
 Esta rodada reorganiza a documentação técnica para onboarding, manutenção e
@@ -48,3 +50,23 @@ powershell -ExecutionPolicy Bypass -File .\tools\scan-secrets.ps1
   com bloqueio por `test-readiness-gates.ps1 -ReleaseGate`.
 - Scanners externos exigem ferramentas instaladas/aprovadas e URL controlada; o
   release gate falha se estiverem ausentes.
+
+## Validade e rastreabilidade
+
+- PR e commit originais: não registrados neste resumo histórico.
+- Escopo temporal: estado conhecido em 2026-05-01.
+- Mudanças posteriores: consulte `docs/changelog-2026-08-03.md`.
+- Validação atual: execute os comandos do `README.md` e não reutilize resultados
+  antigos como aprovação de release.
+
+Um novo PR deve gerar seu próprio resumo com título, motivação, impacto, checks,
+riscos e reversão; este arquivo não é um modelo vivo.
+
+## Campos mínimos do próximo resumo
+
+- commit-base e commit final;
+- requisito, fluxo e risco afetados;
+- arquivos por categoria e contratos preservados;
+- migração, configuração e impacto operacional;
+- comandos executados, resultado e artefato;
+- risco residual, reversão e aprovação humana necessária.

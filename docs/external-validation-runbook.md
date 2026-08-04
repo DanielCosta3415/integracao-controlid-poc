@@ -1,8 +1,10 @@
 # Validação externa de segurança, dependências, DAST e acessibilidade
 
+> **Guia operacional vivo** · Público: QA, AppSec e release · Responsável: Security/QA · Última validação: 2026-08-03.
+
 Escopo: padronizar execução de SAST, OSV, DAST baseline e acessibilidade sem
 versionar credenciais, sem enviar payloads pessoais a terceiros e sem depender de
-comandos informais. Este runbook complementa `tools/test-readiness-gates.ps1`.
+comandos informais. Este guia operacional complementa `tools/test-readiness-gates.ps1`.
 
 ## Ferramentas esperadas
 
@@ -10,7 +12,7 @@ comandos informais. Este runbook complementa `tools/test-readiness-gates.ps1`.
 | --- | --- | --- | --- |
 | SAST | `semgrep` | Executa regras locais em `.semgrep.yml` | Não usa conjunto de regras remoto por padrão. |
 | Dependências OSV | `osv-scanner` | Avalia lockfiles e manifests por vulnerabilidades conhecidas | Complementa `dotnet list package --vulnerable`. |
-| DAST baseline | `zap-baseline.py` ou `zap.bat` | Varre app local/staging controlado | Exige `EXTERNAL_SCAN_BASE_URL`; no Windows, o pacote ZAP pode expor apenas `zap.bat`, usado em quick scan headless. |
+| Linha de base DAST | `zap-baseline.py` ou `zap.bat` | Varre aplicação local/homologação controlada | Exige `EXTERNAL_SCAN_BASE_URL`; no Windows, o pacote ZAP pode expor apenas `zap.bat`, usado em varredura rápida sem interface gráfica. |
 | Acessibilidade | `axe` | Varre página inicial do app em execução | Exige `EXTERNAL_SCAN_BASE_URL`; não coleta dado pessoal. |
 
 Instale as ferramentas por canais oficiais ou imagem/container aprovados pelo
@@ -90,3 +92,48 @@ Todos os relatórios ficam fora do Git:
 - Rodar DAST/a11y contra ambiente local, preview isolado ou staging controlado.
 - Usar dados fictícios nos fluxos varridos.
 - Revisar qualquer achado antes de publicar relatório fora do time técnico.
+
+## Versões e reprodutibilidade
+
+Antes da execução, registre versões sem instalar ou atualizar automaticamente:
+
+```powershell
+semgrep --version
+osv-scanner --version
+zap-baseline.py --help
+axe --version
+dotnet --info
+```
+
+Se um comando não existir, marque o scanner como bloqueado e use o canal oficial
+aprovado pela organização para instalação. O relatório deve conter ferramenta,
+versão, origem, hash da imagem quando aplicável, commit, URL sem credenciais,
+horário, duração e parâmetros.
+
+## Triagem de achados
+
+| Estado | Significado | Evidência mínima |
+| --- | --- | --- |
+| Confirmado | Comportamento reproduzível e aplicável | Regra, local seguro e impacto |
+| Falso positivo | Regra não se aplica ao fluxo real | Justificativa revisável |
+| Aceito temporariamente | Risco real com mitigação compensatória | Dono, prazo e aprovação |
+| Bloqueado | Ferramenta ou ambiente ausente | Dependência e próximo passo |
+
+Achado crítico ou alto bloqueia release até correção ou aceite humano formal.
+Não publique payload ofensivo, cookie, segredo ou dado pessoal como evidência.
+
+## Controle de versões e artefatos
+
+| Campo obrigatório | Exemplo seguro |
+| --- | --- |
+| Ferramenta e versão | `semgrep <versão-validada>` |
+| Origem | Site oficial, pacote ou imagem aprovada |
+| Configuração | Arquivo de regras e opções sem segredo |
+| Alvo | URL local ou de homologação autorizada |
+| Resultado | Código de saída, totais por severidade e falso positivo justificado |
+| Artefato | Caminho restrito para SARIF, JSON, HTML ou log sanitizado |
+
+Não fixe neste documento uma versão que ainda não tenha sido instalada e
+validada. O relatório de cada execução é a fonte da versão efetiva; mudança de
+versão exige nova linha de base para evitar comparar regras diferentes como se
+fossem o mesmo controle.

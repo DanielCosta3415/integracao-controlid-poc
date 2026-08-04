@@ -1,8 +1,10 @@
 # Implantação, ambientes e resiliência
 
+> **Guia operacional vivo** · Público: plataforma, SRE e release · Responsável: Platform/SRE · Última validação: 2026-08-03.
+
 Escopo: PoC ASP.NET Core 8 MVC/Razor com SQLite local e integração com equipamento
 Control iD. Este documento descreve execução reproduzível fora do ambiente local
-sem criar deploy automático, DNS real ou credenciais versionadas.
+sem criar implantação automática, DNS real ou credenciais versionadas.
 
 ## Ambientes mapeados
 
@@ -10,9 +12,9 @@ sem criar deploy automático, DNS real ou credenciais versionadas.
 | --- | --- | --- | --- |
 | Local | Existente | `launchSettings.json`, `README.md`, `tools/smoke-localhost.ps1` | Usa `Development`, SQLite local e User Secrets/env vars. |
 | Development | Existente | `appsettings.Development.json` | Habilita OpenAPI somente neste ambiente. |
-| Staging | Configurado | `appsettings.Staging.json`, `.env.example`, Docker/Compose | Requer secrets e hosts via ambiente. |
-| Production | Configurado | `appsettings.Production.json`, `.env.example`, Docker/Compose | Startup falha se hosts, shared key, assinatura e egress allowlist não forem configurados. |
-| Preview | Ausente | Sem provedor/manifesto dedicado | Use branch/serviço efemero com as mesmas variáveis de Staging. |
+| Homologação (`Staging`) | Configurado | `appsettings.Staging.json`, `.env.example`, Docker/Compose | Requer segredos e hosts configurados pelo ambiente. |
+| Produção (`Production`) | Configurado | `appsettings.Production.json`, `.env.example`, Docker/Compose | A inicialização falha se hosts, chave compartilhada, assinatura e lista de permissões de saída não forem configurados. |
+| Pré-visualização (`Preview`) | Ausente | Sem provedor ou manifesto dedicado | Use ramificação ou serviço efêmero com as mesmas variáveis de homologação. |
 
 Não há provedor cloud versionado. Qualquer Render, Azure, AWS, GCP, Fly.io, VPS ou
 Kubernetes deve ser configurado por decisão humana e sem credenciais no Git.
@@ -135,7 +137,7 @@ O fechamento das lacunas externas fica em `docs/residual-risk-closure.md`.
 
 Para incidentes ativos, use também `docs/incident-response-and-dr.md`, que define
 severidade, comunicação, escalonamento, preservação de evidências e validação
-pós-rollback.
+pós-reversão.
 
 1. Preservar volume `/app/data` antes de trocar versão.
 2. Manter a imagem anterior tagueada, por exemplo `integracao-controlid-poc:<versao-anterior>`.
@@ -163,3 +165,50 @@ powershell -ExecutionPolicy Bypass -File .\tools\backup-sqlite-operational.ps1 -
 | Secrets reais fora do Git | Alta | `.env.example`, User Secrets, secret scan e validação contra placeholders. |
 | SQLite local em container sem volume | Alta | Compose usa volume nomeado para `/app/data`; docs exigem volume persistente. |
 | Forwarded headers com proxy não confiável | Alta | Desabilitado por padrão; exige `KnownProxies` fora de Development. |
+
+## Topologia de referência independente de provedor
+
+```mermaid
+flowchart TB
+    Internet["Rede autorizada"] --> TLS["TLS e proxy reverso"]
+    TLS --> App["Uma instância da PoC"]
+    App --> Data["Volume persistente SQLite"]
+    App --> Logs["Volume de logs com retenção"]
+    App --> Device["Rede ou host Control iD permitido"]
+    Data --> Backup["Destino de backup fora do host"]
+    Backup --> Restore["Exercício de restauração"]
+```
+
+Essa referência não promete alta disponibilidade. SQLite pressupõe uma instância
+gravadora e volume persistente. Um provedor real deve documentar CPU, memória,
+armazenamento, TLS, DNS, backup, retenção, região, custo e responsável em
+`ops.local.json`.
+
+## Lista de verificação pós-implantação
+
+1. Confirmar imagem/tag e configuração sem exibir segredos.
+2. Validar `/health/live` e `/health/ready` antes de liberar tráfego.
+3. Fazer login local com conta de teste autorizada e papel esperado.
+4. Consultar endpoint de leitura no stub ou equipamento homologado.
+5. Confirmar logs correlacionados, métricas e ausência de 5xx novos.
+6. Validar volumes, espaço livre, backup e alerta de retenção.
+7. Registrar horário, executor, versão, evidências e decisão de seguir ou reverter.
+
+A reversão só termina quando a versão anterior está saudável, dados permanecem
+consistentes e sinais operacionais voltaram à linha de base. Migração de schema
+exige plano próprio; restaurar código não reverte dados automaticamente.
+
+## Pacote mínimo de evidência
+
+| Item | Conteúdo permitido | Local |
+| --- | --- | --- |
+| Versão | Commit, imagem e horário | Registro da liberação |
+| Configuração | Nomes das variáveis e estados, nunca valores secretos | Repositório operacional restrito |
+| Banco | Migração aplicada, backup e resultado de restauração | Evidência de dados restrita |
+| Saúde | Estado de `live`, `ready`, métricas e erro 5xx | Painel ou relatório sanitizado |
+| Integração | Modelo, firmware, licença e contrato aprovado | Evidência de bancada restrita |
+| Decisão | Executor, aprovador, seguir ou reverter | Registro da liberação |
+
+Sem provedor escolhido, este pacote é um contrato de conteúdo. Região, serviço,
+TLS, cofre de segredos, limites e URL reais só devem ser preenchidos após decisão
+humana registrada em `ops.local.json`.

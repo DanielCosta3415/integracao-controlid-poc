@@ -1,5 +1,7 @@
 # Responsabilidades dos arquivos do projeto
 
+> **Inventário vivo** · Público: desenvolvimento e manutenção · Responsável: mantenedores · Última validação: 2026-08-03.
+
 Este documento resume a responsabilidade dos arquivos versionados da PoC `Integracao.ControlID.PoC`.
 
 O objetivo é servir como um mapa rápido de navegação para quem quiser entender a solução, localizar uma funcionalidade ou contribuir com o projeto sem precisar descobrir a estrutura apenas pelo código.
@@ -14,22 +16,32 @@ Observações de escopo:
 
 | Arquivo | Responsabilidade |
 | --- | --- |
-| `.dockerignore` | Remove segredos, banco local, logs e artefatos do contexto de build Docker. |
-| `.env.example` | Lista variáveis de ambiente seguras para criar `.env` local sem versionar secrets. |
-| `Dockerfile` | Define build multi-stage e runtime não root para execução containerizada da PoC. |
-| `appsettings.Staging.json` | Defaults seguros sem segredos para validação em staging. |
-| `appsettings.Production.json` | Defaults seguros sem segredos para produção; exige variáveis reais no ambiente. |
+| `.dockerignore` | Remove segredos, banco local, registros e artefatos do contexto de compilação Docker. |
+| `.env.example` | Lista variáveis de ambiente seguras para criar `.env` local sem versionar segredos. |
+| `Dockerfile` | Define compilação em múltiplos estágios e execução sem usuário raiz para a PoC em contêiner. |
+| `appsettings.Staging.json` | Valores padrão seguros, sem segredos, para validação no ambiente `Staging`. |
+| `appsettings.Production.json` | Valores padrão seguros, sem segredos, para produção; exige variáveis reais no ambiente. |
 | `docker-compose.yml` | Executa a PoC em contêiner com volumes persistentes, verificação de integridade e variáveis obrigatórias. |
 | `.editorconfig` | Padroniza convenções básicas de edição, formatação e estilo entre IDEs. |
-| `.gitignore` | Define arquivos e pastas que não devem ser versionados, como builds, logs e artefatos locais. |
-| `ops.example.json` | Exemplo versionado de configuração operacional para incidentes, on-call, backup externo, RTO/RPO, deploy, privacidade, validação externa, contrato físico e FinOps. |
-| `Directory.Build.props` | Centraliza propriedades comuns de build para os projetos .NET da solução. |
+| `.gitignore` | Define arquivos e pastas que não devem ser versionados, como compilações, registros e artefatos locais. |
+| `.semgrep.yml` | Define regras locais e exclusões usadas pela análise estática externa. |
+| `ops.example.json` | Exemplo versionado de configuração operacional para incidentes, plantão, cópia externa, RTO/RPO, implantação, privacidade, validação externa, contrato físico e FinOps. |
+| `Directory.Build.props` | Centraliza propriedades comuns de compilação para os projetos .NET da solução. |
+| `global.json` | Fixa a família do SDK .NET usada para restauração, compilação e testes reproduzíveis. |
 | `Integracao.ControlID.PoC.csproj` | Define o projeto ASP.NET Core MVC principal, dependências NuGet e configurações de compilação. |
 | `Integracao.ControlID.PoC.sln` | Agrupa o projeto principal, testes e utilitários em uma única solução. |
-| `Program.cs` | Configura o bootstrap da aplicação, DI, middlewares, banco local, rotas MVC, Serilog e serviços da PoC. |
-| `README.md` | Apresenta a PoC, stack, setup local, testes, observabilidade e links de referência. |
+| `packages.lock.json` | Fixa o grafo NuGet do projeto principal para restauração em modo bloqueado. |
+| `Program.cs` | Configura a inicialização da aplicação, injeção de dependências, middlewares, banco local, rotas MVC, Serilog e serviços da PoC. |
+| `README.md` | Apresenta a PoC, tecnologias, configuração local, testes, observabilidade e links de referência. |
 | `appsettings.json` | Configurações base da aplicação, API Control iD, banco, logs e segurança de callbacks. |
 | `appsettings.Development.json` | Sobrescritas de configuração para execução local em ambiente de desenvolvimento. |
+
+## GitHub
+
+| Arquivo | Responsabilidade |
+| --- | --- |
+| `.github/dependabot.yml` | Agenda a revisão automatizada de dependências NuGet e GitHub Actions. |
+| `.github/workflows/ci.yml` | Executa os gates de compilação, testes, documentação, auditoria e contêiner em pull requests e na ramificação principal. |
 
 ## Properties
 
@@ -39,7 +51,7 @@ Observações de escopo:
 
 ## Controllers
 
-Os controllers coordenam as rotas MVC, recebem a entrada da UI, acionam serviços/repositórios e retornam views ou respostas auxiliares.
+Os controladores coordenam as rotas MVC, recebem a entrada da interface, acionam serviços/repositórios e retornam telas ou respostas auxiliares.
 
 | Arquivo | Responsabilidade |
 | --- | --- |
@@ -57,7 +69,7 @@ Os controllers coordenam as rotas MVC, recebem a entrada da UI, acionam serviço
 | `Controllers/ErrorsController.cs` | Lista e detalha erros registrados durante chamadas, integrações ou processamento local. |
 | `Controllers/GroupsController.cs` | CRUD e visualização de grupos locais relacionados aos fluxos de acesso. |
 | `Controllers/HardwareController.cs` | Aciona e apresenta recursos de hardware, como GPIO, relé, porta e validações biométricas. |
-| `Controllers/HomeController.cs` | Monta o dashboard inicial e indicadores principais da PoC. |
+| `Controllers/HomeController.cs` | Monta o painel inicial e os indicadores principais da PoC. |
 | `Controllers/LogoController.cs` | Gerencia upload, consulta e remoção de logos/imagens locais. |
 | `Controllers/MediaController.cs` | Gerencia mídias como fotos e vídeos usados nos fluxos da PoC. |
 | `Controllers/MonitorWebhookController.cs` | Recebe, registra e apresenta eventos recebidos por webhook/callback. |
@@ -66,6 +78,7 @@ Os controllers coordenam as rotas MVC, recebem a entrada da UI, acionam serviço
 | `Controllers/OfficialEventsController.cs` | Centraliza fluxos ligados a eventos oficiais da API Control iD. |
 | `Controllers/OfficialObjectsController.cs` | Apresenta operações oficiais sobre objetos, payloads e contratos relacionados. |
 | `Controllers/OperationModesController.cs` | Exibe e simula os modos de operação Standalone, Pro e Enterprise. |
+| `Controllers/PrivacyController.cs` | Coordena consulta, correção, exportação e eliminação controlada dos dados locais de um titular. |
 | `Controllers/ProductSpecificController.cs` | Coordena funcionalidades específicas por produto/modelo da família Control iD. |
 | `Controllers/PushCenterController.cs` | Organiza a central de push, filas e comandos pendentes. |
 | `Controllers/PushController.cs` | Fluxos de eventos push, consulta e enfileiramento de comandos. |
@@ -74,13 +87,22 @@ Os controllers coordenam as rotas MVC, recebem a entrada da UI, acionam serviço
 | `Controllers/SessionController.cs` | Gerenciamento de sessões locais e status de autenticação/conexão com o equipamento. |
 | `Controllers/SystemController.cs` | Operações de sistema, rede, VPN, hash de senha e ações administrativas. |
 | `Controllers/UsersController.cs` | CRUD, visualização e payloads de usuários da PoC. |
-| `Controllers/WorkspaceController.cs` | Exibe o workspace/explorador operacional para navegar pelos recursos implementados. |
+| `Controllers/WorkspaceController.cs` | Exibe a área de trabalho/o explorador operacional para navegar pelos recursos implementados. |
 
 ## Data
 
 | Arquivo | Responsabilidade |
 | --- | --- |
 | `Data/IntegracaoControlIDContext.cs` | DbContext do Entity Framework Core; mapeia entidades locais, índices, relacionamentos e configurações SQLite. |
+| `Data/Migrations/20260430144509_InitialLocalSchema.cs` | Cria o esquema local inicial usado pela PoC. |
+| `Data/Migrations/20260430144509_InitialLocalSchema.Designer.cs` | Registra os metadados EF da migração inicial. |
+| `Data/Migrations/20260430224746_AddOperationalIndexes.cs` | Adiciona índices operacionais para consultas locais frequentes. |
+| `Data/Migrations/20260430224746_AddOperationalIndexes.Designer.cs` | Registra os metadados EF da migração de índices. |
+| `Data/Migrations/20260430233000_AddLocalUserRoles.cs` | Acrescenta os papéis de autorização dos usuários locais. |
+| `Data/Migrations/20260430233000_AddLocalUserRoles.Designer.cs` | Registra os metadados EF da migração de papéis locais. |
+| `Data/Migrations/20260803192319_HardenLocalIdentity.cs` | Fortalece unicidade e normalização da identidade local. |
+| `Data/Migrations/20260803192319_HardenLocalIdentity.Designer.cs` | Registra os metadados EF da migração de fortalecimento da identidade. |
+| `Data/Migrations/IntegracaoControlIDContextModelSnapshot.cs` | Mantém o retrato EF vigente do esquema local para gerar e revisar migrações. |
 
 ## Helpers
 
@@ -90,23 +112,25 @@ Os controllers coordenam as rotas MVC, recebem a entrada da UI, acionam serviço
 | `Helpers/CryptoHelper.cs` | Apoio criptográfico, especialmente para hashes e transformações relacionadas a segurança. |
 | `Helpers/FileHelper.cs` | Rotinas auxiliares para manipulação de arquivos usados pela PoC. |
 | `Helpers/HttpHelper.cs` | Funções de apoio para chamadas HTTP, montagem de requests e leitura de respostas. |
+| `Helpers/HighImpactOperationGuard.cs` | Exige confirmação explícita antes de operações administrativas ou destrutivas de alto impacto. |
 | `Helpers/NavigationPresentationHelper.cs` | Centraliza detalhes de apresentação usados pela navegação da UI. |
 | `Helpers/ProductSpecificPresentationHelper.cs` | Apoia a exibição de conteúdos específicos de produto na interface. |
+| `Helpers/PrivacyLogHelper.cs` | Minimiza e mascara identificadores antes de incluí-los em registros técnicos. |
 | `Helpers/SecurityTextHelper.cs` | Padroniza textos e mascaramentos ligados a informações sensíveis. |
 | `Helpers/SessionHelper.cs` | Auxilia leitura, escrita e interpretação de dados de sessão no contexto web. |
 
-## Logging
+## Registros
 
 | Arquivo | Responsabilidade |
 | --- | --- |
-| `Logging/SeriLogConfiguration.cs` | Configura sinks, formato e políticas de logging com Serilog. |
+| `Logging/SeriLogConfiguration.cs` | Configura destinos, formato e políticas de registro com Serilog. |
 | `Logging/SeriLogEvents.cs` | Centraliza identificadores/eventos de log usados para rastreabilidade. |
 
 ## Mappings
 
 | Arquivo | Responsabilidade |
 | --- | --- |
-| `Mappings/ModelMappings.cs` | Converte modelos da API/DOMÍNIO para entidades locais ou estruturas equivalentes. |
+| `Mappings/ModelMappings.cs` | Converte modelos da API e do domínio para entidades locais ou estruturas equivalentes. |
 | `Mappings/ViewModelMappings.cs` | Converte modelos e entidades em ViewModels prontos para as telas Razor. |
 
 ## Middlewares
@@ -122,7 +146,7 @@ Os controllers coordenam as rotas MVC, recebem a entrada da UI, acionam serviço
 
 ## Models/ControlIDApi
 
-Modelos que representam contratos, payloads e respostas próximas da API Control iD.
+Modelos que representam contratos, cargas úteis e respostas próximas da API Control iD.
 
 | Arquivo | Responsabilidade |
 | --- | --- |
@@ -176,6 +200,12 @@ Entidades persistidas no SQLite local para histórico, cache operacional, simula
 | `Models/Database/SyncLocal.cs` | Entidade local para estado de sincronização. |
 | `Models/Database/UserLocal.cs` | Entidade local para usuários. |
 
+## Models/Security
+
+| Arquivo | Responsabilidade |
+| --- | --- |
+| `Models/Security/LocalIdentityPolicy.cs` | Centraliza normalização, limites e validações da identidade autenticável local. |
+
 ## Monitor
 
 | Arquivo | Responsabilidade |
@@ -189,6 +219,8 @@ Entidades persistidas no SQLite local para histórico, cache operacional, simula
 | Arquivo | Responsabilidade |
 | --- | --- |
 | `Options/CallbackSecurityOptions.cs` | Representa as configurações de segurança aplicadas aos callbacks/webhooks. |
+| `Options/ControlIdCircuitBreakerOptions.cs` | Configura o limiar e a janela do disjuntor das chamadas à API Control iD. |
+| `Options/ControlIdEgressOptions.cs` | Configura limites, timeout e políticas seguras para tráfego de saída ao equipamento. |
 
 ## Services/Callbacks
 
@@ -198,6 +230,7 @@ Entidades persistidas no SQLite local para histórico, cache operacional, simula
 | `Services/Callbacks/CallbackRequestBodyReader.cs` | Lê o corpo bruto das requisições de callback de forma reutilizável. |
 | `Services/Callbacks/CallbackSignatureCanonicalizer.cs` | Canonicaliza e assina method/path/query/timestamp/nonce e bytes exatos do body. |
 | `Services/Callbacks/CallbackSecurityEvaluator.cs` | Avalia regras de segurança, chave compartilhada e origem permitida dos callbacks. |
+| `Services/Callbacks/CallbackSignatureValidator.cs` | Valida assinatura HMAC, janela temporal e nonce dos callbacks recebidos. |
 
 ## Services/ControlIDApi
 
@@ -207,6 +240,7 @@ Entidades persistidas no SQLite local para histórico, cache operacional, simula
 | `Services/ControlIDApi/OfficialApiBinaryFileResultFactory.cs` | Monta respostas de arquivo/binário para resultados oficiais que precisam de download. |
 | `Services/ControlIDApi/OfficialApiBodyParameterStrategy.cs` | Define estratégia de montagem de parâmetros enviados no corpo da requisição. |
 | `Services/ControlIDApi/OfficialApiCatalogService.cs` | Disponibiliza o catálogo navegável de endpoints oficiais implementados/documentados. |
+| `Services/ControlIDApi/OfficialApiCircuitBreaker.cs` | Interrompe temporariamente chamadas externas após falhas consecutivas para limitar cascatas. |
 | `Services/ControlIDApi/OfficialApiContractDocumentationService.cs` | Gera a apresentação dos contratos oficiais de entrada/saída. |
 | `Services/ControlIDApi/OfficialApiDocumentationSeedCatalog.cs` | Semeia metadados e documentação base dos endpoints oficiais. |
 | `Services/ControlIDApi/OfficialApiDocumentationService.cs` | Consolida documentação, exemplos e metadados para exibição na UI. |
@@ -242,6 +276,7 @@ Repositórios que encapsulam acesso ao SQLite local para cada entidade da PoC.
 | `Services/Database/SyncRepository.cs` | Persistência e consulta do estado de sincronização. |
 | `Services/Database/UserRepository.cs` | Persistência e consulta de usuários. |
 | `Services/Database/LocalUserRegistrationResult.cs` | Resultado tipado e estados do registro atômico de usuário local. |
+| `Services/Database/LocalDataQueryLimits.cs` | Centraliza os limites padrão e máximos das consultas e listagens locais. |
 
 ## Services complementares
 
@@ -261,12 +296,19 @@ Repositórios que encapsulam acesso ao SQLite local para cada entidade da PoC.
 | `Services/Observability/SqliteReadinessHealthCheck.cs` | Verifica readiness do SQLite local usado como estado runtime. |
 | `Services/OperationModes/OperationModesPayloadFactory.cs` | Monta payloads demonstrativos dos modos Standalone, Pro e Enterprise. |
 | `Services/OperationModes/OperationModesProfileResolver.cs` | Resolve perfis, comportamento esperado e transições dos modos de operação. |
+| `Services/Performance/ServerTimingHeaderWriter.cs` | Publica medições agregadas e seguras no cabeçalho `Server-Timing`. |
+| `Services/Performance/StaticAssetCachePolicy.cs` | Define a política de cache e invalidação dos ativos estáticos versionados. |
+| `Services/Privacy/PrivacySubjectReportService.cs` | Monta relatório minimizado de dados locais para atender solicitações de titulares. |
 | `Services/ProductSpecific/ProductSpecificCommandService.cs` | Executa comandos específicos por produto ou modelo. |
 | `Services/ProductSpecific/ProductSpecificConfigurationPayloadFactory.cs` | Monta payloads de configuração específicos por linha de produto. |
 | `Services/ProductSpecific/ProductSpecificDownloadResult.cs` | Representa resultado de download em fluxos específicos de produto. |
 | `Services/ProductSpecific/ProductSpecificJsonReader.cs` | Lê e interpreta JSONs usados por funcionalidades específicas. |
 | `Services/ProductSpecific/ProductSpecificSections.cs` | Define seções/categorias exibidas no módulo de recursos específicos. |
 | `Services/ProductSpecific/ProductSpecificSnapshotService.cs` | Monta snapshots de estado/configuração específicos por produto. |
+| `Services/Push/PushCommandStatuses.cs` | Centraliza os estados canônicos do ciclo de vida de comandos push. |
+| `Services/Push/PushCommandWorkflowService.cs` | Aplica transições válidas e idempotentes ao fluxo persistido de comandos push. |
+| `Services/Push/PushIdempotencyKeyResolver.cs` | Resolve e valida chaves de idempotência para evitar duplicidade de comandos. |
+| `Services/Security/AppSecurityRoles.cs` | Define os papéis de autorização usados nas políticas e telas protegidas. |
 | `Services/Security/ControlIdInputSanitizer.cs` | Sanitiza entradas para reduzir risco de payloads inválidos ou inseguros. |
 
 ## ViewModels
@@ -329,7 +371,7 @@ As ViewModels carregam dados já preparados para as telas Razor, reduzindo regra
 | `ViewModels/Hardware/GpioStateViewModel.cs` | Dados de estado GPIO. |
 | `ViewModels/Hardware/HardwareStatusViewModel.cs` | Dados de status geral de hardware. |
 | `ViewModels/Hardware/RelayActionViewModel.cs` | Dados de acionamento de relé. |
-| `ViewModels/Home/HomeDashboardViewModel.cs` | Dados do dashboard inicial. |
+| `ViewModels/Home/HomeDashboardViewModel.cs` | Dados do painel inicial. |
 | `ViewModels/Logo/LogoDeleteViewModel.cs` | Dados da confirmação de exclusão de logo. |
 | `ViewModels/Logo/LogoListViewModel.cs` | Dados da listagem de logos. |
 | `ViewModels/Logo/LogoUploadViewModel.cs` | Campos do upload de logo. |
@@ -348,6 +390,7 @@ As ViewModels carregam dados já preparados para as telas Razor, reduzindo regra
 | `ViewModels/OfficialApi/OfficialApiInvokeViewModel.cs` | Dados do formulário e resultado de invocação oficial. |
 | `ViewModels/OfficialObjects/OfficialObjectsViewModel.cs` | Dados da tela de exploração de objetos oficiais. |
 | `ViewModels/OperationModes/OperationModesViewModel.cs` | Dados da tela de modos Standalone, Pro e Enterprise. |
+| `ViewModels/Privacy/PrivacySubjectRequestViewModel.cs` | Campos e validações das solicitações de direitos do titular sobre dados locais. |
 | `ViewModels/ProductSpecific/ProductSpecificViewModel.cs` | Dados da tela de recursos específicos por produto. |
 | `ViewModels/Push/PushEventListViewModel.cs` | Dados da listagem de eventos push. |
 | `ViewModels/Push/PushEventViewModel.cs` | Dados de detalhe de evento push. |
@@ -383,7 +426,7 @@ As ViewModels carregam dados já preparados para as telas Razor, reduzindo regra
 | `ViewModels/Users/UserListViewModel.cs` | Dados da listagem de usuários. |
 | `ViewModels/Users/UsersApiResponse.cs` | Estrutura de resposta agregada da API para usuários. |
 | `ViewModels/Users/UserViewModel.cs` | Dados de detalhe de usuário. |
-| `ViewModels/Workspace/WorkspaceExplorerViewModel.cs` | Dados do explorador/workspace operacional. |
+| `ViewModels/Workspace/WorkspaceExplorerViewModel.cs` | Dados do explorador/área de trabalho operacional. |
 
 ## Views
 
@@ -408,6 +451,8 @@ As views Razor compõem a interface web da PoC. Em geral, cada pasta espelha um 
 | `Views/AdvancedOfficial/NetworkInterlock.cshtml` | Tela do fluxo de intertravamento/rede. |
 | `Views/AdvancedOfficial/RemoteLedControl.cshtml` | Tela do fluxo de controle remoto de LED. |
 | `Views/Auth/ChangePassword.cshtml` | Tela de troca de senha. |
+| `Views/Auth/AccessDenied.cshtml` | Tela acessível exibida quando o usuário autenticado não possui o papel exigido. |
+| `Views/Auth/LocalLogin.cshtml` | Tela de autenticação da conta local usada para proteger a PoC. |
 | `Views/Auth/Login.cshtml` | Tela de login/conexão. |
 | `Views/Auth/Logout.cshtml` | Tela de encerramento de sessão. |
 | `Views/Auth/Register.cshtml` | Tela de registro/cadastro. |
@@ -476,6 +521,7 @@ As views Razor compõem a interface web da PoC. Em geral, cada pasta espelha um 
 | `Views/OfficialObjects/Index.cshtml` | Tela de exploração de objetos oficiais. |
 | `Views/OperationModes/Index.cshtml` | Tela dos modos Standalone, Pro e Enterprise. |
 | `Views/ProductSpecific/Index.cshtml` | Tela de recursos específicos por produto. |
+| `Views/Privacy/Index.cshtml` | Tela administrativa para solicitações de acesso, correção, exportação e eliminação de dados locais. |
 | `Views/PushCenter/Details.cshtml` | Tela de detalhe de item/comando da central de push. |
 | `Views/PushCenter/Index.cshtml` | Tela centralizada de eventos e comandos push. |
 | `Views/QRCodes/Create.cshtml` | Tela de criação de QR Code. |
@@ -518,19 +564,22 @@ As views Razor compõem a interface web da PoC. Em geral, cada pasta espelha um 
 | `Views/Users/Details.cshtml` | Tela de detalhe de usuário. |
 | `Views/Users/Edit.cshtml` | Tela de edição de usuário. |
 | `Views/Users/Index.cshtml` | Tela de listagem de usuários. |
-| `Views/Workspace/Domain.cshtml` | Tela de domínio/área específica do workspace. |
-| `Views/Workspace/Index.cshtml` | Tela principal do workspace/explorador operacional. |
+| `Views/Workspace/Domain.cshtml` | Tela de domínio/área específica da área de trabalho. |
+| `Views/Workspace/Index.cshtml` | Tela principal da área de trabalho/do explorador operacional. |
 
 ## wwwroot
 
 | Arquivo/Pasta | Responsabilidade |
 | --- | --- |
-| `wwwroot/css/site.css` | Estilos globais da PoC, componentes visuais, dashboard, tabelas e formulários. |
-| `wwwroot/css/site-shell-responsive.css` | Overrides isolados da navegação e do shell responsivo. |
-| `wwwroot/js/site.js` | JavaScript global da UI, comportamentos de interação e utilidades client-side. |
+| `wwwroot/css/site.css` | Estilos globais da PoC, componentes visuais, painel, tabelas e formulários. |
+| `wwwroot/css/site-shell-responsive.css` | Sobrescritas isoladas da navegação e do shell responsivo. |
+| `wwwroot/js/site.js` | JavaScript global da interface, comportamentos de interação e utilidades executadas no cliente. |
 | `wwwroot/favicon.ico` | Ícone exibido pelo navegador para a aplicação. |
-| `wwwroot/lib/bootstrap/*` | Arquivos CSS/JS do Bootstrap, incluindo versões minificadas, sourcemaps, utilitários e licenças. |
-| `wwwroot/lib/jquery/*` | Arquivos da biblioteca jQuery usados pela camada client-side. |
+| `wwwroot/img/docs/local-login.png` | Captura sanitizada da tela inicial de autenticação local. |
+| `wwwroot/img/docs/authenticated-home.png` | Captura sanitizada do painel autenticado sem equipamento conectado. |
+| `wwwroot/img/docs/official-api.png` | Captura sanitizada do catálogo oficial da API. |
+| `wwwroot/lib/bootstrap/*` | Arquivos CSS/JS do Bootstrap, incluindo versões minificadas, mapas de código-fonte, utilitários e licenças. |
+| `wwwroot/lib/jquery/*` | Arquivos da biblioteca jQuery usados pela camada executada no cliente. |
 | `wwwroot/lib/jquery-validation/*` | Biblioteca de validação jQuery usada nos formulários. |
 | `wwwroot/lib/jquery-validation-unobtrusive/*` | Adaptadores unobtrusive validation usados com ASP.NET Core MVC/Razor. |
 
@@ -540,85 +589,151 @@ As views Razor compõem a interface web da PoC. Em geral, cada pasta espelha um 
 | --- | --- |
 | `docs/README.md` | Índice central da documentação técnica por papel e por tema. |
 | `docs/adrs/` | Registros de decisões arquiteturais aceitas e suas consequências. |
-| `docs/architecture-overview.md` | Visão de camadas, fluxos críticos, dependências, trust boundaries e contratos a preservar. |
+| `docs/architecture-overview.md` | Visão de camadas, fluxos críticos, dependências, fronteiras de confiança e contratos a preservar. |
 | `docs/changelog-2026-04-14.md` | Registro resumido de evoluções relevantes realizadas na PoC. |
-| `docs/changelog-2026-04-15.md` | Registro resumido das atualizações de documentação, comentários inline e observabilidade. |
-| `docs/changelog-2026-05-01.md` | Registro da rodada de documentação, onboarding e ADRs. |
-| `docs/ci-cd-quality-gates.md` | Documenta GitHub Actions, quality gates, artefatos, branch protection recomendada e reprodução local. |
-| `docs/developer-onboarding.md` | Guia de setup, execução, desenvolvimento, diagnóstico e entrega segura para novos contribuidores. |
-| `docs/deployment-runbook.md` | Mapeia ambientes, container, variáveis obrigatórias, deploy, rollback e riscos de infraestrutura. |
+| `docs/changelog-2026-04-15.md` | Registro resumido das atualizações de documentação, comentários no código e observabilidade. |
+| `docs/changelog-2026-05-01.md` | Registro da rodada de documentação, integração técnica e ADRs. |
+| `docs/ci-cd-quality-gates.md` | Documenta GitHub Actions, critérios de qualidade, artefatos, proteção recomendada da ramificação e reprodução local. |
+| `docs/developer-onboarding.md` | Guia de configuração, execução, desenvolvimento, diagnóstico e entrega segura para novos contribuidores. |
+| `docs/deployment-runbook.md` | Mapeia ambientes, contêiner, variáveis obrigatórias, implantação, reversão e riscos de infraestrutura. |
 | `docs/documentation-audit-2026-05-01.md` | Auditoria de documentação, achados, consistência e lacunas restantes. |
-| `docs/equipment-contingency-runbook.md` | Define contingência operacional do equipamento Control iD, fallback manual e validação de bancada. |
-| `docs/external-validation-runbook.md` | Padroniza SAST, OSV, DAST, acessibilidade e contrato com stub/equipamento. |
+| `docs/equipment-contingency-runbook.md` | Define contingência operacional do equipamento Control iD, alternativa manual e validação de bancada. |
+| `docs/external-validation-runbook.md` | Padroniza SAST, OSV, DAST, acessibilidade e contrato com simulador/equipamento. |
 | `docs/finops-capacity.md` | Define inventário de custos, capacidade, limites, governança FinOps e sustentabilidade operacional. |
-| `docs/incident-response-and-dr.md` | Define matriz SEV, runbooks de incidentes, continuidade, backup/restore operacional, DR, comunicação e postmortem. |
+| `docs/incident-response-and-dr.md` | Define matriz SEV, guias de incidentes, continuidade, cópia/restauração operacional, recuperação de desastres, comunicação e análise pós-incidente. |
 | `docs/monitor-implementation.md` | Documenta a implementação da funcionalidade Monitor, callbacks oficiais, segurança e persistência local. |
-| `docs/observability-runbook.md` | Define health, métricas, alertas, dashboards e resposta a incidentes operacionais. |
+| `docs/observability-runbook.md` | Define saúde, métricas, alertas, painéis e resposta a incidentes operacionais. |
 | `docs/observability/alert-rules.json` | Regras versionadas de alerta para o monitor local e ferramentas externas. |
-| `docs/observability/dashboard.json` | Especificação versionada de dashboards independente de fornecedor. |
-| `docs/operation-modes-implementation.md` | Documenta a implementação dos modos Standalone, Pro e Enterprise, incluindo payloads e transições. |
-| `docs/product-analytics.md` | Define objetivos, KPIs, funis, eventos, dashboards e restrições de analytics privacy-aware. |
-| `docs/pr-summary-2026-05-01.md` | Resumo de PR/release notes da rodada documental. |
+| `docs/observability/dashboard.json` | Especificação versionada de painéis independente de fornecedor. |
+| `docs/operation-modes-implementation.md` | Documenta a implementação dos modos Standalone, Pro e Enterprise, incluindo cargas úteis e transições. |
+| `docs/product-analytics.md` | Define objetivos, KPIs, funis, eventos, painéis e restrições de análise com privacidade. |
+| `docs/pr-summary-2026-05-01.md` | Resumo de PR e notas de liberação da rodada documental. |
 | `docs/project-file-responsibilities.md` | Este inventário de responsabilidades por pasta e arquivo. |
 | `docs/push-implementation.md` | Documenta a implementação da funcionalidade Push, fila persistida, polling e retorno de resultados. |
-| `docs/residual-risk-closure.md` | Mapeia riscos residuais externos para campos obrigatórios, gates e evidências de release. |
+| `docs/residual-risk-closure.md` | Mapeia riscos residuais externos para campos obrigatórios, critérios e evidências de liberação. |
 | `docs/reports/controlid-api-audit-2026-04-13.md` | Auditoria técnica da cobertura da API Control iD. |
-| `docs/reports/design-system-accessibility-audit-2026-04-14.md` | Auditoria de design system e acessibilidade da UI. |
+| `docs/reports/design-system-accessibility-audit-2026-04-14.md` | Auditoria do sistema de design e da acessibilidade da interface. |
 | `docs/reports/heuristic-ui-audit-2026-04-14.md` | Avaliação heurística inicial da interface. |
-| `docs/reports/localhost-smoke-test-2026-04-13.md` | Relatório de smoke test local da rodada de 13/04/2026. |
-| `docs/reports/localhost-smoke-test-2026-04-14.md` | Relatório de smoke test local da rodada de 14/04/2026. |
+| `docs/reports/localhost-smoke-test-2026-04-13.md` | Relatório de teste integrado local da rodada de 13/04/2026. |
+| `docs/reports/localhost-smoke-test-2026-04-14.md` | Relatório de teste integrado local da rodada de 14/04/2026. |
 | `docs/reports/operation-modes-e2e-runbook-2026-04-14.md` | Roteiro E2E para validação dos modos de operação. |
 | `docs/reports/operation-modes-homologation-matrix-2026-04-14.md` | Matriz de homologação dos modos Standalone, Pro e Enterprise. |
 | `docs/reports/visual-inventory-2026-04-14.md` | Inventário visual das telas e estados avaliados. |
 
 ## tests
 
-| Arquivo/Pasta | Responsabilidade |
+Este inventário é conferido por `tools/validate-documentation.ps1`. Qualquer
+arquivo de teste novo deve ser incluído aqui com sua responsabilidade; referências
+a arquivos removidos fazem o gate documental falhar.
+
+| Arquivo | Responsabilidade |
 | --- | --- |
-| `tests/Integracao.ControlID.PoC.Tests/Integracao.ControlID.PoC.Tests.csproj` | Projeto de testes unitários xUnit da PoC. |
-| `tests/Integracao.ControlID.PoC.Tests/Helpers/ApiResponseHelperTests.cs` | Testa normalização e interpretação de respostas da API. |
-| `tests/Integracao.ControlID.PoC.Tests/Helpers/CryptoHelperTests.cs` | Testa comportamentos criptográficos e hash. |
-| `tests/Integracao.ControlID.PoC.Tests/Helpers/FileHelperTests.cs` | Testa utilitários de arquivo. |
-| `tests/Integracao.ControlID.PoC.Tests/Helpers/HttpHelperTests.cs` | Testa utilitários HTTP. |
-| `tests/Integracao.ControlID.PoC.Tests/Helpers/ProductSpecificPresentationHelperTests.cs` | Testa utilitários de apresentação de recursos específicos por produto. |
-| `tests/Integracao.ControlID.PoC.Tests/Helpers/SecurityTextHelperTests.cs` | Testa mascaramento e textos de segurança. |
-| `tests/Integracao.ControlID.PoC.Tests/Helpers/SessionHelperTests.cs` | Testa manipulação auxiliar de sessão. |
-| `tests/Integracao.ControlID.PoC.Tests/Mappings/ViewModelMappingsTests.cs` | Testa conversões para ViewModels. |
-| `tests/Integracao.ControlID.PoC.Tests/Middlewares/SecurityHeadersMiddlewareTests.cs` | Testa aplicação de cabeçalhos de segurança. |
-| `tests/Integracao.ControlID.PoC.Tests/Services/Callbacks/CallbackIngressServiceTests.cs` | Testa orquestração de callbacks recebidos. |
-| `tests/Integracao.ControlID.PoC.Tests/Services/Callbacks/CallbackRequestBodyReaderTests.cs` | Testa leitura reutilizável do corpo bruto de callbacks. |
-| `tests/Integracao.ControlID.PoC.Tests/Services/Callbacks/CallbackSecurityEvaluatorTests.cs` | Testa validação de segurança dos callbacks. |
-| `tests/Integracao.ControlID.PoC.Tests/Services/ControlIDApi/OfficialApiBinaryFileResultFactoryTests.cs` | Testa geração de resultados binários/download para chamadas oficiais. |
-| `tests/Integracao.ControlID.PoC.Tests/Services/ControlIDApi/OfficialApiBodyParameterStrategyTests.cs` | Testa montagem de parâmetros no body. |
-| `tests/Integracao.ControlID.PoC.Tests/Services/ControlIDApi/OfficialApiCatalogServiceTests.cs` | Testa catálogo de endpoints oficiais. |
-| `tests/Integracao.ControlID.PoC.Tests/Services/ControlIDApi/OfficialApiContractDocumentationServiceTests.cs` | Testa documentação visual de contratos. |
-| `tests/Integracao.ControlID.PoC.Tests/Services/ControlIDApi/OfficialApiInvokerServiceTests.cs` | Testa invocação genérica de endpoints oficiais. |
-| `tests/Integracao.ControlID.PoC.Tests/Services/ControlIDApi/OfficialApiParameterDocumentationUtilitiesTests.cs` | Testa utilitários de documentação de parâmetros. |
-| `tests/Integracao.ControlID.PoC.Tests/Services/ControlIDApi/OfficialApiQueryParameterStrategyTests.cs` | Testa montagem de parâmetros via query string. |
-| `tests/Integracao.ControlID.PoC.Tests/Services/DocumentedFeatures/DocumentedFeaturesPayloadFactoryTests.cs` | Testa payload de funcionalidades documentadas. |
-| `tests/Integracao.ControlID.PoC.Tests/Services/Files/UploadedFileBase64EncoderTests.cs` | Testa conversão de uploads para Base64. |
-| `tests/Integracao.ControlID.PoC.Tests/Services/Analytics/ProductAnalyticsEventClassifierTests.cs` | Testa classificação privacy-aware de eventos de produto por rota. |
-| `tests/Integracao.ControlID.PoC.Tests/Services/Navigation/NavigationCatalogServiceTests.cs` | Testa catálogo de navegação. |
-| `tests/Integracao.ControlID.PoC.Tests/Services/Navigation/PageShellServiceTests.cs` | Testa metadados de shell/cabeçalho das páginas. |
-| `tests/Integracao.ControlID.PoC.Tests/Services/OperationModes/OperationModesPayloadFactoryTests.cs` | Testa payloads dos modos de operação. |
-| `tests/Integracao.ControlID.PoC.Tests/Services/OperationModes/OperationModesProfileResolverTests.cs` | Testa resolução de perfis dos modos de operação. |
-| `tests/Integracao.ControlID.PoC.Tests/Services/ProductSpecific/ProductSpecificCommandServiceTests.cs` | Testa comandos específicos por produto. |
-| `tests/Integracao.ControlID.PoC.Tests/Services/ProductSpecific/ProductSpecificConfigurationPayloadFactoryTests.cs` | Testa payloads de configuração específicos por produto. |
-| `tests/Integracao.ControlID.PoC.Tests/Services/ProductSpecific/ProductSpecificJsonReaderTests.cs` | Testa leitura e interpretação de JSONs específicos. |
-| `tests/Integracao.ControlID.PoC.Tests/Services/ProductSpecific/ProductSpecificSnapshotServiceTests.cs` | Testa montagem de snapshots específicos por produto. |
-| `tests/Integracao.ControlID.PoC.Tests/Services/Security/ControlIdInputSanitizerTests.cs` | Testa sanitização de entradas. |
+| `tests/Integracao.ControlID.PoC.Tests/Integracao.ControlID.PoC.Tests.csproj` | Projeto xUnit, dependências e configuração da suíte da PoC. |
+| `tests/Integracao.ControlID.PoC.Tests/packages.lock.json` | Fixa o grafo NuGet da suíte para restauração reprodutível. |
+| `tests/Integracao.ControlID.PoC.Tests/Controllers/AuthControllerTests.cs` | Valida comportamento HTTP, autorização e respostas cobertos por `AuthControllerTests`. |
+| `tests/Integracao.ControlID.PoC.Tests/Controllers/CallbackRateLimitingContractTests.cs` | Valida comportamento HTTP, autorização e respostas cobertos por `CallbackRateLimitingContractTests`. |
+| `tests/Integracao.ControlID.PoC.Tests/Controllers/HomeControllerPerformanceTests.cs` | Valida comportamento HTTP, autorização e respostas cobertos por `HomeControllerPerformanceTests`. |
+| `tests/Integracao.ControlID.PoC.Tests/Controllers/OfficialEventsControllerTests.cs` | Valida comportamento HTTP, autorização e respostas cobertos por `OfficialEventsControllerTests`. |
+| `tests/Integracao.ControlID.PoC.Tests/Controllers/OfficialObjectsControllerTests.cs` | Valida comportamento HTTP, autorização e respostas cobertos por `OfficialObjectsControllerTests`. |
+| `tests/Integracao.ControlID.PoC.Tests/Controllers/PushCenterControllerTests.cs` | Valida comportamento HTTP, autorização e respostas cobertos por `PushCenterControllerTests`. |
+| `tests/Integracao.ControlID.PoC.Tests/Controllers/PushControllerTests.cs` | Valida comportamento HTTP, autorização e respostas cobertos por `PushControllerTests`. |
+| `tests/Integracao.ControlID.PoC.Tests/Controllers/SessionControllerTests.cs` | Valida comportamento HTTP, autorização e respostas cobertos por `SessionControllerTests`. |
+| `tests/Integracao.ControlID.PoC.Tests/Controllers/SystemControllerTests.cs` | Valida comportamento HTTP, autorização e respostas cobertos por `SystemControllerTests`. |
+| `tests/Integracao.ControlID.PoC.Tests/Data/OperationalIndexMigrationTests.cs` | Valida migrações, índices e compatibilidade de dados cobertos por `OperationalIndexMigrationTests`. |
+| `tests/Integracao.ControlID.PoC.Tests/Frontend/AccessibilityAndResponsiveContractTests.cs` | Valida contrato renderizado, responsividade e acessibilidade cobertos por `AccessibilityAndResponsiveContractTests`. |
+| `tests/Integracao.ControlID.PoC.Tests/Frontend/RenderedApplicationContractTests.cs` | Valida contrato renderizado, responsividade e acessibilidade cobertos por `RenderedApplicationContractTests`. |
+| `tests/Integracao.ControlID.PoC.Tests/Helpers/CryptoHelperTests.cs` | Valida regras auxiliares e casos de borda cobertos por `CryptoHelperTests`. |
+| `tests/Integracao.ControlID.PoC.Tests/Helpers/HighImpactOperationGuardTests.cs` | Valida regras auxiliares e casos de borda cobertos por `HighImpactOperationGuardTests`. |
+| `tests/Integracao.ControlID.PoC.Tests/Helpers/PrivacyLogHelperTests.cs` | Valida regras auxiliares e casos de borda cobertos por `PrivacyLogHelperTests`. |
+| `tests/Integracao.ControlID.PoC.Tests/Helpers/ProductSpecificPresentationHelperTests.cs` | Valida regras auxiliares e casos de borda cobertos por `ProductSpecificPresentationHelperTests`. |
+| `tests/Integracao.ControlID.PoC.Tests/Helpers/SecurityTextHelperTests.cs` | Valida regras auxiliares e casos de borda cobertos por `SecurityTextHelperTests`. |
+| `tests/Integracao.ControlID.PoC.Tests/Middlewares/CorrelationIdMiddlewareTests.cs` | Valida o pipeline HTTP e os controles transversais cobertos por `CorrelationIdMiddlewareTests`. |
+| `tests/Integracao.ControlID.PoC.Tests/Middlewares/DynamicResponseCachePolicyMiddlewareTests.cs` | Valida o pipeline HTTP e os controles transversais cobertos por `DynamicResponseCachePolicyMiddlewareTests`. |
+| `tests/Integracao.ControlID.PoC.Tests/Middlewares/ExceptionHandlingMiddlewareTests.cs` | Valida o pipeline HTTP e os controles transversais cobertos por `ExceptionHandlingMiddlewareTests`. |
+| `tests/Integracao.ControlID.PoC.Tests/Middlewares/SecurityHeadersMiddlewareTests.cs` | Valida o pipeline HTTP e os controles transversais cobertos por `SecurityHeadersMiddlewareTests`. |
+| `tests/Integracao.ControlID.PoC.Tests/Platform/CiQualityGateContractTests.cs` | Valida governança, infraestrutura e contratos documentais cobertos por `CiQualityGateContractTests`. |
+| `tests/Integracao.ControlID.PoC.Tests/Platform/DeploymentEnvironmentContractTests.cs` | Valida governança, infraestrutura e contratos documentais cobertos por `DeploymentEnvironmentContractTests`. |
+| `tests/Integracao.ControlID.PoC.Tests/Platform/DocumentationGovernanceContractTests.cs` | Valida governança, infraestrutura e contratos documentais cobertos por `DocumentationGovernanceContractTests`. |
+| `tests/Integracao.ControlID.PoC.Tests/Platform/FinOpsCapacityContractTests.cs` | Valida governança, infraestrutura e contratos documentais cobertos por `FinOpsCapacityContractTests`. |
+| `tests/Integracao.ControlID.PoC.Tests/Platform/IncidentResponseRunbookContractTests.cs` | Valida governança, infraestrutura e contratos documentais cobertos por `IncidentResponseRunbookContractTests`. |
+| `tests/Integracao.ControlID.PoC.Tests/Services/Analytics/ProductAnalyticsEventClassifierTests.cs` | Valida serviços da área `Analytics` e os casos de borda cobertos por `ProductAnalyticsEventClassifierTests`. |
+| `tests/Integracao.ControlID.PoC.Tests/Services/Callbacks/CallbackIngressServiceTests.cs` | Valida serviços da área `Callbacks` e os casos de borda cobertos por `CallbackIngressServiceTests`. |
+| `tests/Integracao.ControlID.PoC.Tests/Services/Callbacks/CallbackRequestBodyReaderTests.cs` | Valida serviços da área `Callbacks` e os casos de borda cobertos por `CallbackRequestBodyReaderTests`. |
+| `tests/Integracao.ControlID.PoC.Tests/Services/Callbacks/CallbackSecurityEvaluatorTests.cs` | Valida serviços da área `Callbacks` e os casos de borda cobertos por `CallbackSecurityEvaluatorTests`. |
+| `tests/Integracao.ControlID.PoC.Tests/Services/Callbacks/CallbackSignatureValidatorTests.cs` | Valida serviços da área `Callbacks` e os casos de borda cobertos por `CallbackSignatureValidatorTests`. |
+| `tests/Integracao.ControlID.PoC.Tests/Services/ControlIDApi/OfficialApiBinaryFileResultFactoryTests.cs` | Valida serviços da área `ControlIDApi` e os casos de borda cobertos por `OfficialApiBinaryFileResultFactoryTests`. |
+| `tests/Integracao.ControlID.PoC.Tests/Services/ControlIDApi/OfficialApiCatalogServiceTests.cs` | Valida serviços da área `ControlIDApi` e os casos de borda cobertos por `OfficialApiCatalogServiceTests`. |
+| `tests/Integracao.ControlID.PoC.Tests/Services/ControlIDApi/OfficialApiCircuitBreakerTests.cs` | Valida serviços da área `ControlIDApi` e os casos de borda cobertos por `OfficialApiCircuitBreakerTests`. |
+| `tests/Integracao.ControlID.PoC.Tests/Services/ControlIDApi/OfficialApiContractDocumentationServiceTests.cs` | Valida serviços da área `ControlIDApi` e os casos de borda cobertos por `OfficialApiContractDocumentationServiceTests`. |
+| `tests/Integracao.ControlID.PoC.Tests/Services/ControlIDApi/OfficialApiInvokerServiceTests.cs` | Valida serviços da área `ControlIDApi` e os casos de borda cobertos por `OfficialApiInvokerServiceTests`. |
+| `tests/Integracao.ControlID.PoC.Tests/Services/Database/DeviceRepositoryTests.cs` | Valida serviços da área `Database` e os casos de borda cobertos por `DeviceRepositoryTests`. |
+| `tests/Integracao.ControlID.PoC.Tests/Services/Database/MonitorEventRepositoryTests.cs` | Valida serviços da área `Database` e os casos de borda cobertos por `MonitorEventRepositoryTests`. |
+| `tests/Integracao.ControlID.PoC.Tests/Services/Database/PushCommandRepositoryTests.cs` | Valida serviços da área `Database` e os casos de borda cobertos por `PushCommandRepositoryTests`. |
+| `tests/Integracao.ControlID.PoC.Tests/Services/Database/RepositoryFailureContractTests.cs` | Valida serviços da área `Database` e os casos de borda cobertos por `RepositoryFailureContractTests`. |
+| `tests/Integracao.ControlID.PoC.Tests/Services/Database/UserRepositoryRegistrationTests.cs` | Valida serviços da área `Database` e os casos de borda cobertos por `UserRepositoryRegistrationTests`. |
+| `tests/Integracao.ControlID.PoC.Tests/Services/Files/UploadedFileBase64EncoderTests.cs` | Valida serviços da área `Files` e os casos de borda cobertos por `UploadedFileBase64EncoderTests`. |
+| `tests/Integracao.ControlID.PoC.Tests/Services/Navigation/NavigationCatalogServiceTests.cs` | Valida serviços da área `Navigation` e os casos de borda cobertos por `NavigationCatalogServiceTests`. |
+| `tests/Integracao.ControlID.PoC.Tests/Services/Observability/ObservabilityEndpointContractTests.cs` | Valida serviços da área `Observability` e os casos de borda cobertos por `ObservabilityEndpointContractTests`. |
+| `tests/Integracao.ControlID.PoC.Tests/Services/Observability/OperationalMetricsTests.cs` | Valida serviços da área `Observability` e os casos de borda cobertos por `OperationalMetricsTests`. |
+| `tests/Integracao.ControlID.PoC.Tests/Services/Observability/SqliteReadinessHealthCheckTests.cs` | Valida serviços da área `Observability` e os casos de borda cobertos por `SqliteReadinessHealthCheckTests`. |
+| `tests/Integracao.ControlID.PoC.Tests/Services/OperationModes/OperationModesPayloadFactoryTests.cs` | Valida serviços da área `OperationModes` e os casos de borda cobertos por `OperationModesPayloadFactoryTests`. |
+| `tests/Integracao.ControlID.PoC.Tests/Services/OperationModes/OperationModesProfileResolverTests.cs` | Valida serviços da área `OperationModes` e os casos de borda cobertos por `OperationModesProfileResolverTests`. |
+| `tests/Integracao.ControlID.PoC.Tests/Services/Performance/ServerTimingHeaderWriterTests.cs` | Valida serviços da área `Performance` e os casos de borda cobertos por `ServerTimingHeaderWriterTests`. |
+| `tests/Integracao.ControlID.PoC.Tests/Services/Performance/StaticAssetCachePolicyTests.cs` | Valida serviços da área `Performance` e os casos de borda cobertos por `StaticAssetCachePolicyTests`. |
+| `tests/Integracao.ControlID.PoC.Tests/Services/Privacy/PrivacySubjectReportServiceTests.cs` | Valida serviços da área `Privacy` e os casos de borda cobertos por `PrivacySubjectReportServiceTests`. |
+| `tests/Integracao.ControlID.PoC.Tests/Services/ProductSpecific/ProductSpecificConfigurationPayloadFactoryTests.cs` | Valida serviços da área `ProductSpecific` e os casos de borda cobertos por `ProductSpecificConfigurationPayloadFactoryTests`. |
+| `tests/Integracao.ControlID.PoC.Tests/Services/ProductSpecific/ProductSpecificJsonReaderTests.cs` | Valida serviços da área `ProductSpecific` e os casos de borda cobertos por `ProductSpecificJsonReaderTests`. |
+| `tests/Integracao.ControlID.PoC.Tests/Services/Push/PushCommandWorkflowServiceTests.cs` | Valida serviços da área `Push` e os casos de borda cobertos por `PushCommandWorkflowServiceTests`. |
+| `tests/Integracao.ControlID.PoC.Tests/Services/Push/PushIdempotencyKeyResolverTests.cs` | Valida serviços da área `Push` e os casos de borda cobertos por `PushIdempotencyKeyResolverTests`. |
+| `tests/Integracao.ControlID.PoC.Tests/Services/Security/ControlIdInputSanitizerTests.cs` | Valida serviços da área `Security` e os casos de borda cobertos por `ControlIdInputSanitizerTests`. |
+| `tests/Integracao.ControlID.PoC.Tests/TestSupport/DictionaryTempDataProvider.cs` | Fornece infraestrutura determinística de teste por meio de `DictionaryTempDataProvider`. |
+| `tests/Integracao.ControlID.PoC.Tests/TestSupport/FileSqliteTestDatabase.cs` | Fornece infraestrutura determinística de teste por meio de `FileSqliteTestDatabase`. |
+| `tests/Integracao.ControlID.PoC.Tests/TestSupport/OfficialApiTestFactory.cs` | Fornece infraestrutura determinística de teste por meio de `OfficialApiTestFactory`. |
+| `tests/Integracao.ControlID.PoC.Tests/TestSupport/RecordingHttpMessageHandler.cs` | Fornece infraestrutura determinística de teste por meio de `RecordingHttpMessageHandler`. |
+| `tests/Integracao.ControlID.PoC.Tests/TestSupport/SqliteTestDatabase.cs` | Fornece infraestrutura determinística de teste por meio de `SqliteTestDatabase`. |
+| `tests/Integracao.ControlID.PoC.Tests/TestSupport/StaticHttpClientFactory.cs` | Fornece infraestrutura determinística de teste por meio de `StaticHttpClientFactory`. |
+| `tests/Integracao.ControlID.PoC.Tests/TestSupport/StaticUrlHelper.cs` | Fornece infraestrutura determinística de teste por meio de `StaticUrlHelper`. |
+| `tests/Integracao.ControlID.PoC.Tests/TestSupport/TestSession.cs` | Fornece infraestrutura determinística de teste por meio de `TestSession`. |
+| `tests/Integracao.ControlID.PoC.Tests/TestSupport/TestSessionFeature.cs` | Fornece infraestrutura determinística de teste por meio de `TestSessionFeature`. |
+| `tests/Integracao.ControlID.PoC.Tests/Tools/ReadinessGateContractTests.cs` | Valida os contratos dos scripts e gates cobertos por `ReadinessGateContractTests`. |
 
 ## tools
 
 | Arquivo/Pasta | Responsabilidade |
 | --- | --- |
-| `tools/observability-check.ps1` | Valida artefatos de observabilidade, health checks, métricas e contrato físico opcional. |
-| `tools/operational-readiness-check.ps1` | Valida runbooks operacionais, `ops.example.json` e, em release, `ops.local.json` sem placeholders. |
-| `tools/backup-sqlite-operational.ps1` | Orquestra backup SQLite protegido, espelhamento opcional, restore-smoke e retenção confirmada. |
-| `tools/contract-controlid-stub.ps1` | Sobe o stub local e valida contrato Control iD sem equipamento físico ou credenciais reais. |
+| `tools/audit-supply-chain.ps1` | Orquestra auditoria NuGet, componentes vendorizados, integridade e inventário da cadeia de suprimentos. |
+| `tools/audit-vendor-dependencies.ps1` | Confere versões, hashes, licenças e arquivos declarados das bibliotecas de frontend vendorizadas. |
+| `tools/backup-sqlite.ps1` | Produz cópia local não destrutiva e consistente do banco SQLite. |
+| `tools/observability-check.ps1` | Valida artefatos de observabilidade, verificações de saúde, métricas e contrato físico opcional. |
+| `tools/operational-readiness-check.ps1` | Valida guias operacionais, `ops.example.json` e, em liberação, `ops.local.json` sem valores de exemplo. |
+| `tools/backup-sqlite-operational.ps1` | Orquestra cópia SQLite protegida, espelhamento opcional, teste de restauração e retenção confirmada. |
+| `tools/contract-controlid-device.ps1` | Executa contrato opt-in contra equipamento físico usando credenciais fornecidas apenas pelo ambiente. |
+| `tools/contract-controlid-stub.ps1` | Inicia o simulador local e valida o contrato Control iD sem equipamento físico ou credenciais reais. |
 | `tools/external-security-scans.ps1` | Orquestra inventário e execução de Semgrep, OSV Scanner, ZAP baseline e axe quando disponíveis. |
-| `tools/finops-capacity-check.ps1` | Valida runbook, alertas, governança e tamanhos locais de SQLite, logs, artifacts e reports sem apagar dados. |
-| `tools/test-readiness-gates.ps1` | Orquestra build, testes, format, secret scan, observabilidade offline, FinOps/capacidade, cobertura, smoke, auditoria, contrato físico, scanners externos e modo estrito `-ReleaseGate`. |
-| `tools/smoke-localhost.ps1` | Script PowerShell que executa smoke test local, sobe stub e percorre fluxos críticos da PoC. |
-| `tools/ControlIdDeviceStub/ControlIdDeviceStub.csproj` | Projeto .NET do stub local que simula respostas de um equipamento Control iD. |
+| `tools/finops-capacity-check.ps1` | Valida guia operacional, alertas, governança e tamanhos locais de SQLite, registros, artefatos e relatórios sem apagar dados. |
+| `tools/generate-sbom.ps1` | Gera SBOM CycloneDX a partir dos grafos NuGet restaurados. |
+| `tools/harden-local-state.ps1` | Verifica e restringe, quando solicitado, permissões do estado local sensível. |
+| `tools/restore-smoke-sqlite.ps1` | Restaura uma cópia em destino temporário e valida sua integridade sem substituir o banco ativo. |
+| `tools/scan-secrets.ps1` | Procura padrões de credenciais e dados sensíveis em arquivos versionados e no diff. |
+| `tools/test-readiness-gates.ps1` | Orquestra compilação, testes, formatação, análise de segredos, observabilidade off-line, FinOps/capacidade, cobertura, teste integrado, auditoria, contrato físico, analisadores externos e modo estrito `-ReleaseGate`. |
+| `tools/validate-documentation.ps1` | Valida inventário, UTF-8, metadados, links, âncoras, rastreabilidade e integridade da licença vendorizada. |
+| `tools/smoke-localhost.ps1` | Script PowerShell que executa teste integrado local, inicia o simulador e percorre fluxos críticos da PoC. |
+| `tools/ControlIdDeviceStub/ControlIdDeviceStub.csproj` | Projeto .NET do simulador local que reproduz respostas de um equipamento Control iD. |
 | `tools/ControlIdDeviceStub/Program.cs` | Implementa os endpoints simulados usados pelos smoke tests locais. |
+| `tools/ControlIdDeviceStub/packages.lock.json` | Fixa o grafo NuGet do simulador local. |
+| `tools/ControlIdCallbackSigningProxy/ControlIdCallbackSigningProxy.csproj` | Define o proxy mínimo de assinatura HMAC para callbacks de equipamentos sem suporte nativo. |
+| `tools/ControlIdCallbackSigningProxy/Program.cs` | Valida origem e tamanho, remove cabeçalhos sensíveis, assina e encaminha callbacks ao destino permitido. |
+| `tools/ControlIdCallbackSigningProxy/appsettings.json` | Fornece configuração segura sem segredo para o proxy assinador. |
+| `tools/ControlIdCallbackSigningProxy/packages.lock.json` | Fixa o grafo NuGet do proxy assinador. |
+
+## Política de geração e revisão
+
+O inventário combina descoberta automática e descrição humana. O validador
+documental compara arquivos de código e testes versionados com os caminhos desta
+tabela; a descrição continua revisada por mantenedor porque responsabilidade não
+pode ser inferida apenas do nome. Arquivos gerados em `bin/`, `obj/`, `Logs/` e
+`artifacts/` não pertencem ao inventário.
+
+Ao criar, mover ou remover arquivo relevante, atualize esta tabela na mesma
+mudança. Uma entrada ausente ou obsoleta deve falhar a validação documental; não
+reduza o escopo do validador para acomodar divergência.

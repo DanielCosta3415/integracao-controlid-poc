@@ -1,4 +1,6 @@
-﻿# Auditoria de cobertura da API Control iD
+# Auditoria de cobertura da API Control iD
+
+> **Evidência histórica** · Público: integração e auditoria · Referência temporal: 2026-04-13 · Responsável: engenharia de integração · Revalide conclusões no código atual.
 
 Data da auditoria: 2026-04-13
 
@@ -29,7 +31,7 @@ Data da auditoria: 2026-04-13
 - Callbacks e rotas de servidor no catálogo: 23.
 - Endpoints oficiais consumidos diretamente por controllers e telas dedicadas: 67.
 
-## Status geral
+## Situação geral
 
 ### Cobertura forte
 
@@ -53,8 +55,31 @@ Data da auditoria: 2026-04-13
 - Nem toda diferença em relação ao índice oficial representa um endpoint inédito. Vários tópicos atuais da documentação descrevem o uso de `set_configuration.fcgi` ou `get_configuration.fcgi`, e a PoC cobre esses dois endpoints tanto de forma genérica quanto com formulários dedicados para os grupos relevantes, incluindo attendance, online, visitors, hardening, SNMP, iDCloud, alarmes, QR/TOTP, energia, streaming, facial e sinais customizados.
 - A PoC implementa rotas locais adicionais de compatibilidade para callbacks como `new_rex_log.fcgi` e `fingerprint_create.fcgi`, mesmo quando eles não aparecem como entradas explícitas na tela de invocação manual.
 - A completude auditada aqui vale para o conjunto de páginas oficiais revisadas nesta data e para o smoke local com stub. A validação em hardware ou firmware real continua sendo a camada final para afirmar completude operacional absoluta.
-- O smoke test local passou a executar 340 verificações com 310 PASS, 0 FAIL e 30 SKIP, cobrindo catálogo oficial, callbacks e telas dedicadas da PoC.
+- O teste integrado local passou a executar 340 verificações com 310 PASS, 0 FAIL e 30 SKIP, cobrindo catálogo oficial, callbacks e telas dedicadas da PoC.
 
 ## Conclusão
 
 No estado auditado e atualizado em 2026-04-13, a PoC passou a cobrir o conjunto de endpoints objetivos e dos tópicos documentados revisados nesta rodada, incluindo a lista oficial de objetos, `create_or_modify_objects.fcgi`, QR Code/TOTP e energia/screenshot do iDFace Max. A ressalva honesta permanece a mesma: completude absoluta, em sentido operacional, depende de validação em hardware ou firmware real e de nova revisão quando a documentação oficial viva mudar.
+
+## Metodologia, validade e reexecução
+
+| Item | Registro |
+| --- | --- |
+| Fonte | Páginas oficiais da Access API citadas neste relatório |
+| Versão da documentação | Não registrada pela fonte na evidência original |
+| Código auditado | Estado local de 2026-04-13; hash não registrado |
+| Método | Comparação de catálogo, rotas, objetos, telas e smoke com stub |
+| Limite | Sem matriz completa por modelo, firmware e licença |
+
+Para revalidar, registre commit, data, URLs oficiais, data de acesso, modelo,
+firmware, licença, endpoint, cobertura automatizada e diferença encontrada. Uma
+página oficial alterada ou firmware novo invalida a conclusão correspondente até
+nova análise.
+
+## Cobertura comparável em nova execução
+
+Exporte a lista de endpoints do catálogo da PoC, normalize método e caminho e
+compare-a com a fonte oficial acessada na mesma data. O resultado deve separar
+suportado, parcialmente suportado, não aplicável e ausente, com modelo, firmware,
+licença e teste associado. Não converta ausência documental do fabricante em
+contrato inferido.

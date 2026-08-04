@@ -1,5 +1,7 @@
 # Modelo de dados, integridade e recuperação
 
+> **Documento vivo** · Público: dados, backend e SRE · Responsável: engenharia de dados · Última validação: 2026-08-03.
+
 Este documento descreve o estado de dados local da PoC, as regras de evolução de schema e os procedimentos seguros de backup/restore. Ele deve ser revisado antes de mudanças em `Models/Database/`, `Data/Migrations/`, `Services/Database/`, callbacks, push ou retenção de payloads.
 
 ## Inventário de persistências
@@ -37,11 +39,11 @@ Este documento descreve o estado de dados local da PoC, as regras de evolução 
 
 ## Integridade e evolução
 
-- O schema usa chaves primarias locais, mas não declara foreign keys entre entidades. Isso evita quebrar dados importados ou simulados da Access API quando IDs remotos ainda não possuem contrato relacional fechado no projeto.
+- O esquema usa chaves primárias locais, mas não declara chaves estrangeiras entre entidades. Isso evita quebrar dados importados ou simulados da Access API quando IDs remotos ainda não possuem contrato relacional fechado no projeto.
 - `Users.NormalizedUsername` e `Users.NormalizedEmail` possuem índices únicos;
   a migration falha sem excluir dados caso encontre duplicidades preexistentes.
 - Outros índices operacionais continuam não únicos. Novas constraints exigem
-  análise de duplicidade e plano de rollback.
+  análise de duplicidade e plano de reversão.
 - `DeviceLocal` ainda possui `Ip` e `IpAddress`. O campo duplicado deve ser preservado até existir plano de migração e confirmação de compatibilidade.
 - `Program.cs` só aplica `Database.Migrate()` quando configurado; fora de
   `Development`, o default e não alterar schema no startup.
@@ -86,9 +88,9 @@ Histórico atual:
 Regras de segurança:
 
 - Não executar migration destrutiva sem backup e confirmação humana.
-- Não remover coluna/tabela enquanto houver dados locais sem plano de migração, rollback e retenção.
+- Não remover coluna/tabela enquanto houver dados locais sem plano de migração, reversão e retenção.
 - Para mudanças de alta volumetria, preferir estratégia em etapas: adicionar campo nullable, preencher de forma controlada, validar, depois tornar obrigatório se necessário.
-- Scripts de rollback devem ser revisáveis e não apagar dados por padrão.
+- Scripts de reversão devem ser revisáveis e não apagar dados por padrão.
 
 ## Dados iniciais
 
@@ -137,7 +139,7 @@ Restore sobrescreve estado local e exige confirmação humana. Procedimento reco
 
 RTO/RPO não estão garantidos para produção até existir validação no ambiente-alvo. Para a release operacional, `ops.local.json` deve registrar os valores aprovados, e `tools/operational-readiness-check.ps1 -RequireConfig` bloqueia status pendente. O fechamento completo está em `docs/residual-risk-closure.md`.
 
-## Teste smoke de restauração
+## Teste de restauração em cópia temporária
 
 Para validar que um backup pode ser aberto e receber migrations sem sobrescrever o banco real:
 
@@ -156,4 +158,52 @@ Sem parâmetro, o script usa a cópia de segurança mais recente em `artifacts/b
 | Média | Ausência de chaves estrangeiras entre tabelas locais | Preserva compatibilidade com IDs remotos | Definir o contrato relacional antes de criar restrições. |
 | Média | Consultas de listagem ainda podem carregar muitos registros | Índices adicionados, limite padrão nos repositórios e aviso de listagem truncada em Monitor e Push | Avaliar paginação por tela quando houver volume real. |
 | Média | `Ip` e `IpAddress` duplicam a finalidade em `Devices` | Campo preservado para compatibilidade; consultas novas usam `Ip`, e ambos ficam indexados | Planejar consolidação versionada sem remoção destrutiva. |
-| Baixa | Sem seeds formais | Testes criam dados em memória | Criar fixtures ficticias se surgirem testes de integração mais amplos. |
+| Baixa | Sem dados iniciais formais | Testes criam dados em memória | Criar fixtures fictícias se surgirem testes de integração mais amplos. |
+
+## Diagrama conceitual
+
+As ligações abaixo representam associações funcionais; o schema atual não impõe
+chaves estrangeiras entre todas elas porque vários identificadores vêm do
+equipamento remoto.
+
+```mermaid
+erDiagram
+    Users ||--o{ Sessions : "inicia logicamente"
+    Devices ||--o{ Sessions : "recebe conexão"
+    Devices ||--o{ MonitorEvents : "emite"
+    Devices ||--o{ PushCommands : "consulta"
+    Users ||--o{ Cards : "possui logicamente"
+    Users ||--o{ Photos : "possui logicamente"
+    Users ||--o{ BiometricTemplates : "possui logicamente"
+    Groups ||--o{ AccessRules : "agrupa"
+    Users ||--o{ AccessLogs : "gera"
+```
+
+## Histórico de migrações
+
+| Migração | Finalidade | Reversão e atenção |
+| --- | --- | --- |
+| `20260430144509_InitialLocalSchema` | Cria o schema local inicial | Reversão remove tabelas; nunca executar sobre dados reais sem aprovação |
+| `20260430224746_AddOperationalIndexes` | Adiciona índices de consultas operacionais | Remoção degrada desempenho, mas não altera payload |
+| `20260430233000_AddLocalUserRoles` | Introduz papéis de usuário local | Rollback afeta autorização e exige plano explícito |
+| `20260803192319_HardenLocalIdentity` | Normaliza identidade e unicidade | Exige validar duplicidades antes de ambiente existente |
+
+Toda nova migração deve ter teste sobre banco vazio e legado, impacto de lock e
+volume estimado, estratégia de backup, compatibilidade com a versão anterior e
+procedimento de reversão. O comando de produção permanece uma decisão humana.
+
+## Atualização verificável do modelo
+
+As fontes de verdade são `IntegracaoControlIDContext`, as entidades em
+`Models/Database/` e as migrações versionadas. Antes de atualizar o inventário ou
+o diagrama, execute somente comandos de leitura ou geração fora do banco real:
+
+```powershell
+dotnet ef dbcontext info --project .\Integracao.ControlID.PoC.csproj --no-build
+dotnet ef migrations list --project .\Integracao.ControlID.PoC.csproj --no-build
+```
+
+Toda entidade nova deve aparecer no inventário, no diagrama conceitual, na
+política de retenção e no mapa de arquivos. Tipo, nulabilidade e índice devem ser
+confirmados no snapshot da migração; associação lógica não deve ser descrita
+como chave estrangeira quando o SQLite não a impõe.

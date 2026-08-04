@@ -1,4 +1,6 @@
-# Changelog técnico - 2026-05-01
+# Registro técnico de alterações - 2026-05-01
+
+> **Registro histórico** · Público: manutenção e auditoria · Referência temporal: 2026-05-01 · Responsável: mantenedores · Não representa sozinho o estado atual.
 
 ## O que mudou
 
@@ -18,8 +20,8 @@
 
 ## Por que mudou
 
-A documentação cresceu junto com hardening, testes, observabilidade, privacidade,
-FinOps e runbooks. Faltava uma trilha única para novo desenvolvedor entender o
+A documentação cresceu junto com fortalecimento, testes, observabilidade, privacidade,
+FinOps e guias operacionais. Faltava uma trilha única para novo desenvolvedor entender o
 projeto sem reconstruir contexto pela conversa ou por arquivos dispersos.
 
 ## Como validar
@@ -36,7 +38,7 @@ powershell -ExecutionPolicy Bypass -File .\tools\test-readiness-gates.ps1
 ## Riscos
 
 - Decisões humanas continuam necessárias para provedor, faturamento, DPO ou departamento jurídico e
-  equipamento físico real, mas agora são bloqueios explicitos em
+  equipamento físico real, mas agora são bloqueios explícitos em
   `ops.local.json` e no release gate.
 - README foi reescrito para ASCII limpo; se algum consumidor dependia de texto
   anterior, deve usar os documentos técnicos agora indexados.
@@ -54,3 +56,19 @@ O release sem exceções deve usar:
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\tools\test-readiness-gates.ps1 -ReleaseGate
 ```
+
+## Referência histórica
+
+- Commit ou tag exatos: não registrados no artefato original.
+- Foco da rodada: documentação, governança e prontidão operacional.
+- Impacto de banco/API: nenhuma alteração pública declarada.
+- Documento sucessor: `docs/changelog-2026-08-03.md`.
+
+O gate atual pode conter etapas adicionais; sempre use o script versionado no
+commit que está sendo validado.
+
+## Evidência esperada em um sucessor
+
+Um novo registro deve informar commit, arquivos por categoria, comandos e códigos
+de saída, artefatos sanitizados, contratos preservados, migrações, riscos e plano
+de reversão. Campo sem evidência deve ser marcado como não executado.

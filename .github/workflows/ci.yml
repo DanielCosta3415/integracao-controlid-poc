@@ -74,6 +74,10 @@ jobs:
       - name: Whitespace check
         run: git diff --check
 
+      - name: Documentation validation
+        shell: pwsh
+        run: .\tools\validate-documentation.ps1
+
       - name: Secret scan
         shell: pwsh
         run: .\tools\scan-secrets.ps1

@@ -1,4 +1,6 @@
-# Onboarding técnico
+# Integração técnica de novos desenvolvedores
+
+> **Guia vivo** · Público: novos desenvolvedores · Responsável: mantenedores · Última validação: 2026-08-03.
 
 Este guia leva um novo desenvolvedor do clone ao diagnóstico e entrega segura da
 PoC. Ele complementa `README.md` e `AGENTS.md`.
@@ -19,6 +21,14 @@ Princípios para contribuir:
 - Rode os checks relevantes e documente qualquer falha ou check não executado.
 
 ## Ambiente local
+
+0. Clone o repositório, entre na raiz e confirme que não há mudanças locais:
+
+```powershell
+git clone https://github.com/DanielCosta3415/integracao-controlid-poc.git
+Set-Location .\integracao-controlid-poc
+git status -sb
+```
 
 1. Verifique o SDK:
 
@@ -46,6 +56,11 @@ dotnet user-secrets set "CallbackSecurity:SharedKey" "<segredo-local>"
 
 Para container, copie `.env.example` para `.env` fora do Git e substitua todos os
 placeholders.
+
+Resultado esperado: restores concluídos em modo locked, sem alteração nos
+`packages.lock.json`. Falha de restore indica SDK incompatível, lockfile
+inconsistente ou indisponibilidade do NuGet; não remova o modo locked para
+contornar o problema.
 
 ## Execução
 
@@ -75,6 +90,31 @@ docker compose config
 docker compose up --build
 ```
 
+### Primeiro acesso local
+
+1. Abra `http://localhost:5000` ou `https://localhost:5001`.
+2. Se ainda não houver usuário, acesse `/Auth/Register` e cadastre somente dados
+   fictícios. O primeiro cadastro é administrador por bootstrap transacional.
+3. Faça login em `/Auth/LocalLogin`.
+4. Para trabalhar sem hardware, execute o stub em outro terminal; ele escuta em
+   `http://127.0.0.1:6600` e aceita `stub-admin`/`stub-password`.
+5. Em `/Auth/Login`, conecte a aplicação ao stub e confirme `/Auth/Status`.
+
+Nunca reutilize essas credenciais fictícias fora do stub. O resultado esperado é
+um shell autenticado, `/health/ready` saudável e o catálogo oficial acessível.
+
+### Depuração
+
+- Visual Studio/Rider: use o perfil `Integracao.ControlID.PoC` de
+  `Properties/launchSettings.json`.
+- VS Code: execute `dotnet run --project .\Integracao.ControlID.PoC.csproj` e
+  anexe o depurador ao processo .NET quando necessário.
+- Breakpoints úteis: `AuthController`, `OfficialApiInvokerService`,
+  `CallbackIngressService`, `PushCommandWorkflowService` e repositórios em
+  `Services/Database/`.
+- Estado descartável: use banco temporário ou cópia de segurança; não apague o
+  SQLite de outro usuário ou ambiente.
+
 ## Ciclo de desenvolvimento
 
 Fluxo recomendado para mudança comum:
@@ -94,16 +134,17 @@ dotnet build .\Integracao.ControlID.PoC.sln --no-restore -v:minimal
 dotnet test .\Integracao.ControlID.PoC.sln --no-build -v:minimal
 dotnet format .\Integracao.ControlID.PoC.sln --verify-no-changes --no-restore -v:minimal
 git diff --check
+powershell -ExecutionPolicy Bypass -File .\tools\validate-documentation.ps1
 powershell -ExecutionPolicy Bypass -File .\tools\scan-secrets.ps1
 ```
 
-Gate padrão:
+Critério padrão:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\tools\test-readiness-gates.ps1
 ```
 
-Gate estrito de release:
+Critério estrito de liberação:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\tools\test-readiness-gates.ps1 -ReleaseGate
@@ -163,3 +204,18 @@ Definição de Pronto prática:
 - Arquivos alterados listados no resumo final.
 
 Commit e push exigem confirmação humana explícita.
+
+## Evidência do primeiro sucesso
+
+| Marco | Evidência esperada | Tempo indicativo |
+| --- | --- | ---: |
+| Dependências restauradas | Restore em modo bloqueado sem alteração de lockfile | 2 a 10 min |
+| Aplicação iniciada | `/health/live` retorna sucesso | até 2 min |
+| Usuário local criado | Login local concluído com dados fictícios | até 5 min |
+| Stub autenticado | `/Auth/Status` apresenta sessão Control iD válida | até 5 min |
+| Contrato básico | `system_information.fcgi` retorna resposta simulada | até 2 min |
+| Ambiente validado | `tools/test-readiness-gates.ps1` termina com código zero | conforme a máquina |
+
+Os tempos são referências de diagnóstico, não objetivos de desempenho. Registre
+SDK, sistema operacional e etapa quando houver desvio relevante; não contorne
+restore bloqueado, segurança ou testes para reduzir o tempo de configuração.

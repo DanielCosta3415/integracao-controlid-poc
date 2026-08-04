@@ -1,5 +1,7 @@
 # Auditoria documental - 2026-05-01
 
+> **Evidência histórica** · Público: manutenção e auditoria · Referência temporal: 2026-05-01 · Responsável: mantenedores · Superada pela revisão integral de 2026-08-03.
+
 ## Escopo auditado
 
 - `README.md`
@@ -22,7 +24,7 @@
 | ADRs | Não havia ADRs versionados | `docs/adrs/` criado com quatro decisões |
 | Changelog/PR summary | Havia changelogs antigos, sem resumo da rodada atual | `docs/changelog-2026-05-01.md` e `docs/pr-summary-2026-05-01.md` criados |
 | Comandos reais | Comandos estavam no README/AGENTS, mas sem trilha de onboarding | Guia novo referência comandos existentes sem inventar scripts |
-| Operação/DR/FinOps | Runbooks existiam, mas precisavam estar indexados | Índice e README conectam runbooks |
+| Operação/recuperação de desastres/FinOps | Guias operacionais existiam, mas precisavam estar indexados | Índice e README conectam os guias operacionais |
 | Limitações | Lacunas estavam espalhadas | Lacunas consolidadas e transformadas em controles de release em `docs/residual-risk-closure.md` |
 
 ## Consistência verificada
@@ -56,3 +58,20 @@ Detalhes em `docs/residual-risk-closure.md`.
 - Atualizar changelog e PR summary por rodada relevante.
 - Evitar duplicar payload sensível; usar exemplos minimizados.
 - Registrar checks executados no resumo final e no PR.
+
+## Validade desta auditoria
+
+Esta evidência foi superada em 2026-08-03 pela revisão individual dos 49 arquivos
+Markdown e pela introdução de metadados e validação automática. Preserve-a para
+histórico, mas use `docs/README.md`, `README.md` e
+`tools/validate-documentation.ps1` como referências atuais.
+
+Limitações do registro original: não contém hash do commit auditado, inventário
+individual de relatórios nem validação de caminhos em crases.
+
+## Critério para nova auditoria
+
+Uma auditoria sucessora deve registrar inventário exato, classificação, público,
+responsável, data, UTF-8, links, âncoras, caminhos, comandos, rastreabilidade,
+licenças vendorizadas e divergências semânticas encontradas. O validador fornece
+evidência estrutural; ortografia e coerência de comportamento ainda exigem revisão.

@@ -1,4 +1,6 @@
-# Avaliação heurística focada em design system, língua portuguesa e acessibilidade
+# Avaliação heurística focada em sistema de design, língua portuguesa e acessibilidade
+
+> **Evidência histórica** · Público: design e QA · Referência temporal: 2026-04-14 · Responsável: design/QA · Revalide conclusões na interface atual.
 
 Data: 2026-04-14  
 Escopo: todas as superfícies atuais da PoC, com ênfase em shell global, busca de módulos, navegação superior, painéis compartilhados, workspaces por domínio e telas de operação/documentação técnica.
@@ -13,7 +15,7 @@ Escopo: todas as superfícies atuais da PoC, com ênfase em shell global, busca 
    - Parte das páginas modernizadas já seguia o shell novo, mas alguns workspaces ainda dependiam do espaçamento herdado de `container mt-5`.
    - Isso criava densidade desigual entre o topo contextual e o conteúdo principal.
 
-3. Texto legado com encoding inconsistente em fluxos compartilhados e técnicos.
+3. Texto legado com codificação inconsistente em fluxos compartilhados e técnicos.
    - Ainda havia rastros de mojibake em mensagens renderizadas na interface, especialmente em componentes compartilhados, fallback do JavaScript e catálogo técnico.
    - O problema também afetava a consistência visual em português e a clareza dos estados apresentados ao usuário.
 
@@ -26,15 +28,15 @@ Escopo: todas as superfícies atuais da PoC, com ênfase em shell global, busca 
    - O objetivo desta passada foi reforçar consistência sem inflar ainda mais o shell.
 
 6. Proporção visual irregular nos domínios e no mapa funcional.
-   - Os domínios `Pessoas e credenciais` e `API e exploração técnica` exibiam cards grandes demais para a largura disponível, com CTAs dominando o bloco e sensação de vazamento visual.
+   - Os domínios `Pessoas e credenciais` e `API e exploração técnica` exibiam cartões grandes demais para a largura disponível, com chamadas para ação dominando o bloco e sensação de vazamento visual.
    - A taxonomia principal versus apoio ainda estava fraca, especialmente quando módulos especializados apareciam com o mesmo peso dos módulos recomendados.
 
 7. Densidade excessiva nas superfícies técnicas de catálogo.
-   - `Catálogo oficial da API` e `Recursos oficiais avançados` ainda repetiam o padrão de cards com CTA inflado, pouca diferenciação entre bloco principal e apoio e excesso de elementos competindo no mesmo nível visual.
-   - No catálogo, o volume de endpoints pedia uma leitura mais editorial e menos parecida com uma parede homogênea de cards.
+   - `Catálogo oficial da API` e `Recursos oficiais avançados` ainda repetiam o padrão de cartões com chamada para ação inflada, pouca diferenciação entre bloco principal e apoio e excesso de elementos competindo no mesmo nível visual.
+   - No catálogo, o volume de endpoints pedia uma leitura mais editorial e menos parecida com uma parede homogênea de cartões.
 
 8. Estouro visual de endpoints e rótulos técnicos longos.
-   - Parte das rotas técnicas ainda ficava espremida no topo dos cards, causando sensação de vazamento para fora do bloco em telas mais densas.
+   - Parte das rotas técnicas ainda ficava espremida no topo dos cartões, causando sensação de vazamento para fora do bloco em telas mais densas.
    - Havia também resquícios de linguagem híbrida entre português e termos internos de engenharia, como `workspace` e `troubleshooting`, em superfícies já modernizadas.
 
 9. Semântica inadequada no painel técnico compartilhado.
@@ -56,7 +58,7 @@ Escopo: todas as superfícies atuais da PoC, com ênfase em shell global, busca 
    - O shell manteve o padrão visual existente, mas com contraste mais previsível para textos auxiliares do painel de conexão.
 
 3. Normalização de texto em português.
-   - A correção de artefatos de encoding foi centralizada no helper de segurança textual e reaproveitada em componentes compartilhados.
+   - A correção de artefatos de codificação foi centralizada no auxiliar de segurança textual e reaproveitada em componentes compartilhados.
    - O JavaScript do shell também passou a reparar rótulos legados antes de montar resultados da busca, favoritos e recentes.
    - O catálogo oficial da API voltou a normalizar os textos técnicos legados sem quebrar compilação nem contrato público.
 
@@ -65,11 +67,11 @@ Escopo: todas as superfícies atuais da PoC, com ênfase em shell global, busca 
    - O painel de conexão agora normaliza melhor base ativa e nome do equipamento antes da renderização pública.
 
 5. Recalibração dos hubs por domínio.
-   - Os templates de `Workspace/Domain`, `Workspace/Index` e os atalhos da home passaram a usar uma hierarquia visual mais clara, com grids limitados, CTAs compactos, chips menores e diferenciação melhor entre entradas principais e apoio.
+   - Os modelos de `Workspace/Domain`, `Workspace/Index` e os atalhos da página inicial passaram a usar uma hierarquia visual mais clara, com grades limitadas, chamadas para ação compactas, marcadores menores e melhor diferenciação entre entradas principais e apoio.
    - O catálogo de navegação também foi reorganizado para refletir melhor a semântica dos domínios, movendo `Logo do equipamento` para infraestrutura e reduzindo o peso inicial de superfícies especializadas em `API e exploração técnica`.
 
 6. Reestruturação das superfícies técnicas densas.
-   - `OfficialApi/Index` deixou de usar um muro homogêneo de cards e passou a apresentar o catálogo em grupos por categoria, com resumo superior, cards técnicos mais compactos e ações secundárias menos invasivas.
+   - `OfficialApi/Index` deixou de usar um muro homogêneo de cartões e passou a apresentar o catálogo em grupos por categoria, com resumo superior, cartões técnicos mais compactos e ações secundárias menos invasivas.
    - `AdvancedOfficial/Index` foi separado em fluxos avançados prioritários e exploradores correlatos, com CTAs menores, dicas de uso e grids mais adequados para texto técnico em português.
 
 7. Tratamento de rotas longas e microcopy residual.
@@ -104,5 +106,25 @@ Comandos executados:
 
 Resultado:
 
-- Build verde com `0 warnings` e `0 errors`.
+- Compilação aprovada com `0 avisos` e `0 erros`.
 - Testes verdes com `40` testes aprovados.
+
+## Critérios de acessibilidade e validade
+
+| Área | Referência WCAG | Evidência esperada em nova revisão |
+| --- | --- | --- |
+| Teclado e foco | 2.1.1, 2.4.3 e 2.4.7 | Ordem, foco visível e retorno após modal |
+| Contraste | 1.4.3 e 1.4.11 | Medição de texto, ícone, borda e foco |
+| Nome e semântica | 1.3.1, 2.5.3 e 4.1.2 | Árvore acessível e associação label/controle |
+| Refluxo e responsividade | 1.4.10 | 320 CSS px sem perda de conteúdo |
+| Erros e estado | 3.3.1, 3.3.2 e 4.1.3 | Mensagem associada e anúncio de status |
+
+Este relatório não guardou screenshots nem saída automatizada por critério.
+Portanto, os resultados são históricos e devem ser revalidados com os testes em
+`tests/Integracao.ControlID.PoC.Tests/Frontend/`, axe e inspeção manual por teclado.
+
+## Pacote da próxima avaliação
+
+Registre commit, navegador, viewport, escala, rota, estado, captura sanitizada,
+resultado axe, medição de contraste, percurso de teclado e critério WCAG. Cada
+achado deve ter severidade, arquivo, teste, responsável e estado verificável.

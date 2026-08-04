@@ -1,5 +1,7 @@
 # Inventário de integrações e contratos
 
+> **Documento vivo** · Público: backend, frontend, QA e integrações · Responsável: engenharia de integração · Última validação: 2026-08-03.
+
 Este documento registra os contratos de integração da PoC sem criar endpoints novos ou alterar contratos públicos. Quando um esquema provém de um payload livre da Control iD ou da interface técnica, ele é marcado como inferido.
 
 ## Sumário executivo
@@ -183,7 +185,7 @@ Não há loader `.env` configurado. Use `appsettings.json`, User Secrets ou vari
 - Idempotência: depende do repository; inserts geram novos ids, updates por chave.
 - Logs: repositories registram falhas.
 - Dados sensíveis: usuários, fotos, biometria, cartões, QR, callbacks e push.
-- Ambiente: local/workspace; arquivos `integracao_controlid.db*` não devem ser versionados.
+- Ambiente: local/área de trabalho; arquivos `integracao_controlid.db*` não devem ser versionados.
 
 ### INT-008 - Sessão ASP.NET e sessão Control iD
 
@@ -207,7 +209,7 @@ Não há loader `.env` configurado. Use `appsettings.json`, User Secrets ou vari
 - Health: `GET /health/live` e `GET /health/ready`.
 - Métricas: meter `Integracao.ControlID.PoC.Operations` via `System.Diagnostics.Metrics` e `GET /metrics` em formato Prometheus text.
 - Autorização: `/metrics` exige `AdministratorOnly` por padrão; `AllowAnonymous` é bloqueado fora de `Development`.
-- Artefatos: alertas em `docs/observability/alert-rules.json`, dashboards em `docs/observability/dashboard.json`, monitor local em `tools/observability-check.ps1`.
+- Artefatos: alertas em `docs/observability/alert-rules.json`, painéis em `docs/observability/dashboard.json`, monitor local em `tools/observability-check.ps1`.
 - Dados sensíveis: não logar credenciais, shared key, biometria bruta ou payload integral.
 - Retenção: configurada por `Logging__File__RetainedFileCountLimit`/Serilog.
 
@@ -388,3 +390,61 @@ Quando um fluxo espera JSON estruturado e o equipamento retorna corpo não parse
 | `/push` altera estado por natureza do contrato de polling | Alta | Mantido sem retry automático para evitar replay de operações físicas; resultados usam idempotency key quando o equipamento envia ou quando a PoC deriva chave segura |
 | Operações oficiais de saída podem não ser idempotentes | Média | Sem nova tentativa automática genérica; tempo limite e circuit breaker reduzem repetição perigosa e falhas em cascata |
 | Contratos oficiais dependem de firmware/modelo/licença | Alta | Check opt-in real existe em `tools/contract-controlid-device.ps1`; validação final exige equipamento físico e credenciais fora do Git |
+
+## Sequências de referência
+
+```mermaid
+sequenceDiagram
+    participant UI as Interface MVC
+    participant Client as OfficialApiInvokerService
+    participant Breaker as Circuit breaker por destino
+    participant Device as Control iD ou stub
+    UI->>Client: Endpoint, parâmetros e cancelamento
+    Client->>Client: Valida URL, allowlist e tamanho
+    Client->>Breaker: Verifica estado do destino
+    Breaker->>Device: Requisição com timeout
+    Device-->>Client: Headers e corpo limitado
+    Client-->>UI: Resultado tipado ou erro sanitizado
+```
+
+```mermaid
+sequenceDiagram
+    participant Device as Equipamento
+    participant Ingress as CallbackSecurityEvaluator
+    participant Signature as CallbackSignatureValidator
+    participant Workflow as Serviço de ingresso
+    participant DB as SQLite
+    Device->>Ingress: Callback ou Push
+    Ingress->>Signature: Bytes exatos, timestamp e nonce
+    Signature-->>Workflow: Origem autenticada
+    Workflow->>DB: Persistência/idempotência
+    DB-->>Device: Confirmação somente após commit
+```
+
+## Compatibilidade e propriedade
+
+| Integração | Dono técnico | Compatibilidade conhecida | Evidência exigida |
+| --- | --- | --- | --- |
+| Access API | Engenharia de integração | Stub cobre o contrato usado; hardware varia por firmware e licença | Relatório de `contract-controlid-device.ps1` |
+| Callbacks/Monitor | Integração e AppSec | HMAC nativo ou proxy assinador | Callback real, correlação e persistência |
+| Push | Integração e operação | Polling e resultado simulados no stub | Ciclo físico sem duplicidade |
+| SQLite | Backend/dados | Uma instância gravadora da PoC | Migrações e teste de cópia/restauração |
+| OpenAPI/métricas | Plataforma | Exposição condicionada ao ambiente e à autorização | Gate de observabilidade |
+
+Registre modelo, firmware, licença, data e relatório fora de payloads públicos.
+Uma diferença física não autoriza alterar silenciosamente rota ou DTO; documente
+a variante, cubra-a por teste e preserve o contrato existente.
+
+## Detecção de divergência contratual
+
+| Fonte | Verificação | Divergência bloqueante |
+| --- | --- | --- |
+| Rotas MVC | Testes de controlador e catálogo de navegação | Rota pública removida ou autorização enfraquecida |
+| Access API | Stub, catálogo oficial e teste com equipamento opt-in | Método, `.fcgi`, campo ou semântica incompatível |
+| DTOs e schemas | Compilação, testes de serialização e exemplos | Campo obrigatório sem validação ou resposta sensível |
+| OpenAPI | Documento gerado em Development | Operação pública ausente ou erro não documentado |
+| Firmware real | Relatório de contrato físico | Variação não versionada por modelo, firmware ou licença |
+
+O OpenAPI descreve a superfície HTTP da PoC, mas não substitui o contrato externo
+do equipamento. Exemplos deste documento devem usar placeholders e permanecer
+compatíveis com testes executáveis.

@@ -1,8 +1,10 @@
 # Estratégia de testes e regressão preventiva
 
+> **Documento vivo** · Público: desenvolvimento e QA · Responsável: QA/SDET · Última validação: 2026-08-03.
+
 Escopo: PoC ASP.NET Core MVC/Razor para integração com a Access API Control iD.
 Esta estratégia complementa `docs/product-acceptance-criteria.md` e deve ser usada
-para vincular cada mudança a requisito, criterio de aceite, risco e teste.
+para vincular cada mudança a requisito, critério de aceite, risco e teste.
 
 ## Objetivos
 
@@ -42,7 +44,7 @@ para vincular cada mudança a requisito, criterio de aceite, risco e teste.
 - Usar dados fictícios e placeholders; nunca usar credenciais, fotos, biométricos ou payloads reais.
 - Preferir asserts em status, payload, URL segura, persistência e ausência de chamadas indevidas.
 - Quando a segurança depende de não chamar o equipamento, assertar que `RecordingHttpMessageHandler.Requests` ficou vazio.
-- Para chamadas oficiais simuladas, validar método, path `.fcgi`, query de sessão ficticia e corpo JSON normalizado.
+- Para chamadas oficiais simuladas, validar método, caminho `.fcgi`, consulta de sessão fictícia e corpo JSON normalizado.
 - Para dados, usar SQLite em memória via `SqliteTestDatabase`.
 - Para UI/JS/CSS, manter testes de contrato textual apenas para invariantes estáveis; validação visual detalhada deve ser manual ou por ferramenta dedicada.
 
@@ -53,9 +55,10 @@ dotnet build .\Integracao.ControlID.PoC.sln --no-restore -v:minimal
 dotnet test .\Integracao.ControlID.PoC.sln --no-build -v:minimal
 dotnet format .\Integracao.ControlID.PoC.sln --verify-no-changes --no-restore -v:minimal
 git diff --check
+powershell -ExecutionPolicy Bypass -File .\tools\validate-documentation.ps1
 ```
 
-Gate local completo para release readiness de testes:
+Critério local completo para prontidão de liberação dos testes:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\tools\test-readiness-gates.ps1 -RunCoverage
@@ -88,7 +91,7 @@ powershell -ExecutionPolicy Bypass -File .\tools\test-readiness-gates.ps1 -RunCo
 
 Um limite numérico ainda exige ferramenta de leitura ou relatório compatível com `.coverage`; caso seja necessário bloquear por percentual, a adição dessa ferramenta deve ser uma mudança separada, justificada e validada no arquivo de bloqueio.
 
-## Gates de validação externa
+## Critérios de validação externa
 
 - Contrato simulado com stub local roda por padrão via `tools/contract-controlid-stub.ps1`.
 - A homologação com equipamento real, firmware e rede pública depende do ambiente e é bloqueada por `-RequireHardwareContract` quando exigida.
@@ -96,3 +99,50 @@ Um limite numérico ainda exige ferramenta de leitura ou relatório compatível 
 - A validação on-line de métricas depende da aplicação em execução e de uma credencial local de administrador; use `-RunObservabilityOnline -RequireObservabilityMetrics`.
 - A cobertura numérica por percentual depende de um analisador ou relatório compatível; `-RunCoverage` bloqueia a ausência de artefato, e qualquer limite formal deve ser definido com uma ferramenta versionada antes de uma release regulada.
 - Para uma release sem exceções, `-ReleaseGate` agrega smoke, cobertura, cadeia de suprimentos, construção do contêiner, observabilidade on-line, FinOps/capacidade em modo estrito, contrato físico e scanners externos; se o ambiente ou a ferramenta estiver ausente, ou se houver aviso de capacidade, o gate falha.
+
+## Linha de base e comandos direcionados
+
+Na validação documental de 2026-08-03, a solução possuía 209 testes aprovados,
+incluindo o contrato automatizado do inventário dos 49 documentos.
+Essa contagem é uma linha de base, não uma meta fixa; novos comportamentos devem
+aumentar ou substituir cobertura relevante sem remover cenários válidos.
+
+```powershell
+dotnet test .\Integracao.ControlID.PoC.sln --no-build --filter FullyQualifiedName~Controllers
+dotnet test .\Integracao.ControlID.PoC.sln --no-build --filter FullyQualifiedName~Services.Callbacks
+dotnet test .\Integracao.ControlID.PoC.sln --no-build --filter FullyQualifiedName~Services.Database
+dotnet test .\Integracao.ControlID.PoC.sln --no-build --filter FullyQualifiedName~Frontend
+```
+
+| Camada | Objetivo | Critério de expansão |
+| --- | --- | --- |
+| Unitária/serviço | Regras, parsing, limites e estados | Toda nova regra ou bug reproduzível |
+| Controller/componente | Binding, autorização, mensagens e resposta | Toda rota ou mudança de UX |
+| Integração SQLite | Migração, transação, concorrência e falha | Toda alteração de schema/repositório |
+| Contrato/stub | Compatibilidade HTTP sem hardware | Toda mudança de endpoint/payload |
+| Smoke/E2E | Jornada integrada e configuração | Fluxo crítico, release e regressão ampla |
+
+## Estabilidade dos testes
+
+- Teste instável deve ter issue, responsável e prazo; não use repetição cega como cura.
+- Quarentena ou `Skip` exige justificativa, risco protegido e condição de saída.
+- Fixtures não usam relógio, rede ou banco compartilhado sem controle explícito.
+- Falha deve preservar artefato útil sem segredo, cookie, biometria ou payload real.
+- Cobertura percentual só vira gate após baseline e ferramenta de leitura
+  versionada; até lá, cobertura de risco e rastreabilidade prevalecem.
+
+## Evolução da cobertura
+
+1. Versionar leitor compatível com o artefato `.coverage` sem atualização ampla
+   de dependências.
+2. Medir linha de base por linhas e ramificações, excluindo somente código gerado
+   com justificativa.
+3. Definir limite inicial que não incentive testes superficiais e impedir queda
+   não justificada.
+4. Adicionar navegação real de navegador para login, catálogo, erro, teclado e
+   dois viewports, usando somente stub e dados fictícios.
+5. Executar axe como evidência complementar; zero violações automáticas não
+   substitui inspeção manual de foco, leitura e compreensão.
+
+Até essas etapas, os 209 testes e a matriz de riscos são a linha de base
+verificável, não uma garantia de cobertura completa.

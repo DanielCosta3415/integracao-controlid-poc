@@ -1,4 +1,6 @@
-﻿# Inventário visual de UX/UI - 14/04/2026
+# Inventário visual de UX/UI - 14/04/2026
+
+> **Evidência histórica** · Público: design e frontend · Referência temporal: 2026-04-14 · Responsável: design/frontend · Revalide o inventário quando telas forem adicionadas ou removidas.
 
 ## Resumo
 
@@ -43,7 +45,7 @@
 - `BiometricTemplates/Edit.cshtml`: Modernizada
 - `BiometricTemplates/Index.cshtml`: Modernizada
 
-### Cards
+### `Cards` - cartões
 - `Cards/Create.cshtml`: Modernizada
 - `Cards/Delete.cshtml`: Modernizada
 - `Cards/Details.cshtml`: Modernizada
@@ -55,7 +57,7 @@
 - `Catra/Details.cshtml`: Modernizada
 - `Catra/Index.cshtml`: Modernizada
 
-### ChangeLogs
+### `ChangeLogs` - registros de alterações
 - `ChangeLogs/Delete.cshtml`: Modernizada
 - `ChangeLogs/Details.cshtml`: Modernizada
 - `ChangeLogs/Index.cshtml`: Modernizada
@@ -188,7 +190,7 @@
 - `Users/Edit.cshtml`: Modernizada
 - `Users/Index.cshtml`: Modernizada
 
-### Workspace
+### `Workspace` - área de trabalho
 - `Workspace/Domain.cshtml`: Modernizada
 - `Workspace/Index.cshtml`: Modernizada
 
@@ -198,3 +200,27 @@
 - `Coberta por uplift global`: ainda usa markup antigo, mas recebe a camada visual compartilhada do CSS global.
 - `Órfã sem rota ativa`: view existente no repositório, mas não exposta por uma action ativa encontrada nesta rodada.
 - A classificação é útil para governança visual, mas não substitui revisão manual futura em cada estado dinâmico.
+
+## Validade e próxima coleta
+
+O inventário original não contém screenshots versionados, viewport, navegador,
+tema ou commit. Trate a classificação como referência histórica, não como prova
+de que a tela atual permanece modernizada.
+
+Uma nova coleta deve registrar:
+
+- rota, view, viewport e estado (`loading`, vazio, erro e sucesso);
+- screenshot sanitizado e texto alternativo;
+- navegação por teclado, foco e overflow;
+- contraste e alvo de toque;
+- arquivo, teste relacionado, responsável e decisão.
+
+Compare a lista com `rg --files Views -g '*.cshtml'`; tela nova, removida ou sem
+rota deve gerar atualização explícita do inventário.
+
+## Referências visuais atuais
+
+As capturas sanitizadas de entrada, área inicial e catálogo oficial ficam em
+`wwwroot/img/docs/` e complementam este inventário. Elas não alteram o caráter
+histórico da lista de 2026-04-14; mudança de rota ou componente exige nova coleta
+datada e comparação com as views versionadas.

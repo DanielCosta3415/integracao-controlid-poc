@@ -1,5 +1,7 @@
 # Push: implementação na PoC
 
+> **Documento vivo** · Público: desenvolvimento, QA e operação · Responsável: engenharia de integração · Última validação: 2026-08-03.
+
 Este documento explica como a funcionalidade Push foi implementada dentro da PoC de integração com a API de controle de acesso da Control iD.
 
 Na PoC, Push representa o fluxo em que o equipamento consulta a aplicação para buscar comandos pendentes e depois devolve o resultado da execução. Isso é diferente do Monitor, em que o equipamento envia notificações diretamente para a PoC.
@@ -309,3 +311,49 @@ A suíte cobre:
 | Autenticação dos endpoints Push | Usa `CallbackSecurityEvaluator`; a robustez depende de configurar shared key/IPs em ambientes expostos. |
 | Status padronizados | A PoC aceita status livres vindos de `/result`, o que é flexível, mas pode exigir normalização futura. |
 | Concorrência | O repositório reivindica atomicamente um único comando pendente no SQLite, e a suíte cobre consultas simultâneas; outra persistência exigirá nova validação. |
+
+## Máquina de estados
+
+```mermaid
+stateDiagram-v2
+    [*] --> pending: comando enfileirado
+    pending --> delivered: GET /push reivindica atomicamente
+    delivered --> completed: POST /result confirma sucesso
+    delivered --> failed: POST /result informa falha
+    pending --> cleared: limpeza administrativa confirmada
+    delivered --> delivered: resultado repetido com mesma chave idempotente
+    completed --> completed: repetição idempotente
+    failed --> failed: repetição idempotente
+```
+
+Os nomes recebidos do equipamento podem ser preservados para diagnóstico, mas a
+PoC usa constantes para seus estados próprios. Não crie nova tentativa automática
+de comando físico não idempotente; reenvio exige chave estável ou confirmação do
+operador.
+
+## Recuperação operacional
+
+| Sintoma | Verificação | Ação segura |
+| --- | --- | --- |
+| Poll retorna vazio | Device ID, fila `pending` e segurança do ingresso | Corrigir contexto; não duplicar comando manualmente |
+| Mesmo comando aparece duas vezes | Chave idempotente e transação de claim | Interromper produtor e preservar evidência |
+| Resultado não atualiza | `command_id`, body limite e commit SQLite | Reprocessar apenas a resposta idempotente |
+| Comando fica `delivered` | Conectividade e execução física | Conciliar com o equipamento antes de qualquer reenvio |
+| Banco falha | Readiness, permissões e espaço | Restaurar persistência; não responder falso ACK |
+
+Após recuperação, execute o contrato com stub, confira métricas de fila e registre
+correlation ID, command ID e decisão de reenvio sem payload sensível.
+
+## Contrato de estados
+
+| Estado canônico local | Origem | Significado |
+| --- | --- | --- |
+| `pending` | Enfileiramento | Disponível para reivindicação pelo equipamento |
+| `delivered` | Poll bem-sucedido | Entregue ao equipamento, execução ainda não confirmada |
+| `completed` | Resultado sem estado explícito | Conclusão padrão registrada pela PoC |
+| `received` | Recebimento legado | Evento legado persistido sem ciclo de fila moderno |
+
+O endpoint `/result` ainda preserva estado explícito informado pelo equipamento;
+portanto, valores externos podem existir além da lista canônica. Não normalize ou
+rejeite novos valores sem decisão de produto e contrato por firmware. Relatórios
+devem distinguir estados canônicos de valores externos observados.
