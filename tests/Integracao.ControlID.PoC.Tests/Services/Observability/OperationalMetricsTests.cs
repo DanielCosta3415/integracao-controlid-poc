@@ -27,8 +27,13 @@ public class OperationalMetricsTests
         Assert.Equal("5xx", counter.Tags["status_group"]);
         Assert.Equal(1, counter.Value);
         Assert.Equal(1, histogram.Count);
-        Assert.DoesNotContain("123", PrometheusMetricsWriter.Format(snapshot), StringComparison.Ordinal);
-        Assert.DoesNotContain("secret", PrometheusMetricsWriter.Format(snapshot), StringComparison.OrdinalIgnoreCase);
+
+        var prometheus = PrometheusMetricsWriter.Format(snapshot);
+        var labelValues = counter.Tags.Values.Concat(histogram.Tags.Values);
+
+        Assert.Contains("path=\"/users/details/{id}\"", prometheus, StringComparison.Ordinal);
+        Assert.DoesNotContain(labelValues, value => value.Contains("123", StringComparison.Ordinal));
+        Assert.DoesNotContain(labelValues, value => value.Contains("secret", StringComparison.OrdinalIgnoreCase));
     }
 
     [Fact]
