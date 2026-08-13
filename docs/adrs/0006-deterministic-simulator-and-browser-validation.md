@@ -1,6 +1,6 @@
 # ADR 0006: simulador determinístico e validação real de navegador
 
-> **Decisão aceita** · Público: arquitetura, QA e mantenedores · Responsável: liderança técnica · Última validação: 2026-08-04.
+> **Decisão** · Público: arquitetura, QA e mantenedores · Responsável: Engenharia · Última validação: 2026-08-12.
 
 Estado: aceita
 
@@ -42,5 +42,10 @@ equivalência.
 
 `tools/contract-controlid-stub.ps1`, o projeto
 `tests/Integracao.ControlID.PoC.E2E`, `tools/performance-baseline.ps1` e
-`docs/endpoint-validation-matrix.md` formam a evidência executável e documental
+[docs/integracao-controlid/endpoint-validation-matrix.md](../integracao-controlid/endpoint-validation-matrix.md) formam a evidência executável e documental
 desta decisão.
+
+## Navegação documental
+
+- [Voltar ao índice deste domínio](README.md).
+- [Abrir a central de documentação](../README.md).

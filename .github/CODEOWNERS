@@ -1,0 +1,9 @@
+# Responsabilidade mínima de revisão para áreas críticas e documentação.
+* @DanielCosta3415
+
+/docs/ @DanielCosta3415
+/tests/ @DanielCosta3415
+/.github/ @DanielCosta3415
+/Data/Migrations/ @DanielCosta3415
+/Services/Callbacks/ @DanielCosta3415
+/Services/ControlIDApi/ @DanielCosta3415

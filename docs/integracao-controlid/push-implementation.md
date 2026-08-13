@@ -1,0 +1,364 @@
+# Push: implementação na PoC
+
+> **Referência** · Público: desenvolvimento, QA e operação · Responsável: Engenharia · Última validação: 2026-08-12.
+
+Este documento explica como a funcionalidade Push foi implementada dentro da PoC de integração com a API de controle de acesso da Control iD.
+
+Na PoC, Push representa o fluxo em que o equipamento consulta a aplicação para buscar comandos pendentes e depois devolve o resultado da execução. Isso é diferente do Monitor, em que o equipamento envia notificações diretamente para a PoC.
+
+## Visão geral
+
+O Push foi implementado como uma fila persistida em SQLite.
+
+O ciclo principal é:
+
+```text
+Usuário enfileira comando na PoC
+  -> comando fica com status pending
+  -> equipamento chama GET /push
+  -> PoC entrega o payload e marca como delivered
+  -> equipamento executa comando
+  -> equipamento chama POST /result
+  -> PoC registra o resultado e marca como completed ou status recebido
+```
+
+A tela operacional principal é `PushCenter`.
+
+## Arquivos envolvidos
+
+| Arquivo | Papel na funcionalidade |
+| --- | --- |
+| `Controllers/PushCenterController.cs` | Adapta a central web e os endpoints oficiais servidos pela PoC para HTTP/MVC. |
+| `Controllers/PushController.cs` | Mantém rotas legadas, redirecionamentos e recebimento antigo em `POST /Push/Receive`. |
+| `Services/Push/PushCommandWorkflowService.cs` | Centraliza regras de fila, status, parsing legado, entrega e registro de resultado. |
+| `Services/Push/PushCommandStatuses.cs` | Define os status persistidos usados pelo fluxo Push. |
+| `Models/Database/PushCommandLocal.cs` | Entidade persistida na tabela `PushCommands`. |
+| `Models/ControlIDApi/PushCommand.cs` | Modelo de API para representar comando/evento Push. |
+| `Services/Database/PushCommandRepository.cs` | Repositório responsável por inserir, consultar, atualizar e remover comandos Push. |
+| `ViewModels/Push/PushQueueCommandViewModel.cs` | Campos usados para enfileirar um novo comando. |
+| `ViewModels/Push/PushEventListViewModel.cs` | Dados da listagem da central Push. |
+| `ViewModels/Push/PushEventViewModel.cs` | Dados de detalhe de um comando/evento Push. |
+| `Views/PushCenter/Index.cshtml` | Tela de criação de comando e histórico da fila. |
+| `Views/PushCenter/Details.cshtml` | Tela de inspeção de payload e JSON bruto. |
+| `Services/ControlIDApi/OfficialApiCatalogService.cs` | Cataloga `GET /push`, `POST /result` e endpoints relacionados a Push. |
+
+## Endpoints implementados
+
+### Central web
+
+| Rota | Controller | Finalidade |
+| --- | --- | --- |
+| `GET /PushCenter` | `PushCenterController.Index` | Lista comandos/eventos e exibe formulário para enfileirar comando. |
+| `GET /PushCenter/Details/{id}` | `PushCenterController.Details` | Exibe payload, JSON bruto e metadados de um item. |
+| `POST /PushCenter/Queue` | `PushCenterController.Queue` | Cria comando pendente para o equipamento consumir. |
+| `POST /PushCenter/Clear` | `PushCenterController.Clear` | Limpa a fila persistida. |
+
+### Endpoints oficiais servidos pela PoC
+
+| Rota | Controller | Finalidade |
+| --- | --- | --- |
+| `GET /push` | `PushCenterController.Poll` | Entrega o próximo comando pendente para um equipamento. |
+| `POST /result` | `PushCenterController.Result` | Recebe o resultado de execução de um comando Push. |
+
+Essas rotas aparecem no catálogo oficial como:
+
+| ID no catálogo | Rota | Descrição |
+| --- | --- | --- |
+| `push-poll` | `GET /push` | Endpoint servido pela PoC para o equipamento buscar comandos pendentes. |
+| `push-result` | `POST /result` | Endpoint servido pela PoC para o equipamento devolver o resultado. |
+| `change-idcloud-code` | `/change_idcloud_code.fcgi` | Endpoint oficial relacionado a Push/iDCloud, invocado no equipamento. |
+
+### Rotas legadas
+
+`PushController` mantém compatibilidade com rotas antigas:
+
+| Rota | Comportamento |
+| --- | --- |
+| `GET /Push` | Redireciona para `PushCenter/Index`. |
+| `GET /Push/Details/{id}` | Redireciona para `PushCenter/Details/{id}`. |
+| `POST /Push/Receive` | Recebe um evento Push legado, tenta interpretar JSON e persiste como item recebido. |
+| `POST /Push/Clear` | Limpa comandos e redireciona para a central. |
+
+## Como um comando é enfileirado
+
+O usuário preenche o formulário da central com:
+
+| Campo | Origem |
+| --- | --- |
+| `DeviceId` | Dispositivo de destino. |
+| `CommandType` | Tipo lógico do comando. |
+| `UserId` | Usuário relacionado, quando aplicável. |
+| `Payload` | JSON que será entregue ao equipamento. |
+
+`PushCenterController.Queue` valida o `ModelState` e delega o caso de uso para `PushCommandWorkflowService.QueueAsync`, que valida o JSON e cria um `PushCommandLocal` com:
+
+```text
+Status = pending
+RawJson = Payload
+Payload = Payload
+CreatedAt = DateTime.UtcNow
+CommandId = Guid.NewGuid()
+```
+
+Depois o comando é salvo por `PushCommandRepository.AddPushCommandAsync`.
+
+## Como o equipamento busca comandos
+
+O equipamento chama:
+
+```text
+GET /push?device_id=<id-do-equipamento>
+```
+
+A PoC também aceita o parâmetro legado:
+
+```text
+GET /push?deviceid=<id-do-equipamento>
+```
+
+O controller resolve o dispositivo usando `device_id` ou `deviceid` e chama `PushCommandWorkflowService.DeliverNextAsync`, que consulta:
+
+```csharp
+_pushCommandRepository.GetNextPendingCommandAsync(resolvedDeviceId)
+```
+
+A consulta pega o primeiro comando com `Status == "pending"`, ordenado por `CreatedAt`.
+
+Se `device_id` foi informado, a PoC entrega comandos com:
+
+```text
+command.DeviceId == deviceId
+```
+
+ou comandos sem dispositivo específico:
+
+```text
+string.IsNullOrEmpty(command.DeviceId)
+```
+
+Quando encontra um comando:
+
+1. O status muda para `delivered`.
+2. `UpdatedAt` recebe `DateTime.UtcNow`.
+3. O comando é atualizado no SQLite.
+4. O `Payload` é retornado como `application/json`.
+
+Se não houver comando, a PoC retorna:
+
+```json
+{}
+```
+
+## Como o resultado é recebido
+
+Depois de executar o comando, o equipamento pode chamar:
+
+```text
+POST /result?command_id=<guid>
+```
+
+O corpo da requisição é lido como texto bruto.
+
+O fluxo de `PushCenterController.Result` é:
+
+1. Ler `command_id` da query string, quando enviado.
+2. Quando `command_id` não vem, resolver chave opcional `Idempotency-Key` ou `idempotency_key`.
+3. Ler o corpo bruto da requisição.
+4. Delegar persistência para `PushCommandWorkflowService.StoreResultAsync`.
+5. Se existir comando, atualizar `Payload`, `Status` e `UpdatedAt`, mantendo `RawJson` vazio para não duplicar o corpo.
+6. Se não existir, criar um novo registro do tipo `result`.
+7. Se a query `status` não vier preenchida, usar `completed`.
+8. Retornar `200 OK`.
+
+Exemplo:
+
+```text
+POST /result?command_id=00000000-0000-0000-0000-000000000001&status=completed
+```
+
+## Persistência local
+
+Os comandos ficam na tabela `PushCommands`.
+
+As migrações versionadas do EF Core criam e evoluem a tabela quando são aplicadas, seja na inicialização configurada, seja no modo exclusivo de migração:
+
+```text
+PushCommands(
+  CommandId,
+  ReceivedAt,
+  CommandType,
+  RawJson,
+  Status,
+  Payload,
+  DeviceId,
+  UserId,
+  CreatedAt,
+  UpdatedAt
+)
+```
+
+Campos principais:
+
+| Campo | Uso |
+| --- | --- |
+| `CommandId` | Identificador GUID do comando/evento. |
+| `ReceivedAt` | Data/hora de recebimento ou registro. |
+| `CommandType` | Tipo do comando, por exemplo `custom`, `result` ou tipo enviado no evento legado. |
+| `RawJson` | Envelope JSON bruto somente quando ele difere do `Payload`; permanece vazio nos demais fluxos. |
+| `Status` | Estado operacional do item. |
+| `Payload` | Conteúdo entregue ao equipamento ou resultado recebido. |
+| `DeviceId` | Dispositivo alvo ou origem. |
+| `UserId` | Usuário relacionado, quando houver. |
+| `CreatedAt` | Data/hora de criação local. |
+| `UpdatedAt` | Data/hora da última atualização. |
+
+## Estados usados pela PoC
+
+| Status | Quando aparece |
+| --- | --- |
+| `pending` | Comando criado pela tela e aguardando consumo pelo equipamento. |
+| `delivered` | Comando entregue por `GET /push`. |
+| `completed` | Resultado recebido em `POST /result` sem status explícito. |
+| `received` | Evento recebido pela rota legada `POST /Push/Receive`. |
+| Valor enviado em `status` | Quando `POST /result` informa um status específico na query string. |
+
+A UI também possui espaço visual para estados como erro/concluído, mas o fluxo atual usa os estados acima de forma direta.
+
+## Recebimento legado em `/Push/Receive`
+
+A rota `POST /Push/Receive` aceita um corpo bruto e tenta interpretar alguns campos JSON:
+
+| Campo tentado | Uso |
+| --- | --- |
+| `command_type`, `type` ou `event` | Define `CommandType`. |
+| `status` | Define `Status`. |
+| `device_id` ou `deviceid` | Define `DeviceId`. |
+| `user_id` ou `userid` | Define `UserId`. |
+| `payload` ou `data` | Define `Payload`. |
+
+Quando a origem envia `Idempotency-Key` ou `idempotency_key`, a PoC deriva um identificador determinístico e atualiza o mesmo evento nas novas tentativas, evitando duplicatas acidentais no legado.
+
+Se o JSON for inválido, a PoC registra warning e ainda salva o corpo bruto como evento legado com `CommandType = "legacy_push_event"` e `Status = "received"`.
+
+## Relação com Monitor
+
+Push e Monitor compartilham a área de observabilidade da PoC, mas não usam a mesma tabela.
+
+| Funcionalidade | Tabela | Direção principal |
+| --- | --- | --- |
+| Monitor | `MonitorEvents` | Equipamento envia eventos para a PoC. |
+| Push | `PushCommands` | Equipamento busca comandos na PoC e devolve resultado. |
+
+Essa separação deixa mais claro o ciclo de vida:
+
+| Monitor | Push |
+| --- | --- |
+| Evento recebido e registrado. | Comando criado, entregue e finalizado. |
+| Foco em callbacks/notificações. | Foco em fila de comandos. |
+| UI principal: `OfficialEvents`. | UI principal: `PushCenter`. |
+
+## Segurança e considerações operacionais
+
+Os endpoints oficiais servidos pela PoC (`GET /push` e `POST /result`) e o endpoint legado `POST /Push/Receive` passam por `CallbackSecurityEvaluator`.
+
+A mesma configuração de ingress usada por callbacks também vale para Push:
+
+| Opção | Efeito no Push |
+| --- | --- |
+| `CallbackSecurity:MaxBodyBytes` | Rejeita chamadas com `Content-Length` acima do limite configurado. |
+| `CallbackSecurity:AllowedRemoteIps` | Restringe os IPs que podem consultar `/push`, enviar `/result` ou chamar `/Push/Receive`. |
+| `CallbackSecurity:AllowLoopback` | Mantém validação local/stub possível mesmo com lista de IPs restrita. |
+| `CallbackSecurity:RequireSharedKey` | Exige o header configurado em `SharedKeyHeaderName`. |
+| `CallbackSecurity:SharedKeyHeaderName` | Define o nome do header, por padrão `X-ControlID-Callback-Key`. |
+| `CallbackSecurity:RequireSignedRequests` | Exige assinatura HMAC validada depois da leitura limitada do corpo. |
+| `CallbackSecurity:SignatureHeaderName`, `TimestampHeaderName`, `NonceHeaderName` | Definem os cabeçalhos de assinatura, carimbo de data e hora e nonce. |
+| `CallbackSecurity:RateLimit:PermitLimit` | Limita chamadas de callbacks/push por IP remoto. |
+| `CallbackSecurity:RateLimit:WindowSeconds` | Define a janela do rate limit dos ingressos. |
+
+O endpoint legado `POST /Push/Receive` também limita o corpo lido a aproximadamente 1 MB. A limpeza manual da fila persistida exige confirmação textual na UI para evitar perda acidental de histórico local.
+
+`POST /result` e `POST /Push/Receive` usam o mesmo leitor limitado dos callbacks (`CallbackRequestBodyReader`), portanto o limite configurado em `CallbackSecurity:MaxBodyBytes` vale mesmo quando a requisição chega sem `Content-Length`.
+
+Para uso fora de PoC, continue recomendando:
+
+- habilitar `RequireSharedKey=true` e `RequireSignedRequests=true`, provisionando `SharedKey` fora do repositório;
+- restringir IPs de origem;
+- usar HTTPS em uma URL acessível pelo equipamento;
+- registrar tentativa de polling e resultados com mais metadados;
+- monitorar a concorrência entre consultas simultâneas se a persistência ou a topologia mudar.
+
+## Cobertura de testes
+
+No estado atual, a funcionalidade Push é validada por smoke tests locais e por testes unitários dedicados para `PushCommandWorkflowService`, `PushCenterController`, `PushController` e `PushCommandRepository`.
+
+A suíte cobre:
+
+| Cenário | Cobertura |
+| --- | --- |
+| Enfileirar comando válido | Cria item `pending`. |
+| Enfileirar payload inválido | Rejeita antes de persistir. |
+| Poll com comando pendente | Retorna payload e marca `delivered`. |
+| Resultado sem `command_id` | Cria registro `result` com status `completed`; se houver chave idempotente, retries atualizam o mesmo registro. |
+| Evento legado inválido | Persiste corpo bruto como `legacy_push_event` com status `received`. |
+| Evento legado JSON estruturado | Extrai tipo, status, dispositivo, usuário e payload no serviço de workflow. |
+| Segurança de ingress | Rejeita requisição sem shared key quando obrigatória. |
+
+## Limitações atuais
+
+| Ponto | Observação |
+| --- | --- |
+| Equipamento real | O ciclo completo depende de um dispositivo consultando `GET /push` e enviando `POST /result`. |
+| Autenticação dos endpoints Push | Usa `CallbackSecurityEvaluator`; a robustez depende de configurar shared key/IPs em ambientes expostos. |
+| Status padronizados | A PoC aceita status livres vindos de `/result`, o que é flexível, mas pode exigir normalização futura. |
+| Concorrência | O repositório reivindica atomicamente um único comando pendente no SQLite, e a suíte cobre consultas simultâneas; outra persistência exigirá nova validação. |
+
+## Máquina de estados
+
+```mermaid
+stateDiagram-v2
+    [*] --> pending: comando enfileirado
+    pending --> delivered: GET /push reivindica atomicamente
+    delivered --> completed: POST /result confirma sucesso
+    delivered --> failed: POST /result informa falha
+    pending --> cleared: limpeza administrativa confirmada
+    delivered --> delivered: resultado repetido com mesma chave idempotente
+    completed --> completed: repetição idempotente
+    failed --> failed: repetição idempotente
+```
+
+Os nomes recebidos do equipamento podem ser preservados para diagnóstico, mas a
+PoC usa constantes para seus estados próprios. Não crie nova tentativa automática
+de comando físico não idempotente; reenvio exige chave estável ou confirmação do
+operador.
+
+## Recuperação operacional
+
+| Sintoma | Verificação | Ação segura |
+| --- | --- | --- |
+| Poll retorna vazio | Device ID, fila `pending` e segurança do ingresso | Corrigir contexto; não duplicar comando manualmente |
+| Mesmo comando aparece duas vezes | Chave idempotente e transação de claim | Interromper produtor e preservar evidência |
+| Resultado não atualiza | `command_id`, body limite e commit SQLite | Reprocessar apenas a resposta idempotente |
+| Comando fica `delivered` | Conectividade e execução física | Conciliar com o equipamento antes de qualquer reenvio |
+| Banco falha | Readiness, permissões e espaço | Restaurar persistência; não responder falso ACK |
+
+Após recuperação, execute o contrato com stub, confira métricas de fila e registre
+correlation ID, command ID e decisão de reenvio sem payload sensível.
+
+## Contrato de estados
+
+| Estado canônico local | Origem | Significado |
+| --- | --- | --- |
+| `pending` | Enfileiramento | Disponível para reivindicação pelo equipamento |
+| `delivered` | Poll bem-sucedido | Entregue ao equipamento, execução ainda não confirmada |
+| `completed` | Resultado sem estado explícito | Conclusão padrão registrada pela PoC |
+| `received` | Recebimento legado | Evento legado persistido sem ciclo de fila moderno |
+
+O endpoint `/result` ainda preserva estado explícito informado pelo equipamento;
+portanto, valores externos podem existir além da lista canônica. Não normalize ou
+rejeite novos valores sem decisão de produto e contrato por firmware. Relatórios
+devem distinguir estados canônicos de valores externos observados.
+
+## Navegação documental
+
+- [Voltar ao índice deste domínio](README.md).
+- [Abrir a central de documentação](../README.md).

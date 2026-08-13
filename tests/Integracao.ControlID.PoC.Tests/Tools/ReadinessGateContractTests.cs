@@ -38,7 +38,7 @@ public class ReadinessGateContractTests
         var scannerScript = ReadRepoFile("tools", "external-security-scans.ps1");
         var stubContractScript = ReadRepoFile("tools", "contract-controlid-stub.ps1");
         var semgrepConfig = ReadRepoFile(".semgrep.yml");
-        var runbook = ReadRepoFile("docs", "external-validation-runbook.md");
+        var runbook = ReadRepoFile("docs", "qualidade", "external-validation-runbook.md");
 
         Assert.Contains("semgrep", scannerScript, StringComparison.Ordinal);
         Assert.Contains("osv-scanner", scannerScript, StringComparison.Ordinal);
@@ -64,8 +64,8 @@ public class ReadinessGateContractTests
     [Fact]
     public void AcceptanceDocs_ConvertExternalResidualsIntoReadinessGates()
     {
-        var acceptance = ReadRepoFile("docs", "product-acceptance-criteria.md");
-        var strategy = ReadRepoFile("docs", "testing-strategy.md");
+        var acceptance = ReadRepoFile("docs", "produto", "product-acceptance-criteria.md");
+        var strategy = ReadRepoFile("docs", "qualidade", "testing-strategy.md");
 
         Assert.Contains("Critérios de aceite e valida", acceptance, StringComparison.Ordinal);
         Assert.Contains("-RequireHardwareContract", acceptance, StringComparison.Ordinal);

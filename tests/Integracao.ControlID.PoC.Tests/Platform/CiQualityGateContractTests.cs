@@ -57,17 +57,19 @@ public class CiQualityGateContractTests
     {
         var readme = ReadRepoFile("README.md");
         var docsIndex = ReadRepoFile("docs", "README.md");
-        var ciDocs = ReadRepoFile("docs", "ci-cd-quality-gates.md");
-        var projectMap = ReadRepoFile("docs", "project-file-responsibilities.md");
+        var ciDocs = ReadRepoFile("docs", "qualidade", "ci-cd-quality-gates.md");
+        var qualityIndex = ReadRepoFile("docs", "qualidade", "README.md");
+        var projectMap = ReadRepoFile("docs", "arquitetura", "project-file-responsibilities.md");
 
-        Assert.Contains("docs/ci-cd-quality-gates.md", readme, StringComparison.Ordinal);
-        Assert.Contains("docs/ci-cd-quality-gates.md", docsIndex, StringComparison.Ordinal);
+        Assert.Contains("docs/qualidade/README.md", readme, StringComparison.Ordinal);
+        Assert.Contains("qualidade/ci-cd-quality-gates.md", docsIndex, StringComparison.Ordinal);
         Assert.Contains("GitHub Actions", ciDocs, StringComparison.Ordinal);
         Assert.Contains("Critérios de qualidade obrigatórios", ciDocs, StringComparison.Ordinal);
         Assert.Contains("Reprodução local", ciDocs, StringComparison.Ordinal);
         Assert.Contains("Proteção recomendada da ramificação", ciDocs, StringComparison.Ordinal);
         Assert.Contains("A CI não executa implantação", ciDocs, StringComparison.Ordinal);
-        Assert.Contains("docs/ci-cd-quality-gates.md", projectMap, StringComparison.Ordinal);
+        Assert.Contains("ci-cd-quality-gates.md", qualityIndex, StringComparison.Ordinal);
+        Assert.Contains("generate-source-inventory.ps1", projectMap, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -75,7 +77,7 @@ public class CiQualityGateContractTests
     {
         var dockerfile = ReadRepoFile("Dockerfile");
         var vendorAudit = ReadRepoFile("tools", "audit-vendor-dependencies.ps1");
-        var supplyChainDocs = ReadRepoFile("docs", "supply-chain-review.md");
+        var supplyChainDocs = ReadRepoFile("docs", "seguranca-privacidade", "supply-chain-review.md");
 
         Assert.Contains("if ! grep -q '^app:' /etc/group; then addgroup -S app; fi", dockerfile, StringComparison.Ordinal);
         Assert.Contains("if ! id -u app >/dev/null 2>&1; then adduser -S -G app app; fi", dockerfile, StringComparison.Ordinal);

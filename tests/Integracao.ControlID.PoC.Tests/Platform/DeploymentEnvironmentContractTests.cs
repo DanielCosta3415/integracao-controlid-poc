@@ -72,7 +72,7 @@ public class DeploymentEnvironmentContractTests
         var envExample = ReadRepoFile(".env.example");
         var staging = ReadRepoFile("appsettings.Staging.json");
         var production = ReadRepoFile("appsettings.Production.json");
-        var runbook = ReadRepoFile("docs", "deployment-runbook.md");
+        var runbook = ReadRepoFile("docs", "operacao", "deployment-runbook.md");
 
         Assert.Contains("CallbackSecurity__Shared" + "Key=replace-with-at-least-32-random-characters", envExample);
         Assert.Contains("DataProtection__KeyPath=/app/data/data-protection-keys", envExample);

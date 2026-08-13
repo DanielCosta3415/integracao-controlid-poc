@@ -1,6 +1,6 @@
 # ADR 0005 - Adoção coordenada do .NET 10 LTS
 
-> **Decisão aceita** · Público: arquitetura, desenvolvimento e plataforma · Responsável: liderança técnica · Última validação: 2026-08-03.
+> **Decisão** · Público: arquitetura, desenvolvimento e plataforma · Responsável: Engenharia · Última validação: 2026-08-12.
 
 Estado: aceita
 
@@ -102,3 +102,8 @@ Reavalie antes do fim do suporte do .NET 10, diante de vulnerabilidade sem
 correção compatível ou se o provedor de implantação não suportar a linha LTS.
 Qualquer substituição deve manter os pacotes Microsoft de framework na mesma
 linha major e registrar compatibilidade de contêiner, dados e hardware.
+
+## Navegação documental
+
+- [Voltar ao índice deste domínio](README.md).
+- [Abrir a central de documentação](../README.md).

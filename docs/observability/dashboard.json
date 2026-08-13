@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "runbook": "docs/observability-runbook.md",
-  "incidentRunbook": "docs/incident-response-and-dr.md",
+  "runbook": "docs/operacao/observability-runbook.md",
+  "incidentRunbook": "docs/operacao/incident-response-and-dr.md",
   "dashboards": [
     {
       "id": "process-health",
@@ -167,7 +167,7 @@
         {
           "title": "Governanca de budget",
           "source": "runbook",
-          "target": "docs/finops-capacity.md"
+          "target": "docs/operacao/finops-capacity.md"
         }
       ]
     }

@@ -1,6 +1,6 @@
 # ADR 0002 - Fluxos Control iD de entrada e saída seguros fora de Development
 
-> **Decisão aceita** · Público: arquitetura e segurança · Responsável: liderança técnica · Última validação: 2026-08-03.
+> **Decisão** · Público: arquitetura e segurança · Responsável: Engenharia · Última validação: 2026-08-12.
 
 Estado: aceita
 
@@ -50,7 +50,7 @@ HMAC nativo devem usar o proxy assinador local quando necessário.
 - `Services/Callbacks/CallbackSecurityEvaluator.cs`
 - `Services/Callbacks/CallbackSignatureValidator.cs`
 - `tools/ControlIdCallbackSigningProxy/`
-- `docs/security-hardening.md`
+- [docs/seguranca-privacidade/security-hardening.md](../seguranca-privacidade/security-hardening.md)
 - `tests/Integracao.ControlID.PoC.Tests/Services/Callbacks/CallbackSignatureValidatorTests.cs`
 - `tests/Integracao.ControlID.PoC.Tests/Services/Security/ControlIdInputSanitizerTests.cs`
 
@@ -68,3 +68,8 @@ formalmente os mesmos controles e evidências.
   ou mudança da topologia de confiança.
 - Evidência para mudança: contrato do fornecedor, modelo de ameaça atualizado,
   teste de replay, limites, rotação de chave e validação de falha segura.
+
+## Navegação documental
+
+- [Voltar ao índice deste domínio](README.md).
+- [Abrir a central de documentação](../README.md).

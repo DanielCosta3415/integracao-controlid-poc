@@ -1,6 +1,6 @@
 # Services/ControlIDApi
 
-> **Guia de módulo vivo** · Público: desenvolvimento backend · Responsável: engenharia de integração · Última validação: 2026-08-03.
+> **Guia** · Público: desenvolvimento backend · Responsável: Engenharia · Última validação: 2026-08-12.
 
 Camada oficial de integração da PoC com a Access API da Control iD.
 
@@ -59,7 +59,7 @@ flowchart LR
 - Novo endpoint exige catálogo, documentação de parâmetros, autorização adequada
   e testes de sucesso, entrada inválida, tempo limite e resposta inesperada.
 - Mudança de payload público exige versão ou compatibilidade documentada em
-  `docs/integration-contracts.md`.
+  [docs/integracao-controlid/integration-contracts.md](../../docs/integracao-controlid/integration-contracts.md).
 
 ## Testes relacionados
 
@@ -76,10 +76,15 @@ credenciais versionadas.
 4. Manter JSON como `JsonElement` independente e resposta binária como bytes, sem documento descartável ou conversão Base64 intermediária.
 5. Aplicar paginação com lookahead às listagens `load_objects` servidas por GET; operações técnicas POST preservam o payload explícito do operador.
 6. Criar testes de sucesso, sessão ausente, entrada inválida, timeout e resposta inesperada.
-7. Atualizar `docs/integration-contracts.md` e a rastreabilidade do requisito.
+7. Atualizar [docs/integracao-controlid/integration-contracts.md](../../docs/integracao-controlid/integration-contracts.md) e a rastreabilidade do requisito.
 
 Comando direcionado:
 
 ```powershell
 dotnet test .\Integracao.ControlID.PoC.sln --no-build --filter FullyQualifiedName~Services.ControlIDApi
 ```
+
+## Navegação documental
+
+- [Integração Control iD](../../docs/integracao-controlid/README.md).
+- [Central de documentação](../../docs/README.md).

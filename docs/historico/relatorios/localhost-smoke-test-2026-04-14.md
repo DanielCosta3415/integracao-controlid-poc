@@ -1,0 +1,497 @@
+# Teste integrado local da PoC Control iD
+
+> **Registro histórico** · Público: QA e auditoria · Responsável: QA · Referência temporal: 2026-04-14.
+
+Data: 2026-04-30 20:48:18 -03:00
+
+## Resumo
+
+- Total: 443
+- PASS: 388
+- FAIL: 0
+- SKIP: 55
+
+## Inicialização
+
+- [PASS] Auth/Register bootstrap: POST 200
+- [PASS] Auth/LocalLogin: POST 200
+- [PASS] Auth/LocalLogin verification: Sessão local autenticada.
+- [PASS] /: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local não é executado durante o smoke para preservar a autenticação.
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] /Auth/Login: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local não é executado durante o smoke para preservar a autenticação.
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/Auth/Login: POST 200
+- [PASS] /Session/Status: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local não é executado durante o smoke para preservar a autenticação.
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/Session/Validate: POST 200
+- [SKIP] http://localhost:5000/Session/Clear: Sessão não é limpa durante o smoke para preservar o contexto dos demais fluxos.
+
+## Callbacks
+
+- [PASS] /new_user_identified.fcgi: POST 200
+- [PASS] /new_card.fcgi: POST 200
+- [PASS] /new_biometric_image.fcgi: POST 200
+- [PASS] /new_qrcode.fcgi: POST 200
+- [PASS] /new_biometric_template.fcgi: POST 200
+- [PASS] /new_uhf_tag.fcgi: POST 200
+- [PASS] /new_user_id_and_password.fcgi: POST 200
+- [PASS] /device_is_alive.fcgi: POST 200
+- [PASS] /card_create.fcgi: POST 200
+- [PASS] /fingerprint_create.fcgi: POST 200
+- [PASS] /template_create.fcgi: POST 200
+- [PASS] /face_create.fcgi: POST 200
+- [PASS] /pin_create.fcgi: POST 200
+- [PASS] /password_create.fcgi: POST 200
+- [PASS] /new_rex_log.fcgi: POST 200
+- [PASS] /api/notifications/user_image: POST 200
+- [PASS] /api/notifications/template: POST 200
+- [PASS] /api/notifications/card: POST 200
+- [PASS] /api/notifications/operation_mode: POST 200
+- [PASS] /api/notifications/pin: POST 200
+- [PASS] /api/notifications/password: POST 200
+- [PASS] /api/notifications/catra_event: POST 200
+- [PASS] /api/notifications/usb_drive: POST 200
+- [PASS] /push?device_id=smoke-device: GET 200
+- [PASS] /result?device_id=smoke-device&status=completed: POST 200
+
+## Casos limítrofes
+
+- [PASS] Home/ConnectToDevice vazio: Input vazio tratado sem quebra.
+- [PASS] Home/TestDeviceConnectivity falha de rede: Falha de rede tratada sem 500.
+- [PASS] OfficialApi/Invoke sem endereço: Validação tratou endereço vazio sem quebra.
+
+## Formulários
+
+- [PASS] /Users/Create: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local não é executado durante o smoke para preservar a autenticação.
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/Users/Create: POST 200
+- [PASS] /Users/Edit/1: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local não é executado durante o smoke para preservar a autenticação.
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/Users/Edit/1: POST 200
+- [PASS] /Users/Delete/1: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local não é executado durante o smoke para preservar a autenticação.
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/Users/Delete/1: POST 200
+- [PASS] /Groups/Create: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local não é executado durante o smoke para preservar a autenticação.
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/Groups/Create: POST 200
+- [PASS] /Groups/Edit/1: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local não é executado durante o smoke para preservar a autenticação.
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/Groups/Edit/1: POST 200
+- [PASS] /Groups/Delete/1: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local não é executado durante o smoke para preservar a autenticação.
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/Groups/Delete/1: POST 200
+- [PASS] /Cards/Create: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local não é executado durante o smoke para preservar a autenticação.
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/Cards/Create: POST 200
+- [PASS] /Cards/Edit/1: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local não é executado durante o smoke para preservar a autenticação.
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/Cards/Edit/1: POST 200
+- [PASS] /Cards/Delete/1: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local não é executado durante o smoke para preservar a autenticação.
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/Cards/Delete/1: POST 200
+- [PASS] /BiometricTemplates/Create: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local não é executado durante o smoke para preservar a autenticação.
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/BiometricTemplates/Create: POST 200
+- [PASS] /BiometricTemplates/Edit/1: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local não é executado durante o smoke para preservar a autenticação.
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/BiometricTemplates/Edit/1: POST 200
+- [PASS] /BiometricTemplates/Delete/1: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local não é executado durante o smoke para preservar a autenticação.
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/BiometricTemplates/Delete/1: POST 200
+- [PASS] /QRCodes/Create: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local não é executado durante o smoke para preservar a autenticação.
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/QRCodes/Create: POST 200
+- [PASS] /QRCodes/Edit/1: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local não é executado durante o smoke para preservar a autenticação.
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/QRCodes/Edit/1: POST 200
+- [PASS] /QRCodes/Delete/1: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local não é executado durante o smoke para preservar a autenticação.
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/QRCodes/Delete/1: POST 200
+- [PASS] /Devices/Create: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local não é executado durante o smoke para preservar a autenticação.
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/Devices/Create: POST 200
+- [PASS] /Devices/Edit/1: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local não é executado durante o smoke para preservar a autenticação.
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/Devices/Edit/1: POST 200
+- [PASS] /Devices/Delete/1: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local não é executado durante o smoke para preservar a autenticação.
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/Devices/Delete/1: POST 200
+- [PASS] /AccessRules/Create: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local não é executado durante o smoke para preservar a autenticação.
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/AccessRules/Create: POST 200
+- [PASS] /AccessRules/Edit/1: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local não é executado durante o smoke para preservar a autenticação.
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/AccessRules/Edit/1: POST 200
+- [PASS] /AccessRules/Delete/1: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local não é executado durante o smoke para preservar a autenticação.
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/AccessRules/Delete/1: POST 200
+- [PASS] /Config/Create: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local não é executado durante o smoke para preservar a autenticação.
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/Config/Create: POST 200
+- [PASS] /Config/Edit/1: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local não é executado durante o smoke para preservar a autenticação.
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/Config/Edit/1: POST 200
+- [PASS] /Config/Delete/1: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local não é executado durante o smoke para preservar a autenticação.
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/Config/Delete/1: POST 200
+- [PASS] /Config/Diagnostics: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local não é executado durante o smoke para preservar a autenticação.
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/Config/ConnectionTest: POST 200
+- [PASS] http://localhost:5000/Config/PingTest: POST 200
+- [PASS] http://localhost:5000/Config/NslookupTest: POST 200
+- [PASS] /Config/Official: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local não é executado durante o smoke para preservar a autenticação.
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/Config/GetOfficial: POST 200
+- [PASS] http://localhost:5000/Config/SetOfficial: POST 200
+- [PASS] /Hardware/Gpio: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local não é executado durante o smoke para preservar a autenticação.
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] /Hardware/DoorState: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local não é executado durante o smoke para preservar a autenticação.
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] /Hardware/RelayAction: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local não é executado durante o smoke para preservar a autenticação.
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/Hardware/RelayAction: POST 200
+- [PASS] /System/HashPassword: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local não é executado durante o smoke para preservar a autenticação.
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/System/HashPassword: POST 200
+- [PASS] /System/LoginCredentials: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local não é executado durante o smoke para preservar a autenticação.
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/System/LoginCredentials: POST 200
+- [PASS] /System/Network: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local não é executado durante o smoke para preservar a autenticação.
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/System/Network: POST 200
+- [SKIP] /System/Network: Formulário com upload binário foi coberto pela trilha do catálogo oficial.
+- [PASS] /System/Vpn: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local não é executado durante o smoke para preservar a autenticação.
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/System/Vpn: POST 200
+- [SKIP] /System/Vpn: Formulário com upload binário foi coberto pela trilha do catálogo oficial.
+- [PASS] /AdvancedOfficial/ExportObjects: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local não é executado durante o smoke para preservar a autenticação.
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/AdvancedOfficial/ExportObjects: POST 200
+- [PASS] /AdvancedOfficial/NetworkInterlock: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local não é executado durante o smoke para preservar a autenticação.
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/AdvancedOfficial/NetworkInterlock: POST 200
+- [PASS] /AdvancedOfficial/CameraCapture: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local não é executado durante o smoke para preservar a autenticação.
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/AdvancedOfficial/CameraCapture: POST 200
+- [PASS] /AdvancedOfficial/FacialEnroll: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local não é executado durante o smoke para preservar a autenticação.
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/AdvancedOfficial/GetImageList: POST 200
+- [SKIP] /AdvancedOfficial/FacialEnroll: Formulário com upload binário foi coberto pela trilha do catálogo oficial.
+- [SKIP] /AdvancedOfficial/FacialEnroll: Formulário com upload binário foi coberto pela trilha do catálogo oficial.
+- [PASS] /AdvancedOfficial/RemoteLedControl: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local não é executado durante o smoke para preservar a autenticação.
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/AdvancedOfficial/RemoteLedControl: POST 200
+- [PASS] /DocumentedFeatures: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local não é executado durante o smoke para preservar a autenticação.
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/DocumentedFeatures/Attendance: POST 200
+- [PASS] http://localhost:5000/DocumentedFeatures/OnlineMode: POST 200
+- [PASS] http://localhost:5000/DocumentedFeatures/Security: POST 200
+- [PASS] http://localhost:5000/DocumentedFeatures/Visitors: POST 200
+- [PASS] http://localhost:5000/DocumentedFeatures/IdCloud: POST 200
+- [PASS] http://localhost:5000/DocumentedFeatures/Alarm: POST 200
+- [PASS] http://localhost:5000/DocumentedFeatures/GenerateReport: POST 200
+- [PASS] http://localhost:5000/DocumentedFeatures/ExportAfd: POST 200
+- [PASS] http://localhost:5000/DocumentedFeatures/ExportAuditLogs: POST 200
+- [PASS] /OfficialObjects: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local não é executado durante o smoke para preservar a autenticação.
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/OfficialObjects/SelectObject: POST 200
+- [PASS] http://localhost:5000/OfficialObjects/Load: POST 200
+- [PASS] http://localhost:5000/OfficialObjects/Create: POST 200
+- [PASS] http://localhost:5000/OfficialObjects/CreateOrModify: POST 200
+- [PASS] http://localhost:5000/OfficialObjects/Modify: POST 200
+- [PASS] http://localhost:5000/OfficialObjects/Destroy: POST 200
+- [PASS] /ProductSpecific: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local não é executado durante o smoke para preservar a autenticação.
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/ProductSpecific/UpgradeIdFace: POST 200
+- [PASS] http://localhost:5000/ProductSpecific/UpgradeEnterprise: POST 200
+- [PASS] http://localhost:5000/ProductSpecific/FacialSettings: POST 200
+- [PASS] http://localhost:5000/ProductSpecific/QrCodeSettings: POST 200
+- [PASS] http://localhost:5000/ProductSpecific/PowerSettings: POST 200
+- [PASS] http://localhost:5000/ProductSpecific/Streaming: POST 200
+- [PASS] http://localhost:5000/ProductSpecific/SipSettings: POST 200
+- [PASS] http://localhost:5000/ProductSpecific/RefreshSipStatus: POST 200
+- [PASS] http://localhost:5000/ProductSpecific/MakeSipCall: POST 200
+- [PASS] http://localhost:5000/ProductSpecific/FinalizeSipCall: POST 200
+- [SKIP] /ProductSpecific: Formulário com upload binário foi coberto pela trilha do catálogo oficial.
+- [PASS] http://localhost:5000/ProductSpecific/CheckSipAudio: POST 200
+- [PASS] http://localhost:5000/ProductSpecific/DownloadSipAudio: POST 200
+- [PASS] http://localhost:5000/ProductSpecific/AccessAudioSettings: POST 200
+- [SKIP] /ProductSpecific: Formulário com upload binário foi coberto pela trilha do catálogo oficial.
+- [PASS] http://localhost:5000/ProductSpecific/CheckAccessAudio: POST 200
+- [PASS] http://localhost:5000/ProductSpecific/DownloadAccessAudio: POST 200
+- [PASS] http://localhost:5000/ProductSpecific/Signals: POST 200
+- [PASS] http://localhost:5000/ProductSpecific/RefreshLeds: POST 200
+- [PASS] /RemoteActions/Authorization: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local não é executado durante o smoke para preservar a autenticação.
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/RemoteActions/Authorization: POST 200
+- [PASS] /RemoteActions/Enroll: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local não é executado durante o smoke para preservar a autenticação.
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/RemoteActions/Enroll: POST 200
+- [PASS] /PushCenter: GET 200
+
+## Proveniência da execução
+
+- Commit, SDK e sistema operacional: não registrados no relatório original.
+- Escopo diferencial: inclui os casos limítrofes descritos nesta execução.
+- Resultado atual: não inferir; use o smoke versionado e o relatório em `artifacts/`.
+- Integridade futura: registrar duração, código de saída, hash e ambiente sem
+  credencial, sessão ou dado pessoal.
+
+## Validade da evidência
+
+- Data da execução: 2026-04-14.
+- Commit, SDK e sistema operacional: não registrados no relatório original.
+- Resultado: fotografia histórica; `PASS` não garante comportamento atual.
+- Execução atual: `tools/smoke-localhost.ps1` usa banco temporário e grava
+  `artifacts/smoke/localhost-smoke-latest.md`.
+
+Compare totais, falhas, skips intencionais e ambiente da nova execução; não
+edite este relatório para simular resultado recente.
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local não é executado durante o smoke para preservar a autenticação.
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/PushCenter/Queue: POST 200
+- [PASS] http://localhost:5000/PushCenter/Clear: POST 200
+- [PASS] http://localhost:5000/PushCenter/Purge: POST 200
+- [PASS] /OfficialEvents: GET 200
+- [SKIP] http://localhost:5000/Auth/LocalLogout: Logout local não é executado durante o smoke para preservar a autenticação.
+- [PASS] http://localhost:5000/Home/ConnectToDevice: POST 200
+- [PASS] http://localhost:5000/OfficialEvents/Clear: POST 200
+- [PASS] http://localhost:5000/OfficialEvents/Purge: POST 200
+
+## OfficialApi
+
+- [PASS] /OfficialApi: GET 200
+- [PASS] alarm-status: Invocação concluída sem quebra HTTP.
+- [PASS] buzzer-buzz: Invocação concluída sem quebra HTTP.
+- [PASS] cancel-remote-enroll: Invocação concluída sem quebra HTTP.
+- [PASS] cb-card-create: Invocação concluída sem quebra HTTP.
+- [PASS] cb-device-alive: Invocação concluída sem quebra HTTP.
+- [PASS] cb-face-create: Invocação concluída sem quebra HTTP.
+- [PASS] cb-monitor-card: Invocação concluída sem quebra HTTP.
+- [PASS] cb-monitor-catra-event: Invocação concluída sem quebra HTTP.
+- [PASS] cb-monitor-operation-mode: Invocação concluída sem quebra HTTP.
+- [PASS] cb-monitor-password: Invocação concluída sem quebra HTTP.
+- [PASS] cb-monitor-pin: Invocação concluída sem quebra HTTP.
+- [PASS] cb-monitor-template: Invocação concluída sem quebra HTTP.
+- [PASS] cb-monitor-usb-drive: Invocação concluída sem quebra HTTP.
+- [PASS] cb-new-biometric-image: Invocação concluída sem quebra HTTP.
+- [PASS] cb-new-biometric-template: Invocação concluída sem quebra HTTP.
+- [PASS] cb-new-card: Invocação concluída sem quebra HTTP.
+- [PASS] cb-new-qrcode: Invocação concluída sem quebra HTTP.
+- [PASS] cb-new-uhf-tag: Invocação concluída sem quebra HTTP.
+- [PASS] cb-new-user-identified: Invocação concluída sem quebra HTTP.
+- [PASS] cb-new-user-id-password: Invocação concluída sem quebra HTTP.
+- [PASS] cb-password-create: Invocação concluída sem quebra HTTP.
+- [PASS] cb-pin-create: Invocação concluída sem quebra HTTP.
+- [PASS] cb-template-create: Invocação concluída sem quebra HTTP.
+- [PASS] cb-user-image: Invocação concluída sem quebra HTTP.
+- [PASS] change-idcloud-code: Invocação concluída sem quebra HTTP.
+- [PASS] change-login: Invocação concluída sem quebra HTTP.
+- [PASS] connection-test: Invocação concluída sem quebra HTTP.
+- [PASS] create-objects: Invocação concluída sem quebra HTTP.
+- [PASS] create-or-modify-objects: Invocação concluída sem quebra HTTP.
+- [PASS] delete-admins: Invocação concluída sem quebra HTTP.
+- [PASS] destroy-objects: Invocação concluída sem quebra HTTP.
+- [PASS] door-state: Invocação concluída sem quebra HTTP.
+- [PASS] execute-actions: Invocação concluída sem quebra HTTP.
+- [PASS] export-afd: Invocação concluída sem quebra HTTP.
+- [PASS] export-audit-logs: Invocação concluída sem quebra HTTP.
+- [PASS] export-objects: Invocação concluída sem quebra HTTP.
+- [PASS] finalize-sip-call: Invocação concluída sem quebra HTTP.
+- [PASS] get-áudio-access-message: Invocação concluída sem quebra HTTP.
+- [PASS] get-catra-info: Invocação concluída sem quebra HTTP.
+- [PASS] get-configuration: Invocação concluída sem quebra HTTP.
+- [PASS] get-pjsip-áudio-message: Invocação concluída sem quebra HTTP.
+- [PASS] get-sip-status: Invocação concluída sem quebra HTTP.
+- [PASS] get-vpn-file: Invocação concluída sem quebra HTTP.
+- [PASS] get-vpn-information: Invocação concluída sem quebra HTTP.
+- [PASS] get-vpn-status: Invocação concluída sem quebra HTTP.
+- [PASS] gpio-state: Invocação concluída sem quebra HTTP.
+- [PASS] has-áudio-access-messages: Invocação concluída sem quebra HTTP.
+- [PASS] hash-password: Invocação concluída sem quebra HTTP.
+- [PASS] has-pjsip-áudio-message: Invocação concluída sem quebra HTTP.
+- [PASS] has-vpn-file: Invocação concluída sem quebra HTTP.
+- [PASS] load-objects: Invocação concluída sem quebra HTTP.
+- [PASS] login: Invocação concluída sem quebra HTTP.
+- [PASS] logo-change: Invocação concluída sem quebra HTTP.
+- [PASS] logo-destroy: Invocação concluída sem quebra HTTP.
+- [PASS] logo-get: Invocação concluída sem quebra HTTP.
+- [PASS] logout: Invocação concluída sem quebra HTTP.
+- [PASS] make-sip-call: Invocação concluída sem quebra HTTP.
+- [PASS] message-to-screen: Invocação concluída sem quebra HTTP.
+- [PASS] modify-objects: Invocação concluída sem quebra HTTP.
+- [PASS] nslookup-test: Invocação concluída sem quebra HTTP.
+- [PASS] ping-test: Invocação concluída sem quebra HTTP.
+- [PASS] push-poll: Invocação concluída sem quebra HTTP.
+- [PASS] push-result: Invocação concluída sem quebra HTTP.
+- [PASS] reboot: Invocação concluída sem quebra HTTP.
+- [PASS] reboot-recovery: Invocação concluída sem quebra HTTP.
+- [PASS] remote-enroll: Invocação concluída sem quebra HTTP.
+- [PASS] remote-led-control: Invocação concluída sem quebra HTTP.
+- [PASS] remote-user-authorization: Invocação concluída sem quebra HTTP.
+- [PASS] remove-custom-vídeo: Invocação concluída sem quebra HTTP.
+- [PASS] report-generate: Invocação concluída sem quebra HTTP.
+- [PASS] reread-leds: Invocação concluída sem quebra HTTP.
+- [PASS] reset-to-factory: Invocação concluída sem quebra HTTP.
+- [PASS] save-screenshot: Invocação concluída sem quebra HTTP.
+- [PASS] send-vídeo: Invocação concluída sem quebra HTTP.
+- [PASS] session-is-valid: Invocação concluída sem quebra HTTP.
+- [PASS] set-áudio-access-message: Invocação concluída sem quebra HTTP.
+- [PASS] set-configuration: Invocação concluída sem quebra HTTP.
+- [PASS] set-custom-vídeo: Invocação concluída sem quebra HTTP.
+- [PASS] set-network-interlock: Invocação concluída sem quebra HTTP.
+- [PASS] set-pjsip-áudio-message: Invocação concluída sem quebra HTTP.
+- [PASS] set-system-network: Invocação concluída sem quebra HTTP.
+- [PASS] set-system-time: Invocação concluída sem quebra HTTP.
+- [PASS] set-vpn-file: Invocação concluída sem quebra HTTP.
+- [PASS] set-vpn-information: Invocação concluída sem quebra HTTP.
+- [PASS] ssl-certificate-change: Invocação concluída sem quebra HTTP.
+- [PASS] system-information: Invocação concluída sem quebra HTTP.
+- [PASS] upgrade-idface-pro: Invocação concluída sem quebra HTTP.
+- [PASS] upgrade-idflex-enterprise: Invocação concluída sem quebra HTTP.
+- [PASS] user-destroy-image: Invocação concluída sem quebra HTTP.
+- [PASS] user-get-image: Invocação concluída sem quebra HTTP.
+- [PASS] user-get-image-list: Invocação concluída sem quebra HTTP.
+- [PASS] user-list-images: Invocação concluída sem quebra HTTP.
+- [PASS] user-set-image: Invocação concluída sem quebra HTTP.
+- [PASS] user-set-image-list: Invocação concluída sem quebra HTTP.
+- [PASS] user-test-image: Invocação concluída sem quebra HTTP.
+- [PASS] validate-biometry: Invocação concluída sem quebra HTTP.
+
+## Páginas
+
+- [PASS] /Auth/Status: GET 200
+- [PASS] /Users: GET 200
+- [PASS] /Users/Details/1: GET 200
+- [PASS] /Users/Create: GET 200
+- [PASS] /Users/Edit/1: GET 200
+- [PASS] /Users/Delete/1: GET 200
+- [PASS] /Groups: GET 200
+- [PASS] /Groups/Details/1: GET 200
+- [PASS] /Groups/Create: GET 200
+- [PASS] /Groups/Edit/1: GET 200
+- [PASS] /Groups/Delete/1: GET 200
+- [PASS] /Cards: GET 200
+- [PASS] /Cards/Details/1: GET 200
+- [PASS] /Cards/Create: GET 200
+- [PASS] /Cards/Edit/1: GET 200
+- [PASS] /Cards/Delete/1: GET 200
+- [PASS] /BiometricTemplates: GET 200
+- [PASS] /BiometricTemplates/Details/1: GET 200
+- [PASS] /BiometricTemplates/Create: GET 200
+- [PASS] /BiometricTemplates/Edit/1: GET 200
+- [PASS] /BiometricTemplates/Delete/1: GET 200
+- [PASS] /QRCodes: GET 200
+- [PASS] /QRCodes/Details/1: GET 200
+- [PASS] /QRCodes/Create: GET 200
+- [PASS] /QRCodes/Edit/1: GET 200
+- [PASS] /QRCodes/Delete/1: GET 200
+- [PASS] /Devices: GET 200
+- [PASS] /Devices/Details/1: GET 200
+- [PASS] /Devices/Create: GET 200
+- [PASS] /Devices/Edit/1: GET 200
+- [PASS] /Devices/Delete/1: GET 200
+- [PASS] /AccessRules: GET 200
+- [PASS] /AccessRules/Details/1: GET 200
+- [PASS] /AccessRules/Create: GET 200
+- [PASS] /AccessRules/Edit/1: GET 200
+- [PASS] /AccessRules/Delete/1: GET 200
+- [PASS] /AccessLogs: GET 200
+- [PASS] /AccessLogs/Details/1: GET 200
+- [PASS] /ChangeLogs: GET 200
+- [PASS] /ChangeLogs/Details/1: GET 200
+- [PASS] /Catra: GET 200
+- [PASS] /Catra/Details/1: GET 200
+- [PASS] /Catra/Delete/1: GET 200
+- [PASS] /Config: GET 200
+- [PASS] /Config/Details/1: GET 200
+- [PASS] /Config/Create: GET 200
+- [PASS] /Config/Edit/1: GET 200
+- [PASS] /Config/Delete/1: GET 200
+- [PASS] /Config/Diagnostics: GET 200
+- [PASS] /Config/Official: GET 200
+- [PASS] /Hardware/Status: GET 200
+- [PASS] /Hardware/Gpio: GET 200
+- [PASS] /Hardware/DoorState: GET 200
+- [PASS] /Hardware/RelayAction: GET 200
+- [PASS] /Hardware/ValidateBiometry: GET 200
+- [PASS] /System/Info: GET 200
+- [PASS] /System/HashPassword: GET 200
+- [PASS] /System/LoginCredentials: GET 200
+- [PASS] /System/Network: GET 200
+- [PASS] /System/Vpn: GET 200
+- [PASS] /Media: GET 200
+- [PASS] /Media/Details/1: GET 200
+- [PASS] /Media/Upload: GET 200
+- [PASS] /Media/Delete/1: GET 200
+- [PASS] /Media/AdMode: GET 200
+- [PASS] /Logo: GET 200
+- [PASS] /Logo/Details/1: GET 200
+- [PASS] /Logo/Upload: GET 200
+- [PASS] /Logo/Delete/1: GET 200
+- [PASS] /AdvancedOfficial: GET 200
+- [PASS] /AdvancedOfficial/ExportObjects: GET 200
+- [PASS] /AdvancedOfficial/NetworkInterlock: GET 200
+- [PASS] /AdvancedOfficial/CameraCapture: GET 200
+- [PASS] /AdvancedOfficial/FacialEnroll: GET 200
+- [PASS] /AdvancedOfficial/RemoteLedControl: GET 200
+- [PASS] /DocumentedFeatures: GET 200
+- [PASS] /OfficialObjects: GET 200
+- [PASS] /ProductSpecific: GET 200
+- [PASS] /RemoteActions: GET 200
+- [PASS] /RemoteActions/Authorization: GET 200
+- [PASS] /RemoteActions/Enroll: GET 200
+- [PASS] /RemoteActions/Details?action=open_door: GET 200
+- [PASS] /OfficialEvents: GET 200
+- [PASS] /PushCenter: GET 200
+
+## Navegação documental
+
+- [Voltar ao índice deste domínio](README.md).
+- [Abrir a central de documentação](../../README.md).

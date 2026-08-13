@@ -1,6 +1,6 @@
 # ADR 0003 - Observabilidade no processo e critérios locais de prontidão
 
-> **Decisão aceita** · Público: arquitetura e operação · Responsável: liderança técnica · Última validação: 2026-08-03.
+> **Decisão** · Público: arquitetura e operação · Responsável: Engenharia · Última validação: 2026-08-12.
 
 Estado: aceita
 
@@ -47,7 +47,7 @@ O endpoint `/metrics` fica protegido por administrador por padrão.
 - `Services/Observability/OperationalMetrics.cs`
 - `Services/Observability/PrometheusMetricsWriter.cs`
 - `Services/Observability/RuntimeCapacityMetricsProvider.cs`
-- `docs/observability-runbook.md`
+- [docs/operacao/observability-runbook.md](../operacao/observability-runbook.md)
 - `docs/observability/alert-rules.json`
 - `tools/observability-check.ps1`
 - `tools/test-readiness-gates.ps1`
@@ -69,3 +69,8 @@ prontidão.
 - Evidência para mudança: propagação de correlação, custo, retenção, proteção de
   dados, exportação indisponível sem bloquear a aplicação e equivalência das
   verificações de saúde atuais.
+
+## Navegação documental
+
+- [Voltar ao índice deste domínio](README.md).
+- [Abrir a central de documentação](../README.md).

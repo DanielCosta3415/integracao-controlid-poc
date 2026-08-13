@@ -1,6 +1,6 @@
 # ADR 0004 - Governança de liberação por scripts locais versionados
 
-> **Decisão aceita** · Público: arquitetura e release · Responsável: liderança técnica · Última validação: 2026-08-03.
+> **Decisão** · Público: arquitetura e release · Responsável: Engenharia · Última validação: 2026-08-12.
 
 Estado: aceita
 
@@ -68,3 +68,8 @@ os gates locais como caminho de reprodução.
   é obtida removendo uma verificação do script.
 - Gatilho de revisão: adoção de plataforma de implantação, assinatura de
   artefatos ou política corporativa com controles equivalentes ou mais fortes.
+
+## Navegação documental
+
+- [Voltar ao índice deste domínio](README.md).
+- [Abrir a central de documentação](../README.md).

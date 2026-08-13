@@ -278,7 +278,7 @@ $results = [System.Collections.Generic.List[object]]::new()
 $hasFailure = $false
 
 try {
-    Assert-TextContains -Path "docs\incident-response-and-dr.md" -Patterns @(
+    Assert-TextContains -Path "docs\operacao\incident-response-and-dr.md" -Patterns @(
         "Matriz de severidade",
         "RTO/RPO",
         "ops.local.json",
@@ -292,7 +292,7 @@ catch {
 }
 
 try {
-    Assert-TextContains -Path "docs\finops-capacity.md" -Patterns @(
+    Assert-TextContains -Path "docs\operacao\finops-capacity.md" -Patterns @(
         "custos",
         "FinOps",
         "Alertas e limites sugeridos"
@@ -305,7 +305,7 @@ catch {
 }
 
 try {
-    Assert-TextContains -Path "docs\equipment-contingency-runbook.md" -Patterns @(
+    Assert-TextContains -Path "docs\operacao\equipment-contingency-runbook.md" -Patterns @(
         "Conting",
         "Control iD",
         "manual"

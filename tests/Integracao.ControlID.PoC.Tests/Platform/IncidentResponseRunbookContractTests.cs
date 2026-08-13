@@ -5,7 +5,7 @@ public class IncidentResponseRunbookContractTests
     [Fact]
     public void IncidentResponseRunbook_CoversSeveritiesCriticalScenariosAndPostmortem()
     {
-        var runbook = ReadRepoFile("docs", "incident-response-and-dr.md");
+        var runbook = ReadRepoFile("docs", "operacao", "incident-response-and-dr.md");
         var readme = ReadRepoFile("README.md");
         var alerts = ReadRepoFile("docs", "observability", "alert-rules.json");
 
@@ -21,9 +21,9 @@ public class IncidentResponseRunbookContractTests
         Assert.Contains("RTO/RPO", runbook, StringComparison.Ordinal);
         Assert.Contains("Modelo de análise pós-incidente", runbook, StringComparison.Ordinal);
         Assert.Contains("ops.local.json", runbook, StringComparison.Ordinal);
-        Assert.Contains("docs/equipment-contingency-runbook.md", runbook, StringComparison.Ordinal);
-        Assert.Contains("docs/incident-response-and-dr.md", readme, StringComparison.Ordinal);
-        Assert.Contains("\"incidentRunbook\": \"docs/incident-response-and-dr.md\"", alerts, StringComparison.Ordinal);
+        Assert.Contains("docs/operacao/equipment-contingency-runbook.md", runbook, StringComparison.Ordinal);
+        Assert.Contains("docs/operacao/incident-response-and-dr.md", readme, StringComparison.Ordinal);
+        Assert.Contains("\"incidentRunbook\": \"docs/operacao/incident-response-and-dr.md\"", alerts, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -33,7 +33,7 @@ public class IncidentResponseRunbookContractTests
         var readinessCheck = ReadRepoFile("tools", "operational-readiness-check.ps1");
         var backupScript = ReadRepoFile("tools", "backup-sqlite-operational.ps1");
         var example = ReadRepoFile("ops.example.json");
-        var equipmentRunbook = ReadRepoFile("docs", "equipment-contingency-runbook.md");
+        var equipmentRunbook = ReadRepoFile("docs", "operacao", "equipment-contingency-runbook.md");
 
         Assert.Contains("RequireOperationalConfig", gate, StringComparison.Ordinal);
         Assert.Contains("operational-readiness-check.ps1", gate, StringComparison.Ordinal);

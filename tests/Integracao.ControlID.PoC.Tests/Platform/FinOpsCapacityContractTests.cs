@@ -5,7 +5,7 @@ public class FinOpsCapacityContractTests
     [Fact]
     public void FinOpsRunbook_CoversCostCapacityGovernanceAndTradeoffs()
     {
-        var runbook = ReadRepoFile("docs", "finops-capacity.md");
+        var runbook = ReadRepoFile("docs", "operacao", "finops-capacity.md");
         var alerts = ReadRepoFile("docs", "observability", "alert-rules.json");
         var dashboard = ReadRepoFile("docs", "observability", "dashboard.json");
         var opsExample = ReadRepoFile("ops.example.json");

@@ -103,7 +103,7 @@ public sealed class PrivacySubjectReportService
             "Correcao: usar telas administrativas especificas apos confirmar titularidade.",
             "Eliminacao/bloqueio/anonimizacao: exige decisao humana, verificacao de obrigacao de retencao e confirmacao por fluxo de alto impacto.",
             "Portabilidade: exportacao bruta por titular ainda requer formato aprovado e revisao DPO/juridico.",
-            "Informacao sobre compartilhamento: consultar docs/privacy-and-data-retention.md e docs/privacy-governance-runbook.md."
+            "Informacao sobre compartilhamento: consultar docs/seguranca-privacidade/privacy-and-data-retention.md e docs/seguranca-privacidade/privacy-governance-runbook.md."
         ];
 
         report.RequiredHumanDecisions =

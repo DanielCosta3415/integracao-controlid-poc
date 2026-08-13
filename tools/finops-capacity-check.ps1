@@ -128,7 +128,7 @@ function Assert-TextContains {
 }
 
 try {
-    Assert-TextContains -Path "docs\finops-capacity.md" -Patterns @(
+    Assert-TextContains -Path "docs\operacao\finops-capacity.md" -Patterns @(
         "custos",
         "Riscos de capacidade",
         "FinOps",
@@ -234,7 +234,7 @@ catch {
 Add-SizeResult -Name "sqlite-runtime-size" -Bytes (Get-RootFileSetSizeBytes -Filter "integracao_controlid.db*") -MaxMegabytes $MaxSqliteMegabytes -Scope "SQLite local"
 Add-SizeResult -Name "logs-size" -Bytes (Get-DirectorySizeBytes -Path "Logs") -MaxMegabytes $MaxLogsMegabytes -Scope "Logs locais"
 Add-SizeResult -Name "artifacts-size" -Bytes (Get-DirectorySizeBytes -Path "artifacts") -MaxMegabytes $MaxArtifactsMegabytes -Scope "Artifacts locais"
-Add-SizeResult -Name "versioned-reports-size" -Bytes (Get-DirectorySizeBytes -Path "docs\reports") -MaxMegabytes $MaxReportsMegabytes -Scope "Relatorios versionados"
+Add-SizeResult -Name "versioned-reports-size" -Bytes (Get-DirectorySizeBytes -Path "docs\historico\relatorios") -MaxMegabytes $MaxReportsMegabytes -Scope "Relatorios versionados"
 
 $reportFullPath = Resolve-RepoPath -Path $ReportPath
 $reportDirectory = Split-Path -Parent $reportFullPath

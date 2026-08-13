@@ -1,6 +1,6 @@
 # AGENTS.md
 
-> **Política de governança viva** · Público: agentes de código e mantenedores · Responsável: liderança técnica · Última validação: 2026-08-04.
+> **Política** · Público: agentes de código e mantenedores · Responsável: Engenharia · Última validação: 2026-08-12.
 
 Regras permanentes para Codex e outros agentes de código neste repositório.
 
@@ -135,7 +135,8 @@ Notas:
 - Não existe análise estática separada; `dotnet build` com avisos como erro e `dotnet format --verify-no-changes` são as verificações oficiais.
 - Não existe verificação de tipos separada; essa verificação é feita pela própria compilação C#.
 - Para corrigir formatação, use `dotnet format .\Integracao.ControlID.PoC.sln -v:minimal` e registre o efeito mecânico.
-- O teste integrado escreve em `docs/reports/`, `artifacts/`, `Logs/` e no SQLite local.
+- O teste integrado escreve em `artifacts/`, `Logs/` e no SQLite local; somente
+  evidências sanitizadas e aprovadas devem ser promovidas para `docs/historico/relatorios/`.
 - O gate `test-readiness-gates.ps1` executa observabilidade offline por padrão; contra app rodando, use `OBSERVABILITY_BASE_URL` e credencial local para `/metrics` quando necessário.
 - `ops.example.json` define o contrato de ownership, on-call, backup externo, RTO/RPO, FinOps e contingência física. Copie para `ops.local.json` fora do Git para releases reais; `-ReleaseGate` exige essa configuração sem placeholders.
 - `test-readiness-gates.ps1 -ReleaseGate` é o modo estrito para liberação: exige teste integrado, cobertura, cadeia de suprimentos, construção do contêiner, observabilidade on-line, configuração operacional, FinOps/capacidade, contrato físico e analisadores externos.
@@ -177,13 +178,13 @@ Notas:
 ### APIs e integrações
 
 - Trate a Access API Control iD como contrato externo. Não renomeie endpoints, campos ou rotas `.fcgi` sem evidência.
-- Consulte `docs/device-compatibility-matrix.md` e
-  `docs/official-api-version-governance.md` antes de declarar suporte a produto,
+- Consulte [docs/integracao-controlid/device-compatibility-matrix.md](docs/integracao-controlid/device-compatibility-matrix.md) e
+  [docs/integracao-controlid/official-api-version-governance.md](docs/integracao-controlid/official-api-version-governance.md) antes de declarar suporte a produto,
   firmware, licença ou modo.
-- Consulte `docs/network-topologies.md` antes de alterar URL, porta, callback,
+- Consulte [docs/integracao-controlid/network-topologies.md](docs/integracao-controlid/network-topologies.md) antes de alterar URL, porta, callback,
   Monitor, Push, proxy, DNS ou direção de comunicação.
-- Consulte `docs/stub-scenarios.md`, `docs/validation-without-device.md` e
-  `docs/endpoint-validation-matrix.md` antes de promover evidência simulada para
+- Consulte [docs/primeiros-passos/stub-scenarios.md](docs/primeiros-passos/stub-scenarios.md), [docs/primeiros-passos/validation-without-device.md](docs/primeiros-passos/validation-without-device.md) e
+  [docs/integracao-controlid/endpoint-validation-matrix.md](docs/integracao-controlid/endpoint-validation-matrix.md) antes de promover evidência simulada para
   compatibilidade física.
 - Preserve compatibilidade de callbacks oficiais e endpoints push (`/push`, `/result`, `Push/Receive`).
 - Normalize entradas de URL, consulta, corpo e arquivo usando utilitários existentes quando disponíveis.
@@ -194,13 +195,13 @@ Notas:
 - O SQLite local é o estado de execução. Arquivos `integracao_controlid.db*` não devem ser versionados.
 - `Program.cs` aplica `Database.Migrate()` quando `Database:ApplyMigrationsOnStartup=true` (por padrão em `Development`); iniciar a aplicação nessa condição altera o estado local.
 - Mudanças de schema exigem documentação e testes. Migrações destrutivas exigem confirmação humana.
-- Consulte `docs/data-model-and-recovery.md` antes de tocar tabelas, índices, migrações, cópia de segurança, restauração ou retenção.
+- Consulte [docs/dados/data-model-and-recovery.md](docs/dados/data-model-and-recovery.md) antes de tocar tabelas, índices, migrações, cópia de segurança, restauração ou retenção.
 - Listagens locais devem aplicar limite padrão de `LocalDataQueryLimits.DefaultListLimit`; use métodos de expurgo/limpeza confirmados para operações destrutivas.
 
 ### Segurança
 
 - Preserve a separação entre conta local da PoC e sessão oficial do equipamento;
-  a matriz atual de papéis está em `docs/local-account-administration.md`.
+  a matriz atual de papéis está em [docs/seguranca-privacidade/local-account-administration.md](docs/seguranca-privacidade/local-account-administration.md).
 - Fora de `Development`, `AllowedHosts` não pode ser `*`, `OpenApi:Enabled` deve ser `false`, `CallbackSecurity:RequireSharedKey` e `CallbackSecurity:RequireSignedRequests` devem ser `true`, `SharedKey` deve existir e `ControlIDApi:RequireAllowedDeviceHosts` deve listar hosts permitidos.
 - Preserve validação de callbacks, push e `user_get_image.fcgi` via `CallbackSecurityEvaluator` e `CallbackSignatureValidator`.
 - Não enfraqueça headers de segurança, validação antiforgery ou sanitização sem justificativa forte.
@@ -210,7 +211,7 @@ Notas:
 - Considere usuários, fotos, biometria, cartões, QR Codes, logs de acesso e callbacks como dados pessoais ou sensíveis.
 - Minimize persistência e registro de cargas úteis pessoais. Mascare ou trunque quando possível.
 - Não adicione dados reais a testes, documentos, verificações integradas ou dados de teste.
-- Siga `docs/privacy-and-data-retention.md` ao tocar `MonitorEvents`, `PushCommands`, logs, payloads brutos ou limpeza de histórico local.
+- Siga [docs/seguranca-privacidade/privacy-and-data-retention.md](docs/seguranca-privacidade/privacy-and-data-retention.md) ao tocar `MonitorEvents`, `PushCommands`, logs, payloads brutos ou limpeza de histórico local.
 
 ### Dependências
 
@@ -223,7 +224,7 @@ Notas:
 
 - Preserve compressão de resposta e evite carregar catálogos/payloads grandes desnecessariamente.
 - Preserve o limitador por equipamento, o streaming binário e a política SQLite
-  documentados em `docs/performance-baseline.md`.
+  documentados em [docs/qualidade/performance-baseline.md](docs/qualidade/performance-baseline.md).
 - Não adicione chamadas HTTP em loop sem timeout, cancelamento ou limite claro.
 - Evite leitura integral de payloads grandes fora dos leitores com limite.
 
@@ -253,26 +254,28 @@ Notas:
   SQLite nos procedimentos de backup, restauração e rollback.
 - Não versione `ops.local.json`; ele pode conter nomes, canais privados, local de evidências e detalhes operacionais.
 - Não crie implantação automática, DNS real ou provedor de nuvem sem pedido explícito.
-- Não reduza retenção, registros de segurança ou redundância operacional apenas por custo; documente a contrapartida em `docs/finops-capacity.md`.
+- Não reduza retenção, registros de segurança ou redundância operacional apenas por custo; documente a contrapartida em [docs/operacao/finops-capacity.md](docs/operacao/finops-capacity.md).
 - Fora de `Development`, não use `AllowedHosts=*`, chave compartilhada de exemplo, OpenAPI habilitado, métricas anônimas ou cabeçalhos encaminhados sem proxy conhecido.
 - Mudanças em CI devem refletir comandos reais locais.
 - Artefatos `bin/`, `obj/`, `Logs/`, `artifacts/` e banco local devem permanecer fora do Git.
 
 ### Documentação
 
-- Use `docs/faq.md` como resposta canônica de primeiro contato e
-  `docs/persona-guides.md` como percurso por público; evite duplicar respostas
+- Use [docs/primeiros-passos/faq.md](docs/primeiros-passos/faq.md) como resposta canônica de primeiro contato e
+  [docs/primeiros-passos/persona-guides.md](docs/primeiros-passos/persona-guides.md) como percurso por público; evite duplicar respostas
   extensas em documentos especializados.
 - Atualize README/docs quando mudar setup, comando, segurança, banco, contrato externo, FinOps/capacidade ou fluxo operacional.
-- Atualize `docs/README.md` quando criar, remover ou renomear documento técnico.
+- Atualize [docs/README.md](docs/README.md) quando criar, remover ou renomear documento técnico.
 - Registre decisão estrutural em `docs/adrs/` quando alterar padrão de arquitetura, persistência, segurança, observabilidade, release ou provedor.
-- Atualize `docs/changelog-YYYY-MM-DD.md` ou `docs/pr-summary-YYYY-MM-DD.md` em rodadas amplas de governança/documentação.
-- Atualize `docs/residual-risk-closure.md` quando uma lacuna externa virar gate, aprovação, exceção ou risco aceito.
-- Atualize `docs/product-acceptance-criteria.md` quando um fluxo crítico ganhar, perder ou mudar critério verificável.
-- Atualize `docs/api-error-catalog.md`, `docs/troubleshooting-controlid.md` e
-  `docs/data-synchronization-ownership.md` quando mudar erro, diagnóstico ou fonte
+- Registre mudanças amplas em `docs/historico/changelogs/` e resumos/auditorias
+  datados em `docs/historico/auditorias/`.
+- Atualize [docs/operacao/residual-risk-closure.md](docs/operacao/residual-risk-closure.md) quando uma lacuna externa virar gate, aprovação, exceção ou risco aceito.
+- Atualize [docs/produto/product-acceptance-criteria.md](docs/produto/product-acceptance-criteria.md) quando um fluxo crítico ganhar, perder ou mudar critério verificável.
+- Atualize [docs/integracao-controlid/api-error-catalog.md](docs/integracao-controlid/api-error-catalog.md), [docs/operacao/troubleshooting-controlid.md](docs/operacao/troubleshooting-controlid.md) e
+  [docs/integracao-controlid/data-synchronization-ownership.md](docs/integracao-controlid/data-synchronization-ownership.md) quando mudar erro, diagnóstico ou fonte
   de verdade.
-- Relatórios em `docs/reports/` podem ser gerados por smoke/auditoria; registre data e resultado.
+- Relatórios locais são gerados em `artifacts/`; promova apenas evidências
+  sanitizadas para `docs/historico/relatorios/`, com data e contexto original.
 - Não documente comandos que não existem no repositório.
 - Preserve a classificação documental logo após o H1; documentos vivos devem
   refletir o código atual e evidências históricas devem permanecer datadas.
@@ -282,7 +285,7 @@ Notas:
 ### CI/CD e liberação
 
 - A CI deve permanecer capaz de executar restauração bloqueada, compilação, teste, verificação de formatação e auditoria.
-- Mudanças em `.github/workflows/ci.yml` devem manter `docs/ci-cd-quality-gates.md` e os testes de governança de CI sincronizados.
+- Mudanças em `.github/workflows/ci.yml` devem manter [docs/qualidade/ci-cd-quality-gates.md](docs/qualidade/ci-cd-quality-gates.md) e os testes de governança de CI sincronizados.
 - A liberação local mínima exige compilação limpa, testes aprovados, verificação de formatação limpa, auditoria sem vulnerabilidades conhecidas e riscos residuais documentados.
 - A liberação operacional real exige `tools/test-readiness-gates.ps1 -ReleaseGate`, `ops.local.json` preenchido, cópia externa validada, RTO/RPO aprovado, FinOps/capacidade sem avisos, DPO/jurídico quando aplicável, analisadores externos e contingência do equipamento testada.
 - Mudanças em `tools/ControlIdCallbackSigningProxy` exigem restauração bloqueada, compilação e verificação de formatação do projeto do proxy.
@@ -335,7 +338,8 @@ Não crie AGENTS.md adicionais sem evidência clara de regras divergentes. No es
 Sugestões futuras, caso a área cresça:
 
 - `tools/ControlIdDeviceStub/AGENTS.md`: regras específicas do stub e contratos simulados.
-- `docs/reports/AGENTS.md`: política de relatórios gerados, datas e preservação histórica.
+- `docs/historico/relatorios/AGENTS.md`: política específica apenas se o volume
+  futuro exigir regras diferentes das definidas neste arquivo.
 - `tests/AGENTS.md`: convenções de fixtures, nomes e cobertura mínima.
 
 Crie esses arquivos apenas se houver necessidade concreta e documente o motivo no PR/resumo.

@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-    [int]$ExpectedMarkdownCount = 65,
+    [int]$ExpectedMarkdownCount = 81,
     [switch]$CheckExternalUrls
 )
 
@@ -14,6 +14,7 @@ $strictUtf8 = [System.Text.UTF8Encoding]::new($false, $true)
 $errors = [System.Collections.Generic.List[string]]::new()
 $externalUrls = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
 $anchorCache = @{}
+$incomingMarkdownLinks = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
 
 function Add-DocumentationError {
     param([Parameter(Mandatory = $true)][string]$Message)
@@ -181,25 +182,6 @@ function Test-ExternalUrlAvailable {
     return $false
 }
 
-function Test-PathIsMapped {
-    param(
-        [Parameter(Mandatory = $true)][string]$Path,
-        [Parameter(Mandatory = $true)][string[]]$MappedPaths
-    )
-
-    foreach ($mappedPath in $MappedPaths) {
-        if ($Path.Equals($mappedPath, [StringComparison]::OrdinalIgnoreCase)) {
-            return $true
-        }
-        if ($mappedPath.EndsWith('/*', [StringComparison]::Ordinal) -and
-            $Path.StartsWith($mappedPath.Substring(0, $mappedPath.Length - 1), [StringComparison]::OrdinalIgnoreCase)) {
-            return $true
-        }
-    }
-
-    return $false
-}
-
 Push-Location $root
 try {
     $tracked = @(& git ls-files -- "*.md")
@@ -217,8 +199,6 @@ try {
         Add-DocumentationError "Expected $ExpectedMarkdownCount Markdown files, found $($markdownFiles.Count)."
     }
 
-    $documentationIndexPath = Join-Path $root "docs/README.md"
-    $documentationIndexContent = [IO.File]::ReadAllText($documentationIndexPath, $strictUtf8)
     foreach ($markdownPathValue in $markdownFiles) {
         $markdownPath = Get-NormalizedRelativePath $markdownPathValue
         if (-not $markdownPath.StartsWith("docs/", [StringComparison]::OrdinalIgnoreCase) -or
@@ -226,8 +206,27 @@ try {
             continue
         }
 
-        if ($documentationIndexContent.IndexOf($markdownPath, [StringComparison]::OrdinalIgnoreCase) -lt 0) {
-            Add-DocumentationError "Documentation file missing from docs index: $markdownPath"
+        $documentDirectory = Split-Path -Parent $markdownPath
+        $documentName = Split-Path -Leaf $markdownPath
+        if ($documentName.Equals('README.md', [StringComparison]::OrdinalIgnoreCase)) {
+            $parentDirectory = Split-Path -Parent $documentDirectory
+            $indexPath = "$parentDirectory/README.md"
+            $indexNeedle = "$(Split-Path -Leaf $documentDirectory)/README.md"
+        }
+        else {
+            $indexPath = "$documentDirectory/README.md"
+            $indexNeedle = $documentName
+        }
+
+        $indexFullPath = Join-Path $root ($indexPath.Replace('/', [IO.Path]::DirectorySeparatorChar))
+        if (-not (Test-Path -LiteralPath $indexFullPath)) {
+            Add-DocumentationError "Missing domain index for documentation file: $markdownPath -> $indexPath"
+            continue
+        }
+
+        $indexContent = [IO.File]::ReadAllText($indexFullPath, $strictUtf8)
+        if ($indexContent.IndexOf($indexNeedle, [StringComparison]::OrdinalIgnoreCase) -lt 0) {
+            Add-DocumentationError "Documentation file missing from domain index: $markdownPath -> $indexPath"
         }
     }
 
@@ -300,9 +299,17 @@ try {
                 $decodedTarget = [Uri]::UnescapeDataString($pathPart).Replace("/", [IO.Path]::DirectorySeparatorChar)
                 $candidate = Join-Path (Split-Path -Parent $fullPath) $decodedTarget
             }
+            $candidate = [IO.Path]::GetFullPath($candidate)
             if (-not (Test-Path -LiteralPath $candidate)) {
                 Add-DocumentationError "Missing local Markdown link in ${relativePath}: $target"
                 continue
+            }
+
+            if ([IO.Path]::GetExtension($candidate).Equals('.md', [StringComparison]::OrdinalIgnoreCase) -and
+                -not $candidate.Equals($fullPath, [StringComparison]::OrdinalIgnoreCase) -and
+                $candidate.StartsWith($root, [StringComparison]::OrdinalIgnoreCase)) {
+                $linkedRelativePath = $candidate.Substring($root.Length).TrimStart([IO.Path]::DirectorySeparatorChar, [IO.Path]::AltDirectorySeparatorChar).Replace('\', '/')
+                [void]$incomingMarkdownLinks.Add($linkedRelativePath)
             }
 
             if (-not [string]::IsNullOrWhiteSpace($fragment) -and [IO.Path]::GetExtension($candidate) -eq '.md') {
@@ -346,6 +353,44 @@ try {
                 Add-DocumentationError "Missing repository path in ${relativePath}: $referencedPath"
             }
         }
+
+        foreach ($match in [regex]::Matches($content, '`([^`\r\n]+\.md(?:#[^`\r\n]+)?)`')) {
+            $beforeIndex = $match.Index - 1
+            $afterIndex = $match.Index + $match.Length
+            $isClickableCodeLabel = $beforeIndex -ge 0 -and $content[$beforeIndex] -eq '[' -and
+                $afterIndex + 1 -lt $content.Length -and $content.Substring($afterIndex, 2) -eq ']('
+            if ($isClickableCodeLabel) {
+                continue
+            }
+
+            $referencedMarkdown = ($match.Groups[1].Value -split '#', 2)[0].Replace('\', '/')
+            $normalizedMarkdown = Get-NormalizedRelativePath $referencedMarkdown
+            if (Test-IsGeneratedOrTemplatePath $normalizedMarkdown) {
+                continue
+            }
+
+            $rootRelativeReference = $normalizedMarkdown.StartsWith('docs/', [StringComparison]::OrdinalIgnoreCase) -or
+                $normalizedMarkdown.StartsWith('tools/', [StringComparison]::OrdinalIgnoreCase) -or
+                $normalizedMarkdown.StartsWith('Services/', [StringComparison]::OrdinalIgnoreCase) -or
+                $normalizedMarkdown.StartsWith('wwwroot/', [StringComparison]::OrdinalIgnoreCase) -or
+                $normalizedMarkdown -in @('README.md', 'AGENTS.md', 'CONTRIBUTING.md', 'SECURITY.md', 'SUPPORT.md')
+            $referenceBase = if ($rootRelativeReference) { $root } else { Split-Path -Parent $fullPath }
+            $referencedFullPath = [IO.Path]::GetFullPath((Join-Path $referenceBase $normalizedMarkdown.Replace('/', [IO.Path]::DirectorySeparatorChar)))
+            if (Test-Path -LiteralPath $referencedFullPath -PathType Leaf) {
+                Add-DocumentationError "Existing Markdown reference must be a clickable link in ${relativePath}: $referencedMarkdown"
+            }
+        }
+    }
+
+    $indexedIncomingMarkdownCount = 0
+    foreach ($markdownPathValue in $markdownFiles) {
+        $markdownPath = Get-NormalizedRelativePath $markdownPathValue
+        if (-not $incomingMarkdownLinks.Contains($markdownPath)) {
+            Add-DocumentationError "Orphan Markdown document without incoming link: $markdownPath"
+        }
+        else {
+            $indexedIncomingMarkdownCount++
+        }
     }
 
     $licenseHash = (Get-FileHash -Algorithm SHA256 -LiteralPath (Join-Path $root $licenseRelativePath)).Hash.ToLowerInvariant()
@@ -353,49 +398,25 @@ try {
         Add-DocumentationError "Vendored jquery-validation license hash changed unexpectedly."
     }
 
-    $mapPath = Join-Path $root "docs/project-file-responsibilities.md"
-    $mapContent = [IO.File]::ReadAllText($mapPath, [Text.Encoding]::UTF8)
-    $mappedTests = @([regex]::Matches($mapContent, '`(tests/Integracao\.ControlID\.PoC\.Tests/[^`]+\.cs)`') |
-        ForEach-Object { $_.Groups[1].Value } |
-        Sort-Object -Unique)
-    $actualTests = @(Get-ChildItem -LiteralPath (Join-Path $root "tests/Integracao.ControlID.PoC.Tests") -Recurse -Filter "*.cs" -File |
-        Where-Object { $_.FullName -notmatch '[\\/](bin|obj)[\\/]' } |
-        ForEach-Object { $_.FullName.Substring($root.Length + 1).Replace("\", "/") } |
-        Sort-Object -Unique)
-
-    foreach ($testPath in $actualTests) {
-        if ($mappedTests -notcontains $testPath) {
-            Add-DocumentationError "Test file missing from project map: $testPath"
+    $mapPath = Join-Path $root 'docs/arquitetura/project-file-responsibilities.md'
+    $mapContent = [IO.File]::ReadAllText($mapPath, $strictUtf8)
+    $inventoryGeneratorPath = Join-Path $root 'tools/generate-source-inventory.ps1'
+    if (-not (Test-Path -LiteralPath $inventoryGeneratorPath -PathType Leaf)) {
+        Add-DocumentationError 'Missing source inventory generator: tools/generate-source-inventory.ps1'
+    }
+    else {
+        $inventoryGeneratorContent = [IO.File]::ReadAllText($inventoryGeneratorPath, $strictUtf8)
+        foreach ($requiredInventoryContract in @('git -C $root ls-files', 'artifacts/documentation/source-inventory.md')) {
+            if ($inventoryGeneratorContent.IndexOf($requiredInventoryContract, [StringComparison]::Ordinal) -lt 0) {
+                Add-DocumentationError "Source inventory generator is missing contract: $requiredInventoryContract"
+            }
         }
     }
-    foreach ($testPath in $mappedTests) {
-        if ($actualTests -notcontains $testPath) {
-            Add-DocumentationError "Stale test file in project map: $testPath"
-        }
+    if ($mapContent.IndexOf('generate-source-inventory.ps1', [StringComparison]::OrdinalIgnoreCase) -lt 0) {
+        Add-DocumentationError 'Architecture map does not explain the generated source inventory.'
     }
 
-    $mappedSourcePaths = @([regex]::Matches($mapContent, '`([^`]+)`') |
-        ForEach-Object { Get-NormalizedRelativePath $_.Groups[1].Value } |
-        Where-Object { $_ -match '(?i)(\.cs$|\.cshtml$|\.ps1$|\.js$|\.css$|\.yml$|\.json$|\.csproj$|\.sln$|(^|/)Dockerfile$)' } |
-        Sort-Object -Unique)
-    $trackedSourcePaths = @(& git ls-files)
-    $untrackedSourcePaths = @(& git ls-files --others --exclude-standard)
-    $actualSourcePaths = @($trackedSourcePaths + $untrackedSourcePaths |
-        ForEach-Object { Get-NormalizedRelativePath $_ } |
-        Where-Object {
-            $_ -match '(?i)(\.cs$|\.cshtml$|\.ps1$|\.js$|\.css$|\.yml$|\.json$|\.csproj$|\.sln$|(^|/)Dockerfile$)' -and
-            $_ -notmatch '(^|/)(bin|obj|artifacts|Logs)/' -and
-            -not $_.StartsWith('wwwroot/lib/', [StringComparison]::OrdinalIgnoreCase)
-        } |
-        Sort-Object -Unique)
-
-    foreach ($sourcePath in $actualSourcePaths) {
-        if (-not (Test-PathIsMapped $sourcePath $mappedSourcePaths)) {
-            Add-DocumentationError "Source file missing from project map: $sourcePath"
-        }
-    }
-
-    $acceptancePath = Join-Path $root 'docs/product-acceptance-criteria.md'
+    $acceptancePath = Join-Path $root 'docs/produto/product-acceptance-criteria.md'
     $acceptanceContent = [IO.File]::ReadAllText($acceptancePath, [Text.Encoding]::UTF8)
     foreach ($number in 1..9) {
         $requirementId = 'REQ-{0:D3}' -f $number
@@ -426,7 +447,7 @@ try {
 
     if ($CheckExternalUrls) {
         $sortedExternalUrls = @($externalUrls | Sort-Object)
-        $urlsToVerifyIndividually = $sortedExternalUrls
+        $urlsToRetry = $sortedExternalUrls
         $curlCommand = Get-Command curl.exe -CommandType Application -ErrorAction SilentlyContinue
         if ($null -eq $curlCommand) {
             $curlCommand = Get-Command curl -CommandType Application -ErrorAction SilentlyContinue
@@ -434,42 +455,17 @@ try {
 
         if ($null -ne $curlCommand -and $sortedExternalUrls.Count -gt 0) {
             $sink = if ($env:OS -eq 'Windows_NT') { 'NUL' } else { '/dev/null' }
-            $binaryDocumentUrls = @($sortedExternalUrls | Where-Object { ([Uri]$_).AbsolutePath -match '(?i)\.(pdf|zip)$' })
-            $urlsForBatch = @($sortedExternalUrls | Where-Object { $_ -notin $binaryDocumentUrls })
-            $urlsToVerifyIndividually = @()
-
-            foreach ($url in $binaryDocumentUrls) {
-                $url = $url.Trim()
-                $binaryArguments = @(
-                    '--silent', '--fail', '--location', '--head',
-                    '--connect-timeout', '5', '--max-time', '20', '--retry', '2',
-                    '--retry-delay', '1', '--output', $sink, '--', $url
-                )
-                & $curlCommand.Source @binaryArguments 2>$null
-                $binaryExitCode = $LASTEXITCODE
-                Write-Verbose "External binary check: url=$url length=$($url.Length) exit=$binaryExitCode"
-                if ($binaryExitCode -ne 0) {
-                    Add-DocumentationError "External binary document unavailable: $url"
-                }
-            }
-
             $curlArguments = @(
-                '--silent', '--location', '--connect-timeout', '3',
-                '--max-time', '10', '--retry', '1', '--retry-delay', '1',
-                '--range', '0-0', '--max-filesize', '1048576', '--parallel',
-                '--parallel-max', '16', '--write-out',
+                '--silent', '--location', '--connect-timeout', '5',
+                '--max-time', '15', '--retry', '1', '--retry-delay', '1',
+                '--range', '0-0', '--max-filesize', '1048576', '--write-out',
                 "%{urlnum}`t%{http_code}`n"
             )
-            foreach ($url in $urlsForBatch) {
+            foreach ($url in $sortedExternalUrls) {
                 $curlArguments += @('--output', $sink, '--url', $url)
             }
 
-            $batchOutput = if ($urlsForBatch.Count -gt 0) {
-                @(& $curlCommand.Source @curlArguments 2>$null)
-            }
-            else {
-                @()
-            }
+            $batchOutput = @(& $curlCommand.Source @curlArguments 2>$null)
             $statusesByIndex = @{}
             foreach ($line in $batchOutput) {
                 if ($line -match '^(\d+)\s+(\d{3})$') {
@@ -477,28 +473,18 @@ try {
                 }
             }
 
-            if ($urlsForBatch.Count -gt 0) {
-                foreach ($index in 0..($urlsForBatch.Count - 1)) {
-                    $statusCode = if ($statusesByIndex.ContainsKey($index)) {
-                        $statusesByIndex[$index]
-                    }
-                    else {
-                        0
-                    }
-                    if (($statusCode -lt 200 -or $statusCode -ge 400) -and
-                        $statusCode -notin @(401, 403, 405, 429)) {
-                        if ($statusCode -eq 0) {
-                            Add-DocumentationError "External URL unavailable without HTTP response: $($urlsForBatch[$index])"
-                        }
-                        else {
-                            Add-DocumentationError "External URL unavailable (HTTP $statusCode): $($urlsForBatch[$index])"
-                        }
-                    }
+            $retryList = [System.Collections.Generic.List[string]]::new()
+            foreach ($index in 0..($sortedExternalUrls.Count - 1)) {
+                $statusCode = if ($statusesByIndex.ContainsKey($index)) { $statusesByIndex[$index] } else { 0 }
+                if (($statusCode -lt 200 -or $statusCode -ge 400) -and
+                    $statusCode -notin @(401, 403, 405, 429)) {
+                    $retryList.Add($sortedExternalUrls[$index])
                 }
             }
+            $urlsToRetry = @($retryList)
         }
 
-        foreach ($url in $urlsToVerifyIndividually) {
+        foreach ($url in $urlsToRetry) {
             $available = $false
             foreach ($attempt in 1..3) {
                 if (Test-ExternalUrlAvailable $url) {
@@ -522,8 +508,8 @@ try {
     Write-Output "Documentation validation passed."
     Write-Output "Markdown files: $($markdownFiles.Count)"
     Write-Output "Authored documents with metadata: $($markdownFiles.Count - 1)"
-    Write-Output "Mapped test files: $($actualTests.Count)"
-    Write-Output "Mapped source files: $($actualSourcePaths.Count)"
+    Write-Output "Indexed documents with incoming links: $indexedIncomingMarkdownCount"
+    Write-Output "Source inventory generator: validated"
     Write-Output "Requirement traceability rows: 9"
     Write-Output "External URLs checked: $(if ($CheckExternalUrls) { $externalUrls.Count } else { 0 })"
     Write-Output "Vendored license SHA-256: $licenseHash"

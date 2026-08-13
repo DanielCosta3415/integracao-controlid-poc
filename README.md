@@ -1,6 +1,6 @@
 # Integração.ControlID.PoC
 
-> **Documento vivo** · Público: novos usuários, desenvolvimento e operação · Responsável: mantenedores · Última validação: 2026-08-04.
+> **Guia** · Público: novos usuários, desenvolvimento e operação · Responsável: Engenharia · Última validação: 2026-08-12.
 
 PoC web em ASP.NET Core 10 MVC/Razor para exploração operacional e técnica da
 Access API da Control iD. A aplicação ajuda um time técnico a conectar um
@@ -30,20 +30,21 @@ como concluídas sem evidência humana e ambiental.
 
 ## Comece aqui
 
-Leitura recomendada para um novo desenvolvedor:
+Escolha o percurso mais curto para o seu objetivo:
 
-1. `README.md`: resumo, configuração, comandos e links principais.
-2. `docs/faq.md`: respostas diretas sobre acesso, compatibilidade, rede e API.
-3. `docs/persona-guides.md`: percurso conforme o papel e o objetivo.
-4. `AGENTS.md`: regras permanentes para agentes e contribuidores automatizados.
-5. `docs/README.md`: índice da documentação técnica.
-6. `docs/developer-onboarding.md`: trilha completa para configurar, executar,
-   testar, diagnosticar e entregar com segurança.
-7. `docs/architecture-overview.md`: camadas, fluxos críticos e limites de
-   arquitetura.
-8. `docs/product-acceptance-criteria.md`: requisitos, critérios de aceite e
-   rastreabilidade.
-9. `docs/adrs/`: decisões arquiteturais registradas.
+1. Para entender produto e limites, consulte a
+   [FAQ](docs/primeiros-passos/faq.md) e os
+   [percursos por perfil](docs/primeiros-passos/persona-guides.md).
+2. Para executar localmente, siga o
+   [onboarding de desenvolvimento](docs/primeiros-passos/developer-onboarding.md).
+3. Para navegar por todo o conhecimento, use a
+   [central de documentação](docs/README.md).
+4. Para contribuir, leia [CONTRIBUTING.md](CONTRIBUTING.md) e
+   [AGENTS.md](AGENTS.md).
+
+O primeiro fluxo funcional com o simulador está descrito abaixo; detalhes de
+arquitetura, integração, segurança, testes e operação ficam nos respectivos
+domínios da central.
 
 ## Tecnologias
 
@@ -82,7 +83,7 @@ parte do fluxo do projeto.
 | `docs/` | Documentação técnica, guias operacionais, ADRs, relatórios e registros de alterações |
 | `wwwroot/` | CSS/JS globais, assets e bibliotecas vendorizadas |
 
-Mapa detalhado: `docs/project-file-responsibilities.md`.
+Mapa de módulos: [responsabilidades da solução](docs/arquitetura/project-file-responsibilities.md).
 
 ## Requisitos
 
@@ -146,7 +147,7 @@ Teste integrado local com aplicação e simulador:
 powershell -ExecutionPolicy Bypass -File .\tools\smoke-localhost.ps1
 ```
 
-O relatório mais recente é gravado em `artifacts/smoke/localhost-smoke-latest.md`;
+O relatório mais recente é gravado em [artifacts/smoke/localhost-smoke-latest.md](artifacts/smoke/localhost-smoke-latest.md);
 o script interrompe imediatamente se a compilação da aplicação ou do simulador falhar.
 
 Em `Development`, a especificação OpenAPI fica disponível em
@@ -192,8 +193,8 @@ sessão, emitida por `login.fcgi`. O primeiro cadastro local recebe
 `Operator`.
 
 Não existe recuperação de senha sem a senha atual, promoção/desativação de conta,
-SSO ou MFA. Consulte `docs/local-account-administration.md` para a matriz de
-permissões e `docs/faq.md` para as perguntas de primeiro contato.
+SSO ou MFA. Consulte [docs/seguranca-privacidade/local-account-administration.md](docs/seguranca-privacidade/local-account-administration.md) para a matriz de
+permissões e [docs/primeiros-passos/faq.md](docs/primeiros-passos/faq.md) para as perguntas de primeiro contato.
 
 ## Comandos oficiais
 
@@ -311,8 +312,8 @@ powershell -ExecutionPolicy Bypass -File .\tools\restore-smoke-sqlite.ps1
 powershell -ExecutionPolicy Bypass -File .\tools\harden-local-state.ps1
 ```
 
-Detalhes: `docs/data-model-and-recovery.md` e
-`docs/database-and-runtime-state.md`.
+Detalhes: [docs/dados/data-model-and-recovery.md](docs/dados/data-model-and-recovery.md) e
+[docs/dados/database-and-runtime-state.md](docs/dados/database-and-runtime-state.md).
 
 ## Observabilidade e operação
 
@@ -331,9 +332,9 @@ Sinais disponíveis:
 - Métricas HTTP, Access API, callbacks, Push, auth local, analytics de produto e
   capacidade runtime/FinOps.
 - Alertas e painéis versionados em `docs/observability/`.
-- Guias operacionais em `docs/observability-runbook.md`,
-  `docs/incident-response-and-dr.md` e
-  `docs/equipment-contingency-runbook.md`.
+- Guias operacionais em [docs/operacao/observability-runbook.md](docs/operacao/observability-runbook.md),
+  [docs/operacao/incident-response-and-dr.md](docs/operacao/incident-response-and-dr.md) e
+  [docs/operacao/equipment-contingency-runbook.md](docs/operacao/equipment-contingency-runbook.md).
 
 ## Contêiner e implantação
 
@@ -386,39 +387,21 @@ Use `tools/contract-controlid-stub.ps1` para validar o contrato sem hardware.
 
 ## Documentação principal
 
-- `docs/README.md`: índice de conhecimento.
-- `docs/faq.md`: 96 perguntas frequentes sobre produto, acesso, API e operação.
-- `docs/persona-guides.md`: percursos para avaliação, integração, operação e
-  liberação.
-- `docs/developer-onboarding.md`: guia de desenvolvimento e diagnóstico.
-- `docs/validation-without-device.md`: escopo verificável antes do aparelho.
-- `docs/stub-scenarios.md`: falhas, perfis e massas do simulador.
-- `docs/architecture-overview.md`: arquitetura e fluxos.
-- `docs/local-account-administration.md`: contas, papéis, sessões e recuperação.
-- `docs/device-compatibility-matrix.md`: compatibilidade por produto, firmware e
-  licença.
-- `docs/network-topologies.md`: fluxos de rede, callbacks, Monitor e Push.
-- `docs/integration-contracts.md`: APIs, cargas úteis e contratos.
-- `docs/api-error-catalog.md`: erros por camada e resposta segura.
-- `docs/troubleshooting-controlid.md`: diagnóstico guiado da integração.
-- `docs/data-synchronization-ownership.md`: fontes de verdade e reconciliação.
-- `docs/official-api-version-governance.md`: revisão contínua da API e firmware.
-- `docs/endpoint-validation-matrix.md`: evidência por família de endpoint.
-- `docs/data-model-and-recovery.md`: dados, migrações, índices, cópia de segurança e restauração.
-- `docs/security-hardening.md`: fortalecimento, HMAC, RBAC, cabeçalhos e segredos.
-- `docs/privacy-and-data-retention.md`: LGPD, dados pessoais e retenção.
-- `docs/testing-strategy.md`: estratégia de testes e gates.
-- `docs/ci-cd-quality-gates.md`: GitHub Actions, quality gates, artefatos e
-  proteção recomendada da ramificação.
-- `docs/observability-runbook.md`: registros, métricas, alertas e painéis.
-- `docs/deployment-runbook.md`: ambientes, implantação, reversão e contêiner.
-- `docs/incident-response-and-dr.md`: incidentes, recuperação de desastres e análise pós-incidente.
-- `docs/product-analytics.md`: KPIs e eventos sem rastreamento pessoal.
-- `docs/finops-capacity.md`: custos, capacidade e sustentabilidade operacional.
-- `docs/performance-baseline.md`: complexidade, benchmark e orçamento local.
-- `docs/residual-risk-closure.md`: lacunas externas, gates bloqueantes e
-  evidências exigidas para release sem exceções.
-- `docs/adrs/`: decisões arquiteturais.
+A [central de documentação](docs/README.md) oferece percursos por objetivo,
+fontes canônicas e índices por domínio:
+
+- [primeiros passos](docs/primeiros-passos/README.md);
+- [produto](docs/produto/README.md);
+- [arquitetura](docs/arquitetura/README.md) e [ADRs](docs/adrs/README.md);
+- [integração Control iD](docs/integracao-controlid/README.md);
+- [dados](docs/dados/README.md);
+- [segurança e privacidade](docs/seguranca-privacidade/README.md);
+- [qualidade](docs/qualidade/README.md);
+- [operação](docs/operacao/README.md);
+- [histórico](docs/historico/README.md).
+
+Use [SUPPORT.md](SUPPORT.md) para solicitar ajuda e [SECURITY.md](SECURITY.md)
+para relatar vulnerabilidades sem expor detalhes sensíveis.
 
 ## Diagnóstico rápido
 

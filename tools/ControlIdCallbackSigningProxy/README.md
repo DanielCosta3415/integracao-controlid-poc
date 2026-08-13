@@ -1,6 +1,6 @@
 # ControlIdCallbackSigningProxy
 
-> **Guia de ferramenta vivo** · Público: integração, AppSec e operação · Responsável: engenharia de integração · Última validação: 2026-08-03.
+> **Guia** · Público: integração, AppSec e operação · Responsável: Engenharia · Última validação: 2026-08-12.
 
 Proxy local para equipamentos Control iD que não conseguem gerar assinatura HMAC nativamente.
 
@@ -107,3 +107,8 @@ Não existe endpoint de saúde dedicado. A vivacidade deve observar o processo; 
 prontidão deve usar uma chamada canário permitida e não sensível até a PoC, com
 limite de frequência. Rotação exige atualizar assinador e PoC na mesma janela,
 validar uma assinatura e revogar o segredo anterior sem registrá-lo.
+
+## Navegação documental
+
+- [Integração Control iD](../../docs/integracao-controlid/README.md).
+- [Central de documentação](../../docs/README.md).
