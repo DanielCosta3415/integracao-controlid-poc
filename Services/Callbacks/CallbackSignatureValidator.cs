@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
+using Integracao.ControlID.PoC.Helpers;
 using Integracao.ControlID.PoC.Options;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
@@ -75,14 +76,18 @@ namespace Integracao.ControlID.PoC.Services.Callbacks
                 RemoveExpiredNonces(now);
                 if (_seenNonces.ContainsKey(nonce))
                 {
-                    _logger.LogWarning("Blocked replayed callback nonce for {Path}.", request.Path);
+                    _logger.LogWarning(
+                        "Blocked replayed callback nonce for {Path}.",
+                        PrivacyLogHelper.SanitizeForLog(request.Path.Value));
                     return CallbackSignatureValidationResult.Reject(StatusCodes.Status409Conflict, "Callback nonce was already used.");
                 }
 
                 var maxTrackedNonces = Math.Clamp(_options.MaxTrackedNonces, 100, 1_000_000);
                 if (_seenNonces.Count >= maxTrackedNonces)
                 {
-                    _logger.LogError("Callback nonce capacity reached. Rejecting signed callback for {Path}.", request.Path);
+                    _logger.LogError(
+                        "Callback nonce capacity reached. Rejecting signed callback for {Path}.",
+                        PrivacyLogHelper.SanitizeForLog(request.Path.Value));
                     return CallbackSignatureValidationResult.Reject(
                         StatusCodes.Status503ServiceUnavailable,
                         "Callback replay protection is temporarily unavailable.");

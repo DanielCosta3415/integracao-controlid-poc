@@ -350,7 +350,10 @@ namespace Integracao.ControlID.PoC.Controllers
                 ? "Administrador local registrado com sucesso. Faça login local para operar a PoC."
                 : "Usuário local registrado com sucesso.";
             TempData["StatusType"] = "success";
-            _logger.LogInformation("Usuário local {UserRef} registrado com papel {Role}.", BuildUserRef(user), user.Role);
+            _logger.LogInformation(
+                "Usuário local {UserRef} registrado com papel {Role}.",
+                PrivacyLogHelper.SanitizeForLog(BuildUserRef(user)),
+                PrivacyLogHelper.SanitizeForLog(user.Role));
 
             return RedirectToAction(nameof(LocalLogin));
         }

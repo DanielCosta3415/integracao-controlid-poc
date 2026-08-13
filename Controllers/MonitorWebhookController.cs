@@ -40,6 +40,7 @@ namespace Integracao.ControlID.PoC.Controllers
         [HttpPost]
         [Route("MonitorWebhook/Receive")]
         [AllowAnonymous]
+        [IgnoreAntiforgeryToken]
         public async Task<IActionResult> Receive(CancellationToken cancellationToken)
         {
             var result = await _callbackIngressService.PersistAsync(HttpContext, "legacy-webhook", cancellationToken);

@@ -1,6 +1,6 @@
 # Integração.ControlID.PoC
 
-> **Guia** · Público: novos usuários, integração, desenvolvimento e operação · Responsável: Engenharia · Última validação: 2026-08-12.
+> **Guia** · Público: novos usuários, integração, desenvolvimento e operação · Responsável: Engenharia · Última validação: 2026-08-13.
 
 PoC web em ASP.NET Core para demonstrar e validar a integração com a **API de
 Controle de Acesso da Control iD**. O simulador incluído cobre os fluxos
@@ -21,6 +21,7 @@ principais sem exigir equipamento físico.
 - [Início rápido sem equipamento](#início-rápido-sem-equipamento)
 - [Arquitetura resumida](#arquitetura-resumida)
 - [Conta local e sessão Control iD](#conta-local-e-sessão-control-id)
+- [Proteções essenciais](#proteções-essenciais)
 - [Desenvolvimento e validação](#desenvolvimento-e-validação)
 - [Validação com equipamento real](#validação-com-equipamento-real)
 - [Documentação, suporte e licença](#documentação-suporte-e-licença)
@@ -204,6 +205,28 @@ O fluxo humano usa duas autenticações distintas:
 Não há SSO, MFA, promoção automática ou recuperação de senha sem a senha atual.
 Consulte a [administração de contas locais](docs/seguranca-privacidade/local-account-administration.md)
 para a matriz completa de permissões.
+
+## Proteções essenciais
+
+- O invocador manual do catálogo oficial é exclusivo de `Administrator`; a
+  sessão Control iD permanece no servidor e não integra formulário ou HTML.
+- Sessões oficiais, biometrias, cartões, QR Codes, fotos, configurações e cargas
+  operacionais sensíveis são protegidos antes da gravação no SQLite.
+- Em desenvolvimento, preserve `artifacts/runtime/data-protection-keys` junto do
+  banco local. Fora de `Development`, chaveiro persistente protegido por
+  certificado, HTTPS e volume criptografado atestado são obrigatórios.
+- Callbacks e Push de equipamento não usam cookie de navegador nem antiforgery:
+  a fronteira correta é chave compartilhada, HMAC, timestamp, nonce, allowlist e
+  limite de requisições.
+- Logs neutralizam separadores de registro e pseudonimizam identificadores. Os
+  endpoints públicos de saúde expõem apenas o estado geral; detalhes exigem
+  `Administrator`.
+- No GitHub, Dependabot, secret scanning, push protection, CodeQL gerenciado e
+  proteção contra exclusão/force-push de `main` complementam os checks locais.
+
+Detalhes, configuração e conversão segura de dados legados estão em
+[fortalecimento da segurança](docs/seguranca-privacidade/security-hardening.md)
+e [modelo de dados e recuperação](docs/dados/data-model-and-recovery.md).
 
 ## Desenvolvimento e validação
 

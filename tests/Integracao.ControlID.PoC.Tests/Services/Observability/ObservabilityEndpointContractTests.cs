@@ -6,10 +6,11 @@ public class ObservabilityEndpointContractTests
     public void Program_MapsMetricsEndpointBehindAdministratorAuthorization()
     {
         var program = ReadRepoFile("Program.cs");
+        var runtimeSecurity = ReadRepoFile("Services", "Security", "RuntimeSecurityValidator.cs");
 
         Assert.Contains("app.MapGet(\"/metrics\", PrometheusMetricsWriter.WriteAsync)", program);
         Assert.Contains("metricsEndpoint.RequireAuthorization(\"AdministratorOnly\")", program);
-        Assert.Contains("Observability:Metrics:AllowAnonymous must be false", program);
+        Assert.Contains("Observability:Metrics:AllowAnonymous must be false", runtimeSecurity);
     }
 
     [Fact]

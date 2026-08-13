@@ -38,6 +38,12 @@ public class DeploymentEnvironmentContractTests
         Assert.Contains("Serilog__WriteTo__1__Args__fileSizeLimitBytes", compose);
         Assert.Contains("controlid-data:/app/data", compose);
         Assert.Contains("DataProtection__KeyPath", compose);
+        Assert.Contains("DataProtection__CertificatePath", compose);
+        Assert.Contains("DataProtection__CertificatePasswordFile", compose);
+        Assert.Contains("Database__Encryption__RequireProtectedSensitiveColumns: \"true\"", compose);
+        Assert.Contains("Database__Encryption__EncryptedVolumeAttested", compose);
+        Assert.Contains("Security__RequireHttps: \"true\"", compose);
+        Assert.Contains("ControlIDApi__RequireHttpsDeviceUrls: \"true\"", compose);
         Assert.Contains("controlid-logs:/app/Logs", compose);
         Assert.Contains("Database__ApplyMigrationsOnStartup", compose);
         Assert.Contains("Database__ExitAfterMigrations", compose);
@@ -60,14 +66,20 @@ public class DeploymentEnvironmentContractTests
     }
 
     [Fact]
-    public void Program_BlocksUnsafeNonDevelopmentEnvironmentValues()
+    public void RuntimeSecurity_BlocksUnsafeNonDevelopmentEnvironmentValues()
     {
         var program = ReadRepoFile("Program.cs");
+        var runtimeSecurity = ReadRepoFile("Services", "Security", "RuntimeSecurityValidator.cs");
 
-        Assert.Contains("CallbackSecurity:SharedKey must be a non-placeholder value with at least 32 characters", program);
-        Assert.Contains("ForwardedHeaders:KnownProxies must list trusted reverse proxy IPs", program);
-        Assert.Contains("ControlIDApi:AllowedDeviceHosts must not contain placeholder values", program);
-        Assert.Contains("DataProtection:KeyPath must point to persistent storage", program);
+        Assert.Contains("RuntimeSecurityValidator.Validate(app)", program);
+        Assert.Contains("CallbackSecurity:SharedKey must be a non-placeholder value with at least 32 characters", runtimeSecurity);
+        Assert.Contains("ForwardedHeaders:KnownProxies must list trusted reverse proxy IPs", runtimeSecurity);
+        Assert.Contains("ControlIDApi:AllowedDeviceHosts must not contain placeholder values", runtimeSecurity);
+        Assert.Contains("DataProtection:KeyPath must point to persistent storage", runtimeSecurity);
+        Assert.Contains("DataProtection:CertificatePath must point to a PKCS#12 certificate", runtimeSecurity);
+        Assert.Contains("Database:Encryption:RequireProtectedSensitiveColumns must be true", runtimeSecurity);
+        Assert.Contains("ControlIDApi:RequireHttpsDeviceUrls must be true", runtimeSecurity);
+        Assert.Contains("Security:RequireHttps must be true", runtimeSecurity);
         Assert.Contains("options.ShutdownTimeout", program);
         Assert.Contains("app.UseForwardedHeaders()", program);
     }
@@ -82,6 +94,9 @@ public class DeploymentEnvironmentContractTests
 
         Assert.Contains("CallbackSecurity__Shared" + "Key=replace-with-at-least-32-random-characters", envExample);
         Assert.Contains("DataProtection__KeyPath=/app/data/data-protection-keys", envExample);
+        Assert.Contains("DATA_PROTECTION_CERTIFICATE_FILE=", envExample);
+        Assert.Contains("Database__Encryption__EncryptedVolumeAttested=false", envExample);
+        Assert.Contains("ControlIDApi__RequireHttpsDeviceUrls=true", envExample);
         Assert.Contains("\"RequireSignedRequests\": true", staging);
         Assert.Contains("\"RequireAllowedDeviceHosts\": true", production);
         Assert.Contains("Procedimento de implantação", runbook);

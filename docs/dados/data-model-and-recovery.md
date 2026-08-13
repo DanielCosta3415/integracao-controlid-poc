@@ -1,6 +1,6 @@
 # Modelo de dados, integridade e recuperação
 
-> **Referência** · Público: dados, backend e SRE · Responsável: Engenharia · Última validação: 2026-08-12.
+> **Referência** · Público: dados, backend e SRE · Responsável: Engenharia · Última validação: 2026-08-13.
 
 Esta é a fonte canônica para o modelo local: entidades, integridade, índices,
 evolução de esquema, retenção, backup e restauração. Para arquivos criados em
@@ -201,11 +201,46 @@ powershell -ExecutionPolicy Bypass -File .\tools\restore-smoke-sqlite.ps1
 
 Sem parâmetro, o script usa a cópia de segurança mais recente em `artifacts/backups/`. Ele copia ou descriptografa o arquivo para `artifacts/restore-smoke/`, executa `dotnet ef database update --no-build --connection ...` sobre essa cópia e grava um manifesto do teste.
 
+## Proteção criptográfica do estado sensível
+
+Novas gravações protegem, antes da persistência, sessão oficial, template
+biométrico, valor de cartão e QR Code, imagem de foto, valor de configuração e
+cargas de Monitor, Push e logs. O prefixo `dp:v1:` identifica o envelope
+criptográfico no SQLite; a aplicação devolve o valor lógico após a abertura.
+
+Essa proteção não cifra tabelas, índices, identificadores, datas nem o arquivo
+SQLite inteiro. Fora de `Development`, o host deve atestar volume criptografado,
+persistir o chaveiro e protegê-lo por certificado PKCS#12. Backups recuperáveis
+precisam incluir banco, arquivos `-wal`/`-shm` quando existirem, chaveiro,
+certificado e acesso à senha correspondente.
+
+Para dados legados, não habilite conversão automática em um banco real. Execute
+o procedimento confirmado, que cria backup protegido e ensaia restauração antes
+da reescrita:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\tools\protect-sensitive-sqlite-data.ps1 `
+  -CertificatePath C:\secure\controlid-data-protection.pfx `
+  -CertificatePasswordFile C:\secure\controlid-data-protection.password `
+  -ConfirmProtection
+```
+
+`Database:Encryption:ProtectLegacyDataOnStartup` permanece `false` em arquivos
+versionados. Se a conversão falhar, preserve o backup, o chaveiro e o certificado,
+restaure a cópia e investigue antes de repetir.
+
+Em `Development`, o chaveiro fica em
+`artifacts/runtime/data-protection-keys`, fora do Git. Testes de integração e
+E2E usam diretórios temporários próprios para evitar compartilhamento de chaves
+entre execuções. Apagar o chaveiro local torna irrecuperáveis os valores já
+protegidos; preserve-o junto do banco sempre que o estado precisar sobreviver a
+uma reinstalação ou troca de máquina.
+
 ## Riscos controlados e acompanhamento
 
 | Severidade | Item | Controle implementado | Acompanhamento |
 | --- | --- | --- | --- |
-| Média | Dados sensíveis podem existir no SQLite, nos logs e nas cópias de segurança locais | `.gitignore`, cópias protegidas por DPAPI por padrão, fortalecimento de permissões locais, documentação de privacidade e expurgo confirmado de Monitor e Push | Executar `tools/harden-local-state.ps1` no host-alvo e revisar o mascaramento nos logs a cada novo fluxo. |
+| Média | Metadados e campos não catalogados ainda podem existir no SQLite, nos logs e nas cópias locais | Proteção de colunas catalogadas, volume criptografado obrigatório fora de Development, `.gitignore`, cópias protegidas por DPAPI e permissões locais | Validar `sensitive-data-protection`, executar `tools/harden-local-state.ps1` e revisar o catálogo a cada novo campo. |
 | Baixa | Restore precisa ser exercitado de forma recorrente | Procedimento documentado e smoke de restore em cópia temporária, incluindo backups `.protected` | Executar smoke regularmente antes de mudanças de schema e em preparações de release. |
 | Média | Ausência de chaves estrangeiras entre tabelas locais | Preserva compatibilidade com IDs remotos | Definir o contrato relacional antes de criar restrições. |
 | Baixa | Listagens remotas podem mudar entre páginas durante alterações concorrentes no equipamento | Paginação por `limit`/`offset`, lookahead de um registro, limite local e `AsNoTracking()` em leituras SQLite | Homologar ordenação estável e volume máximo por firmware no equipamento físico. |

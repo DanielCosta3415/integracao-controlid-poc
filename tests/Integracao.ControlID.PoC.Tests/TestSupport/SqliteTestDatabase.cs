@@ -15,11 +15,14 @@ public sealed class SqliteTestDatabase : IDisposable
             .UseSqlite(Connection)
             .Options;
 
-        Context = new IntegracaoControlIDContext(options);
+        SensitiveDataProtector = TestDataProtection.CreateSensitiveDataProtector();
+        Context = new IntegracaoControlIDContext(options, SensitiveDataProtector);
         Context.Database.EnsureCreated();
     }
 
     public SqliteConnection Connection { get; }
+
+    public Integracao.ControlID.PoC.Services.Database.SensitiveDataProtector SensitiveDataProtector { get; }
 
     public IntegracaoControlIDContext Context { get; }
 

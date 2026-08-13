@@ -1,6 +1,6 @@
 # Inventário de integrações e contratos
 
-> **Referência** · Público: backend, frontend, QA e integrações · Responsável: Engenharia · Última validação: 2026-08-12.
+> **Referência** · Público: backend, frontend, QA e integrações · Responsável: Engenharia · Última validação: 2026-08-13.
 
 Este documento registra os contratos de integração da PoC sem criar endpoints novos ou alterar contratos públicos. Quando um esquema provém de um payload livre da Control iD ou da interface técnica, ele é marcado como inferido.
 
@@ -292,7 +292,8 @@ Não há loader `.env` configurado. Use `appsettings.json`, User Secrets ou vari
 - Destino: console e `Logs/app_log.txt`.
 - Payload: mensagens estruturadas com endpoint, device id pseudonimizado, command id, status, duração, correlation id e exceções.
 - Correlação: `X-Correlation-ID` inbound/outbound, retornado em toda resposta HTTP.
-- Health: `GET /health/live` e `GET /health/ready`.
+- Health público mínimo: `GET /health/live` e `GET /health/ready`; diagnóstico
+  detalhado administrativo: `GET /health/details`.
 - Métricas: meter `Integracao.ControlID.PoC.Operations` via `System.Diagnostics.Metrics` e `GET /metrics` em formato Prometheus text.
 - Autorização: `/metrics` exige `AdministratorOnly` por padrão; `AllowAnonymous` é bloqueado fora de `Development`.
 - Artefatos: alertas em `docs/observability/alert-rules.json`, painéis em `docs/observability/dashboard.json`, monitor local em `tools/observability-check.ps1`.

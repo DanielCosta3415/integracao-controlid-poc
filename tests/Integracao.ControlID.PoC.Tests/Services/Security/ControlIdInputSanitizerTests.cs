@@ -47,6 +47,33 @@ public class ControlIdInputSanitizerTests
     }
 
     [Fact]
+    public async Task BuildSanitizedContent_CreatesTypedJsonAndRejectsUnknownBodyKind()
+    {
+        var jsonEndpoint = new OfficialApiEndpointDefinition
+        {
+            Id = "json-test",
+            BodyKind = "json",
+            ContentType = "application/json"
+        };
+        var unknownEndpoint = new OfficialApiEndpointDefinition
+        {
+            Id = "unknown-test",
+            BodyKind = "html",
+            ContentType = "text/html"
+        };
+
+        using var content = _sanitizer.BuildSanitizedContent(jsonEndpoint, "{\"value\":\"<tag>\"}");
+
+        Assert.NotNull(content);
+        Assert.Equal("application/json", content.Headers.ContentType?.MediaType);
+        var serialized = await content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+        using var document = System.Text.Json.JsonDocument.Parse(serialized);
+        Assert.Equal("<tag>", document.RootElement.GetProperty("value").GetString());
+        Assert.DoesNotContain("<tag>", serialized, StringComparison.Ordinal);
+        Assert.Throws<InvalidOperationException>(() => _sanitizer.BuildSanitizedContent(unknownEndpoint, "<script>"));
+    }
+
+    [Fact]
     public void TryNormalizeBaseAddress_RejectsHostOutsideConfiguredAllowlist()
     {
         var sanitizer = new ControlIdInputSanitizer(Microsoft.Extensions.Options.Options.Create(new ControlIdEgressOptions
@@ -64,6 +91,25 @@ public class ControlIdInputSanitizerTests
 
         Assert.False(success);
         Assert.Contains("allowlist", errorMessage, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void TryNormalizeBaseAddress_RejectsHttpWhenHttpsIsRequired()
+    {
+        var sanitizer = new ControlIdInputSanitizer(Microsoft.Extensions.Options.Options.Create(new ControlIdEgressOptions
+        {
+            RequireHttpsDeviceUrls = true
+        }));
+
+        var success = sanitizer.TryNormalizeBaseAddress(
+            "http://controlid.local",
+            "http",
+            null,
+            out _,
+            out var errorMessage);
+
+        Assert.False(success);
+        Assert.Contains("HTTPS", errorMessage, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]

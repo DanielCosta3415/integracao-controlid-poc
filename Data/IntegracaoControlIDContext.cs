@@ -1,13 +1,20 @@
 using Integracao.ControlID.PoC.Models.Database;
+using Integracao.ControlID.PoC.Services.Database;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Integracao.ControlID.PoC.Data
 {
     public class IntegracaoControlIDContext : DbContext
     {
-        public IntegracaoControlIDContext(DbContextOptions<IntegracaoControlIDContext> options)
+        private readonly SensitiveDataProtector _sensitiveDataProtector;
+
+        public IntegracaoControlIDContext(
+            DbContextOptions<IntegracaoControlIDContext> options,
+            SensitiveDataProtector sensitiveDataProtector)
             : base(options)
         {
+            _sensitiveDataProtector = sensitiveDataProtector;
         }
 
         public DbSet<UserLocal> Users { get; set; } = null!;
@@ -46,7 +53,63 @@ namespace Integracao.ControlID.PoC.Data
                 .Property(item => item.CommandId)
                 .ValueGeneratedNever();
 
+            ConfigureSensitiveDataProtection(modelBuilder);
             ConfigureOperationalIndexes(modelBuilder);
+        }
+
+        private void ConfigureSensitiveDataProtection(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<SessionLocal>()
+                .Property(item => item.SessionString)
+                .HasConversion(CreateSensitiveStringConverter(_sensitiveDataProtector, SensitiveDataColumnCatalog.SessionString));
+            modelBuilder.Entity<BiometricTemplateLocal>()
+                .Property(item => item.Template)
+                .HasConversion(CreateSensitiveStringConverter(_sensitiveDataProtector, SensitiveDataColumnCatalog.BiometricTemplate));
+            modelBuilder.Entity<CardLocal>()
+                .Property(item => item.Value)
+                .HasConversion(CreateSensitiveStringConverter(_sensitiveDataProtector, SensitiveDataColumnCatalog.CardValue));
+            modelBuilder.Entity<QRCodeLocal>()
+                .Property(item => item.Value)
+                .HasConversion(CreateSensitiveStringConverter(_sensitiveDataProtector, SensitiveDataColumnCatalog.QrCodeValue));
+            modelBuilder.Entity<PhotoLocal>()
+                .Property(item => item.Base64Image)
+                .HasConversion(CreateSensitiveStringConverter(_sensitiveDataProtector, SensitiveDataColumnCatalog.PhotoImage));
+            modelBuilder.Entity<ConfigLocal>()
+                .Property(item => item.Value)
+                .HasConversion(CreateSensitiveStringConverter(_sensitiveDataProtector, SensitiveDataColumnCatalog.ConfigValue));
+            modelBuilder.Entity<MonitorEventLocal>()
+                .Property(item => item.RawJson)
+                .HasConversion(CreateSensitiveStringConverter(_sensitiveDataProtector, SensitiveDataColumnCatalog.MonitorRawJson));
+            modelBuilder.Entity<MonitorEventLocal>()
+                .Property(item => item.Payload)
+                .HasConversion(CreateSensitiveStringConverter(_sensitiveDataProtector, SensitiveDataColumnCatalog.MonitorPayload));
+            modelBuilder.Entity<PushCommandLocal>()
+                .Property(item => item.RawJson)
+                .HasConversion(CreateSensitiveStringConverter(_sensitiveDataProtector, SensitiveDataColumnCatalog.PushRawJson));
+            modelBuilder.Entity<PushCommandLocal>()
+                .Property(item => item.Payload)
+                .HasConversion(CreateSensitiveStringConverter(_sensitiveDataProtector, SensitiveDataColumnCatalog.PushPayload));
+            modelBuilder.Entity<LogLocal>()
+                .Property(item => item.Message)
+                .HasConversion(CreateSensitiveStringConverter(_sensitiveDataProtector, SensitiveDataColumnCatalog.LogMessage));
+            modelBuilder.Entity<LogLocal>()
+                .Property(item => item.StackTrace)
+                .HasConversion(CreateSensitiveStringConverter(_sensitiveDataProtector, SensitiveDataColumnCatalog.LogStackTrace));
+            modelBuilder.Entity<LogLocal>()
+                .Property(item => item.User)
+                .HasConversion(CreateSensitiveStringConverter(_sensitiveDataProtector, SensitiveDataColumnCatalog.LogUser));
+            modelBuilder.Entity<LogLocal>()
+                .Property(item => item.AdditionalData)
+                .HasConversion(CreateSensitiveStringConverter(_sensitiveDataProtector, SensitiveDataColumnCatalog.LogAdditionalData));
+        }
+
+        private static ValueConverter<string, string> CreateSensitiveStringConverter(
+            SensitiveDataProtector protector,
+            SensitiveDataColumn column)
+        {
+            return new ValueConverter<string, string>(
+                value => protector.Protect(value, column.Purpose),
+                value => protector.Unprotect(value, column.Purpose));
         }
 
         private static void ConfigureOperationalIndexes(ModelBuilder modelBuilder)

@@ -8,17 +8,38 @@ namespace Integracao.ControlID.PoC.Helpers;
 public static class PrivacyLogHelper
 {
     private const int TokenLength = 12;
+    private const int MaxSafeLogValueLength = 256;
+
+    public static string SanitizeForLog(object? value, string emptyValue = "none")
+    {
+        var text = value?.ToString();
+        if (string.IsNullOrWhiteSpace(text))
+            return emptyValue;
+
+        var normalized = text
+            .Replace('\r', ' ')
+            .Replace('\n', ' ')
+            .Replace('\t', ' ')
+            .Trim();
+
+        if (normalized.Length == 0)
+            return emptyValue;
+
+        return normalized.Length <= MaxSafeLogValueLength
+            ? normalized
+            : normalized[..MaxSafeLogValueLength];
+    }
 
     public static string PseudonymizeUser(string? value)
     {
-        return Pseudonymize(value, "anonymous");
+        return SanitizeForLog(Pseudonymize(value, "anonymous"), "anonymous");
     }
 
     public static string PseudonymizeIp(IPAddress? address)
     {
         return address == null
             ? "ip:unknown"
-            : $"ip:{Hash(address.ToString())}";
+            : SanitizeForLog($"ip:{Hash(address.ToString())}", "ip:unknown");
     }
 
     public static string PseudonymizeEndpoint(string? value)
@@ -27,9 +48,9 @@ public static class PrivacyLogHelper
             return "endpoint:unknown";
 
         if (Uri.TryCreate(value, UriKind.Absolute, out var uri))
-            return $"endpoint:{uri.Scheme}:{Hash(uri.Authority)}";
+            return SanitizeForLog($"endpoint:{uri.Scheme}:{Hash(uri.Authority)}", "endpoint:unknown");
 
-        return $"endpoint:{Hash(value)}";
+        return SanitizeForLog($"endpoint:{Hash(value)}", "endpoint:unknown");
     }
 
     public static string PseudonymizeIdentifier(object? value, string emptyValue = "ref:unknown")
@@ -48,7 +69,7 @@ public static class PrivacyLogHelper
         if (string.IsNullOrWhiteSpace(value))
             return emptyValue;
 
-        return $"ref:{Hash(value.Trim())}";
+        return SanitizeForLog($"ref:{Hash(value.Trim())}", emptyValue);
     }
 
     private static string Hash(string value)

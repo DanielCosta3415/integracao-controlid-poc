@@ -1,6 +1,6 @@
 # Responsabilidades dos módulos da solução
 
-> **Referência** · Público: desenvolvimento e manutenção · Responsável: Engenharia · Última validação: 2026-08-12.
+> **Referência** · Público: desenvolvimento e manutenção · Responsável: Engenharia · Última validação: 2026-08-13.
 
 Este mapa descreve módulos, pontos de entrada e direção de mudança. Ele não
 repete cada arquivo versionado: o inventário completo é mecânico e pode ser
@@ -18,7 +18,8 @@ Para comportamento detalhado, use o código, os testes e a fonte canônica do
 
 | Caminho | Responsabilidade | Mude quando |
 | --- | --- | --- |
-| `Program.cs` | Compõe DI, middlewares, rotas, banco, health checks e validações de inicialização | Serviço global, pipeline HTTP ou configuração de runtime mudar |
+| `Program.cs` | Compõe DI, middlewares, rotas, banco e health checks | Serviço global, pipeline HTTP ou composição de runtime mudar |
+| `Services/Security/RuntimeSecurityValidator.cs` | Reúne invariantes obrigatórias de segurança para ambientes fora de desenvolvimento | Requisito de HTTPS, hosts, chaveiro, callbacks, métricas, proxy ou saída para equipamento mudar |
 | `Integracao.ControlID.PoC.csproj` | Define framework, dependências e propriedades do projeto web | Pacote ou configuração de compilação mudar |
 | `Integracao.ControlID.PoC.sln` | Agrupa aplicação e projetos de testes | Projeto versionado for adicionado ou removido |
 | `Directory.Build.props` | Centraliza qualidade e propriedades comuns do MSBuild | Regra comum de compilação mudar |
@@ -155,6 +156,8 @@ observável a detalhes privados de implementação.
 | `tools/smoke-localhost.ps1` | Smoke integrado de aplicação e simulador |
 | `tools/test-readiness-gates.ps1` | Orquestra gates progressivos e release estrito |
 | `tools/contract-controlid-*.ps1` | Valida contrato simulado ou físico |
+| `tools/audit-github-security.ps1` | Audita CodeQL, Dependabot, proteção de segredos e integridade de `main` no GitHub |
+| `tools/protect-sensitive-sqlite-data.ps1` | Protege dados legados somente após backup, ensaio e confirmação explícita |
 | `tools/*-check.ps1` e `tools/audit-*.ps1` | Verificações de documentação, segurança, operação, capacidade e dependências |
 | `tools/generate-source-inventory.ps1` | Gera inventário completo de arquivos para diagnóstico |
 

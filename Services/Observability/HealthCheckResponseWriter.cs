@@ -11,9 +11,22 @@ public static class HealthCheckResponseWriter
         WriteIndented = false
     };
 
+    public static Task WriteMinimalAsync(HttpContext context, HealthReport report)
+    {
+        context.Response.ContentType = "application/json; charset=utf-8";
+        context.Response.Headers.CacheControl = "no-store";
+
+        return JsonSerializer.SerializeAsync(
+            context.Response.Body,
+            new { status = report.Status.ToString() },
+            SerializerOptions,
+            context.RequestAborted);
+    }
+
     public static async Task WriteAsync(HttpContext context, HealthReport report)
     {
         context.Response.ContentType = "application/json; charset=utf-8";
+        context.Response.Headers.CacheControl = "no-store";
 
         var payload = new
         {

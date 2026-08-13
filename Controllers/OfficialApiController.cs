@@ -78,6 +78,7 @@ namespace Integracao.ControlID.PoC.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = AppSecurityRoles.Administrator)]
         public IActionResult Invoke(string id)
         {
             var endpoint = _catalogService.GetById(id);
@@ -96,6 +97,8 @@ namespace Integracao.ControlID.PoC.Controllers
             if (endpoint == null)
                 return NotFound();
 
+            var sessionString = HttpContext.Session.GetString(SessionSessionStringKey) ?? string.Empty;
+            model.SessionString = string.Empty;
             model.Endpoint = endpoint;
             model.Contract = _documentationService.Build(endpoint);
 
@@ -114,7 +117,7 @@ namespace Integracao.ControlID.PoC.Controllers
             model.Result = await _invokerService.InvokeAsync(
                 endpoint,
                 model.DeviceAddress,
-                model.SessionString,
+                sessionString,
                 model.AdditionalQuery,
                 model.RequestBody);
 
@@ -132,7 +135,6 @@ namespace Integracao.ControlID.PoC.Controllers
                 Endpoint = endpoint,
                 Contract = _documentationService.Build(endpoint),
                 DeviceAddress = HttpContext.Session.GetString(SessionDeviceAddressKey) ?? string.Empty,
-                SessionString = HttpContext.Session.GetString(SessionSessionStringKey) ?? string.Empty,
                 RequestBody = endpoint.SamplePayload
             };
         }

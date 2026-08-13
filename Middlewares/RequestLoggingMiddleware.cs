@@ -46,16 +46,16 @@ namespace Integracao.ControlID.PoC.Middlewares
                     OperationalEventIds.RequestCompleted,
                     "[{Timestamp}] {Method} {Path} => {StatusCode} ({Elapsed} ms) IP:{IPRef} User:{UserRef} Correlation:{CorrelationId} Trace:{TraceId}",
                     DateTime.UtcNow,
-                    request.Method,
-                    request.Path,
+                    PrivacyLogHelper.SanitizeForLog(request.Method),
+                    PrivacyLogHelper.SanitizeForLog(request.Path.Value),
                     response.StatusCode,
                     sw.ElapsedMilliseconds,
                     PrivacyLogHelper.PseudonymizeIp(context.Connection.RemoteIpAddress),
                     context.User.Identity?.IsAuthenticated == true
                         ? PrivacyLogHelper.PseudonymizeUser(context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? context.User.Identity.Name)
                         : "anonymous",
-                    correlationId,
-                    context.TraceIdentifier
+                    PrivacyLogHelper.SanitizeForLog(correlationId),
+                    PrivacyLogHelper.SanitizeForLog(context.TraceIdentifier)
                 );
             }
             catch

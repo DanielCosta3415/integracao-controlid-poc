@@ -65,18 +65,7 @@ namespace Integracao.ControlID.PoC.Controllers
 
             try
             {
-                var payload = string.IsNullOrWhiteSpace(model.LoadWhereJson)
-                    ? $$"""
-                    {
-                      "object": "{{model.SelectedObjectName}}"
-                    }
-                    """
-                    : $$"""
-                    {
-                      "object": "{{model.SelectedObjectName}}",
-                      "where": {{model.LoadWhereJson}}
-                    }
-                    """;
+                var payload = BuildObjectPayload(model.SelectedObjectName, ("where", model.LoadWhereJson));
 
                 var (result, document) = await _apiService.InvokeJsonAsync("load-objects", payload);
                 EnsureSuccess(result, "Erro ao carregar objetos");
@@ -87,7 +76,7 @@ namespace Integracao.ControlID.PoC.Controllers
             catch (Exception ex)
             {
                 model.ErrorMessage = SecurityTextHelper.BuildSafeUserMessage("A operação não pôde ser concluída", ex);
-                _logger.LogError(ex, "Erro ao consultar objeto oficial {ObjectName}.", model.SelectedObjectName);
+                _logger.LogError(ex, "Erro ao consultar objeto oficial {ObjectName}.", PrivacyLogHelper.SanitizeForLog(model.SelectedObjectName));
             }
 
             return View("Index", model);
@@ -105,14 +94,7 @@ namespace Integracao.ControlID.PoC.Controllers
 
             try
             {
-                using var _ = JsonDocument.Parse(model.CreateValuesJson);
-
-                var payload = $$"""
-                {
-                  "object": "{{model.SelectedObjectName}}",
-                  "values": {{model.CreateValuesJson}}
-                }
-                """;
+                var payload = BuildObjectPayload(model.SelectedObjectName, ("values", model.CreateValuesJson));
 
                 var (result, document) = await _apiService.InvokeJsonAsync("create-objects", payload);
                 EnsureSuccess(result, "Erro ao criar objetos");
@@ -123,7 +105,7 @@ namespace Integracao.ControlID.PoC.Controllers
             catch (Exception ex)
             {
                 model.ErrorMessage = SecurityTextHelper.BuildSafeUserMessage("A operação não pôde ser concluída", ex);
-                _logger.LogError(ex, "Erro ao criar objeto oficial {ObjectName}.", model.SelectedObjectName);
+                _logger.LogError(ex, "Erro ao criar objeto oficial {ObjectName}.", PrivacyLogHelper.SanitizeForLog(model.SelectedObjectName));
             }
 
             return View("Index", model);
@@ -141,14 +123,7 @@ namespace Integracao.ControlID.PoC.Controllers
 
             try
             {
-                using var _ = JsonDocument.Parse(model.UpsertValuesJson);
-
-                var payload = $$"""
-                {
-                  "object": "{{model.SelectedObjectName}}",
-                  "values": {{model.UpsertValuesJson}}
-                }
-                """;
+                var payload = BuildObjectPayload(model.SelectedObjectName, ("values", model.UpsertValuesJson));
 
                 var (result, document) = await _apiService.InvokeJsonAsync("create-or-modify-objects", payload);
                 EnsureSuccess(result, "Erro ao executar create-or-modify");
@@ -159,7 +134,7 @@ namespace Integracao.ControlID.PoC.Controllers
             catch (Exception ex)
             {
                 model.ErrorMessage = SecurityTextHelper.BuildSafeUserMessage("A operação não pôde ser concluída", ex);
-                _logger.LogError(ex, "Erro ao executar create-or-modify para {ObjectName}.", model.SelectedObjectName);
+                _logger.LogError(ex, "Erro ao executar create-or-modify para {ObjectName}.", PrivacyLogHelper.SanitizeForLog(model.SelectedObjectName));
             }
 
             return View("Index", model);
@@ -177,16 +152,10 @@ namespace Integracao.ControlID.PoC.Controllers
 
             try
             {
-                using var whereDocument = JsonDocument.Parse(model.ModifyWhereJson);
-                using var valuesDocument = JsonDocument.Parse(model.ModifyValuesJson);
-
-                var payload = $$"""
-                {
-                  "object": "{{model.SelectedObjectName}}",
-                  "where": {{model.ModifyWhereJson}},
-                  "values": {{model.ModifyValuesJson}}
-                }
-                """;
+                var payload = BuildObjectPayload(
+                    model.SelectedObjectName,
+                    ("where", model.ModifyWhereJson),
+                    ("values", model.ModifyValuesJson));
 
                 var (result, document) = await _apiService.InvokeJsonAsync("modify-objects", payload);
                 EnsureSuccess(result, "Erro ao modificar objetos");
@@ -197,7 +166,7 @@ namespace Integracao.ControlID.PoC.Controllers
             catch (Exception ex)
             {
                 model.ErrorMessage = SecurityTextHelper.BuildSafeUserMessage("A operação não pôde ser concluída", ex);
-                _logger.LogError(ex, "Erro ao modificar objeto oficial {ObjectName}.", model.SelectedObjectName);
+                _logger.LogError(ex, "Erro ao modificar objeto oficial {ObjectName}.", PrivacyLogHelper.SanitizeForLog(model.SelectedObjectName));
             }
 
             return View("Index", model);
@@ -222,14 +191,7 @@ namespace Integracao.ControlID.PoC.Controllers
 
             try
             {
-                using var _ = JsonDocument.Parse(model.DestroyWhereJson);
-
-                var payload = $$"""
-                {
-                  "object": "{{model.SelectedObjectName}}",
-                  "where": {{model.DestroyWhereJson}}
-                }
-                """;
+                var payload = BuildObjectPayload(model.SelectedObjectName, ("where", model.DestroyWhereJson));
 
                 var (result, document) = await _apiService.InvokeJsonAsync("destroy-objects", payload);
                 EnsureSuccess(result, "Erro ao remover objetos");
@@ -240,10 +202,31 @@ namespace Integracao.ControlID.PoC.Controllers
             catch (Exception ex)
             {
                 model.ErrorMessage = SecurityTextHelper.BuildSafeUserMessage("A operação não pôde ser concluída", ex);
-                _logger.LogError(ex, "Erro ao remover objeto oficial {ObjectName}.", model.SelectedObjectName);
+                _logger.LogError(ex, "Erro ao remover objeto oficial {ObjectName}.", PrivacyLogHelper.SanitizeForLog(model.SelectedObjectName));
             }
 
             return View("Index", model);
+        }
+
+        private static string BuildObjectPayload(
+            string objectName,
+            params (string Name, string? Json)[] properties)
+        {
+            var payload = new Dictionary<string, object?>(StringComparer.Ordinal)
+            {
+                ["object"] = objectName
+            };
+
+            foreach (var property in properties)
+            {
+                if (string.IsNullOrWhiteSpace(property.Json))
+                    continue;
+
+                using var document = JsonDocument.Parse(property.Json);
+                payload[property.Name] = document.RootElement.Clone();
+            }
+
+            return JsonSerializer.Serialize(payload);
         }
 
         private static IReadOnlyList<OfficialObjectDefinition> BuildDefinitions()

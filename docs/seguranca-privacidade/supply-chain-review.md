@@ -1,6 +1,6 @@
 # Revisão da cadeia de suprimentos
 
-> **Referência** · Público: manutenção, AppSec e release · Responsável: Segurança/Privacidade · Última validação: 2026-08-12.
+> **Referência** · Público: manutenção, AppSec e release · Responsável: Segurança/Privacidade · Última validação: 2026-08-13.
 
 Baseline para revisões de dependências, licenças e SBOM deste repositório.
 
@@ -69,10 +69,13 @@ Inventário atual:
 
 - Bootstrap `5.1.0`, licença MIT, em `wwwroot/lib/bootstrap`.
 - jQuery `3.6.0`, licença MIT, em `wwwroot/lib/jquery`.
-- jquery-validation `1.20.0`, licença MIT, em `wwwroot/lib/jquery-validation`.
+- jquery-validation `1.22.1`, licença MIT, em `wwwroot/lib/jquery-validation`.
 - jquery-validation-unobtrusive `4.0.0`, licença Apache-2.0, em `wwwroot/lib/jquery-validation-unobtrusive`.
 
-`jquery-validation` foi atualizado de `1.19.5` para `1.20.0` porque a versão anterior e afetada pelo advisory moderado `GHSA-rrj2-ph5q-jxw2` / `CVE-2025-3573`, corrigido em `1.20.0`.
+`jquery-validation` foi atualizado para `1.22.1`, versão oficial revisada em
+2026-08-13. O piso `1.20.0` continua cobrindo o advisory moderado
+`GHSA-rrj2-ph5q-jxw2` / `CVE-2025-3573`; a atualização também reduz a defasagem
+do código vendorizado analisado pelo CodeQL.
 
 O arquivo `wwwroot/lib/vendor-dependencies.json` funciona como lockfile operacional dessas bibliotecas: registra versão, licença, origem, versão mínima segura e hash SHA-256 do diretório. O hash normaliza finais de linha de arquivos texto e usa ordenação ordinal de caminhos para ser reprodutível entre Windows, Linux e runners de CI. Valide com:
 
@@ -98,7 +101,7 @@ Qualquer atualização futura deve:
 | --- | --- | --- | --- |
 | Bootstrap | 5.1.0 | MIT | `wwwroot/lib/bootstrap/LICENSE` |
 | jQuery | 3.6.0 | MIT | `wwwroot/lib/jquery/LICENSE.txt` |
-| jQuery Validation | 1.20.0 | MIT | [wwwroot/lib/jquery-validation/LICENSE.md](../../wwwroot/lib/jquery-validation/LICENSE.md) |
+| jQuery Validation | 1.22.1 | MIT | [wwwroot/lib/jquery-validation/LICENSE.md](../../wwwroot/lib/jquery-validation/LICENSE.md) |
 | jQuery Validation Unobtrusive | 4.0.0 | Apache-2.0 | `wwwroot/lib/jquery-validation-unobtrusive/LICENSE.txt` |
 
 O manifesto `wwwroot/lib/vendor-dependencies.json` é a fonte canônica de versão,

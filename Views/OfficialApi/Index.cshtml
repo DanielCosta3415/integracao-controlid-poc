@@ -133,6 +133,7 @@
                     {
                         var directionLabel = endpoint.Direction == "server-callback" ? "Fluxo de callback" : "Requisição ao equipamento";
                         var sessionLabel = endpoint.RequiresSession ? "Exige sessão" : "Acesso sem sessão";
+                        var canOpenTechnicalDetails = User.IsInRole(Integracao.ControlID.PoC.Services.Security.AppSecurityRoles.Administrator);
                         var actionLabel = endpoint.Invokable ? "Abrir invocação" : "Detalhar callback";
                         var bodyKindLabel = (endpoint.BodyKind ?? string.Empty).Trim().ToLowerInvariant() switch
                         {
@@ -172,13 +173,20 @@
                             </div>
                             <div class="official-api-entry__footer">
                                 <div class="official-api-entry__actions">
-                                    <a asp-action="Invoke"
-                                       asp-route-id="@endpoint.Id"
-                                       data-endpoint-id="@endpoint.Id"
-                                       class="btn @(endpoint.Invokable ? "btn-primary" : "btn-outline-secondary") btn-sm module-directory-card__cta"
-                                       aria-label="@($"{actionLabel} {endpoint.Title}")">
-                                        @actionLabel
-                                    </a>
+                                    @if (canOpenTechnicalDetails)
+                                    {
+                                        <a asp-action="Invoke"
+                                           asp-route-id="@endpoint.Id"
+                                           data-endpoint-id="@endpoint.Id"
+                                           class="btn @(endpoint.Invokable ? "btn-primary" : "btn-outline-secondary") btn-sm module-directory-card__cta"
+                                           aria-label="@($"{actionLabel} {endpoint.Title}")">
+                                            @actionLabel
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <span class="module-card__hint">Invocação e detalhes técnicos restritos a administradores.</span>
+                                    }
                                     <a href="@endpoint.DocumentationUrl"
                                        class="btn btn-quiet btn-sm module-directory-card__cta"
                                        target="_blank"

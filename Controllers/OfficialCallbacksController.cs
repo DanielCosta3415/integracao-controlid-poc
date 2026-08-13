@@ -9,6 +9,7 @@ namespace Integracao.ControlID.PoC.Controllers
 {
     [ApiController]
     [AllowAnonymous]
+    [IgnoreAntiforgeryToken]
     [EnableRateLimiting("CallbackIngress")]
     public class OfficialCallbacksController : ControllerBase
     {
@@ -113,9 +114,9 @@ namespace Integracao.ControlID.PoC.Controllers
 
             _logger.LogWarning(
                 "Blocked callback file request for {Path}. Status {StatusCode}. Reason: {Reason}",
-                Request.Path,
+                PrivacyLogHelper.SanitizeForLog(Request.Path.Value),
                 securityResult.StatusCode,
-                securityResult.Message);
+                PrivacyLogHelper.SanitizeForLog(securityResult.Message));
 
             return StatusCode(securityResult.StatusCode, new { error = securityResult.Message });
         }
@@ -128,9 +129,9 @@ namespace Integracao.ControlID.PoC.Controllers
 
             _logger.LogWarning(
                 "Blocked callback file signature for {Path}. Status {StatusCode}. Reason: {Reason}",
-                Request.Path,
+                PrivacyLogHelper.SanitizeForLog(Request.Path.Value),
                 signatureResult.StatusCode,
-                signatureResult.Message);
+                PrivacyLogHelper.SanitizeForLog(signatureResult.Message));
 
             return StatusCode(signatureResult.StatusCode, new { error = signatureResult.Message });
         }

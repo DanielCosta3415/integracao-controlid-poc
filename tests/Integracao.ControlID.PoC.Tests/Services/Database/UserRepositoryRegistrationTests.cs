@@ -78,7 +78,7 @@ public sealed class UserRepositoryRegistrationTests
         var options = new DbContextOptionsBuilder<IntegracaoControlIDContext>()
             .UseSqlite($"Data Source={databasePath};Default Timeout=30")
             .Options;
-        return new IntegracaoControlIDContext(options);
+        return new IntegracaoControlIDContext(options, TestDataProtection.CreateSensitiveDataProtector());
     }
 
     private static UserLocal CreateUser(string username, string email)

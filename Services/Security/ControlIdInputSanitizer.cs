@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
 using Integracao.ControlID.PoC.Models.ControlIDApi;
@@ -63,6 +64,13 @@ namespace Integracao.ControlID.PoC.Services.Security
             if (!IsSupportedScheme(parsedUri.Scheme))
             {
                 errorMessage = "Use apenas os protocolos http ou https para conectar o equipamento.";
+                return false;
+            }
+
+            if (_egressOptions.RequireHttpsDeviceUrls &&
+                !string.Equals(parsedUri.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase))
+            {
+                errorMessage = "Este ambiente exige HTTPS para conectar o equipamento Control iD.";
                 return false;
             }
 
@@ -170,15 +178,15 @@ namespace Integracao.ControlID.PoC.Services.Security
                 "form" => BuildFormContent(requestBody),
                 "binary" => BuildBinaryContent(requestBody),
                 "multipart" => BuildMultipartContent(requestBody),
-                _ => new StringContent(requestBody ?? string.Empty, Encoding.UTF8, NormalizeContentType(endpoint.ContentType))
+                _ => throw new InvalidOperationException("O tipo de corpo do endpoint oficial não é suportado pela PoC.")
             };
         }
 
         private static HttpContent BuildJsonContent(string? requestBody)
         {
             var rawJson = string.IsNullOrWhiteSpace(requestBody) ? "{}" : requestBody.Trim();
-            using var _ = JsonDocument.Parse(rawJson);
-            return new StringContent(rawJson, Encoding.UTF8, "application/json");
+            var json = JsonSerializer.Deserialize<JsonElement>(rawJson);
+            return JsonContent.Create(json);
         }
 
         public HttpContent BuildBinaryContent(ReadOnlyMemory<byte> payloadBytes)
@@ -241,7 +249,7 @@ namespace Integracao.ControlID.PoC.Services.Security
                 var fileBytes = DecodeBase64Payload(file.Base64Content, "O arquivo multipart não está em base64 válido.");
 
                 var fileContent = new ByteArrayContent(fileBytes);
-                fileContent.Headers.ContentType = MediaTypeHeaderValue.Parse(NormalizeContentType(file.ContentType));
+                fileContent.Headers.ContentType = MediaTypeHeaderValue.Parse(NormalizeMultipartContentType(file.ContentType));
                 content.Add(fileContent, partName, fileName);
             }
 
@@ -308,6 +316,20 @@ namespace Integracao.ControlID.PoC.Services.Security
             return MediaTypeHeaderValue.TryParse(contentType, out var parsedContentType)
                 ? parsedContentType.MediaType ?? "application/octet-stream"
                 : "application/octet-stream";
+        }
+
+        private static string NormalizeMultipartContentType(string? contentType)
+        {
+            var normalized = NormalizeContentType(contentType).ToLowerInvariant();
+            return normalized switch
+            {
+                "application/octet-stream" => normalized,
+                "image/bmp" => normalized,
+                "image/gif" => normalized,
+                "image/jpeg" => normalized,
+                "image/png" => normalized,
+                _ => "application/octet-stream"
+            };
         }
 
         private string NormalizeToken(string? value, string label)

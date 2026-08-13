@@ -24,7 +24,10 @@ namespace Integracao.ControlID.PoC.Controllers
             var errorViewModel = CreateErrorViewModelFromException();
             if (!string.IsNullOrEmpty(errorViewModel.Message))
             {
-                _logger.LogError("Erro não tratado em {Path} (RequestId: {RequestId})", errorViewModel.Path, errorViewModel.RequestId);
+                _logger.LogError(
+                    "Erro não tratado em {Path} (RequestId: {RequestId})",
+                    PrivacyLogHelper.SanitizeForLog(errorViewModel.Path),
+                    PrivacyLogHelper.SanitizeForLog(errorViewModel.RequestId));
             }
 
             Response.StatusCode = 500;
@@ -41,7 +44,10 @@ namespace Integracao.ControlID.PoC.Controllers
                 Path = HttpContext.Request.Path
             };
 
-            _logger.LogWarning("404 NotFound em {Path} (RequestId: {RequestId})", errorViewModel.Path, errorViewModel.RequestId);
+            _logger.LogWarning(
+                "404 NotFound em {Path} (RequestId: {RequestId})",
+                PrivacyLogHelper.SanitizeForLog(errorViewModel.Path),
+                PrivacyLogHelper.SanitizeForLog(errorViewModel.RequestId));
 
             Response.StatusCode = 404;
             return View("NotFound", errorViewModel);
@@ -53,7 +59,10 @@ namespace Integracao.ControlID.PoC.Controllers
             var errorViewModel = CreateErrorViewModelFromException();
             if (!string.IsNullOrEmpty(errorViewModel.Message))
             {
-                _logger.LogError("Erro de servidor em {Path} (RequestId: {RequestId})", errorViewModel.Path, errorViewModel.RequestId);
+                _logger.LogError(
+                    "Erro de servidor em {Path} (RequestId: {RequestId})",
+                    PrivacyLogHelper.SanitizeForLog(errorViewModel.Path),
+                    PrivacyLogHelper.SanitizeForLog(errorViewModel.RequestId));
             }
 
             Response.StatusCode = 500;
@@ -70,7 +79,10 @@ namespace Integracao.ControlID.PoC.Controllers
                 Path = HttpContext.Request.Path
             };
 
-            _logger.LogWarning("403 AccessDenied em {Path} (RequestId: {RequestId})", errorViewModel.Path, errorViewModel.RequestId);
+            _logger.LogWarning(
+                "403 AccessDenied em {Path} (RequestId: {RequestId})",
+                PrivacyLogHelper.SanitizeForLog(errorViewModel.Path),
+                PrivacyLogHelper.SanitizeForLog(errorViewModel.RequestId));
 
             Response.StatusCode = 403;
             return View("AccessDenied", errorViewModel);

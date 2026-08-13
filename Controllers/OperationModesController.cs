@@ -605,7 +605,9 @@ namespace Integracao.ControlID.PoC.Controllers
                 throw new InvalidOperationException("Informe a URL pública da PoC para criar o servidor online.");
             }
 
-            _logger.LogInformation("Creating online server definition for operation mode profile. ServerName {ServerName}.", model.ServerName);
+            _logger.LogInformation(
+                "Creating online server definition for operation mode profile. ServerName {ServerName}.",
+                PrivacyLogHelper.SanitizeForLog(model.ServerName));
             var (result, document) = await _apiService.InvokeJsonAsync(
                 "create-objects",
                 _payloadFactory.BuildOnlineServerDefinition(model.ServerName, model.ServerUrl, model.PublicKey));

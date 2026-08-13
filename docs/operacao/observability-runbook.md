@@ -1,6 +1,6 @@
 # Guia operacional de observabilidade e operabilidade
 
-> **Runbook** · Público: desenvolvimento e SRE · Responsável: Plataforma/SRE · Última validação: 2026-08-12.
+> **Runbook** · Público: desenvolvimento e SRE · Responsável: Plataforma/SRE · Última validação: 2026-08-13.
 
 Escopo: PoC ASP.NET Core MVC/Razor para integração com a Access API Control iD.
 Este guia operacional define sinais, eventos críticos, métricas, alertas e
@@ -11,8 +11,9 @@ internos ao usuário final.
 
 | Endpoint | Finalidade | Dependência | Exposição recomendada |
 | --- | --- | --- | --- |
-| `GET /health/live` | Verifica se o processo ASP.NET Core responde | Processo web | Pode ser usado por supervisor local ou load balancer |
-| `GET /health/ready` | Verifica se o SQLite local pode ser acessado | SQLite/runtime state | Usar para readiness antes de enviar tráfego |
+| `GET /health/live` | Verifica se o processo ASP.NET Core responde | Estado agregado apenas | Pode ser usado anonimamente por supervisor ou balanceador |
+| `GET /health/ready` | Verifica SQLite, migrações e proteção de dados sensíveis | Estado agregado apenas | Usar anonimamente para readiness antes de enviar tráfego |
+| `GET /health/details` | Expõe nomes, estados, durações e tags das verificações | Diagnóstico interno | Exige administrador; nunca publicar no balanceador |
 | `GET /metrics` | Exporta snapshot Prometheus text das métricas locais | Auth local/RBAC | Protegido por administrador por padrão |
 
 As respostas de verificação de saúde são JSON minimizado com `status`, duração e nomes dos

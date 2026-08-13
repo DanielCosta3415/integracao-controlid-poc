@@ -1,6 +1,6 @@
 # Fechamento de riscos residuais externos
 
-> **Referência** · Público: liderança, release e auditoria · Responsável: Plataforma/SRE · Última validação: 2026-08-12.
+> **Referência** · Público: liderança, release e auditoria · Responsável: Plataforma/SRE · Última validação: 2026-08-13.
 
 Este documento transforma as lacunas residuais da rodada técnica em controles
 versionados, comandos verificáveis e bloqueios de release. Ele não substitui
@@ -19,6 +19,7 @@ tratados como "resolvidos" sem evidência.
 | Contrato físico Control iD | `ops.example.json` exige dono do equipamento, firmware, rede de bancada, data e evidência; release gate exige contrato físico. | `tools/test-readiness-gates.ps1 -ReleaseGate` chama `tools/contract-controlid-device.ps1`. | Hardware, firmware, rede e credenciais reais fora do Git. |
 | Analisadores externos SAST/OSV/DAST/acessibilidade | Semgrep, OSV, axe e ZAP foram executados localmente em 2026-08-04; o ZAP não encontrou alertas altos, médios ou baixos, e o axe não encontrou violações na página pública. O E2E mantém axe autenticado. | `tools/external-security-scans.ps1 -RequireTools`, E2E e `tools/test-readiness-gates.ps1 -ReleaseGate`. | Repetição em URL de homologação controlada por release. |
 | Faturamento e orçamento real | `ops.example.json` exige orçamento, painel, alertas e fonte de gasto real; a verificação FinOps valida o contrato documental. | `tools/finops-capacity-check.ps1 -FailOnWarnings` e `tools/operational-readiness-check.ps1 -RequireConfig`. | Conta/provedor real, orçamento aprovado e responsável pelo custo. |
+| Segurança do repositório GitHub | Dependabot alerts/security updates, secret scanning, push protection, CodeQL Default Setup estendido e regra de integridade de `main` foram habilitados em 2026-08-13. | `tools/audit-github-security.ps1`. | `non-provider patterns` e `validity checks` permanecem indisponíveis para a conta/repositório; revisar disponibilidade do provedor. |
 
 ## Critério mínimo sem ambiente real
 

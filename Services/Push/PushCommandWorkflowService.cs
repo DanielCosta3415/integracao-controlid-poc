@@ -49,7 +49,7 @@ public sealed class PushCommandWorkflowService
                 OperationalEventIds.PushRejected,
                 "Rejected push queue request for device {DeviceRef} and type {CommandType} because the payload is not valid JSON.",
                 PrivacyLogHelper.PseudonymizeIdentifier(model.DeviceId),
-                model.CommandType);
+                PrivacyLogHelper.SanitizeForLog(model.CommandType));
 
             return PushQueueResult.Invalid("Informe um payload JSON valido antes de enfileirar.");
         }
@@ -74,7 +74,7 @@ public sealed class PushCommandWorkflowService
             "Push command {CommandId} queued for device {DeviceRef} with type {CommandType}.",
             command.CommandId,
             PrivacyLogHelper.PseudonymizeIdentifier(command.DeviceId),
-            command.CommandType);
+            PrivacyLogHelper.SanitizeForLog(command.CommandType));
 
         return PushQueueResult.Queued(command);
     }

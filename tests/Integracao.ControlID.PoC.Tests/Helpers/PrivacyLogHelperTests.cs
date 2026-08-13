@@ -47,4 +47,15 @@ public class PrivacyLogHelperTests
         Assert.StartsWith("ref:", value);
         Assert.DoesNotContain("123456", value, StringComparison.OrdinalIgnoreCase);
     }
+
+    [Fact]
+    public void SanitizeForLog_RemovesRecordSeparatorsAndLimitsLength()
+    {
+        var value = PrivacyLogHelper.SanitizeForLog("first\r\nsecond\t" + new string('x', 300));
+
+        Assert.DoesNotContain('\r', value);
+        Assert.DoesNotContain('\n', value);
+        Assert.DoesNotContain('\t', value);
+        Assert.Equal(256, value.Length);
+    }
 }

@@ -99,7 +99,7 @@ namespace Integracao.ControlID.PoC.Controllers
                 _logger.LogWarning(
                     "Rejected push queue request for device {DeviceRef} and type {CommandType} because the model state is invalid.",
                     PrivacyLogHelper.PseudonymizeIdentifier(model.DeviceId),
-                    model.CommandType);
+                    PrivacyLogHelper.SanitizeForLog(model.CommandType));
 
                 return View(nameof(Index), await BuildIndexViewModelAsync(model, "Revise os dados do comando antes de enfileirar."));
             }
@@ -119,7 +119,7 @@ namespace Integracao.ControlID.PoC.Controllers
                     ex,
                     "Failed to queue push command for device {DeviceRef}. Type {CommandType}.",
                     PrivacyLogHelper.PseudonymizeIdentifier(model.DeviceId),
-                    model.CommandType);
+                    PrivacyLogHelper.SanitizeForLog(model.CommandType));
 
                 TempData["StatusMessage"] = "Nao foi possivel enfileirar o comando push.";
                 TempData["StatusType"] = "danger";
@@ -240,6 +240,7 @@ namespace Integracao.ControlID.PoC.Controllers
         /// <returns>OK quando o resultado foi persistido; erro 500 quando a persistência falha.</returns>
         [HttpPost("/result")]
         [AllowAnonymous]
+        [IgnoreAntiforgeryToken]
         [EnableRateLimiting("CallbackIngress")]
         public async Task<IActionResult> Result([FromQuery(Name = "command_id")] Guid? commandId)
         {
@@ -252,9 +253,9 @@ namespace Integracao.ControlID.PoC.Controllers
             {
                 _logger.LogWarning(
                     "Rejected push result body for {Path}. Status {StatusCode}. Reason: {Reason}",
-                    Request.Path,
+                    PrivacyLogHelper.SanitizeForLog(Request.Path.Value),
                     bodyResult.StatusCode,
-                    bodyResult.Message);
+                    PrivacyLogHelper.SanitizeForLog(bodyResult.Message));
 
                 return StatusCode(bodyResult.StatusCode, new { error = bodyResult.Message });
             }
@@ -296,7 +297,7 @@ namespace Integracao.ControlID.PoC.Controllers
                     "Push result stored for command {CommandId}. Device {DeviceRef}. Status {Status}. BodyBytes {BodyBytes}.",
                     command.CommandId,
                     PrivacyLogHelper.PseudonymizeIdentifier(command.DeviceId),
-                    command.Status,
+                    PrivacyLogHelper.SanitizeForLog(command.Status),
                     Encoding.UTF8.GetByteCount(body));
 
                 return Ok();
@@ -328,9 +329,9 @@ namespace Integracao.ControlID.PoC.Controllers
             _logger.LogWarning(
                 OperationalEventIds.CallbackRejected,
                 "Blocked push ingress request for {Path}. Status {StatusCode}. Reason: {Reason}",
-                Request.Path,
+                PrivacyLogHelper.SanitizeForLog(Request.Path.Value),
                 securityResult.StatusCode,
-                securityResult.Message);
+                PrivacyLogHelper.SanitizeForLog(securityResult.Message));
 
             return StatusCode(securityResult.StatusCode, new { error = securityResult.Message });
         }
@@ -350,9 +351,9 @@ namespace Integracao.ControlID.PoC.Controllers
             _logger.LogWarning(
                 OperationalEventIds.CallbackRejected,
                 "Blocked push ingress signature for {Path}. Status {StatusCode}. Reason: {Reason}",
-                Request.Path,
+                PrivacyLogHelper.SanitizeForLog(Request.Path.Value),
                 signatureResult.StatusCode,
-                signatureResult.Message);
+                PrivacyLogHelper.SanitizeForLog(signatureResult.Message));
 
             return StatusCode(signatureResult.StatusCode, new { error = signatureResult.Message });
         }

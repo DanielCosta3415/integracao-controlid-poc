@@ -1,6 +1,6 @@
 # AGENTS.md
 
-> **Política** · Público: agentes de código e mantenedores · Responsável: Engenharia · Última validação: 2026-08-12.
+> **Política** · Público: agentes de código e mantenedores · Responsável: Engenharia · Última validação: 2026-08-13.
 
 Regras permanentes para Codex e outros agentes de código neste repositório.
 
@@ -26,7 +26,8 @@ Trate o projeto como uma PoC operacional com pontos sensíveis de segurança, da
 
 ## Estrutura principal
 
-- `Program.cs`: composição da aplicação, DI, middlewares, SQLite e validações de runtime.
+- `Program.cs`: composição da aplicação, DI, middlewares, SQLite e rotas de infraestrutura.
+- `Services/Security/RuntimeSecurityValidator.cs`: invariantes de segurança obrigatórias fora de `Development`.
 - `Controllers/`: fluxos MVC, endpoints oficiais auxiliares, callbacks e push.
 - `Services/`: integrações Control iD, segurança, repositórios, navegação, factories e casos de uso.
 - `Data/`: `IntegracaoControlIDContext`.
@@ -94,6 +95,7 @@ powershell -ExecutionPolicy Bypass -File .\tools\backup-sqlite.ps1
 powershell -ExecutionPolicy Bypass -File .\tools\backup-sqlite-operational.ps1 -RunRestoreSmoke
 powershell -ExecutionPolicy Bypass -File .\tools\restore-smoke-sqlite.ps1
 powershell -ExecutionPolicy Bypass -File .\tools\harden-local-state.ps1
+powershell -ExecutionPolicy Bypass -File .\tools\protect-sensitive-sqlite-data.ps1 -CertificatePath <arquivo-pfx> -CertificatePasswordFile <arquivo-senha> -ConfirmProtection
 ```
 
 ### Compilação, análise estática, formatação, verificação de tipos, testes e auditoria
@@ -120,6 +122,7 @@ powershell -ExecutionPolicy Bypass -File .\tools\contract-controlid-stub.ps1
 powershell -ExecutionPolicy Bypass -File .\tools\maintainability-check.ps1
 powershell -ExecutionPolicy Bypass -File .\tools\performance-baseline.ps1 -FailOnBudget
 powershell -ExecutionPolicy Bypass -File .\tools\external-security-scans.ps1 -InventoryOnly
+powershell -ExecutionPolicy Bypass -File .\tools\audit-github-security.ps1
 powershell -ExecutionPolicy Bypass -File .\tools\test-readiness-gates.ps1 -RunCoverage
 powershell -ExecutionPolicy Bypass -File .\tools\test-readiness-gates.ps1 -RunContainerBuild
 powershell -ExecutionPolicy Bypass -File .\tools\test-readiness-gates.ps1 -RunObservabilityOnline -RequireObservabilityMetrics
@@ -193,6 +196,9 @@ Notas:
 ### Banco de dados
 
 - O SQLite local é o estado de execução. Arquivos `integracao_controlid.db*` não devem ser versionados.
+- Novas gravações em colunas sensíveis usam proteção de dados por finalidade; preserve o chaveiro junto do banco em backup, restauração e reversão.
+- Em `Development`, o chaveiro padrão fica em `artifacts/runtime/data-protection-keys`; não o apague se o banco local precisar continuar legível.
+- A conversão de valores legados em texto simples exige backup, ensaio de restauração e `tools/protect-sensitive-sqlite-data.ps1 -ConfirmProtection`.
 - `Program.cs` aplica `Database.Migrate()` quando `Database:ApplyMigrationsOnStartup=true` (por padrão em `Development`); iniciar a aplicação nessa condição altera o estado local.
 - Mudanças de schema exigem documentação e testes. Migrações destrutivas exigem confirmação humana.
 - Consulte [docs/dados/data-model-and-recovery.md](docs/dados/data-model-and-recovery.md) antes de tocar tabelas, índices, migrações, cópia de segurança, restauração ou retenção.
@@ -202,7 +208,8 @@ Notas:
 
 - Preserve a separação entre conta local da PoC e sessão oficial do equipamento;
   a matriz atual de papéis está em [docs/seguranca-privacidade/local-account-administration.md](docs/seguranca-privacidade/local-account-administration.md).
-- Fora de `Development`, `AllowedHosts` não pode ser `*`, `OpenApi:Enabled` deve ser `false`, `CallbackSecurity:RequireSharedKey` e `CallbackSecurity:RequireSignedRequests` devem ser `true`, `SharedKey` deve existir e `ControlIDApi:RequireAllowedDeviceHosts` deve listar hosts permitidos.
+- A invocação manual do catálogo oficial é exclusiva de administrador e deve usar a sessão mantida no servidor; nunca devolva ou aceite o token pelo HTML.
+- Fora de `Development`, `AllowedHosts` não pode ser `*`, `OpenApi:Enabled` deve ser `false`, HTTPS deve ser obrigatório, `CallbackSecurity:RequireSharedKey` e `CallbackSecurity:RequireSignedRequests` devem ser `true`, `SharedKey` deve existir e `ControlIDApi` deve exigir HTTPS e listar hosts permitidos.
 - Preserve validação de callbacks, push e `user_get_image.fcgi` via `CallbackSecurityEvaluator` e `CallbackSignatureValidator`.
 - Não enfraqueça headers de segurança, validação antiforgery ou sanitização sem justificativa forte.
 
@@ -250,8 +257,10 @@ Notas:
 
 - Dockerfile/Compose existem para execução reproduzível e validação de container; mantenha usuário não root, porta 8080, volumes `/app/data` e `/app/Logs`, e healthcheck em `/health/ready`.
 - Fora de `Development`, preserve `DataProtection:KeyPath` em armazenamento
-  persistente; em contêiner, `/app/data/data-protection-keys` deve acompanhar o
-  SQLite nos procedimentos de backup, restauração e rollback.
+  persistente e protegido por certificado PKCS#12; em contêiner,
+  `/app/data/data-protection-keys` deve acompanhar o SQLite nos procedimentos de
+  backup, restauração e rollback.
+- Fora de `Development`, ateste criptografia do volume que contém SQLite, logs e chaveiro; proteção de colunas não substitui criptografia integral do armazenamento.
 - Não versione `ops.local.json`; ele pode conter nomes, canais privados, local de evidências e detalhes operacionais.
 - Não crie implantação automática, DNS real ou provedor de nuvem sem pedido explícito.
 - Não reduza retenção, registros de segurança ou redundância operacional apenas por custo; documente a contrapartida em [docs/operacao/finops-capacity.md](docs/operacao/finops-capacity.md).
@@ -288,6 +297,8 @@ Notas:
 ### CI/CD e liberação
 
 - A CI deve permanecer capaz de executar restauração bloqueada, compilação, teste, verificação de formatação e auditoria.
+- Referencie GitHub Actions por SHA completo e comentário de versão; atualizações devem passar pelos mesmos gates locais.
+- Preserve o CodeQL gerenciado pelo GitHub com conjunto estendido e os controles remotos de alertas, varredura de segredos e proteção contra envio de segredos; valide-os com `tools/audit-github-security.ps1`.
 - Mudanças em `.github/workflows/ci.yml` devem manter [docs/qualidade/ci-cd-quality-gates.md](docs/qualidade/ci-cd-quality-gates.md) e os testes de governança de CI sincronizados.
 - A liberação local mínima exige compilação limpa, testes aprovados, verificação de formatação limpa, auditoria sem vulnerabilidades conhecidas e riscos residuais documentados.
 - A liberação operacional real exige `tools/test-readiness-gates.ps1 -ReleaseGate`, `ops.local.json` preenchido, cópia externa validada, RTO/RPO aprovado, FinOps/capacidade sem avisos, DPO/jurídico quando aplicável, analisadores externos e contingência do equipamento testada.

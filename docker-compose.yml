@@ -14,9 +14,17 @@ services:
       Host__ShutdownTimeoutSeconds: "${Host__ShutdownTimeoutSeconds:-30}"
       DataProtection__ApplicationName: "${DataProtection__ApplicationName:-Integracao.ControlID.PoC}"
       DataProtection__KeyPath: "${DataProtection__KeyPath:-/app/data/data-protection-keys}"
+      DataProtection__CertificatePath: "/run/secrets/data-protection-certificate"
+      DataProtection__CertificatePasswordFile: "/run/secrets/data-protection-certificate-password"
       ConnectionStrings__DefaultConnection: "${ConnectionStrings__DefaultConnection:-Data Source=/app/data/integracao_controlid.db}"
       Database__ApplyMigrationsOnStartup: "${Database__ApplyMigrationsOnStartup:-false}"
       Database__ExitAfterMigrations: "${Database__ExitAfterMigrations:-false}"
+      Database__Encryption__RequireProtectedSensitiveColumns: "true"
+      Database__Encryption__ProtectLegacyDataOnStartup: "false"
+      Database__Encryption__RequireEncryptedVolume: "true"
+      Database__Encryption__EncryptedVolumeAttested: "${Database__Encryption__EncryptedVolumeAttested:?attest encrypted storage in .env}"
+      Security__RequireHttps: "true"
+      Security__HttpsPort: "${Security__HttpsPort:-443}"
       ForwardedHeaders__Enabled: "${ForwardedHeaders__Enabled:-false}"
       ForwardedHeaders__ForwardLimit: "${ForwardedHeaders__ForwardLimit:-1}"
       ForwardedHeaders__KnownProxies__0: "${ForwardedHeaders__KnownProxies__0:-}"
@@ -32,6 +40,7 @@ services:
       ControlIDApi__ConnectionTimeoutSeconds: "${ControlIDApi__ConnectionTimeoutSeconds:-10}"
       ControlIDApi__MaxResponseBodyBytes: "${ControlIDApi__MaxResponseBodyBytes:-16777216}"
       ControlIDApi__RequireAllowedDeviceHosts: "true"
+      ControlIDApi__RequireHttpsDeviceUrls: "true"
       ControlIDApi__AllowedDeviceHosts__0: "${ControlIDApi__AllowedDeviceHosts__0:?set ControlIDApi__AllowedDeviceHosts__0 in .env}"
       ControlIDApi__CircuitBreaker__Enabled: "${ControlIDApi__CircuitBreaker__Enabled:-true}"
       ControlIDApi__CircuitBreaker__FailureThreshold: "${ControlIDApi__CircuitBreaker__FailureThreshold:-5}"
@@ -46,6 +55,9 @@ services:
     volumes:
       - controlid-data:/app/data
       - controlid-logs:/app/Logs
+    secrets:
+      - data-protection-certificate
+      - data-protection-certificate-password
     healthcheck:
       test: [ "CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/health/ready" ]
       interval: 30s
@@ -56,3 +68,9 @@ services:
 volumes:
   controlid-data:
   controlid-logs:
+
+secrets:
+  data-protection-certificate:
+    file: "${DATA_PROTECTION_CERTIFICATE_FILE:?set DATA_PROTECTION_CERTIFICATE_FILE in .env}"
+  data-protection-certificate-password:
+    file: "${DATA_PROTECTION_CERTIFICATE_PASSWORD_FILE:?set DATA_PROTECTION_CERTIFICATE_PASSWORD_FILE in .env}"

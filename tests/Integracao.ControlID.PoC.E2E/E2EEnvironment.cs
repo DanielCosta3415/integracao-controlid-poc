@@ -47,6 +47,7 @@ internal sealed class E2EEnvironment : IAsyncDisposable
                 ["ASPNETCORE_ENVIRONMENT"] = "Development",
                 ["ASPNETCORE_URLS"] = appUrl.ToString().TrimEnd('/'),
                 ["ConnectionStrings__DefaultConnection"] = $"Data Source={Path.Combine(runtimeDirectory, "e2e.db")}",
+                ["DataProtection__KeyPath"] = Path.Combine(runtimeDirectory, "data-protection-keys"),
                 ["Database__ApplyMigrationsOnStartup"] = "true",
                 ["Session__CookieSecure"] = "SameAsRequest",
                 ["CallbackSecurity__RequireSharedKey"] = "false",

@@ -1,4 +1,5 @@
 using Integracao.ControlID.PoC.Data;
+using Integracao.ControlID.PoC.Services.Database;
 using Microsoft.EntityFrameworkCore;
 
 namespace Integracao.ControlID.PoC.Tests.TestSupport;
@@ -6,6 +7,7 @@ namespace Integracao.ControlID.PoC.Tests.TestSupport;
 public sealed class FileSqliteTestDatabase : IDisposable
 {
     private readonly string _directoryPath;
+    private readonly SensitiveDataProtector _sensitiveDataProtector = TestDataProtection.CreateSensitiveDataProtector();
 
     public FileSqliteTestDatabase()
     {
@@ -25,7 +27,7 @@ public sealed class FileSqliteTestDatabase : IDisposable
             .UseSqlite($"Data Source={DatabasePath}")
             .Options;
 
-        return new IntegracaoControlIDContext(options);
+        return new IntegracaoControlIDContext(options, _sensitiveDataProtector);
     }
 
     public void Dispose()

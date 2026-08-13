@@ -23,10 +23,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v6
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           global-json-file: global.json
           cache: true
@@ -152,7 +152,7 @@ jobs:
 
       - name: Upload CI diagnostic artifacts
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ci-diagnostics
           if-no-files-found: ignore
@@ -175,13 +175,22 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Prepare Docker Compose secret placeholders
+        shell: bash
+        run: |
+          printf '%s' 'not-a-runtime-certificate' > "$RUNNER_TEMP/data-protection.pfx"
+          printf '%s' 'not-a-runtime-password' > "$RUNNER_TEMP/data-protection.password"
 
       - name: Docker Compose config
         env:
           AllowedHosts: poc.example.internal
           ControlIDApi__AllowedDeviceHosts__0: controlid-device.local
           CallbackSecurity__SharedKey: placeholder-shared-key-32-characters-minimum
+          DATA_PROTECTION_CERTIFICATE_FILE: ${{ runner.temp }}/data-protection.pfx
+          DATA_PROTECTION_CERTIFICATE_PASSWORD_FILE: ${{ runner.temp }}/data-protection.password
+          Database__Encryption__EncryptedVolumeAttested: "true"
         run: docker compose config
 
       - name: Docker build

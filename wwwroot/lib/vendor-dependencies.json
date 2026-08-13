@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "lastReviewed": "2026-08-03",
+  "lastReviewed": "2026-08-13",
   "allowedLicenses": [
     "MIT",
     "Apache-2.0"
@@ -41,7 +41,7 @@
     {
       "id": "jquery-validation",
       "name": "jQuery Validation",
-      "version": "1.20.0",
+      "version": "1.22.1",
       "minimumSafeVersion": "1.20.0",
       "license": "MIT",
       "supplier": "jQuery Validation contributors",
@@ -51,8 +51,8 @@
       "versionFile": "wwwroot/lib/jquery-validation/dist/jquery.validate.js",
       "versionPattern": "jQuery Validation Plugin v(?<version>\\d+\\.\\d+\\.\\d+)",
       "fileCount": 5,
-      "directorySha256": "8b4ba2d61c96068db30ed8ec0561acc0392d296539daf74c1d1f53b3c8efebf7",
-      "securityNotes": "Minimum safe version covers GHSA-rrj2-ph5q-jxw2 / CVE-2025-3573."
+      "directorySha256": "81dd90703d664962e2bd84937a817df129902d2a6e2ef9201d75ae57e0a7e3b2",
+      "securityNotes": "Version 1.22.1 is the reviewed upstream release; minimum safe version covers GHSA-rrj2-ph5q-jxw2 / CVE-2025-3573."
     },
     {
       "id": "jquery-validation-unobtrusive",

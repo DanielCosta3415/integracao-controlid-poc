@@ -200,7 +200,7 @@ namespace Integracao.ControlID.PoC.Controllers
                     TempData["StatusType"] = "danger";
                     _logger.LogWarning(
                         "Falha ao conectar no dispositivo Control iD em {DeviceRef}. Status: {StatusCode}",
-                        PrivacyLogHelper.PseudonymizeEndpoint(baseUrl),
+                        PrivacyLogHelper.SanitizeForLog(PrivacyLogHelper.PseudonymizeEndpoint(baseUrl)),
                         result.StatusCode);
                     return RedirectToLocal(connection.ReturnUrl);
                 }
@@ -211,7 +211,7 @@ namespace Integracao.ControlID.PoC.Controllers
                     TempData["StatusType"] = "warning";
                     _logger.LogWarning(
                         "Resposta inesperada ou invalida ao conectar no equipamento {DeviceRef}. Status: {StatusCode}. ResponseLength: {ResponseLength}.",
-                        PrivacyLogHelper.PseudonymizeEndpoint(baseUrl),
+                        PrivacyLogHelper.SanitizeForLog(PrivacyLogHelper.PseudonymizeEndpoint(baseUrl)),
                         result.StatusCode,
                         result.ResponseBody?.Length ?? 0);
                     return RedirectToLocal(connection.ReturnUrl);
@@ -257,19 +257,19 @@ namespace Integracao.ControlID.PoC.Controllers
             {
                 TempData["StatusMessage"] = SecurityTextHelper.BuildSafeUserMessage("Falha de rede ao tentar conectar ao equipamento", ex);
                 TempData["StatusType"] = "danger";
-                _logger.LogError(ex, "Erro de rede ao conectar no dispositivo Control iD em {DeviceRef}", PrivacyLogHelper.PseudonymizeEndpoint(baseUrl));
+                _logger.LogError(ex, "Erro de rede ao conectar no dispositivo Control iD em {DeviceRef}", PrivacyLogHelper.SanitizeForLog(PrivacyLogHelper.PseudonymizeEndpoint(baseUrl)));
             }
             catch (TaskCanceledException)
             {
                 TempData["StatusMessage"] = "Tempo de resposta excedido ao tentar conectar ao equipamento.";
                 TempData["StatusType"] = "danger";
-                _logger.LogWarning("Timeout ao conectar no dispositivo Control iD em {DeviceRef}", PrivacyLogHelper.PseudonymizeEndpoint(baseUrl));
+                _logger.LogWarning("Timeout ao conectar no dispositivo Control iD em {DeviceRef}", PrivacyLogHelper.SanitizeForLog(PrivacyLogHelper.PseudonymizeEndpoint(baseUrl)));
             }
             catch (Exception ex)
             {
                 TempData["StatusMessage"] = SecurityTextHelper.BuildSafeUserMessage("Erro ao conectar ao equipamento", ex);
                 TempData["StatusType"] = "danger";
-                _logger.LogError(ex, "Erro inesperado ao conectar no dispositivo Control iD em {DeviceRef}", PrivacyLogHelper.PseudonymizeEndpoint(baseUrl));
+                _logger.LogError(ex, "Erro inesperado ao conectar no dispositivo Control iD em {DeviceRef}", PrivacyLogHelper.SanitizeForLog(PrivacyLogHelper.PseudonymizeEndpoint(baseUrl)));
             }
 
             return RedirectToLocal(connection.ReturnUrl);
@@ -312,7 +312,7 @@ namespace Integracao.ControlID.PoC.Controllers
             {
                 TempData["StatusMessage"] = SecurityTextHelper.BuildSafeUserMessage("Falha ao testar comunicação com o equipamento", ex);
                 TempData["StatusType"] = "danger";
-                _logger.LogError(ex, "Erro ao testar comunicação com o equipamento {DeviceRef}.", PrivacyLogHelper.PseudonymizeEndpoint(baseUrl));
+                _logger.LogError(ex, "Erro ao testar comunicação com o equipamento {DeviceRef}.", PrivacyLogHelper.SanitizeForLog(PrivacyLogHelper.PseudonymizeEndpoint(baseUrl)));
             }
 
             return RedirectToLocal(connection.ReturnUrl);

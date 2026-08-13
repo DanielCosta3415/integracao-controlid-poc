@@ -35,6 +35,7 @@ using Serilog;
 using System;
 using System.IO.Compression;
 using System.Net;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -52,6 +53,27 @@ if (!string.IsNullOrWhiteSpace(dataProtectionKeyPath))
     Directory.CreateDirectory(resolvedKeyPath);
     dataProtection.PersistKeysToFileSystem(new DirectoryInfo(resolvedKeyPath));
 }
+
+var dataProtectionCertificatePath = builder.Configuration["DataProtection:CertificatePath"];
+if (!string.IsNullOrWhiteSpace(dataProtectionCertificatePath))
+{
+    var resolvedCertificatePath = Path.GetFullPath(dataProtectionCertificatePath, builder.Environment.ContentRootPath);
+    var certificatePassphrase = builder.Configuration["DataProtection:CertificatePassword"] ??
+                              RuntimeSecurityValidator.ReadSecretFile(
+                                    builder.Configuration["DataProtection:CertificatePasswordFile"],
+                                    builder.Environment.ContentRootPath);
+    var certificate = X509CertificateLoader.LoadPkcs12FromFile(
+        resolvedCertificatePath,
+        certificatePassphrase,
+        X509KeyStorageFlags.EphemeralKeySet);
+    dataProtection.ProtectKeysWithCertificate(certificate);
+}
+
+builder.Services.AddHttpsRedirection(options =>
+{
+    options.HttpsPort = Math.Clamp(builder.Configuration.GetValue<int?>("Security:HttpsPort") ?? 443, 1, 65535);
+    options.RedirectStatusCode = StatusCodes.Status308PermanentRedirect;
+});
 
 builder.Services.Configure<HostOptions>(options =>
 {
@@ -84,6 +106,9 @@ if (forwardedHeadersEnabled)
 
 // Configura contexto do banco de dados SQLite.
 builder.Services.Configure<SqliteRuntimeOptions>(builder.Configuration.GetSection("Database:Sqlite"));
+builder.Services.Configure<SensitiveDataProtectionOptions>(builder.Configuration.GetSection("Database:Encryption"));
+builder.Services.AddSingleton<SensitiveDataProtector>();
+builder.Services.AddScoped<SensitiveDataProtectionStore>();
 builder.Services.AddSingleton<SqliteConnectionPragmaInterceptor>();
 builder.Services.AddScoped<SqliteRuntimePolicy>();
 builder.Services.AddDbContext<IntegracaoControlIDContext>((serviceProvider, options) =>
@@ -116,7 +141,8 @@ builder.Services.AddHttpContextAccessor();
 builder.Services
     .AddHealthChecks()
     .AddCheck("self", () => Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult.Healthy(), tags: ["live"])
-    .AddCheck<SqliteReadinessHealthCheck>("sqlite-runtime-state", tags: ["ready"]);
+    .AddCheck<SqliteReadinessHealthCheck>("sqlite-runtime-state", tags: ["ready"])
+    .AddCheck<SensitiveDataProtectionHealthCheck>("sensitive-data-protection", tags: ["ready"]);
 builder.Services.AddResponseCompression(options =>
 {
     options.EnableForHttps = true;
@@ -286,7 +312,7 @@ builder.Services.AddLogging(logging =>
 
 var app = builder.Build();
 
-ValidateRuntimeSecurity(app);
+RuntimeSecurityValidator.Validate(app);
 
 if (!app.Environment.IsDevelopment())
 {
@@ -296,6 +322,13 @@ if (!app.Environment.IsDevelopment())
 if (forwardedHeadersEnabled)
 {
     app.UseForwardedHeaders();
+}
+
+if (app.Configuration.GetValue<bool>("Security:RequireHttps"))
+{
+    app.UseWhen(
+        context => !context.Request.Path.StartsWithSegments("/health", StringComparison.OrdinalIgnoreCase),
+        branch => branch.UseHttpsRedirection());
 }
 
 // Middlewares customizados (ordem: correlacao -> tratamento de erro -> logging de request -> sessao -> session API)
@@ -360,6 +393,30 @@ using (var sqlitePolicyScope = app.Services.CreateScope())
     Log.Information("SQLite runtime policy applied. JournalMode {JournalMode}.", journalMode);
 }
 
+using (var protectionScope = app.Services.CreateScope())
+{
+    var protectionOptions = protectionScope.ServiceProvider
+        .GetRequiredService<IOptions<SensitiveDataProtectionOptions>>()
+        .Value;
+    var protectionStore = protectionScope.ServiceProvider.GetRequiredService<SensitiveDataProtectionStore>();
+
+    if (protectionOptions.ProtectLegacyDataOnStartup)
+    {
+        var protectedCount = await protectionStore.ProtectLegacyValuesAsync();
+        Log.Information("Sensitive data protection completed for {ProtectedValueCount} legacy values.", protectedCount);
+    }
+
+    if (protectionOptions.RequireProtectedSensitiveColumns)
+    {
+        var unprotectedCount = await protectionStore.CountUnprotectedValuesAsync();
+        if (unprotectedCount > 0)
+        {
+            throw new InvalidOperationException(
+                "Sensitive database columns contain legacy plaintext values. Run the explicit data-protection procedure before serving traffic.");
+        }
+    }
+}
+
 if (exitAfterMigrations)
 {
     Log.Information("Database migration-only mode completed successfully.");
@@ -389,7 +446,7 @@ var healthCheckResponseWriter = HealthCheckResponseWriter.WriteAsync;
 app.MapHealthChecks("/health/live", new HealthCheckOptions
 {
     Predicate = registration => registration.Tags.Contains("live"),
-    ResponseWriter = healthCheckResponseWriter
+    ResponseWriter = HealthCheckResponseWriter.WriteMinimalAsync
 })
 .AllowAnonymous()
 .DisableRateLimiting();
@@ -397,10 +454,17 @@ app.MapHealthChecks("/health/live", new HealthCheckOptions
 app.MapHealthChecks("/health/ready", new HealthCheckOptions
 {
     Predicate = registration => registration.Tags.Contains("ready"),
-    ResponseWriter = healthCheckResponseWriter
+    ResponseWriter = HealthCheckResponseWriter.WriteMinimalAsync
 })
 .AllowAnonymous()
 .DisableRateLimiting();
+
+app.MapHealthChecks("/health/details", new HealthCheckOptions
+{
+    Predicate = _ => true,
+    ResponseWriter = healthCheckResponseWriter
+})
+.RequireAuthorization("AdministratorOnly");
 
 if (app.Configuration.GetValue<bool?>("Observability:Metrics:Enabled") ?? true)
 {
@@ -423,120 +487,6 @@ app.MapControllerRoute(
 app.MapRazorPages();
 
 app.Run();
-
-static void ValidateRuntimeSecurity(WebApplication app)
-{
-    if (app.Environment.IsDevelopment())
-        return;
-
-    var allowedHosts = app.Configuration["AllowedHosts"];
-    var configuredHosts = (allowedHosts ?? string.Empty)
-        .Split([';', ','], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-
-    if (configuredHosts.Length == 0 || configuredHosts.Any(static host => host == "*"))
-    {
-        throw new InvalidOperationException(
-            "AllowedHosts must be explicitly configured for non-Development environments.");
-    }
-
-    if (configuredHosts.Any(IsPlaceholderValue))
-    {
-        throw new InvalidOperationException(
-            "AllowedHosts must not contain placeholder values for non-Development environments.");
-    }
-
-    var dataProtectionKeyPath = app.Configuration["DataProtection:KeyPath"];
-    if (string.IsNullOrWhiteSpace(dataProtectionKeyPath) || IsPlaceholderValue(dataProtectionKeyPath))
-    {
-        throw new InvalidOperationException(
-            "DataProtection:KeyPath must point to persistent storage for non-Development environments.");
-    }
-
-    var callbackSecurityOptions = app.Services.GetRequiredService<IOptions<CallbackSecurityOptions>>().Value;
-    if (!callbackSecurityOptions.RequireSharedKey)
-    {
-        throw new InvalidOperationException(
-            "CallbackSecurity:RequireSharedKey must be true for non-Development environments.");
-    }
-
-    if (string.IsNullOrWhiteSpace(callbackSecurityOptions.SharedKey))
-    {
-        throw new InvalidOperationException(
-            "CallbackSecurity:SharedKey must be configured for non-Development environments.");
-    }
-
-    if (callbackSecurityOptions.SharedKey.Trim().Length < 32 || IsPlaceholderValue(callbackSecurityOptions.SharedKey))
-    {
-        throw new InvalidOperationException(
-            "CallbackSecurity:SharedKey must be a non-placeholder value with at least 32 characters for non-Development environments.");
-    }
-
-    if (!callbackSecurityOptions.RequireSignedRequests)
-    {
-        throw new InvalidOperationException(
-            "CallbackSecurity:RequireSignedRequests must be true for non-Development environments.");
-    }
-
-    if (app.Configuration.GetValue<bool>("OpenApi:Enabled"))
-    {
-        throw new InvalidOperationException(
-            "OpenApi:Enabled must be false for non-Development environments.");
-    }
-
-    if (app.Configuration.GetValue<bool>("Observability:Metrics:AllowAnonymous"))
-    {
-        throw new InvalidOperationException(
-            "Observability:Metrics:AllowAnonymous must be false for non-Development environments.");
-    }
-
-    if (app.Configuration.GetValue<bool>("ForwardedHeaders:Enabled"))
-    {
-        var knownProxies = app.Configuration
-            .GetSection("ForwardedHeaders:KnownProxies")
-            .Get<string[]>() ?? [];
-
-        if (knownProxies.Length == 0 || knownProxies.Any(IsPlaceholderValue))
-        {
-            throw new InvalidOperationException(
-                "ForwardedHeaders:KnownProxies must list trusted reverse proxy IPs when ForwardedHeaders:Enabled is true outside Development.");
-        }
-    }
-
-    var egressOptions = app.Services.GetRequiredService<IOptions<ControlIdEgressOptions>>().Value;
-    var allowedDeviceHosts = egressOptions.AllowedDeviceHosts
-        .Where(static host => !string.IsNullOrWhiteSpace(host))
-        .Select(static host => host.Trim())
-        .ToArray();
-
-    if (!egressOptions.RequireAllowedDeviceHosts ||
-        allowedDeviceHosts.Length == 0 ||
-        allowedDeviceHosts.Any(static host => host == "*"))
-    {
-        throw new InvalidOperationException(
-            "ControlIDApi:RequireAllowedDeviceHosts must be true and ControlIDApi:AllowedDeviceHosts must list allowed device hosts for non-Development environments.");
-    }
-
-    if (allowedDeviceHosts.Any(IsPlaceholderValue))
-    {
-        throw new InvalidOperationException(
-            "ControlIDApi:AllowedDeviceHosts must not contain placeholder values for non-Development environments.");
-    }
-}
-
-static bool IsPlaceholderValue(string? value)
-{
-    if (string.IsNullOrWhiteSpace(value))
-        return true;
-
-    var normalized = value.Trim();
-    return normalized.Contains('<', StringComparison.Ordinal) ||
-           normalized.Contains('>', StringComparison.Ordinal) ||
-           normalized.Contains("placeholder", StringComparison.OrdinalIgnoreCase) ||
-           normalized.Contains("changeme", StringComparison.OrdinalIgnoreCase) ||
-           normalized.Contains("replace", StringComparison.OrdinalIgnoreCase) ||
-           normalized.Contains("example", StringComparison.OrdinalIgnoreCase) ||
-           normalized.Contains("localhost", StringComparison.OrdinalIgnoreCase);
-}
 
 public partial class Program
 {

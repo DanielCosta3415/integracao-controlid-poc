@@ -56,6 +56,7 @@ namespace Integracao.ControlID.PoC.Controllers
         [HttpPost]
         [Route("Push/Receive")]
         [AllowAnonymous]
+        [IgnoreAntiforgeryToken]
         [EnableRateLimiting("CallbackIngress")]
         public async Task<IActionResult> Receive()
         {
@@ -132,9 +133,9 @@ namespace Integracao.ControlID.PoC.Controllers
             _logger.LogWarning(
                 OperationalEventIds.CallbackRejected,
                 "Blocked legacy push ingress request for {Path}. Status {StatusCode}. Reason: {Reason}",
-                Request.Path,
+                PrivacyLogHelper.SanitizeForLog(Request.Path.Value),
                 securityResult.StatusCode,
-                securityResult.Message);
+                PrivacyLogHelper.SanitizeForLog(securityResult.Message));
 
             return StatusCode(securityResult.StatusCode, new { error = securityResult.Message });
         }
@@ -154,9 +155,9 @@ namespace Integracao.ControlID.PoC.Controllers
             _logger.LogWarning(
                 OperationalEventIds.CallbackRejected,
                 "Blocked legacy push signature for {Path}. Status {StatusCode}. Reason: {Reason}",
-                Request.Path,
+                PrivacyLogHelper.SanitizeForLog(Request.Path.Value),
                 signatureResult.StatusCode,
-                signatureResult.Message);
+                PrivacyLogHelper.SanitizeForLog(signatureResult.Message));
 
             return StatusCode(signatureResult.StatusCode, new { error = signatureResult.Message });
         }

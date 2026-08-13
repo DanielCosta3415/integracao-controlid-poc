@@ -1,6 +1,6 @@
 # Fortalecimento da segurança
 
-> **Referência** · Público: desenvolvimento, AppSec e operação · Responsável: Segurança/Privacidade · Última validação: 2026-08-12.
+> **Referência** · Público: desenvolvimento, AppSec e operação · Responsável: Segurança/Privacidade · Última validação: 2026-08-13.
 
 ## Controles implementados
 
@@ -14,14 +14,26 @@
   [local-account-administration.md](local-account-administration.md).
 - Hash de senha local migrado para PBKDF2-HMAC-SHA256 com suporte de leitura para hashes SHA256 legados. Hash legado válido e regravado em PBKDF2 no próximo login local.
 - Endpoints externos de callback e Push permanecem anônimos para compatibilidade com o equipamento, mas passam por validação de IP, chave compartilhada e limite de requisições, além de poderem exigir assinatura HMAC.
+- Esses ingressos máquina-a-máquina declaram `IgnoreAntiforgeryToken`: eles não
+  usam cookie de navegador, e sua autenticação correta é a chave/HMAC. Ações
+  humanas de escrita continuam exigindo antiforgery e autorização.
 - Assinatura HMAC de ingressos externos usa `X-ControlID-Signature`, `X-ControlID-Timestamp` e `X-ControlID-Nonce`, com janela de tempo e cache anti-replay limitado por `CallbackSecurity:MaxTrackedNonces`.
 - `user_get_image.fcgi` agora usa a mesma avaliação de segurança e assinatura dos ingressos externos antes de retornar foto local.
 - Egress para equipamentos pode ser limitado por allowlist em `ControlIDApi:AllowedDeviceHosts`.
-- Fora de `Development`, a aplicação exige `AllowedHosts` explícito, shared key de callback, assinatura HMAC, OpenAPI desabilitado e allowlist de equipamentos habilitada.
+- Fora de `Development`, a aplicação exige HTTPS para a interface e para o equipamento, `AllowedHosts` explícito, shared key de callback, assinatura HMAC, OpenAPI desabilitado e allowlist de equipamentos habilitada.
+- O invocador genérico oficial exige administrador e obtém a sessão exclusivamente do estado protegido no servidor; o token não integra o HTML nem é aceito por model binding.
+- Sessão, biometria, cartões, QR Codes, fotos, configurações e cargas operacionais sensíveis são protegidos por coluna antes de serem persistidos no SQLite.
+- Fora de `Development`, o chaveiro de Data Protection exige certificado PKCS#12, e o volume criptografado deve ser atestado explicitamente.
 - Cabeçalhos HTTP reforçados com CSP sem `unsafe-inline`, `Permissions-Policy`, `frame-ancestors`, `nosniff`, COOP, `Referrer-Policy` e HSTS fora de `Development`.
 - `Referrer-Policy` usa `no-referrer` para reduzir vazamento acidental de URLs internas, inclusive quando a Access API exige `session` em query string.
 - Rate limit global por usuário autenticado ou IP cobre a UI e atua junto das políticas específicas de login local e ingressos externos.
-- Logs de request incluem referências pseudonimizadas de usuário/IP e trace id; logs de push legado não gravam corpo bruto; URLs oficiais exibidas/registradas mascaram `session`, tokens e segredos em query string.
+- Logs de request incluem referências pseudonimizadas de usuário/IP e trace id;
+  valores variáveis têm CR, LF e tab neutralizados e limite de 256 caracteres;
+  logs de push legado não gravam corpo bruto; URLs oficiais exibidas/registradas
+  mascaram `session`, tokens e segredos em query string.
+- O invocador oficial aceita somente tipos de corpo catalogados; JSON usa
+  `JsonContent` tipado, e anexos multipart recebem content-type de uma lista
+  restrita de imagens ou `application/octet-stream`.
 - Mensagens públicas de erro de API não exibem corpo bruto retornado pelo equipamento.
 - Uploads administrativos validam allowlist de extensão, tamanho, content-type declarado e assinatura/conteúdo quando aplicável para PNG/JPG, MP4, WAV, PEM e OpenVPN.
 - Cópias de segurança do SQLite geradas por `tools/backup-sqlite.ps1` são protegidas por DPAPI por padrão; o teste smoke de restauração descriptografa cópias protegidas para validar a recuperação.
@@ -57,13 +69,13 @@ flowchart TB
     subgraph AppZone["Zona confiável da PoC"]
         MVC["MVC, cookie, antiforgery e RBAC"]
         Ingress["Ingressos com limite, IP, chave, HMAC e anti-replay"]
-        Egress["Saída com URL normalizada, allowlist, timeout e limites"]
+        Egress["Saída HTTPS com URL normalizada, allowlist, timeout e limites"]
         Services["Serviços de aplicação"]
         Signals["Correlação, logs e métricas minimizados"]
     end
     subgraph StateZone["Zona de estado local sensível"]
-        SQLite["SQLite"]
-        Keys["Chaves de Data Protection"]
+        SQLite["SQLite em volume criptografado e colunas protegidas"]
+        Keys["Chaves de Data Protection protegidas por certificado"]
         Files["Logs, backups e artefatos"]
     end
 
@@ -71,7 +83,7 @@ flowchart TB
     ReverseProxy --> MVC
     MVC --> Services
     Services --> Egress
-    Egress -->|"HTTP ou HTTPS em rede autorizada"| Device
+    Egress -->|"HTTPS em ambiente não local"| Device
     Device -->|"HMAC nativo"| Ingress
     Device -->|"Sem HMAC nativo"| SigningProxy
     SigningProxy -->|"Reassinado"| Ingress
@@ -97,7 +109,19 @@ Valores reais devem ser configurados por variáveis de ambiente, User Secrets ou
   "AllowedHosts": "poc.exemplo.local",
   "ControlIDApi": {
     "RequireAllowedDeviceHosts": true,
+    "RequireHttpsDeviceUrls": true,
     "AllowedDeviceHosts": [ "192.168.0.10", "controlid.exemplo.local" ]
+  },
+  "Security": {
+    "RequireHttps": true
+  },
+  "Database": {
+    "Encryption": {
+      "RequireProtectedSensitiveColumns": true,
+      "ProtectLegacyDataOnStartup": false,
+      "RequireEncryptedVolume": true,
+      "EncryptedVolumeAttested": true
+    }
   },
   "CallbackSecurity": {
     "RequireSharedKey": true,
@@ -158,6 +182,20 @@ powershell -ExecutionPolicy Bypass -File .\tools\harden-local-state.ps1
 
 Esses controles não substituem isolamento de rede e governança de acesso ao host, mas deixam o repositório com implementações reproduzíveis para assinatura, backup protegido, restore validável e restrição de arquivos locais.
 
+Para converter um banco legado, primeiro providencie certificado e arquivo de
+senha fora do repositório. O comando cria backup protegido, executa teste de
+restauração e somente depois reescreve as colunas sensíveis:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\tools\protect-sensitive-sqlite-data.ps1 `
+  -CertificatePath C:\secure\controlid-data-protection.pfx `
+  -CertificatePasswordFile C:\secure\controlid-data-protection.password `
+  -ConfirmProtection
+```
+
+Nunca remova o certificado, o chaveiro ou a senha correspondente antes de
+validar a restauração de todas as cópias que ainda precisem ser recuperadas.
+
 ## Validação com equipamento físico
 
 A validação real do hardware não deve usar credenciais versionadas. Configure as variáveis apenas no terminal local ou no cofre do ambiente:
@@ -178,6 +216,7 @@ dotnet restore .\tools\ControlIdCallbackSigningProxy\ControlIdCallbackSigningPro
 dotnet build .\tools\ControlIdCallbackSigningProxy\ControlIdCallbackSigningProxy.csproj --no-restore -v:minimal
 dotnet format .\tools\ControlIdCallbackSigningProxy\ControlIdCallbackSigningProxy.csproj --verify-no-changes --no-restore -v:minimal
 powershell -ExecutionPolicy Bypass -File .\tools\scan-secrets.ps1
+powershell -ExecutionPolicy Bypass -File .\tools\audit-github-security.ps1
 powershell -ExecutionPolicy Bypass -File .\tools\smoke-localhost.ps1 -ReportPath .\artifacts\smoke\localhost-smoke-ci.md
 ```
 
@@ -188,10 +227,10 @@ powershell -ExecutionPolicy Bypass -File .\tools\smoke-localhost.ps1 -ReportPath
 | SEC-001 | Falsificação de callback | STRIDE: falsificação | Chave compartilhada, HMAC, timestamp, nonce e IP | `CallbackSignatureValidatorTests` | Relógio, rede e equipamento reais |
 | SEC-002 | SSRF de saída | OWASP: SSRF | URL normalizada e lista de hosts permitidos | `ControlIdInputSanitizerTests` e invocador | Mudança de topologia exige revisão |
 | SEC-003 | Quebra de autorização | OWASP: controle de acesso | Cookie global e RBAC administrativo | Testes de controladores | Provedor corporativo ainda não escolhido |
-| SEC-004 | Injeção ou XSS | OWASP: injeção | Vinculação de modelos, codificação Razor e validação | Testes renderizados e de controladores | Nova carga útil requer análise contextual |
+| SEC-004 | Injeção ou XSS | OWASP: injeção | Vinculação de modelos, codificação Razor, JSON tipado e tipos de corpo permitidos | Testes renderizados, de controladores e do sanitizador | Nova carga útil requer análise contextual |
 | SEC-005 | Exposição de segredo | OWASP: falha criptográfica/configuração | Configuração externa, mascaramento e scan | `tools/scan-secrets.ps1` | Rotação e cofre dependem do ambiente |
 | SEC-006 | Negação de serviço | STRIDE: negação de serviço | Limite de requisições, corpo/resposta e circuit breaker | Testes de limite e circuit breaker | Capacidade do host precisa de linha de base |
-| SEC-007 | Vazamento em logs | STRIDE: divulgação | Pseudonimização e lista de contexto permitido | `PrivacyLogHelperTests` | Revisão humana de novos eventos |
+| SEC-007 | Vazamento ou forjamento de logs | STRIDE: divulgação/adulteração | Pseudonimização, neutralização de separadores e lista de contexto permitido | `PrivacyLogHelperTests` | Revisão humana de novos eventos |
 
 ## Rotação de segredos
 

@@ -1,6 +1,6 @@
 # Perguntas frequentes sobre a PoC e a Access API
 
-> **Referência** · Público: primeiro contato, usuários, integração e operação · Responsável: Engenharia · Última validação: 2026-08-12.
+> **Referência** · Público: primeiro contato, usuários, integração e operação · Responsável: Engenharia · Última validação: 2026-08-13.
 
 Este documento responde às dúvidas mais comuns sobre o propósito, o acesso, a
 rede e o funcionamento da PoC. As respostas distinguem quatro níveis de
@@ -253,7 +253,9 @@ sanitizada. Não existe envelope universal para todo endpoint; use
 ### 39. Onde a sessão do equipamento é armazenada?
 
 Na sessão ASP.NET sob `ControlID_SessionString`; a URL fica em
-`ControlID_DeviceAddress`. O cookie de sessão é HttpOnly e SameSite Strict.
+`ControlID_DeviceAddress`. O cookie de sessão é HttpOnly e SameSite Strict. O
+invocador técnico lê a sessão no servidor e não envia o token ao HTML; acesso a
+essa tela exige papel `Administrator`.
 
 ### 40. Quando usar o catálogo ou uma tela especializada?
 
@@ -460,6 +462,9 @@ eventos/comandos.
 
 Contas locais, entidades auxiliares, sessões históricas, eventos de Monitor,
 comandos Push, logs e outros estados descritos em [data-model-and-recovery.md](../dados/data-model-and-recovery.md).
+Campos de maior impacto recebem proteção criptográfica por coluna. Isso não cifra
+o arquivo inteiro: fora de `Development`, volume criptografado, chaveiro
+persistente e certificado PKCS#12 também são obrigatórios.
 
 ### 74. O que permanece somente no equipamento?
 
@@ -488,7 +493,10 @@ Push possuem expurgo confirmado.
 ### 78. Como fazer backup e restauração?
 
 Use `tools/backup-sqlite-operational.ps1 -RunRestoreSmoke` e valide em cópia
-temporária. Restauração real sobrescreve estado e exige aprovação humana.
+temporária. O conjunto recuperável inclui banco, chaveiro, certificado e acesso à
+senha. Restauração real sobrescreve estado e exige aprovação humana. Banco legado
+é convertido somente por `tools/protect-sensitive-sqlite-data.ps1`, após backup e
+confirmação explícita.
 
 ### 79. Como atender direitos de titulares?
 
@@ -517,7 +525,9 @@ credencial em cofre; exemplos oficiais não são recomendação de segurança.
 ### 83. HTTPS é obrigatório?
 
 Para ambiente exposto ou produção, sim. A comunicação com o equipamento também
-deve usar HTTPS quando suportado e corretamente provisionado.
+deve usar HTTPS. Fora de `Development`, a aplicação bloqueia startup sem
+`Security:RequireHttps=true` e rejeita URL HTTP do equipamento. Um terminal sem
+HTTPS precisa ficar em laboratório isolado ou atrás de gateway TLS aprovado.
 
 ### 84. O SSH do equipamento deve ficar habilitado?
 
@@ -559,7 +569,8 @@ particularidades completas do firmware.
 ### 90. Quais verificações devem ser executadas?
 
 Restauração de dependências em modo bloqueado, compilação, formatação, testes,
-documentação, segredos, cadeia de suprimentos e contrato com simulador. O conjunto está em [AGENTS.md](../../AGENTS.md) e
+documentação, segredos, CodeQL, cadeia de suprimentos e contrato com simulador. As
+GitHub Actions externas são fixadas por SHA. O conjunto está em [AGENTS.md](../../AGENTS.md) e
 [testing-strategy.md](../qualidade/testing-strategy.md).
 
 ### 91. O que exige homologação física?
@@ -569,7 +580,9 @@ relés, portas, catracas, sensores, mídia e contingência do modelo/firmware al
 
 ### 92. Quais sinais operacionais existem?
 
-`/health/live`, `/health/ready`, `/metrics`, logs Serilog, identificador de
+`/health/live` e `/health/ready` expõem somente estado agregado. Diagnóstico
+detalhado fica em `/health/details` e métricas em `/metrics`, ambos administrativos.
+Também existem logs Serilog, identificador de
 correlação, métricas de latência/erro, estado de circuit breaker e históricos de
 Monitor/Push.
 

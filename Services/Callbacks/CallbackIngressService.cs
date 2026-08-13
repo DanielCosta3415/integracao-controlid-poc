@@ -52,9 +52,9 @@ namespace Integracao.ControlID.PoC.Services.Callbacks
                 _logger.LogWarning(
                     OperationalEventIds.CallbackRejected,
                     "Blocked callback request for {Path}. Status {StatusCode}. Reason: {Reason}",
-                    httpContext.Request.Path,
+                    PrivacyLogHelper.SanitizeForLog(httpContext.Request.Path.Value),
                     securityResult.StatusCode,
-                    securityResult.Message);
+                    PrivacyLogHelper.SanitizeForLog(securityResult.Message));
 
                 return CallbackIngressResult.Rejected(securityResult.StatusCode, securityResult.Message);
             }
@@ -71,9 +71,9 @@ namespace Integracao.ControlID.PoC.Services.Callbacks
                 _logger.LogWarning(
                     OperationalEventIds.CallbackRejected,
                     "Rejected callback request body for {Path}. Status {StatusCode}. Reason: {Reason}",
-                    httpContext.Request.Path,
+                    PrivacyLogHelper.SanitizeForLog(httpContext.Request.Path.Value),
                     bodyResult.StatusCode,
-                    bodyResult.Message);
+                    PrivacyLogHelper.SanitizeForLog(bodyResult.Message));
 
                 return CallbackIngressResult.Rejected(bodyResult.StatusCode, bodyResult.Message);
             }
@@ -90,9 +90,9 @@ namespace Integracao.ControlID.PoC.Services.Callbacks
                 _logger.LogWarning(
                     OperationalEventIds.CallbackRejected,
                     "Rejected callback signature for {Path}. Status {StatusCode}. Reason: {Reason}",
-                    httpContext.Request.Path,
+                    PrivacyLogHelper.SanitizeForLog(httpContext.Request.Path.Value),
                     signatureResult.StatusCode,
-                    signatureResult.Message);
+                    PrivacyLogHelper.SanitizeForLog(signatureResult.Message));
 
                 return CallbackIngressResult.Rejected(signatureResult.StatusCode, signatureResult.Message);
             }
@@ -127,9 +127,9 @@ namespace Integracao.ControlID.PoC.Services.Callbacks
                     OperationalEventIds.CallbackPersistenceFailed,
                     ex,
                     "Failed to persist callback event for {Path}. EventFamily {EventFamily}. RequestId {RequestId}.",
-                    path,
-                    eventFamily,
-                    httpContext.TraceIdentifier);
+                    PrivacyLogHelper.SanitizeForLog(path),
+                    PrivacyLogHelper.SanitizeForLog(eventFamily),
+                    PrivacyLogHelper.SanitizeForLog(httpContext.TraceIdentifier));
 
                 return CallbackIngressResult.Rejected(
                     StatusCodes.Status500InternalServerError,
@@ -145,9 +145,9 @@ namespace Integracao.ControlID.PoC.Services.Callbacks
             _logger.LogInformation(
                 OperationalEventIds.CallbackAccepted,
                 "Accepted callback request for {Path} as event {EventId}. EventFamily {EventFamily}. Device {DeviceRef}.",
-                path,
+                PrivacyLogHelper.SanitizeForLog(path),
                 monitorEvent.EventId,
-                eventFamily,
+                PrivacyLogHelper.SanitizeForLog(eventFamily),
                 PrivacyLogHelper.PseudonymizeIdentifier(monitorEvent.DeviceId));
 
             return CallbackIngressResult.Success(monitorEvent.EventId);

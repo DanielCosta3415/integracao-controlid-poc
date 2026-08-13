@@ -11,8 +11,8 @@ public class CiQualityGateContractTests
         Assert.Contains("pull_request:", workflow, StringComparison.Ordinal);
         Assert.Contains("contents: read", workflow, StringComparison.Ordinal);
         Assert.Contains("concurrency:", workflow, StringComparison.Ordinal);
-        Assert.Contains("actions/checkout@v7", workflow, StringComparison.Ordinal);
-        Assert.Contains("actions/setup-dotnet@v6", workflow, StringComparison.Ordinal);
+        Assert.Contains("actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1", workflow, StringComparison.Ordinal);
+        Assert.Contains("actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68", workflow, StringComparison.Ordinal);
         Assert.Contains("global-json-file: global.json", workflow, StringComparison.Ordinal);
         Assert.Contains("cache-dependency-path:", workflow, StringComparison.Ordinal);
         Assert.Contains("dotnet restore .\\Integracao.ControlID.PoC.sln --locked-mode", workflow, StringComparison.Ordinal);
@@ -32,7 +32,7 @@ public class CiQualityGateContractTests
         Assert.Contains(".\\tools\\audit-supply-chain.ps1", workflow, StringComparison.Ordinal);
         Assert.Contains(".\\tools\\external-security-scans.ps1 -InventoryOnly", workflow, StringComparison.Ordinal);
         Assert.Contains("dotnet list $target package --vulnerable --include-transitive", workflow, StringComparison.Ordinal);
-        Assert.Contains("actions/upload-artifact@v7", workflow, StringComparison.Ordinal);
+        Assert.Contains("actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a", workflow, StringComparison.Ordinal);
         Assert.Contains("docker compose config", workflow, StringComparison.Ordinal);
         Assert.Contains("docker build --pull", workflow, StringComparison.Ordinal);
         Assert.DoesNotContain("deploy", workflow, StringComparison.OrdinalIgnoreCase);
@@ -66,7 +66,8 @@ public class CiQualityGateContractTests
         Assert.Contains("GitHub Actions", ciDocs, StringComparison.Ordinal);
         Assert.Contains("Critérios de qualidade obrigatórios", ciDocs, StringComparison.Ordinal);
         Assert.Contains("Reprodução local", ciDocs, StringComparison.Ordinal);
-        Assert.Contains("Proteção recomendada da ramificação", ciDocs, StringComparison.Ordinal);
+        Assert.Contains("Proteção aplicada à ramificação", ciDocs, StringComparison.Ordinal);
+        Assert.Contains("audit-github-security.ps1", ciDocs, StringComparison.Ordinal);
         Assert.Contains("A CI não executa implantação", ciDocs, StringComparison.Ordinal);
         Assert.Contains("ci-cd-quality-gates.md", qualityIndex, StringComparison.Ordinal);
         Assert.Contains("generate-source-inventory.ps1", projectMap, StringComparison.Ordinal);

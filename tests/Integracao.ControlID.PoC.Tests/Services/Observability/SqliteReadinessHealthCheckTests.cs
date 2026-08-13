@@ -16,6 +16,7 @@ public class SqliteReadinessHealthCheckTests
         database.Context.Database.EnsureDeleted();
         database.Context.Database.Migrate();
         var services = new ServiceCollection();
+        services.AddSingleton(database.SensitiveDataProtector);
         services.AddDbContext<IntegracaoControlIDContext>(options => options.UseSqlite(database.Connection));
 
         await using var provider = services.BuildServiceProvider();
@@ -31,6 +32,7 @@ public class SqliteReadinessHealthCheckTests
     {
         using var database = new SqliteTestDatabase();
         var services = new ServiceCollection();
+        services.AddSingleton(database.SensitiveDataProtector);
         services.AddDbContext<IntegracaoControlIDContext>(options => options.UseSqlite(database.Connection));
 
         await using var provider = services.BuildServiceProvider();

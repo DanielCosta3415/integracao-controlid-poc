@@ -1,6 +1,6 @@
 # Implantação, ambientes e resiliência
 
-> **Runbook** · Público: plataforma, SRE e release · Responsável: Plataforma/SRE · Última validação: 2026-08-12.
+> **Runbook** · Público: plataforma, SRE e release · Responsável: Plataforma/SRE · Última validação: 2026-08-13.
 
 Escopo: PoC ASP.NET Core 10 MVC/Razor com SQLite local e integração com equipamento
 Control iD. Este documento descreve execução reproduzível fora do ambiente local
@@ -33,6 +33,16 @@ Variáveis mínimas:
   ou caminho de volume persistente equivalente.
 - `DataProtection__KeyPath=/app/data/data-protection-keys` no mesmo volume
   persistente, para preservar cookies e antiforgery entre reinicializações.
+- `DATA_PROTECTION_CERTIFICATE_FILE` apontando para PKCS#12 fora do repositório.
+- `DATA_PROTECTION_CERTIFICATE_PASSWORD_FILE` apontando para arquivo de segredo
+  montado somente no processo; não coloque a senha em `.env`.
+- `Database__Encryption__RequireProtectedSensitiveColumns=true`.
+- `Database__Encryption__ProtectLegacyDataOnStartup=false` na execução normal.
+- `Database__Encryption__RequireEncryptedVolume=true` e
+  `Database__Encryption__EncryptedVolumeAttested=true` somente após validar o
+  volume criptografado no host ou provedor.
+- `Security__RequireHttps=true`; o TLS externo termina no proxy confiável, que
+  encaminha `X-Forwarded-Proto` após configurar `KnownProxies`.
 - `Database__ApplyMigrationsOnStartup=false` na instancia que atende tráfego.
 - `Database__ExitAfterMigrations=false` na execução normal.
 - `CallbackSecurity__RequireSharedKey=true`.
@@ -40,6 +50,7 @@ Variáveis mínimas:
 - `CallbackSecurity__RequireSignedRequests=true`.
 - `CallbackSecurity__AllowLoopback=false` em ambiente exposto.
 - `ControlIDApi__RequireAllowedDeviceHosts=true`.
+- `ControlIDApi__RequireHttpsDeviceUrls=true`.
 - `ControlIDApi__AllowedDeviceHosts__0` com o host/IP permitido do equipamento.
 - `OpenApi__Enabled=false`.
 - `Observability__Metrics__AllowAnonymous=false`.
@@ -77,8 +88,9 @@ docker compose up --build
 
 Health checks:
 
-- Liveness: `GET /health/live`.
-- Readiness: `GET /health/ready`.
+- Liveness: `GET /health/live`, anônimo e com apenas o estado agregado.
+- Readiness: `GET /health/ready`, anônimo e com apenas o estado agregado.
+- Diagnóstico: `GET /health/details`, restrito a administrador.
 - Métricas: `GET /metrics` com usuário administrador.
 
 ## Sequência de inicialização e prontidão
@@ -125,8 +137,9 @@ aprovação operacional. Liveness saudável indica apenas que o processo respond
 ## Procedimento de implantação
 
 1. Criar ou atualizar `.env` fora do Git com base em `.env.example`.
-2. Garantir volume persistente para `/app/data` e `/app/Logs`; a cópia de
-   `/app/data` deve preservar tanto o SQLite quanto as chaves de Data Protection.
+2. Garantir volume persistente e criptografado para `/app/data` e `/app/Logs`; a
+   cópia de `/app/data` deve preservar SQLite e chaveiro. Guardar também o
+   certificado e a senha em cofre ou mídia separada com acesso controlado.
 3. Validar a configuração sem iniciar:
 
 ```powershell
@@ -139,34 +152,37 @@ docker compose config
 docker build --pull -t integracao-controlid-poc:<versao> .
 ```
 
-5. Depois do backup, aplicar migrations em um processo único que encerra ao
+5. Em banco legado, executar `tools/protect-sensitive-sqlite-data.ps1` com
+   `-ConfirmProtection`; o script cria backup protegido e ensaia a restauração
+   antes de converter as colunas.
+6. Depois do backup, aplicar migrations em um processo único que encerra ao
    concluir. Não execute este comando em paralelo:
 
 ```powershell
 docker compose run --rm -e Database__ApplyMigrationsOnStartup=true -e Database__ExitAfterMigrations=true integracao-controlid-poc
 ```
 
-6. Subir em Staging com `Database__ApplyMigrationsOnStartup=false`:
+7. Subir em Staging com `Database__ApplyMigrationsOnStartup=false`:
 
 ```powershell
 docker compose up --build
 ```
 
-7. Validar:
+8. Validar:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\tools\observability-check.ps1 -OfflineValidateOnly
 powershell -ExecutionPolicy Bypass -File .\tools\test-readiness-gates.ps1 -RunContainerBuild
 ```
 
-8. Contra ambiente rodando, validar health/readiness e métricas com credencial local:
+9. Contra ambiente rodando, validar health/readiness e métricas com credencial local:
 
 ```powershell
 $env:OBSERVABILITY_BASE_URL = "http://localhost:8080"
 powershell -ExecutionPolicy Bypass -File .\tools\observability-check.ps1
 ```
 
-9. Para release sem exceções, rode o gate estrito em ambiente preparado:
+10. Para release sem exceções, rode o gate estrito em ambiente preparado:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\tools\test-readiness-gates.ps1 -ReleaseGate
@@ -185,7 +201,7 @@ Para incidentes ativos, use também [docs/operacao/incident-response-and-dr.md](
 severidade, comunicação, escalonamento, preservação de evidências e validação
 pós-reversão.
 
-1. Preservar volume `/app/data` antes de trocar versão.
+1. Preservar volume `/app/data`, chaveiro, certificado e acesso à senha antes de trocar versão.
 2. Manter a imagem anterior tagueada, por exemplo `integracao-controlid-poc:<versao-anterior>`.
 3. Se o novo container falhar em `/health/ready`, parar somente o serviço novo.
 4. Subir a tag anterior com o mesmo `.env` e os mesmos volumes.
@@ -209,8 +225,8 @@ powershell -ExecutionPolicy Bypass -File .\tools\backup-sqlite-operational.ps1 -
 | TLS/DNS fora do repo | Alta | Deve ser terminado no proxy/provedor; app bloqueia configs inseguras fora de Development. |
 | Equipamento físico não disponível na CI | Alta | `-RequireHardwareContract` e `-ReleaseGate` bloqueiam release quando exigido. |
 | Secrets reais fora do Git | Alta | `.env.example`, User Secrets, secret scan e validação contra placeholders. |
-| SQLite local em container sem volume | Alta | Compose usa volume nomeado para `/app/data`; docs exigem volume persistente. |
-| Chaves de sessão perdidas na reinicialização | Alta | Chaves de Data Protection persistem em `/app/data/data-protection-keys`; o volume deve ter acesso restrito e criptografia em repouso no provedor. |
+| SQLite local em container sem volume criptografado | Alta | Compose usa volume nomeado, a aplicação exige atestado fora de Development e a operação deve comprovar a proteção do provedor. |
+| Chaves de sessão perdidas ou expostas | Alta | Chaveiro persistente protegido por certificado PKCS#12; certificado e senha acompanham backup sob controles separados. |
 | Forwarded headers com proxy não confiável | Alta | Desabilitado por padrão; exige `KnownProxies` fora de Development. |
 
 ## Topologia de referência independente de provedor

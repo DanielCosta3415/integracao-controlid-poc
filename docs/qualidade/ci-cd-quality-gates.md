@@ -1,6 +1,6 @@
 # CI/CD e critérios de qualidade
 
-> **Referência** · Público: desenvolvimento, plataforma e release · Responsável: QA · Última validação: 2026-08-12.
+> **Referência** · Público: desenvolvimento, plataforma e release · Responsável: QA · Última validação: 2026-08-13.
 
 Este documento descreve a automação versionada para impedir regressão antes de
 merge ou publicação. Ele complementa [AGENTS.md](../../AGENTS.md), [docs/qualidade/testing-strategy.md](testing-strategy.md),
@@ -12,6 +12,7 @@ merge ou publicação. Ele complementa [AGENTS.md](../../AGENTS.md), [docs/quali
 | --- | --- |
 | Provedor de repositório | GitHub (`origin` aponta para GitHub). |
 | CI | GitHub Actions em `.github/workflows/ci.yml`. |
+| SAST gerenciado | CodeQL Default Setup, configurado no GitHub com conjunto estendido. |
 | CD/implantação automática | Não existe e não deve ser criado sem autorização humana. |
 | Container | `Dockerfile` e `docker-compose.yml`, validados pela CI. |
 | Scripts internos | `tools/*.ps1`, especialmente `test-readiness-gates.ps1`. |
@@ -48,12 +49,27 @@ Jobs:
 
 Não há tarefa de implantação, liberação, publicação, marcação ou envio de imagem.
 
+### CodeQL gerenciado
+
+O Default Setup do GitHub analisa C#, JavaScript/TypeScript e workflows em push
+para a ramificação padrão, pull request e agenda gerenciada. A configuração usa
+o conjunto `extended`, fontes remotas e locais e runner padrão. Como esse estado
+vive no provedor, valide-o com:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\tools\audit-github-security.ps1
+```
+
+Não mantenha simultaneamente um workflow CodeQL avançado: o Default Setup
+bloqueia uploads da configuração avançada e pode desabilitar o workflow.
+
 ## Critérios de qualidade obrigatórios em PR e `main`
 
 | Gate | Comando/step | Falha quando |
 | --- | --- | --- |
-| Checkout reprodutível | `actions/checkout@v7` | Repositório não pode ser lido. |
-| SDK pinado | `actions/setup-dotnet@v6` com `global.json` | SDK .NET correto não resolve. |
+| Checkout reprodutível | `actions/checkout` fixado por SHA revisado | Repositório não pode ser lido. |
+| SDK pinado | `actions/setup-dotnet` fixado por SHA e `global.json` | SDK .NET correto não resolve. |
+| SAST gerenciado | CodeQL gerenciado com conjunto `extended` | A análise falha, fica desativada ou não publica resultado. |
 | Cache seguro | `cache: true` usando `packages.lock.json` | Lockfiles mudam sem restore consistente. |
 | Restauração bloqueada | `dotnet restore ... --locked-mode` | O arquivo de bloqueio está ausente ou desatualizado. |
 | Ferramentas locais | `dotnet tool restore` | O `dotnet-ef` pinado não pode ser restaurado. |
@@ -126,6 +142,7 @@ powershell -ExecutionPolicy Bypass -File .\tools\operational-readiness-check.ps1
 powershell -ExecutionPolicy Bypass -File .\tools\finops-capacity-check.ps1
 powershell -ExecutionPolicy Bypass -File .\tools\audit-supply-chain.ps1
 powershell -ExecutionPolicy Bypass -File .\tools\external-security-scans.ps1 -InventoryOnly
+powershell -ExecutionPolicy Bypass -File .\tools\audit-github-security.ps1
 ```
 
 A validação documental da CI é off-line e determinística. Para uma auditoria
@@ -145,6 +162,9 @@ interpolação:
 $env:AllowedHosts = "poc.example.internal"
 $env:ControlIDApi__AllowedDeviceHosts__0 = "controlid-device.local"
 $env:CallbackSecurity__SharedKey = "placeholder-shared-key-32-characters-minimum"
+$env:DATA_PROTECTION_CERTIFICATE_FILE = "C:\secure\controlid-data-protection.pfx"
+$env:DATA_PROTECTION_CERTIFICATE_PASSWORD_FILE = "C:\secure\controlid-data-protection.password"
+$env:Database__Encryption__EncryptedVolumeAttested = "true"
 docker compose config
 ```
 
@@ -160,18 +180,19 @@ Esse gate é intencionalmente mais estrito que a CI de PR. Ele exige ambiente
 preparado, `ops.local.json` fora do Git, observabilidade on-line, contrato físico
 Control iD, analisadores externos e FinOps/capacidade sem avisos.
 
-## Proteção recomendada da ramificação
+## Proteção aplicada à ramificação
 
-Configurar no GitHub, fora do repositório:
+O repositório mantém envio direto para `main` por decisão explícita do mantenedor.
+A regra remota `Protect main integrity` bloqueia envio forçado e exclusão e exige
+histórico linear. A CI e o CodeQL executam após
+o push; portanto, esse modelo detecta regressões, mas não as impede antes de
+entrarem em `main`.
 
-- exigir PR antes da mesclagem em `main`;
-- exigir pelo menos uma revisão humana;
-- exigir ramificação atualizada antes da mesclagem;
-- exigir as verificações de estado `build-test-audit` e `container-build`;
-- bloquear bypass por administradores, salvo emergência documentada;
-- exigir resolução de conversas;
-- bloquear envio forçado e exclusão da ramificação `main`;
-- exigir assinatura de commit se a organização já usar essa política.
+O endurecimento recomendado para uma equipe com mais de um mantenedor continua
+sendo exigir pull request, revisão humana e os estados `CI / build-test-audit`,
+`CI / container-build` e o estado CodeQL publicado pelo Default Setup antes da
+mesclagem. Essa evolução
+altera o fluxo de contribuição e requer confirmação humana específica.
 
 ## Diagnóstico de falhas
 
@@ -191,7 +212,7 @@ Configurar no GitHub, fora do repositório:
 - A CI não executa implantação.
 - A CI não usa credenciais reais nem equipamento físico.
 - Scanners externos completos ficam no `-ReleaseGate` ou em ambiente preparado.
-- Branch protection precisa ser aplicada nas configurações do GitHub.
+- Controles remotos podem sofrer deriva; execute `tools/audit-github-security.ps1` antes de uma liberação.
 - A cobertura inicial é deliberadamente modesta e bloqueia regressão; ela não
   autoriza reduzir testes de risco nem omitir homologação física.
 
@@ -233,14 +254,14 @@ responsável e prazo; não adote repetição automática ilimitada.
 | --- | --- | --- |
 | `CI / build-test-audit` | Job `build-test-audit` | Obrigatório para PR e `main` |
 | `CI / container-build` | Job `container-build` | Obrigatório quando a execução Docker estiver disponível |
+| Estado CodeQL publicado pelo Default Setup | GitHub Code Scanning | Obrigatório ao adotar gate preventivo antes de merge |
 
-A configuração de proteção da ramificação não está versionada neste repositório.
-O mantenedor deve conferir os nomes na interface ou API do GitHub após renomear
-workflow ou job; um contexto antigo não protege a ramificação. Ações de terceiros
-devem permanecer fixadas por versão ou SHA revisado. A CI usa
-`actions/checkout@v7`, `actions/setup-dotnet@v6` e
-`actions/upload-artifact@v7`; qualquer mudança de versão major deve atualizar o
-teste contratual e este documento na mesma entrega.
+O estado remoto de proteção não é totalmente representável em Git. O mantenedor
+deve conferir os nomes pela API do GitHub após renomear workflow ou job; um
+contexto antigo não protege a ramificação. Ações de terceiros devem permanecer
+fixadas por SHA revisado, com a versão legível em comentário. Qualquer atualização
+deve conferir a origem da tag, revisar notas de versão e atualizar o teste
+contratual e este documento na mesma entrega.
 
 ## Navegação documental
 

@@ -39,8 +39,26 @@ public sealed class RenderedApplicationContractTests : IClassFixture<PocWebAppli
         using var client = _factory.CreateClient();
 
         using var response = await client.GetAsync("/health/ready", TestContext.Current.CancellationToken);
+        var body = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
 
         response.EnsureSuccessStatusCode();
+        Assert.Contains("\"status\"", body, StringComparison.Ordinal);
+        Assert.DoesNotContain("sqlite-runtime-state", body, StringComparison.Ordinal);
+        Assert.DoesNotContain("duration", body, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task DetailedHealth_RequiresAuthenticatedAdministrator()
+    {
+        using var client = _factory.CreateClient(new WebApplicationFactoryClientOptions
+        {
+            AllowAutoRedirect = false
+        });
+
+        using var response = await client.GetAsync("/health/details", TestContext.Current.CancellationToken);
+
+        Assert.Equal(System.Net.HttpStatusCode.Redirect, response.StatusCode);
+        Assert.StartsWith("/Auth/LocalLogin", response.Headers.Location?.PathAndQuery, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -76,6 +94,7 @@ public sealed class PocWebApplicationFactory : WebApplicationFactory<Program>
             configuration.AddInMemoryCollection(new Dictionary<string, string?>
             {
                 ["ConnectionStrings:DefaultConnection"] = $"Data Source={databasePath}",
+                ["DataProtection:KeyPath"] = Path.Combine(_directoryPath, "data-protection-keys"),
                 ["Session:CookieSecure"] = "SameAsRequest",
                 ["CallbackSecurity:RequireSharedKey"] = "false",
                 ["CallbackSecurity:RequireSignedRequests"] = "false",

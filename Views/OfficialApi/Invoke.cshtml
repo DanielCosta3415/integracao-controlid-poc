@@ -67,11 +67,12 @@
                         <input asp-for="DeviceAddress" class="form-control" placeholder="https://ip-ou-host" autocomplete="off" />
                         <span asp-validation-for="DeviceAddress" class="text-danger"></span>
                     </div>
-                    <div>
-                        <label asp-for="SessionString" class="form-label">Sessão</label>
-                        <input asp-for="SessionString" class="form-control" type="password" placeholder="Sessão atual do equipamento" autocomplete="off" />
-                        <span asp-validation-for="SessionString" class="text-danger"></span>
-                    </div>
+                    @if (endpoint.RequiresSession)
+                    {
+                        <div class="alert alert-info" role="status">
+                            A chamada usará a sessão ativa mantida no servidor. O token não é enviado ao navegador.
+                        </div>
+                    }
                     <div>
                         <label asp-for="AdditionalQuery" class="form-label">Query adicional</label>
                         <input asp-for="AdditionalQuery" class="form-control" placeholder="id=1&user_id=123" autocomplete="off" />

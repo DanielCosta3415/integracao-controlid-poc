@@ -1,6 +1,6 @@
 # Privacidade, LGPD e retenção local
 
-> **Referência** · Público: desenvolvimento, segurança e DPO · Responsável: Segurança/Privacidade · Última validação: 2026-08-12.
+> **Referência** · Público: desenvolvimento, segurança e DPO · Responsável: Segurança/Privacidade · Última validação: 2026-08-13.
 
 Esta é uma revisão técnica de privacidade da PoC. O documento não constitui parecer jurídico nem declara conformidade total com a LGPD. Bases legais, papéis dos agentes de tratamento, contratos com terceiros e RIPD precisam de validação formal do DPO ou do departamento jurídico antes do uso real.
 
@@ -42,6 +42,11 @@ Esta PoC ASP.NET Core MVC integra com equipamentos Control iD para autenticaçã
 | Push e resultados | Enfileirar comandos e receber status | UI/equipamento | SQLite `PushCommands` | `PushCommandWorkflowService`, `/push`, `/result` | Admin cria/expurga; sistema atualiza | Curto prazo para QA | Necessita validação; operação técnica. |
 | Logs técnicos | Diagnóstico, segurança e rastreabilidade | App/middleware | `Logs/`/Serilog | middlewares, controllers, services | Operador do host | Curto prazo | Necessita validação; segurança/prevenção. |
 | Backups SQLite | Recuperação local | SQLite | `artifacts/backups/` | scripts `backup-sqlite`, `restore-smoke` | Operador do host | Apenas enquanto necessário | Necessita validação; recuperabilidade e continuidade. |
+
+Os campos de maior impacto no SQLite recebem proteção criptográfica por coluna:
+sessão, biometria, cartões, QR Codes, fotos, valores de configuração e cargas de
+Monitor, Push e logs. A proteção não anonimiza o titular nem elimina a necessidade
+de volume criptografado, controle de acesso, minimização, retenção e descarte.
 
 Todas as bases acima são hipóteses técnicas. A definição final depende do controlador real, finalidade concreta, titulares afetados, contratos, setor, legislação trabalhista/regulatória e política interna.
 
@@ -88,7 +93,7 @@ Todas as bases acima são hipóteses técnicas. A definição final depende do c
 | `PushCommands` | Até concluir análise do ciclo Push | `PushCenter/Purge` com frase `EXPURGAR PUSH`; payload/resultados podem conter ids e comandos. |
 | `Logs/` | Curto prazo local | Logs novos usam referências pseudonimizadas para IP, usuário, equipamento e ids sensíveis; manter fora do Git. |
 | `integracao_controlid.db*` | Ambiente local controlado | Não versionar nem compartilhar; tratar como base com dados pessoais/sensíveis. |
-| `artifacts/backups/` | Apenas enquanto necessário para reversão local | DPAPI por padrão; não versionar; restringir permissões com `tools/harden-local-state.ps1`. |
+| `artifacts/backups/` | Apenas enquanto necessário para reversão local | DPAPI por padrão; não versionar; incluir chaveiro e acesso controlado ao certificado no conjunto de recuperação. |
 | Fotos/templates/cartões/QRs | Mínimo necessário | Preferir dados fictícios; exclusão real exige confirmação humana e base jurídica. |
 
 Não apagar dados reais sem confirmação humana, registro da finalidade e decisão do controlador/DPO. Para dados em produção real, documentar política de retenção, descarte seguro e evidências.
@@ -130,6 +135,8 @@ Procedimento mínimo recomendado para incidente:
 - Limpar `MonitorEvents` e `PushCommands` apenas por ação manual confirmada na UI.
 - Preferir expurgo por retenção (`EXPURGAR EVENTOS` ou `EXPURGAR PUSH`) a limpeza total quando o objetivo for reduzir histórico.
 - Tratar backups SQLite como dados sensíveis; backups novos são protegidos por DPAPI por padrão.
+- Exigir volume criptografado, certificado de Data Protection e verificação de
+  colunas legadas antes de servir tráfego fora de `Development`.
 - Executar `tools/harden-local-state.ps1` no host local para restringir permissões do SQLite, dos logs, das cópias de segurança e das cópias temporárias de restauração.
 - Não usar dados pessoais reais em testes, docs, smoke, fixtures ou screenshots.
 
@@ -141,6 +148,15 @@ Procedimento mínimo recomendado para incidente:
 - Exemplo versionado usa valores fictícios e placeholders.
 - Ambiente não `Development` falha no startup sem `AllowedHosts` explícito, `RequireSharedKey=true`, `SharedKey` configurado e assinatura HMAC quando exigida.
 - Log novo que envolva titular, IP, host, device id, user id, biometria, cartão ou QR code usa mascaramento ou pseudonimização.
+- O repositório público não deve publicar endereço pessoal de contato na UI; use
+  o canal público de issues para conteúdo não sensível e o fluxo responsável de
+  [política de segurança](../../SECURITY.md) para solicitar um canal privado.
+
+Metadados de autoria do Git são dados pessoais inerentes ao histórico público. A
+configuração de identidade usada em novos commits é decisão do mantenedor; uma
+eventual reescrita do histórico altera hashes e clones e só pode ocorrer mediante
+aprovação humana específica. Nunca trate reescrita como remoção garantida de
+cópias, forks ou caches externos.
 
 ## Lacunas para DPO/jurídico
 

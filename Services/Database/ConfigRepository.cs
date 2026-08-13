@@ -88,13 +88,27 @@ namespace Integracao.ControlID.PoC.Services.Database
             if (!string.IsNullOrWhiteSpace(key))
                 query = query.Where(c => c.Key == key);
 
-            if (!string.IsNullOrWhiteSpace(value))
-                query = query.Where(c => c.Value == value);
+            query = query.OrderBy(c => c.Id);
 
-            return await query
-                .OrderBy(c => c.Id)
-                .Take(LocalDataQueryLimits.DefaultListLimit)
-                .ToListAsync();
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return await query
+                    .Take(LocalDataQueryLimits.DefaultListLimit)
+                    .ToListAsync();
+            }
+
+            var matches = new List<ConfigLocal>();
+            await foreach (var config in query.AsAsyncEnumerable())
+            {
+                if (!string.Equals(config.Value, value, StringComparison.Ordinal))
+                    continue;
+
+                matches.Add(config);
+                if (matches.Count == LocalDataQueryLimits.DefaultListLimit)
+                    break;
+            }
+
+            return matches;
         }
     }
 }

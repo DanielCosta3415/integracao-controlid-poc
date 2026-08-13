@@ -200,8 +200,8 @@ namespace Integracao.ControlID.PoC.Services.ControlIDApi
                     _logger.LogWarning(
                         OperationalEventIds.OfficialApiInvocationBlocked,
                         "Official endpoint {EndpointId} blocked by circuit breaker for {DeviceTarget}. RetryAfterSeconds {RetryAfterSeconds}.",
-                        endpoint.Id,
-                        deviceTarget,
+                        PrivacyLogHelper.SanitizeForLog(endpoint.Id),
+                        PrivacyLogHelper.SanitizeForLog(deviceTarget),
                         Math.Ceiling(retryAfter.TotalSeconds));
 
                     result.StatusCode = StatusCodes.Status503ServiceUnavailable;
@@ -216,10 +216,10 @@ namespace Integracao.ControlID.PoC.Services.ControlIDApi
                 _logger.LogInformation(
                     OperationalEventIds.OfficialApiInvocationStarted,
                     "Invoking official endpoint {EndpointId} {Method} {Path} against {DeviceTarget}.",
-                    endpoint.Id,
-                    endpoint.Method,
-                    endpoint.Path,
-                    deviceTarget);
+                    PrivacyLogHelper.SanitizeForLog(endpoint.Id),
+                    PrivacyLogHelper.SanitizeForLog(endpoint.Method),
+                    PrivacyLogHelper.SanitizeForLog(endpoint.Path),
+                    PrivacyLogHelper.SanitizeForLog(deviceTarget));
 
                 using var request = new HttpRequestMessage(new HttpMethod(endpoint.Method), requestUrl)
                 {
@@ -286,7 +286,7 @@ namespace Integracao.ControlID.PoC.Services.ControlIDApi
 
                 stopwatch.Stop();
                 OperationalMetrics.RecordOfficialApiInvocation(
-                    endpoint.Id,
+                    PrivacyLogHelper.SanitizeForLog(endpoint.Id),
                     endpoint.Method,
                     result.Success ? "success" : "http_error",
                     result.StatusCode,
@@ -299,8 +299,8 @@ namespace Integracao.ControlID.PoC.Services.ControlIDApi
                     endpoint.Id,
                     result.StatusCode,
                     stopwatch.ElapsedMilliseconds,
-                    deviceTarget,
-                    responseContentType);
+                    PrivacyLogHelper.SanitizeForLog(deviceTarget),
+                    PrivacyLogHelper.SanitizeForLog(responseContentType));
 
                 return result;
             }
@@ -319,8 +319,8 @@ namespace Integracao.ControlID.PoC.Services.ControlIDApi
                     OperationalEventIds.OfficialApiInvocationBlocked,
                     ex,
                     "Official endpoint {EndpointId} was rejected by the per-device concurrency limit for {DeviceTarget}.",
-                    endpoint.Id,
-                    deviceTarget);
+                    PrivacyLogHelper.SanitizeForLog(endpoint.Id),
+                    PrivacyLogHelper.SanitizeForLog(deviceTarget));
                 return result;
             }
             catch (InvalidOperationException ex)
@@ -337,9 +337,9 @@ namespace Integracao.ControlID.PoC.Services.ControlIDApi
                     OperationalEventIds.OfficialApiInvocationFailed,
                     ex,
                     "Validation failure while invoking official endpoint {EndpointId} after {ElapsedMs} ms. Target {DeviceTarget}.",
-                    endpoint.Id,
+                    PrivacyLogHelper.SanitizeForLog(endpoint.Id),
                     stopwatch.ElapsedMilliseconds,
-                    deviceTarget);
+                    PrivacyLogHelper.SanitizeForLog(deviceTarget));
 
                 result.ErrorMessage = SecurityTextHelper.NormalizeForDisplay(
                     ex.Message,
@@ -363,9 +363,9 @@ namespace Integracao.ControlID.PoC.Services.ControlIDApi
                     OperationalEventIds.OfficialApiInvocationFailed,
                     ex,
                     "Official endpoint {EndpointId} exceeded the response limit of {MaxResponseBodyBytes} bytes. Target {DeviceTarget}.",
-                    endpoint.Id,
+                    PrivacyLogHelper.SanitizeForLog(endpoint.Id),
                     _maxResponseBodyBytes,
-                    deviceTarget);
+                    PrivacyLogHelper.SanitizeForLog(deviceTarget));
                 return result;
             }
             catch (OperationCanceledException ex) when (!requestAborted.IsCancellationRequested)
@@ -383,9 +383,9 @@ namespace Integracao.ControlID.PoC.Services.ControlIDApi
                     OperationalEventIds.OfficialApiInvocationFailed,
                     ex,
                     "Timeout while invoking official endpoint {EndpointId} after {ElapsedMs} ms. Target {DeviceTarget}.",
-                    endpoint.Id,
+                    PrivacyLogHelper.SanitizeForLog(endpoint.Id),
                     stopwatch.ElapsedMilliseconds,
-                    deviceTarget);
+                    PrivacyLogHelper.SanitizeForLog(deviceTarget));
 
                 result.ErrorMessage = "Tempo limite excedido ao comunicar com o equipamento.";
                 return result;
@@ -417,9 +417,9 @@ namespace Integracao.ControlID.PoC.Services.ControlIDApi
                     OperationalEventIds.OfficialApiInvocationFailed,
                     ex,
                     "Unexpected failure while invoking official endpoint {EndpointId} after {ElapsedMs} ms. Target {DeviceTarget}.",
-                    endpoint.Id,
+                    PrivacyLogHelper.SanitizeForLog(endpoint.Id),
                     stopwatch.ElapsedMilliseconds,
-                    deviceTarget);
+                    PrivacyLogHelper.SanitizeForLog(deviceTarget));
 
                 result.ErrorMessage = SecurityTextHelper.BuildSafeUserMessage("Falha ao invocar o endpoint oficial", ex);
                 return result;

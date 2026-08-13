@@ -1,4 +1,5 @@
 using Integracao.ControlID.PoC.Data;
+using Integracao.ControlID.PoC.Tests.TestSupport;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
@@ -16,7 +17,7 @@ public sealed class OperationalIndexMigrationTests
             .UseSqlite(connection)
             .Options;
 
-        using var context = new IntegracaoControlIDContext(options);
+        using var context = new IntegracaoControlIDContext(options, TestDataProtection.CreateSensitiveDataProtector());
 
         context.Database.Migrate();
 

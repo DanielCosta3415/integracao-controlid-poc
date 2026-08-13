@@ -14,6 +14,19 @@ public static class OfficialApiTestFactory
         HttpContext httpContext,
         RecordingHttpMessageHandler handler)
     {
+        var invoker = CreateInvoker(httpContext, handler);
+
+        return new OfficialControlIdApiService(
+            new HttpContextAccessor { HttpContext = httpContext },
+            new OfficialApiCatalogService(),
+            invoker,
+            NullLogger<OfficialControlIdApiService>.Instance);
+    }
+
+    public static OfficialApiInvokerService CreateInvoker(
+        HttpContext httpContext,
+        RecordingHttpMessageHandler handler)
+    {
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
@@ -21,7 +34,7 @@ public static class OfficialApiTestFactory
             })
             .Build();
 
-        var invoker = new OfficialApiInvokerService(
+        return new OfficialApiInvokerService(
             new StaticHttpClientFactory(handler),
             NullLogger<OfficialApiInvokerService>.Instance,
             new ControlIdInputSanitizer(),
@@ -32,11 +45,5 @@ public static class OfficialApiTestFactory
             new OfficialApiConcurrencyLimiter(Microsoft.Extensions.Options.Options.Create(new ControlIdConcurrencyOptions())),
             new HttpContextAccessor { HttpContext = httpContext },
             configuration);
-
-        return new OfficialControlIdApiService(
-            new HttpContextAccessor { HttpContext = httpContext },
-            new OfficialApiCatalogService(),
-            invoker,
-            NullLogger<OfficialControlIdApiService>.Instance);
     }
 }

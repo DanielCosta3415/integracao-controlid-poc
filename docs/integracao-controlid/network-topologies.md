@@ -1,6 +1,6 @@
 # Topologias de rede e comunicação
 
-> **Referência** · Público: integração, infraestrutura, segurança e suporte · Responsável: Engenharia · Última validação: 2026-08-12.
+> **Referência** · Público: integração, infraestrutura, segurança e suporte · Responsável: Engenharia · Última validação: 2026-08-13.
 
 Este documento mostra quem inicia cada conexão, quais endereços precisam ser
 alcançáveis e como separar um laboratório local de um ambiente exposto. Ele não
@@ -16,7 +16,7 @@ certificado real sem aprovação humana.
 | Modo Pro/Enterprise | Equipamento | Servidor configurado | Entrada | Resposta do servidor define autorização/continuidade. |
 | Monitor | Equipamento | PoC/proxy | Entrada | IP, chave compartilhada, HMAC, timestamp, nonce e limite de corpo conforme ambiente. |
 | Push | Equipamento | PoC/proxy | Entrada e resposta | `GET /push` e `POST /result`; controles de ingresso. |
-| Observabilidade | Operador/coletor | PoC | Entrada | `/health/*` anônimo; `/metrics` administrativo por padrão. |
+| Observabilidade | Operador/coletor | PoC | Entrada | `/health/live` e `/health/ready` anônimos com resposta mínima; `/health/details` e `/metrics` administrativos. |
 
 ## Topologia 1: demonstração somente local
 
@@ -38,7 +38,7 @@ biometria, câmera, licença, latência ou firmware reais.
 ```mermaid
 flowchart LR
     Browser["Estação do operador"] --> Poc["PoC em host de bancada"]
-    Poc -->|"HTTP/HTTPS .fcgi"| Device["Equipamento Control iD"]
+    Poc -->|"HTTPS .fcgi fora de Development"| Device["Equipamento Control iD"]
     Device -->|"Monitor, callbacks ou Push"| Proxy["Proxy assinador opcional"]
     Proxy --> Poc
     Poc --> Db["SQLite/Logs no host"]
@@ -114,6 +114,9 @@ e [push-implementation.md](push-implementation.md).
   `ForwardedHeaders:KnownProxies` configurado.
 - HTTPS entre PoC e equipamento depende da configuração/certificado do terminal;
   não desative validação de certificado para contornar erro.
+- `ControlIDApi:RequireHttpsDeviceUrls=true` é obrigatório fora de `Development`.
+  Equipamento sem HTTPS deve permanecer em laboratório isolado ou atrás de
+  gateway TLS aprovado; não reduza o controle para acomodar uma LAN não confiável.
 - CORS não substitui autenticação nem costuma participar de chamadas servidor a
   servidor. A interface MVC usa mesma origem e antiforgery.
 
@@ -126,7 +129,7 @@ e [push-implementation.md](push-implementation.md).
 | IP permitido em callbacks | Loopback | IP do equipamento/proxy | Obrigatório e revisado. |
 | Chave compartilhada | Pode ser usada no teste integrado | Obrigatória se houver ingresso real | Obrigatória. |
 | HMAC/timestamp/nonce | Proxy opcional | Obrigatório para homologação segura | Obrigatório. |
-| TLS | Pode usar certificado local | Recomendado | Obrigatório. |
+| TLS | Pode usar certificado local | Obrigatório quando não for `Development` | Obrigatório. |
 | OpenAPI | Permitido em Development | Desabilitar salvo necessidade | Desabilitado. |
 | Métricas anônimas | Permitidas apenas em Development controlado | Não | Não. |
 

@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Integracao.ControlID.PoC.Helpers;
 using Integracao.ControlID.PoC.Services.Observability;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
@@ -31,8 +32,8 @@ public sealed class CorrelationIdMiddleware
 
         using var scope = _logger.BeginScope(new Dictionary<string, object>
         {
-            [ObservabilityConstants.CorrelationIdScopeProperty] = correlationId,
-            [ObservabilityConstants.TraceIdScopeProperty] = context.TraceIdentifier
+            [ObservabilityConstants.CorrelationIdScopeProperty] = PrivacyLogHelper.SanitizeForLog(correlationId),
+            [ObservabilityConstants.TraceIdScopeProperty] = PrivacyLogHelper.SanitizeForLog(context.TraceIdentifier)
         });
 
         await _next(context);

@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-    [int]$ExpectedMarkdownCount = 82,
+    [int]$ExpectedMarkdownCount = 84,
     [int]$ExpectedMermaidCount = 41,
     [switch]$CheckExternalUrls
 )
@@ -10,7 +10,7 @@ $ErrorActionPreference = "Stop"
 
 $root = Split-Path -Parent $PSScriptRoot
 $licenseRelativePath = "wwwroot/lib/jquery-validation/LICENSE.md"
-$expectedLicenseSha256 = "81e1c4930fd618f75a1d0311ab91ee358f6c9e588dcd4ff2d8e5bcc9c9e1197c"
+$expectedLicenseSha256 = "f398878cab338b869638bdac1aeae76bf3ac11b2b89da6e0b68bc1a645733440"
 $strictUtf8 = [System.Text.UTF8Encoding]::new($false, $true)
 $errors = [System.Collections.Generic.List[string]]::new()
 $externalUrls = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
@@ -420,7 +420,11 @@ try {
         }
     }
 
-    $licenseHash = (Get-FileHash -Algorithm SHA256 -LiteralPath (Join-Path $root $licenseRelativePath)).Hash.ToLowerInvariant()
+    $licenseContent = [IO.File]::ReadAllText((Join-Path $root $licenseRelativePath), $strictUtf8)
+    $canonicalLicenseBytes = [Text.Encoding]::UTF8.GetBytes(
+        $licenseContent.Replace("`r`n", "`n").Replace("`r", "`n"))
+    $licenseHashBytes = [Security.Cryptography.SHA256]::Create().ComputeHash($canonicalLicenseBytes)
+    $licenseHash = ([BitConverter]::ToString($licenseHashBytes) -replace '-', '').ToLowerInvariant()
     if ($licenseHash -ne $expectedLicenseSha256) {
         Add-DocumentationError "Vendored jquery-validation license hash changed unexpectedly."
     }

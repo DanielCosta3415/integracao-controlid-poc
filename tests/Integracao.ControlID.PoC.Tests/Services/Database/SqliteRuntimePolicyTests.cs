@@ -2,6 +2,7 @@ using Integracao.ControlID.PoC.Data;
 using Integracao.ControlID.PoC.Models.Database;
 using Integracao.ControlID.PoC.Options;
 using Integracao.ControlID.PoC.Services.Database;
+using Integracao.ControlID.PoC.Tests.TestSupport;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
@@ -71,7 +72,7 @@ public sealed class SqliteRuntimePolicyTests
         var options = new DbContextOptionsBuilder<IntegracaoControlIDContext>()
             .UseSqlite($"Data Source={databasePath};Default Timeout=5;Foreign Keys=True;Pooling=False")
             .Options;
-        return new IntegracaoControlIDContext(options);
+        return new IntegracaoControlIDContext(options, TestDataProtection.CreateSensitiveDataProtector());
     }
 
     private static string BuildTemporaryDatabasePath()

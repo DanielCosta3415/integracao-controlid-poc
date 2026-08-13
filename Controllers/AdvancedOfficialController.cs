@@ -70,7 +70,7 @@ namespace Integracao.ControlID.PoC.Controllers
             catch (Exception ex)
             {
                 model.ErrorMessage = SecurityTextHelper.BuildSafeUserMessage("A operação não pôde ser concluída", ex);
-                _logger.LogError(ex, "Erro ao exportar objetos do tipo {ObjectName}.", model.ObjectName);
+                _logger.LogError(ex, "Erro ao exportar objetos do tipo {ObjectName}.", PrivacyLogHelper.SanitizeForLog(model.ObjectName));
             }
 
             return View(model);
