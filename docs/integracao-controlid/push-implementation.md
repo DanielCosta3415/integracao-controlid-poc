@@ -42,6 +42,78 @@ A tela operacional principal é `PushCenter`.
 | `Views/PushCenter/Details.cshtml` | Tela de inspeção de payload e JSON bruto. |
 | `Services/ControlIDApi/OfficialApiCatalogService.cs` | Cataloga `GET /push`, `POST /result` e endpoints relacionados a Push. |
 
+## Relações entre as classes do Push
+
+```mermaid
+classDiagram
+    class PushCenterController {
+        +Index()
+        +Queue(model)
+        +Poll(deviceId, legacyDeviceId)
+        +Result(commandId)
+        +Clear(confirmationPhrase)
+        +Purge(retentionDays, confirmationPhrase)
+    }
+    class PushController {
+        +Receive()
+        +Clear(confirmationPhrase)
+    }
+    class PushCommandWorkflowService {
+        +QueueAsync(model)
+        +DeliverNextAsync(deviceId)
+        +StoreResultAsync(commandId, status, body, idempotencyKey)
+        +StoreLegacyEventAsync(body, commandId)
+        +ClearAsync()
+        +PurgeOlderThanAsync(cutoffUtc)
+    }
+    class PushCommandRepository {
+        +AddPushCommandAsync(command)
+        +ClaimNextPendingCommandForDeliveryAsync(deviceId)
+        +UpdatePushCommandAsync(command)
+    }
+    class PushIdempotencyKeyResolver {
+        +Resolve(request)
+    }
+    class PushCommandStatuses {
+        <<static>>
+        +Pending
+        +Delivered
+        +Completed
+        +Received
+    }
+    class PushCommandLocal {
+        +Guid CommandId
+        +string Status
+        +string Payload
+        +string DeviceId
+        +DateTime CreatedAt
+        +DateTime UpdatedAt
+    }
+    class PushQueueCommandViewModel
+    class CallbackRequestBodyReader
+    class CallbackSecurityEvaluator
+    class CallbackSignatureValidator
+
+    PushCenterController --> PushCommandWorkflowService
+    PushCenterController --> PushIdempotencyKeyResolver
+    PushCenterController --> CallbackRequestBodyReader
+    PushCenterController --> CallbackSecurityEvaluator
+    PushCenterController --> CallbackSignatureValidator
+    PushController --> PushCommandWorkflowService
+    PushController --> CallbackRequestBodyReader
+    PushController --> CallbackSecurityEvaluator
+    PushController --> CallbackSignatureValidator
+    PushCommandWorkflowService --> PushCommandRepository
+    PushCommandWorkflowService --> PushCommandStatuses
+    PushCommandWorkflowService --> PushCommandLocal
+    PushCommandWorkflowService --> PushQueueCommandViewModel
+    PushCommandRepository --> PushCommandLocal
+```
+
+Os controllers adaptam HTTP e autorização; as regras de status, JSON,
+idempotência e persistência ficam no workflow e no repositório. As rotas anônimas
+continuam protegidas pelos controles próprios de ingresso.
+
 ## Endpoints implementados
 
 ### Central web
@@ -175,6 +247,48 @@ Exemplo:
 ```text
 POST /result?command_id=00000000-0000-0000-0000-000000000001&status=completed
 ```
+
+## Sequência ponta a ponta
+
+```mermaid
+sequenceDiagram
+    actor Admin as Administrador
+    participant UI as PushCenter MVC
+    participant Workflow as PushCommandWorkflowService
+    participant Repo as PushCommandRepository
+    participant DB as SQLite
+    participant Device as Equipamento Control iD
+    participant Security as Segurança de ingresso
+
+    Admin->>UI: Enfileira payload JSON e destino
+    UI->>Workflow: QueueAsync(model)
+    Workflow->>Workflow: Valida JSON e cria command_id
+    Workflow->>Repo: Persiste status pending
+    Repo->>DB: INSERT transacional
+    DB-->>UI: Comando confirmado
+
+    Device->>Security: GET /push com controles de origem
+    Security->>UI: Requisição permitida
+    UI->>Workflow: DeliverNextAsync(device_id)
+    Workflow->>Repo: Claim atômico do próximo pending
+    Repo->>DB: UPDATE pending para delivered
+    alt Comando elegível
+        DB-->>Device: Payload JSON após commit
+        Device->>Device: Executa o comando
+        Device->>Security: POST /result com command_id ou chave idempotente
+        Security->>UI: Corpo limitado e autenticado
+        UI->>Workflow: StoreResultAsync(...)
+        Workflow->>Repo: Atualiza o mesmo registro
+        Repo->>DB: UPDATE status, payload e UpdatedAt
+        DB-->>Device: 200 somente após persistência
+    else Fila vazia
+        DB-->>Device: Retorna objeto JSON vazio
+    end
+```
+
+Uma falha após a entrega e antes do resultado deixa o comando `delivered`. A PoC
+não o recoloca automaticamente em `pending`, porque a execução física pode ter
+ocorrido mesmo sem confirmação de rede.
 
 ## Persistência local
 

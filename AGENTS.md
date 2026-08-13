@@ -266,6 +266,9 @@ Notas:
   extensas em documentos especializados.
 - Atualize README/docs quando mudar setup, comando, segurança, banco, contrato externo, FinOps/capacidade ou fluxo operacional.
 - Atualize [docs/README.md](docs/README.md) quando criar, remover ou renomear documento técnico.
+- Atualize [docs/arquitetura/diagramas.md](docs/arquitetura/diagramas.md) quando
+  criar, remover, renomear ou alterar o escopo de um diagrama; mantenha a visão
+  no documento canônico do domínio e não duplique desenhos extensos.
 - Registre decisão estrutural em `docs/adrs/` quando alterar padrão de arquitetura, persistência, segurança, observabilidade, release ou provedor.
 - Registre mudanças amplas em `docs/historico/changelogs/` e resumos/auditorias
   datados em `docs/historico/auditorias/`.

@@ -28,6 +28,98 @@ O encerramento do login local limpa o cookie e o estado ASP.NET da navegação. 
 logout do equipamento chama `logout.fcgi` e remove somente a sessão oficial. Não
 trate essas duas ações como equivalentes.
 
+## Relações entre identidade e sessões
+
+```mermaid
+classDiagram
+    class AuthController {
+        +LocalLogin(model, returnUrl)
+        +LocalLogout()
+        +Login(model)
+        +Logout()
+        +Register(model)
+        +ChangePassword(model)
+    }
+    class UserRepository {
+        +RegisterLocalUserAsync(user, password)
+        +GetUserByUsernameOrEmailAsync(identifier)
+        +UpdateUserAsync(user)
+    }
+    class OfficialControlIdApiService {
+        +InvokeDirectAsync(endpointId, address, payload)
+        +TryGetConnection()
+    }
+    class LocalIdentityPolicy {
+        <<static>>
+        +NormalizeIdentifier(value)
+    }
+    class CryptoHelper {
+        <<static>>
+        +HashPassword(password)
+        +VerifyPassword(password, storedHash, legacySalt)
+        +IsPbkdf2Hash(storedHash)
+    }
+    class UserLocal {
+        +long Id
+        +string Username
+        +string NormalizedUsername
+        +string PasswordHash
+        +string Role
+        +string Status
+    }
+    class CookieAuthentication {
+        +SignInAsync(principal)
+        +SignOutAsync()
+    }
+    class AspNetSession {
+        +DeviceAddress
+        +SessionString
+    }
+    class ControlIdSession {
+        +session
+        +validade definida pelo equipamento
+    }
+
+    AuthController --> UserRepository
+    AuthController --> OfficialControlIdApiService
+    AuthController --> CookieAuthentication
+    AuthController --> AspNetSession
+    AuthController --> CryptoHelper
+    UserRepository --> UserLocal
+    UserRepository --> LocalIdentityPolicy
+    OfficialControlIdApiService --> AspNetSession
+    AspNetSession o-- ControlIdSession
+```
+
+`SessionLocal` é uma entidade de histórico operacional e não substitui o cookie
+de autenticação nem a sessão ASP.NET ativa da requisição. O segredo da sessão
+oficial nunca deve ser exposto pelo ViewModel.
+
+## Ciclo de vida das autenticações
+
+Os dois estados avançam de forma independente. O estado composto abaixo evita a
+interpretação incorreta de que entrar na PoC também autentica no equipamento.
+
+```mermaid
+stateDiagram-v2
+    [*] --> SemContaLocal: SQLite sem usuários
+    SemContaLocal --> ContaLocalCriada: primeiro cadastro transacional
+    ContaLocalCriada --> LocalAutenticado: credencial local válida
+    LocalAutenticado --> LocalAutenticado: renovação deslizante do cookie
+    LocalAutenticado --> EquipamentoConectado: URL validada e conexão selecionada
+    EquipamentoConectado --> SessaoControlIdAtiva: login.fcgi retorna session
+    SessaoControlIdAtiva --> SessaoControlIdAtiva: session_is_valid confirma
+    SessaoControlIdAtiva --> EquipamentoConectado: logout.fcgi ou sessão oficial expira
+    EquipamentoConectado --> LocalAutenticado: contexto do equipamento é limpo
+    LocalAutenticado --> LocalNaoAutenticado: logout local ou cookie expira
+    SessaoControlIdAtiva --> LocalNaoAutenticado: logout local limpa cookie e sessão ASP.NET
+    LocalNaoAutenticado --> LocalAutenticado: novo login local
+```
+
+Se a validade remota for desconhecida, a interface pode ter um valor de sessão
+armazenado, mas uma operação sensível deve validar o equipamento ou tratar a
+falha oficial de forma segura.
+
 ## Primeiro administrador
 
 1. Quando a tabela local `Users` está vazia, `/Auth/Register` permite o primeiro

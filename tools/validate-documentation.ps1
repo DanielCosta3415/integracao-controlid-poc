@@ -1,6 +1,7 @@
 [CmdletBinding()]
 param(
-    [int]$ExpectedMarkdownCount = 81,
+    [int]$ExpectedMarkdownCount = 82,
+    [int]$ExpectedMermaidCount = 41,
     [switch]$CheckExternalUrls
 )
 
@@ -199,6 +200,10 @@ try {
         Add-DocumentationError "Expected $ExpectedMarkdownCount Markdown files, found $($markdownFiles.Count)."
     }
 
+    $mermaidCount = 0
+    $markdownWithMermaid = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+    $allowedMermaidTypes = @('flowchart', 'sequenceDiagram', 'stateDiagram-v2', 'classDiagram', 'erDiagram')
+
     foreach ($markdownPathValue in $markdownFiles) {
         $markdownPath = Get-NormalizedRelativePath $markdownPathValue
         if (-not $markdownPath.StartsWith("docs/", [StringComparison]::OrdinalIgnoreCase) -or
@@ -253,6 +258,24 @@ try {
         $fenceCount = ([regex]::Matches($content, '(?m)^\s*```')).Count
         if (($fenceCount % 2) -ne 0) {
             Add-DocumentationError "Unbalanced fenced code block: $relativePath"
+        }
+
+        $mermaidMatches = [regex]::Matches($content, '(?ms)^\s*```mermaid\s*\r?\n(?<body>.*?)^\s*```\s*$')
+        foreach ($mermaidMatch in $mermaidMatches) {
+            $mermaidCount++
+            [void]$markdownWithMermaid.Add($relativePath)
+            $firstStatement = @($mermaidMatch.Groups['body'].Value -split '\r?\n' |
+                Where-Object { -not [string]::IsNullOrWhiteSpace($_) } |
+                Select-Object -First 1)
+            if ($firstStatement.Count -eq 0) {
+                Add-DocumentationError "Empty Mermaid diagram: $relativePath"
+                continue
+            }
+
+            $mermaidType = ($firstStatement[0].Trim() -split '\s+')[0]
+            if ($mermaidType -notin $allowedMermaidTypes) {
+                Add-DocumentationError "Unsupported Mermaid diagram type in ${relativePath}: $mermaidType"
+            }
         }
 
         if ($relativePath -ne $licenseRelativePath) {
@@ -382,6 +405,10 @@ try {
         }
     }
 
+    if ($mermaidCount -ne $ExpectedMermaidCount) {
+        Add-DocumentationError "Expected $ExpectedMermaidCount Mermaid diagrams, found $mermaidCount."
+    }
+
     $indexedIncomingMarkdownCount = 0
     foreach ($markdownPathValue in $markdownFiles) {
         $markdownPath = Get-NormalizedRelativePath $markdownPathValue
@@ -509,6 +536,7 @@ try {
     Write-Output "Markdown files: $($markdownFiles.Count)"
     Write-Output "Authored documents with metadata: $($markdownFiles.Count - 1)"
     Write-Output "Indexed documents with incoming links: $indexedIncomingMarkdownCount"
+    Write-Output "Mermaid diagrams: $mermaidCount in $($markdownWithMermaid.Count) documents"
     Write-Output "Source inventory generator: validated"
     Write-Output "Requirement traceability rows: 9"
     Write-Output "External URLs checked: $(if ($CheckExternalUrls) { $externalUrls.Count } else { 0 })"

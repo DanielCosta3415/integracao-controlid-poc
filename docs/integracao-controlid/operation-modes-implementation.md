@@ -164,6 +164,50 @@ O ciclo é:
 
 Importante: a PoC não guarda uma tabela própria de "modo atual". A fonte de verdade é o equipamento, lido por `get-configuration`. O banco local entra apenas como apoio para eventos/callbacks recentes usados na observabilidade da tela.
 
+## Sequência de alteração e releitura
+
+```mermaid
+sequenceDiagram
+    actor Admin as Administrador
+    participant UI as OperationModes MVC
+    participant Controller as OperationModesController
+    participant Resolver as OperationModesProfileResolver
+    participant Payload as OperationModesPayloadFactory
+    participant API as OfficialControlIdApiService
+    participant Device as Equipamento Control iD
+    participant Monitor as MonitorEventRepository
+
+    Admin->>UI: Abre a tela de modos
+    UI->>Controller: GET /OperationModes
+    Controller->>API: get-configuration
+    API->>Device: Consulta flags oficiais
+    Device-->>Controller: online, local_identification e server_id
+    Controller->>Resolver: Resolve(flags)
+    Resolver-->>UI: Modo detectado e prontidão
+
+    Admin->>UI: Escolhe Standalone, Pro ou Enterprise
+    UI->>Controller: POST com antiforgery
+    Controller->>Controller: Valida conexão e sessão
+    opt Perfil Pro ou Enterprise sem server_id
+        Controller->>API: load_objects ou create_objects para devices
+        API->>Device: Resolve/cria servidor online
+        Device-->>Controller: server_id
+    end
+    Controller->>Payload: Monta payload do perfil
+    Controller->>API: set-configuration
+    API->>Device: Aplica configuração
+    Device-->>Controller: Resposta oficial
+    Controller->>API: get-configuration novamente
+    API->>Device: Relê a fonte de verdade
+    Device-->>Resolver: Flags atuais
+    Controller->>Monitor: Consulta sinais recentes relacionados
+    Controller-->>UI: Estado relido ou erro sanitizado
+```
+
+Sucesso HTTP na escrita não é evidência suficiente de transição física. A tela
+deve apresentar o estado relido e manter explícita a necessidade de homologação
+por modelo, firmware e licença.
+
 ## Licenças e upgrades
 
 A tela também inclui ações de licenciamento, mas elas são separadas da aplicação de perfil.

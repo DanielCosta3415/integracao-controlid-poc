@@ -89,7 +89,9 @@ public class DocumentationGovernanceContractTests
 
         Assert.Contains(".\\tools\\validate-documentation.ps1", workflow, StringComparison.Ordinal);
         Assert.Contains("documentation-validation", releaseGate, StringComparison.Ordinal);
-        Assert.Contains("ExpectedMarkdownCount = 81", validator, StringComparison.Ordinal);
+        Assert.Contains("ExpectedMarkdownCount = 82", validator, StringComparison.Ordinal);
+        Assert.Contains("ExpectedMermaidCount = 41", validator, StringComparison.Ordinal);
+        Assert.Contains("Unsupported Mermaid diagram type", validator, StringComparison.Ordinal);
         Assert.Contains("[switch]$CheckExternalUrls", validator, StringComparison.Ordinal);
         Assert.Contains("Missing local Markdown anchor", validator, StringComparison.Ordinal);
         Assert.Contains("Documentation file missing from domain index", validator, StringComparison.Ordinal);

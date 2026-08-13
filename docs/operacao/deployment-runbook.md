@@ -81,6 +81,47 @@ Health checks:
 - Readiness: `GET /health/ready`.
 - Métricas: `GET /metrics` com usuário administrador.
 
+## Sequência de inicialização e prontidão
+
+Esta sequência separa o processo exclusivo de migração do processo que recebe
+tráfego. Ela representa o procedimento recomendado para ambiente persistente;
+em `Development`, a configuração pode aplicar migrações no próprio startup.
+
+```mermaid
+sequenceDiagram
+    actor Release as Responsável pela liberação
+    participant Backup as Backup operacional
+    participant Migrator as Processo exclusivo de migração
+    participant Validation as Validação de configuração
+    participant DB as SQLite e Data Protection
+    participant App as Processo web
+    participant Health as Liveness e readiness
+
+    Release->>Backup: Preserva DB, WAL, SHM e chaves
+    Backup-->>Release: Manifesto e restore-smoke válidos
+    Release->>Migrator: Inicia com ApplyMigrationsOnStartup=true e ExitAfterMigrations=true
+    Migrator->>Validation: Valida ambiente, hosts, ingressos e egressos
+    alt Configuração insegura
+        Validation-->>Release: Startup falha sem alterar tráfego
+    else Configuração válida
+        Migrator->>DB: Database.Migrate em processo único
+        DB-->>Migrator: Migrações aplicadas
+        Migrator-->>Release: Processo encerra com sucesso
+        Release->>App: Inicia com ApplyMigrationsOnStartup=false
+        App->>Validation: Repete validações de runtime
+        App->>DB: Abre estado e aplica política SQLite
+        App->>Health: Publica /health/live e /health/ready
+        alt Banco acessível e sem migração pendente
+            Health-->>Release: Ready para receber tráfego
+        else Banco indisponível ou schema pendente
+            Health-->>Release: Not ready, bloquear tráfego e investigar
+        end
+    end
+```
+
+Readiness saudável não substitui smoke funcional, contrato do equipamento nem
+aprovação operacional. Liveness saudável indica apenas que o processo responde.
+
 ## Procedimento de implantação
 
 1. Criar ou atualizar `.env` fora do Git com base em `.env.example`.

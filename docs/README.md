@@ -12,7 +12,7 @@ arquiteturais e evidências históricas.
 | --- | --- | --- |
 | Entender a PoC | [Visão geral](../README.md) → [FAQ](primeiros-passos/faq.md) → [percurso por perfil](primeiros-passos/persona-guides.md) | Escopo, limites e próximo passo identificados |
 | Executar sem equipamento | [Onboarding](primeiros-passos/developer-onboarding.md) → [validação sem aparelho](primeiros-passos/validation-without-device.md) → [cenários do simulador](primeiros-passos/stub-scenarios.md) | Aplicação, simulador e smoke aprovados |
-| Evoluir código | [Arquitetura](arquitetura/architecture-overview.md) → [contratos](integracao-controlid/integration-contracts.md) → [testes](qualidade/testing-strategy.md) | Contrato e testes afetados identificados |
+| Evoluir código | [Arquitetura](arquitetura/architecture-overview.md) → [diagramas](arquitetura/diagramas.md) → [contratos](integracao-controlid/integration-contracts.md) → [testes](qualidade/testing-strategy.md) | Componentes, contrato e testes afetados identificados |
 | Integrar equipamento | [Compatibilidade](integracao-controlid/device-compatibility-matrix.md) → [rede](integracao-controlid/network-topologies.md) → [validação de endpoints](integracao-controlid/endpoint-validation-matrix.md) | Modelo, firmware, licença e topologia registrados |
 | Operar ou diagnosticar | [Diagnóstico](operacao/troubleshooting-controlid.md) → [observabilidade](operacao/observability-runbook.md) → [incidentes](operacao/incident-response-and-dr.md) | Sintoma classificado e evidência segura coletada |
 | Preparar liberação | [CI/CD](qualidade/ci-cd-quality-gates.md) → [implantação](operacao/deployment-runbook.md) → [riscos residuais](operacao/residual-risk-closure.md) | Gate estrito e aprovações humanas concluídos |
@@ -23,7 +23,7 @@ arquiteturais e evidências históricas.
 | --- | --- |
 | [Primeiros passos](primeiros-passos/README.md) | FAQ, onboarding, personas, simulador e limites sem hardware |
 | [Produto](produto/README.md) | Requisitos, critérios de aceite, analytics e identidade visual |
-| [Arquitetura](arquitetura/README.md) | Camadas, fluxos, módulos e direção de dependências |
+| [Arquitetura](arquitetura/README.md) | Camadas, fluxos, módulos, diagramas e direção de dependências |
 | [Decisões arquiteturais](adrs/README.md) | ADRs aceitos, substituições e consequências |
 | [Integração Control iD](integracao-controlid/README.md) | Contratos, rede, compatibilidade, Monitor, Push e modos |
 | [Dados](dados/README.md) | SQLite, modelo, migrações, retenção, backup e recuperação |
@@ -38,7 +38,7 @@ arquiteturais e evidências históricas.
 | --- | --- | --- |
 | Escopo e primeiro uso | [README raiz](../README.md) | [FAQ](primeiros-passos/faq.md) |
 | Setup e comandos | [Onboarding](primeiros-passos/developer-onboarding.md) | [AGENTS.md](../AGENTS.md) |
-| Arquitetura | [Visão de arquitetura](arquitetura/architecture-overview.md) | [ADRs](adrs/README.md) |
+| Arquitetura | [Visão de arquitetura](arquitetura/architecture-overview.md) | [Catálogo de diagramas](arquitetura/diagramas.md) e [ADRs](adrs/README.md) |
 | Access API | [Contratos de integração](integracao-controlid/integration-contracts.md) | [Catálogo de erros](integracao-controlid/api-error-catalog.md) |
 | Compatibilidade física | [Matriz de compatibilidade](integracao-controlid/device-compatibility-matrix.md) | [Matriz de endpoints](integracao-controlid/endpoint-validation-matrix.md) |
 | Dados e recuperação | [Modelo e recuperação](dados/data-model-and-recovery.md) | [Estado de execução](dados/database-and-runtime-state.md) |
@@ -86,7 +86,9 @@ revisar também links, exemplos e riscos antes de atualizar a data de validaçã
 4. Não replique procedimentos extensos: vincule a fonte canônica.
 5. Registre decisões estruturais em `docs/adrs/`.
 6. Preserve relatórios datados em `docs/historico/`.
-7. Execute:
+7. Atualize [o catálogo de diagramas](arquitetura/diagramas.md) quando uma visão
+   visual for criada, removida, renomeada ou mudar de fonte canônica.
+8. Execute:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\tools\validate-documentation.ps1

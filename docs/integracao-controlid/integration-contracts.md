@@ -24,6 +24,89 @@ Este documento registra os contratos de integração da PoC sem criar endpoints 
 | Pagamentos | Terceiro | N/A | N/A | Não aplicável |
 | E-mail/SMS/analytics | Terceiro | N/A | N/A | Não aplicável |
 
+## Classes dos ingressos externos
+
+Callbacks, Monitor e Push compartilham leitura limitada e controles de origem,
+mas persistem por serviços de domínio distintos. A autenticação local por cookie
+não protege essas rotas máquina a máquina. Os dois diagramas separam os fluxos
+para manter classes e relações legíveis no GitHub.
+
+### Callbacks e Monitor
+
+```mermaid
+classDiagram
+    direction TB
+    class OfficialCallbacksController
+    class MonitorWebhookController
+    class CallbackRequestBodyReader {
+        +ReadAsync(request, cancellationToken)
+    }
+    class CallbackSecurityEvaluator {
+        +Evaluate(httpContext)
+        +IsRemoteIpAllowed(remoteIp)
+    }
+    class CallbackSignatureValidator {
+        +Validate(request, bodyBytes)
+    }
+    class CallbackIngressService {
+        +PersistAsync(path, body, contentType)
+    }
+    class MonitorEventRepository
+
+    OfficialCallbacksController --> CallbackRequestBodyReader
+    OfficialCallbacksController --> CallbackSecurityEvaluator
+    OfficialCallbacksController --> CallbackSignatureValidator
+    OfficialCallbacksController --> CallbackIngressService
+    MonitorWebhookController --> CallbackRequestBodyReader
+    MonitorWebhookController --> CallbackSecurityEvaluator
+    MonitorWebhookController --> CallbackSignatureValidator
+    MonitorWebhookController --> CallbackIngressService
+    CallbackIngressService --> MonitorEventRepository
+```
+
+### Push e idempotência
+
+```mermaid
+classDiagram
+    direction TB
+    class PushCenterController
+    class PushController
+    class CallbackRequestBodyReader {
+        +ReadAsync(request, cancellationToken)
+    }
+    class CallbackSecurityEvaluator {
+        +Evaluate(httpContext)
+        +IsRemoteIpAllowed(remoteIp)
+    }
+    class CallbackSignatureValidator {
+        +Validate(request, bodyBytes)
+    }
+    class PushCommandWorkflowService {
+        +DeliverNextAsync(deviceId)
+        +StoreResultAsync(commandId, status, body, idempotencyKey)
+        +StoreLegacyEventAsync(body, commandId)
+    }
+    class PushCommandRepository
+    class PushIdempotencyKeyResolver {
+        +Resolve(request)
+    }
+
+    PushCenterController --> CallbackRequestBodyReader
+    PushCenterController --> CallbackSecurityEvaluator
+    PushCenterController --> CallbackSignatureValidator
+    PushCenterController --> PushCommandWorkflowService
+    PushCenterController --> PushIdempotencyKeyResolver
+    PushController --> CallbackRequestBodyReader
+    PushController --> CallbackSecurityEvaluator
+    PushController --> CallbackSignatureValidator
+    PushController --> PushCommandWorkflowService
+    PushCommandWorkflowService --> PushCommandRepository
+```
+
+Todas as respostas de sucesso que confirmam recebimento devem ocorrer somente
+depois da persistência necessária. Rejeição de tamanho, origem, assinatura ou
+replay não deve criar registro operacional.
+
 ## Configuração e variáveis
 
 Não há loader `.env` configurado. Use `appsettings.json`, User Secrets ou variáveis de ambiente ASP.NET Core no formato `Secao__Chave`.

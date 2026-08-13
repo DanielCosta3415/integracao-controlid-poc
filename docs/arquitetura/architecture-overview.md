@@ -4,7 +4,8 @@
 
 Este documento resume a arquitetura atual da PoC e aponta onde cada tipo de
 mudança deve acontecer. Ele não substitui os documentos de domínio; serve como
-mapa de alto nível.
+mapa de alto nível. O inventário de todas as visões está no
+[catálogo de diagramas](diagramas.md).
 
 ## Estilo arquitetural
 
@@ -16,22 +17,54 @@ A aplicação é um monólito web ASP.NET Core MVC/Razor com:
 - scripts PowerShell para diagnóstico, teste integrado, prontidão e operação;
 - Docker/Compose para execução reproduzível sem definir provedor de nuvem.
 
+O desenho usa agrupamentos equivalentes a componentes para tornar explícitas as
+fronteiras do monólito e dos processos externos:
+
 ```mermaid
-flowchart LR
-    Browser["Navegador MVC/Razor"] --> Controllers["Controllers e ViewModels"]
-    Controllers --> Services["Serviços de aplicação"]
-    Services --> ApiClient["Cliente Access API"]
-    Services --> Repositories["Repositórios EF Core"]
-    ApiClient --> Device["Equipamento Control iD ou stub"]
-    Repositories --> SQLite["SQLite local"]
-    Device --> Ingress["Callbacks, Monitor e Push"]
-    Ingress --> Controllers
-    Controllers --> Signals["Registros, métricas e verificações de saúde"]
+flowchart TB
+    subgraph Client["Componente: navegador"]
+        Browser["Views Razor, CSS e JavaScript"]
+    end
+    subgraph WebApp["Componente: PoC ASP.NET Core"]
+        Controllers["Controllers e ViewModels"]
+        AppServices["Serviços de aplicação"]
+        Outbound["Adaptador Access API"]
+        Ingress["Adaptadores de callbacks, Monitor e Push"]
+        Repositories["Repositórios EF Core"]
+        CrossCutting["Segurança, logs, métricas e saúde"]
+        Controllers --> AppServices
+        AppServices --> Outbound
+        AppServices --> Repositories
+        Ingress --> AppServices
+        Controllers --> CrossCutting
+        Ingress --> CrossCutting
+    end
+    subgraph LocalState["Componente: estado local"]
+        SQLite["SQLite e chaves de Data Protection"]
+        LogFiles["Logs e artefatos locais"]
+    end
+    subgraph External["Componentes externos"]
+        Device["Equipamento Control iD"]
+        Stub["Simulador determinístico"]
+        SigningProxy["Proxy assinador opcional"]
+    end
+    Browser --> Controllers
+    Outbound --> Device
+    Outbound --> Stub
+    Device --> SigningProxy
+    Device --> Ingress
+    SigningProxy --> Ingress
+    Repositories --> SQLite
+    CrossCutting --> LogFiles
 ```
 
 As dependências apontam da apresentação para serviços e adaptadores. Regras
 reutilizáveis não devem depender de Razor, `HttpContext` ou detalhes de transporte
 quando puderem ser expressas como serviços testáveis.
+
+O processo do simulador e o proxy assinador não fazem parte do processo web. O
+SQLite, as chaves de Data Protection e os logs são estado do ambiente e precisam
+de persistência e proteção próprias quando a PoC sair do uso descartável.
 
 ## Camadas
 

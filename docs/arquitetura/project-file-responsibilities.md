@@ -41,6 +41,56 @@ Para comportamento detalhado, use o código, os testes e a fonte canônica do
 Controllers devem permanecer finos. Regra reutilizável, acesso a dados e
 integração HTTP pertencem aos módulos abaixo.
 
+## Mapa de navegação funcional
+
+O mapa agrupa telas por jornada e papel, sem tentar substituir a tabela de rotas
+do ASP.NET Core. Links administrativos podem aparecer na navegação, mas o
+controller continua sendo a fronteira confiável de autorização.
+
+```mermaid
+flowchart LR
+    Start["/Auth/LocalLogin"] --> Home["/Home/Index"]
+    Start --> Bootstrap["/Auth/Register quando permitido"]
+    Home --> Connect["Conexão e login Control iD"]
+    Home --> Workspace["/Workspace: mapa funcional"]
+    Home --> Catalog["/OfficialApi: catálogo e contratos"]
+
+    subgraph ReadOnly["Jornada comum autenticada"]
+        Dashboard["Painel e estado da sessão"]
+        Explore["Catálogo, documentação e diagnóstico"]
+        ModesRead["Leitura de modos e prontidão"]
+    end
+
+    subgraph Admin["Jornada Administrator"]
+        Objects["Objetos oficiais e cadastros"]
+        Hardware["Hardware, mídia e ações remotas"]
+        Config["Configuração e modos de operação"]
+        Monitor["Monitor, eventos e callbacks"]
+        Push["Push Center"]
+        Privacy["Privacidade e categorias do titular"]
+        Development["Central do simulador em Development"]
+    end
+
+    Connect --> Dashboard
+    Workspace --> Explore
+    Catalog --> Explore
+    Explore --> ModesRead
+    Workspace --> Objects
+    Workspace --> Hardware
+    Workspace --> Config
+    Workspace --> Monitor
+    Workspace --> Push
+    Workspace --> Privacy
+    Workspace --> Development
+    Objects --> Catalog
+    Config --> ModesRead
+    Monitor --> Push
+```
+
+O percurso inicial recomendado é login local, conexão, login no equipamento,
+painel e consulta segura. Escritas, ações físicas, limpeza e expurgo exigem
+`Administrator`, antiforgery e, quando aplicável, confirmação textual.
+
 ## Aplicação e integração
 
 | Caminho | Responsabilidade | Fonte complementar |
@@ -117,6 +167,7 @@ pré-condições quando dependem de ferramenta externa ou hardware.
 | --- | --- |
 | [README.md](../../README.md) | Visão executiva e início rápido |
 | [docs/README.md](../README.md) | Portal canônico de conhecimento |
+| [docs/arquitetura/diagramas.md](diagramas.md) | Inventário, notação e manutenção das visões técnicas |
 | `docs/<domínio>/README.md` | Índice e fonte canônica do domínio |
 | `docs/adrs/` | Decisões arquiteturais imutáveis por substituição explícita |
 | `docs/historico/` | Changelogs, auditorias e relatórios datados |

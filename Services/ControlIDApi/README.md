@@ -38,6 +38,110 @@ flowchart LR
 5. A resposta é lida em streaming com limite e charset explícito.
 6. O resultado de apresentação remove detalhes internos antes da tela.
 
+## Relações entre as classes principais
+
+Os três diagramas mostram dependências de construção ou chamada, não herança
+entre controllers e serviços. A separação entre fachada, controles de envio e
+tratamento da resposta mantém os nomes legíveis no GitHub. Métodos foram
+limitados aos que definem o contrato do pipeline.
+
+### Fachada de aplicação e catálogo
+
+```mermaid
+classDiagram
+    direction TB
+    class OfficialApiController {
+        +Index()
+        +Invoke(id)
+        +Invoke(model)
+    }
+    class OfficialApiCatalogService {
+        +GetAll()
+        +GetById(id)
+    }
+    class IOfficialControlIdApiService {
+        <<interface>>
+        +InvokeAsync(endpointId, payload)
+        +InvokeBinaryAsync(endpointId, bytes)
+    }
+    class OfficialControlIdApiService {
+        +TryGetConnection()
+        +InvokeAsync(endpointId, payload)
+        +InvokeJsonAsync(endpointId, payload)
+    }
+    class OfficialApiResultPresentationService {
+        +EnsureSuccess(result, message)
+        +FormatResponseBody(result)
+    }
+    class OfficialApiEndpointDefinition
+    class OfficialApiInvocationResult
+
+    OfficialApiController --> OfficialApiCatalogService
+    OfficialApiController --> IOfficialControlIdApiService
+    OfficialApiController --> OfficialApiResultPresentationService
+    OfficialControlIdApiService ..|> IOfficialControlIdApiService
+    OfficialApiCatalogService --> OfficialApiEndpointDefinition
+    OfficialApiResultPresentationService --> OfficialApiInvocationResult
+```
+
+### Transporte e controles anteriores ao envio
+
+```mermaid
+classDiagram
+    direction TB
+    class OfficialControlIdApiService {
+        +TryGetConnection()
+        +InvokeAsync(endpointId, payload)
+        +InvokeJsonAsync(endpointId, payload)
+    }
+    class OfficialApiInvokerService {
+        +InvokeAsync(endpoint, address, session, content)
+        +InvokeToStreamAsync(endpoint, address, session, stream)
+    }
+    class ControlIdInputSanitizer {
+        +TryNormalizeBaseAddress()
+        +BuildSanitizedContent()
+    }
+    class OfficialApiConcurrencyLimiter {
+        +AcquireAsync(deviceTarget, cancellationToken)
+    }
+    class OfficialApiCircuitBreaker {
+        +TryAcquire(endpointId, deviceTarget)
+        +RecordSuccess(endpointId, deviceTarget)
+        +RecordFailure(endpointId, deviceTarget)
+    }
+
+    OfficialControlIdApiService --> OfficialApiInvokerService
+    OfficialApiInvokerService --> ControlIdInputSanitizer
+    OfficialApiInvokerService --> OfficialApiConcurrencyLimiter
+    OfficialApiInvokerService --> OfficialApiCircuitBreaker
+```
+
+### Leitura e apresentação da resposta
+
+```mermaid
+classDiagram
+    direction TB
+    class OfficialApiInvokerService {
+        +InvokeAsync(endpoint, address, session, content)
+        +InvokeToStreamAsync(endpoint, address, session, stream)
+    }
+    class OfficialApiResponseBodyReader {
+        <<static>>
+        +ReadAsync(content, maxBytes, cancellationToken)
+        +CopyToAsync(content, destination, maxBytes, cancellationToken)
+    }
+    class OfficialApiInvocationResult
+    class OfficialApiResultPresentationService {
+        +EnsureSuccess(result, message)
+        +FormatResponseBody(result)
+    }
+
+    OfficialApiInvokerService --> OfficialApiResponseBodyReader
+    OfficialApiInvokerService --> OfficialApiInvocationResult
+    OfficialApiResultPresentationService --> OfficialApiInvocationResult
+```
+
 ## Responsabilidades dos componentes
 
 | Componente | Responsabilidade | Não deve fazer |
@@ -60,6 +164,29 @@ flowchart LR
   e testes de sucesso, entrada inválida, tempo limite e resposta inesperada.
 - Mudança de payload público exige versão ou compatibilidade documentada em
   [docs/integracao-controlid/integration-contracts.md](../../docs/integracao-controlid/integration-contracts.md).
+
+## Estados do circuit breaker
+
+O implementado não possui estado meio aberto exclusivo. Quando o período aberto
+termina, a próxima chamada é permitida; sucesso zera a contagem e nova falha pode
+reabrir o circuito conforme o limiar configurado.
+
+```mermaid
+stateDiagram-v2
+    [*] --> Fechado
+    Fechado --> Fechado: sucesso zera falhas consecutivas
+    Fechado --> ContandoFalhas: primeira falha transitória
+    ContandoFalhas --> ContandoFalhas: falha abaixo do limiar
+    ContandoFalhas --> Fechado: sucesso
+    ContandoFalhas --> Aberto: limiar de falhas atingido
+    Aberto --> Aberto: chamada antes de OpenUntilUtc é bloqueada
+    Aberto --> TentativaPermitida: duração expirada
+    TentativaPermitida --> Fechado: sucesso
+    TentativaPermitida --> Aberto: nova falha mantém limiar atingido
+```
+
+O estado é isolado pela combinação de destino e endpoint. O diagrama não implica
+persistência: a memória do disjuntor é perdida quando o processo reinicia.
 
 ## Testes relacionados
 

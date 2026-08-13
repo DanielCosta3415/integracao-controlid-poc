@@ -35,6 +35,59 @@ do destino. O limitador por equipamento permite até quatro operações
 simultâneas e fila de 16; excesso retorna erro local controlado sem atingir o
 dispositivo.
 
+## Fronteiras de confiança e fluxos de dados
+
+O desenho abaixo é um fluxo de dados para análise de segurança. Cada mudança de
+zona exige autenticação, validação, limitação ou proteção compatível com a direção
+da chamada.
+
+```mermaid
+flowchart TB
+    subgraph UserZone["Zona do usuário"]
+        Browser["Navegador do operador"]
+    end
+    subgraph MachineZone["Zona do equipamento ou sistema externo"]
+        Device["Control iD"]
+        External["Sistema autorizado"]
+    end
+    subgraph EdgeZone["Borda opcional do ambiente"]
+        ReverseProxy["Proxy reverso confiável e TLS"]
+        SigningProxy["Proxy assinador restrito"]
+    end
+    subgraph AppZone["Zona confiável da PoC"]
+        MVC["MVC, cookie, antiforgery e RBAC"]
+        Ingress["Ingressos com limite, IP, chave, HMAC e anti-replay"]
+        Egress["Saída com URL normalizada, allowlist, timeout e limites"]
+        Services["Serviços de aplicação"]
+        Signals["Correlação, logs e métricas minimizados"]
+    end
+    subgraph StateZone["Zona de estado local sensível"]
+        SQLite["SQLite"]
+        Keys["Chaves de Data Protection"]
+        Files["Logs, backups e artefatos"]
+    end
+
+    Browser -->|"HTTPS, cookie e antiforgery"| ReverseProxy
+    ReverseProxy --> MVC
+    MVC --> Services
+    Services --> Egress
+    Egress -->|"HTTP ou HTTPS em rede autorizada"| Device
+    Device -->|"HMAC nativo"| Ingress
+    Device -->|"Sem HMAC nativo"| SigningProxy
+    SigningProxy -->|"Reassinado"| Ingress
+    External -->|"Contrato e origem autorizados"| Ingress
+    Ingress --> Services
+    Services --> SQLite
+    MVC --> Keys
+    Services --> Signals
+    Signals --> Files
+```
+
+Em desenvolvimento local, o navegador pode alcançar a aplicação sem proxy
+reverso. Em ambiente exposto, TLS, hosts permitidos e proxy conhecido deixam de
+ser opcionais. O proxy assinador não autentica pessoas nem substitui a lista de
+origens permitidas.
+
 ## Configuração de produção ou ambiente exposto
 
 Valores reais devem ser configurados por variáveis de ambiente, User Secrets ou provedor seguro equivalente:

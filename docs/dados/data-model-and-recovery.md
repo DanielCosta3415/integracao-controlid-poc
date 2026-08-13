@@ -146,6 +146,49 @@ Restore sobrescreve estado local e exige confirmação humana. Procedimento reco
 5. Rodar `dotnet build .\Integracao.ControlID.PoC.sln --no-restore -v:minimal`.
 6. Subir a aplicação em ambiente local controlado e validar os fluxos afetados.
 
+## Atividade de backup, restauração e reversão
+
+```mermaid
+flowchart TD
+    Change["Mudança de schema, implantação ou incidente"]
+    Stop{"É possível parar a aplicação?"}
+    Quiesce["Parar escritores e preservar DB, WAL e SHM"]
+    Record["Registrar origem, commit, horário e responsável"]
+    Backup["Executar backup protegido e gerar manifesto"]
+    Mirror{"Destino externo aprovado está disponível?"}
+    External["Espelhar cópia criptografada fora do host"]
+    Smoke["Executar restore-smoke em cópia temporária"]
+    Valid{"Integridade e migrações foram validadas?"}
+    Proceed["Autorizar mudança ou restauração real"]
+    Preserve["Preservar estado atual antes de sobrescrever"]
+    Restore["Restaurar somente com confirmação humana"]
+    Verify["Validar migrations, readiness e fluxos afetados"]
+    Fail["Bloquear a mudança e investigar a cópia"]
+    Evidence["Registrar resultado e risco residual"]
+
+    Change --> Stop
+    Stop -->|"Sim"| Quiesce
+    Stop -->|"Não"| Record
+    Quiesce --> Record
+    Record --> Backup
+    Backup --> Mirror
+    Mirror -->|"Sim"| External
+    Mirror -->|"Não"| Smoke
+    External --> Smoke
+    Smoke --> Valid
+    Valid -->|"Não"| Fail
+    Valid -->|"Sim"| Proceed
+    Proceed --> Preserve
+    Preserve --> Restore
+    Restore --> Verify
+    Verify --> Evidence
+    Fail --> Evidence
+```
+
+O caminho “não” para parada não declara consistência garantida: o manifesto deve
+registrar que houve processo ativo, e o restore-smoke decide se a cópia pode ser
+usada. A restauração real continua proibida sem confirmação humana.
+
 RTO/RPO não estão garantidos para produção até existir validação no ambiente-alvo. Para a release operacional, `ops.local.json` deve registrar os valores aprovados, e `tools/operational-readiness-check.ps1 -RequireConfig` bloqueia status pendente. O fechamento completo está em [docs/operacao/residual-risk-closure.md](../operacao/residual-risk-closure.md).
 
 ## Teste de restauração em cópia temporária
@@ -169,24 +212,187 @@ Sem parâmetro, o script usa a cópia de segurança mais recente em `artifacts/b
 | Média | `Ip` e `IpAddress` duplicam a finalidade em `Devices` | Campo preservado para compatibilidade; consultas novas usam `Ip`, e ambos ficam indexados | Planejar consolidação versionada sem remoção destrutiva. |
 | Baixa | Sem dados iniciais formais | Testes criam dados em memória | Criar fixtures fictícias se surgirem testes de integração mais amplos. |
 
-## Diagrama conceitual
+## Diagrama lógico e físico
 
-As ligações abaixo representam associações funcionais; o schema atual não impõe
-chaves estrangeiras entre todas elas porque vários identificadores vêm do
-equipamento remoto.
+As três vistas reúnem as 17 tabelas únicas do `IntegracaoControlIDContext`, suas
+chaves e os campos usados nas relações e consultas principais. `Users` reaparece
+na segunda vista somente como entidade-âncora. As linhas representam
+associações funcionais por identificadores remotos ou valores equivalentes; o
+schema atual **não possui chaves estrangeiras** entre essas tabelas. `UK` indica
+unicidade real no snapshot, enquanto os demais campos de busca são índices não
+únicos documentados na seção anterior.
+
+### Identidade, sessões e credenciais físicas
 
 ```mermaid
 erDiagram
+    Users {
+        long Id PK
+        string Registration
+        string Username
+        string NormalizedUsername UK
+        string NormalizedEmail UK
+        string PasswordHash
+        string Role
+        string Status
+    }
+    Sessions {
+        long Id PK
+        string DeviceAddress
+        string SessionString
+        string Username
+        datetime CreatedAt
+        datetime ExpiresAt
+        bool IsActive
+    }
+    BiometricTemplates {
+        long Id PK
+        long UserId
+        string Template
+        string Type
+        string FingerPosition
+    }
+    Cards {
+        long Id PK
+        long UserId
+        string Value
+        string Type
+        string Status
+    }
+    QRCodes {
+        long Id PK
+        long UserId
+        string Value
+        datetime BeginTime
+        datetime EndTime
+        string Status
+    }
+    Photos {
+        long Id PK
+        long UserId
+        string Base64Image
+        datetime Timestamp
+        string FileName
+    }
     Users ||--o{ Sessions : "inicia logicamente"
-    Devices ||--o{ Sessions : "recebe conexão"
-    Devices ||--o{ MonitorEvents : "emite"
-    Devices ||--o{ PushCommands : "consulta"
     Users ||--o{ Cards : "possui logicamente"
+    Users ||--o{ QRCodes : "possui logicamente"
     Users ||--o{ Photos : "possui logicamente"
     Users ||--o{ BiometricTemplates : "possui logicamente"
+```
+
+`Sessions.DeviceAddress` associa a sessão ao destino por endereço textual, não
+por chave para `Devices`.
+
+### Acesso, dispositivos e integrações assíncronas
+
+```mermaid
+erDiagram
+    Users {
+        long Id PK
+        string Registration
+        string Username
+    }
+    Devices {
+        long Id PK
+        string Ip
+        string IpAddress
+        string SerialNumber
+        string Status
+        datetime LastSeenAt
+    }
+    Groups {
+        long Id PK
+        string Name
+        string Status
+    }
+    AccessRules {
+        long Id PK
+        string Name
+        string Type
+        int Priority
+        string Status
+    }
+    AccessLogs {
+        long Id PK
+        datetime Time
+        int Event
+        long DeviceId
+        long UserId
+        int PortalId
+    }
+    MonitorEvents {
+        guid EventId PK
+        datetime ReceivedAt
+        string EventType
+        string DeviceId
+        string UserId
+        string Status
+    }
+    PushCommands {
+        guid CommandId PK
+        datetime ReceivedAt
+        string CommandType
+        string Status
+        string DeviceId
+        string UserId
+        datetime CreatedAt
+    }
+
     Groups ||--o{ AccessRules : "agrupa"
     Users ||--o{ AccessLogs : "gera"
+    Devices ||--o{ AccessLogs : "registra logicamente"
+    Devices ||--o{ MonitorEvents : "emite"
+    Devices ||--o{ PushCommands : "consulta"
+    Users ||--o{ MonitorEvents : "pode identificar"
+    Users ||--o{ PushCommands : "pode ser alvo"
 ```
+
+### Suporte operacional sem relação estrutural
+
+```mermaid
+erDiagram
+    ChangeLogs {
+        long Id PK
+        string OperationType
+        string TableName
+        long TableId
+        datetime Timestamp
+        string PerformedBy
+    }
+    Configs {
+        long Id PK
+        string Group
+        string Key
+        string Value
+    }
+    Logos {
+        long Id PK
+        string Base64Image
+        datetime Timestamp
+        string FileName
+    }
+    Logs {
+        long Id PK
+        string Level
+        string Message
+        datetime CreatedAt
+        string EventCode
+        string Source
+    }
+    Syncs {
+        long Id PK
+        string SyncType
+        string Status
+        datetime StartedAt
+        datetime FinishedAt
+        string ErrorCode
+    }
+```
+
+Essas cinco tabelas aparecem sem arestas porque sua referência a outras áreas é
+textual, genérica ou inexistente. Desenhar uma seta para elas sugeriria uma
+constraint que o banco não aplica.
 
 ## Histórico de migrações
 

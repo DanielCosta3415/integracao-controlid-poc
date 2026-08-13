@@ -58,6 +58,43 @@ sistema de arquivos.
 | Erro 5xx não tratado | `ExceptionHandlingMiddleware` | Error | correlation id, trace id; detalhes apenas no log |
 | Request HTTP concluída | `RequestLoggingMiddleware` | Information/Warning | método, path sem query, status, duração, IP/user refs |
 
+## Fluxo observável de uma requisição
+
+```mermaid
+sequenceDiagram
+    participant Caller as Navegador, equipamento ou probe
+    participant Correlation as CorrelationIdMiddleware
+    participant Errors as ExceptionHandlingMiddleware
+    participant RequestLog as RequestLoggingMiddleware
+    participant Handler as Controller e serviço
+    participant Dependency as SQLite ou Access API
+    participant Metrics as OperationalMetrics
+    participant Logs as Serilog
+
+    Caller->>Correlation: Requisição com ou sem X-Correlation-ID
+    Correlation->>Correlation: Valida ou gera identificador
+    Correlation->>Errors: Propaga escopo e TraceId
+    Errors->>RequestLog: Inicia medição HTTP
+    RequestLog->>Handler: Método, rota e identidade autorizada
+    Handler->>Dependency: Operação limitada e cancelável
+    alt Sucesso ou erro funcional conhecido
+        Dependency-->>Handler: Resultado tipado
+        Handler->>Metrics: Registra outcome, status_group e duração
+        Handler->>Logs: Evento estruturado sem payload sensível
+        Handler-->>Caller: Resposta com X-Correlation-ID
+    else Exceção não tratada
+        Dependency--x Handler: Falha técnica
+        Errors->>Logs: Exceção correlacionada no ambiente confiável
+        Errors->>Metrics: Incrementa erro 5xx
+        Errors-->>Caller: Mensagem segura sem stack trace
+    end
+    RequestLog->>Logs: Método, path sem query, status e duração
+```
+
+Logs, métricas e resposta compartilham o identificador de correlação, mas não o
+payload. Labels permanecem em lista de permissões para evitar cardinalidade alta
+e exposição de usuário, IP, query, body ou segredo.
+
 ## Métricas instrumentadas
 
 As métricas são publicadas via `System.Diagnostics.Metrics` no meter

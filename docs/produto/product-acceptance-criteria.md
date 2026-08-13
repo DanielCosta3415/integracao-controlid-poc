@@ -8,6 +8,59 @@ Escopo: PoC ASP.NET Core MVC para integração operacional com a Access API da C
 
 Fontes usadas: [README.md](../../README.md), [docs/integracao-controlid/monitor-implementation.md](../integracao-controlid/monitor-implementation.md), [docs/integracao-controlid/push-implementation.md](../integracao-controlid/push-implementation.md), [docs/integracao-controlid/operation-modes-implementation.md](../integracao-controlid/operation-modes-implementation.md), controllers MVC, serviços de integração, entidades locais e suíte `tests/Integracao.ControlID.PoC.Tests`.
 
+## Atores e casos de uso
+
+Esta visão funcional usa Mermaid para representar casos de uso de forma legível
+no GitHub. As autorizações confiáveis continuam nos controllers e nas políticas;
+uma ligação no desenho não substitui RBAC nem segurança máquina a máquina.
+
+```mermaid
+flowchart LR
+    Visitor["Visitante sem conta"]
+    Operator["Operador autenticado"]
+    Admin["Administrador autenticado"]
+    Device["Equipamento Control iD"]
+    External["Sistema externo autorizado"]
+    Maintainer["Mantenedor ou QA"]
+
+    subgraph PoC["Casos de uso da PoC"]
+        Bootstrap(["Cadastrar o primeiro administrador"])
+        LocalAuth(["Entrar e sair da PoC"])
+        Connect(["Conectar e autenticar no equipamento"])
+        Diagnose(["Consultar painel, catálogo e diagnóstico"])
+        ReadApi(["Executar consultas permitidas"])
+        Administer(["Administrar objetos, configurações e hardware"])
+        HighImpact(["Confirmar operação de alto impacto"])
+        Push(["Gerenciar fila Push"])
+        Ingress(["Receber callbacks, Monitor e resultados"])
+        Privacy(["Consultar categorias do titular"])
+        Validate(["Executar stub, testes e gates"])
+    end
+
+    Visitor --> Bootstrap
+    Visitor --> LocalAuth
+    Operator --> LocalAuth
+    Operator --> Connect
+    Operator --> Diagnose
+    Operator --> ReadApi
+    Admin --> LocalAuth
+    Admin --> Connect
+    Admin --> Diagnose
+    Admin --> ReadApi
+    Admin --> Administer
+    Admin --> HighImpact
+    Admin --> Push
+    Admin --> Privacy
+    Device --> Ingress
+    External --> Ingress
+    Maintainer --> Validate
+    Maintainer --> Diagnose
+```
+
+O primeiro cadastro só fica disponível enquanto não existe conta local. Depois
+dele, novos cadastros exigem administrador. `Operator` não recebe permissão para
+escritas administrativas ou ações físicas apenas por conseguir navegar na PoC.
+
 ## Fluxos críticos e critérios de aceite
 
 ### F01 - Conexão, login e sessão
@@ -49,6 +102,43 @@ Critérios:
 - AC-F04-02: Dado confirmação correta e conexão ativa, quando o usuário executa uma operação administrativa, então a PoC deve chamar o endpoint oficial correspondente e exibir sucesso ou erro sanitizado.
 - AC-F04-03: Dado alteração de rede aplicada com sucesso, quando IP/porta podem mudar, então a mensagem deve orientar reconexão.
 - AC-F04-04: Dado reset de fábrica, quando `keepNetworkInfo` é informado, então a PoC deve enviar esse valor ao endpoint oficial sem inferir outro comportamento.
+
+### Atividade de operação de alto impacto
+
+```mermaid
+flowchart TD
+    Start(["Administrador solicita a operação"])
+    Authorized{"Controller confirma papel Administrator?"}
+    Phrase{"Frase esperada confere exatamente?"}
+    Input{"Entrada e sessão são válidas?"}
+    Snapshot["Registrar contexto mínimo e estado anterior quando disponível"]
+    Invoke["Invocar uma única vez o endpoint oficial"]
+    Success{"Resposta oficial indica sucesso?"}
+    ReRead["Reler estado quando o contrato permitir"]
+    Audit["Registrar resultado sanitizado e correlation ID"]
+    Block["Bloquear sem chamar o equipamento"]
+    Fail["Exibir erro seguro e preservar evidência"]
+    End(["Fluxo encerrado"])
+
+    Start --> Authorized
+    Authorized -->|"Não"| Block
+    Authorized -->|"Sim"| Phrase
+    Phrase -->|"Não"| Block
+    Phrase -->|"Sim"| Input
+    Input -->|"Não"| Block
+    Input -->|"Sim"| Snapshot
+    Snapshot --> Invoke
+    Invoke --> Success
+    Success -->|"Sim"| ReRead
+    Success -->|"Não ou incerto"| Fail
+    ReRead --> Audit
+    Fail --> Audit
+    Block --> End
+    Audit --> End
+```
+
+Não existe repetição automática genérica nesse fluxo. Se a resposta for incerta,
+o operador deve conciliar o estado remoto antes de tentar novamente.
 
 ### F05 - Modos de operação Standalone, Pro e Enterprise
 
