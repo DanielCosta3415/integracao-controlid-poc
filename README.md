@@ -15,6 +15,7 @@ principais sem exigir equipamento físico.
 ## Sumário
 
 - [O que esta PoC demonstra](#o-que-esta-poc-demonstra)
+- [Stack tecnológica e ambiente obrigatório](#stack-tecnológica-e-ambiente-obrigatório)
 - [Estado, limites e fontes oficiais](#estado-limites-e-fontes-oficiais)
 - [O que funciona sem e com aparelho](#o-que-funciona-sem-e-com-aparelho)
 - [Início rápido sem equipamento](#início-rápido-sem-equipamento)
@@ -29,6 +30,34 @@ principais sem exigir equipamento físico.
 A solução demonstra sessão, endpoints `.fcgi`, objetos, modos de operação,
 callbacks, Monitor, Push, erros determinísticos e estado SQLite. Não substitui
 o software oficial nem representa controle de acesso pronto para produção.
+
+## Stack tecnológica e ambiente obrigatório
+
+| Frente | Tecnologias adotadas | Finalidade na PoC |
+| --- | --- | --- |
+| Plataforma e ambiente de execução | .NET 10 LTS, SDK `10.0.302` e ASP.NET Core 10 MVC/Razor | Hospedar a aplicação web, compor dependências, processar rotas e renderizar a interface |
+| Linguagens | C#, Razor, HTML5, CSS3, JavaScript e PowerShell | Implementar servidor, interface, automações e verificações operacionais |
+| Interface | Views Razor, Bootstrap 5.1, jQuery 3.6 e JavaScript progressivo | Oferecer telas responsivas, formulários, feedback e acessibilidade |
+| Integração Control iD | `HttpClient`, endpoints `.fcgi`, callbacks, Monitor, Push, simulador determinístico e proxy assinador | Exercitar contratos da Access API com ou sem equipamento físico |
+| Dados | Entity Framework Core `10.0.11`, provedor SQLite, migrações e SQLite local | Persistir contas, eventos, filas e estado operacional da PoC |
+| Segurança | Autenticação local por cookie, papéis `Administrator`/`Operator`, antiforgery, HMAC, listas de permissão e Data Protection | Proteger interface, saídas para equipamentos e ingressos externos |
+| Observabilidade | Serilog, ID de correlação, verificações de saúde e métricas em formato Prometheus | Apoiar diagnóstico, prontidão e operação |
+| API e documentação técnica | Swashbuckle e OpenAPI em `Development` | Expor e inspecionar contratos HTTP quando explicitamente habilitados |
+| Qualidade | xUnit, ASP.NET Core MVC Testing, Playwright, axe, verificação integrada e testes de contrato | Cobrir regras, integração, navegador, acessibilidade e regressões |
+| Compilação e dependências | CLI `dotnet`, NuGet com arquivos de bloqueio, `dotnet-ef` `10.0.11` e `dotnet format` | Garantir restauração, compilação e análise reproduzíveis |
+| Infraestrutura e integração contínua | Docker multiestágio, Docker Compose e GitHub Actions | Validar imagem Linux não privilegiada e critérios de qualidade a cada envio |
+| IDE obrigatória | Visual Studio 2026 18.6 ou mais recente | Carregar, executar e depurar completamente a solução `net10.0` com a banda `10.0.3xx` |
+
+> [!IMPORTANT]
+> O **Visual Studio 2026 18.6 ou mais recente é obrigatório para a experiência
+> completa de desenvolvimento desta PoC**, incluindo carregamento da solução,
+> execução por perfis, depuração integrada e gerenciamento dos projetos de teste.
+> O Visual Studio 2022 não oferece suporte oficial ao destino `net10.0`. Os
+> comandos da CLI `dotnet` continuam necessários para automação e reprodução dos
+> critérios de qualidade, mas não substituem a IDE no fluxo completo adotado
+> pelo projeto.
+> Consulte a [matriz oficial entre SDK, MSBuild e Visual
+> Studio](https://learn.microsoft.com/pt-br/dotnet/core/porting/versioning-sdk-msbuild-vs).
 
 ## Estado, limites e fontes oficiais
 
@@ -72,15 +101,13 @@ desempenho real, rede do local ou particularidades do produto.
 ### Pré-requisitos
 
 - Git;
+- Visual Studio 2026 18.6 ou mais recente, com a carga de trabalho
+  **ASP.NET e desenvolvimento Web**;
 - .NET SDK `10.0.302`, conforme `global.json`;
 - Windows PowerShell 5.1 ou PowerShell 7.
 
-Uma IDE é opcional. Para carregar e depurar `net10.0` de forma oficialmente
-suportada, use Visual Studio 2026 18.0 ou mais recente; a banda do SDK
-`10.0.3xx` corresponde ao Visual Studio 18.6. O Visual Studio 2022 17.14 pode
-executar comandos `dotnet`, mas não oferece suporte oficial ao destino
-`net10.0`. Consulte a
-[matriz oficial entre SDK, MSBuild e Visual Studio](https://learn.microsoft.com/dotnet/core/porting/versioning-sdk-msbuild-vs).
+O Visual Studio 2026 é requisito do fluxo completo. Execute os comandos abaixo
+no terminal integrado da IDE ou em um PowerShell aberto na raiz do repositório.
 
 ### 1. Preparar o repositório
 
@@ -153,9 +180,6 @@ flowchart TB
     Target -->|"consulta /push e envia /result"| App
     App --> Signals["Logs seguros, saúde e métricas"]
 ```
-
-Stack: C#, ASP.NET Core 10 MVC/Razor, JavaScript, Entity Framework Core, SQLite,
-Serilog, xUnit, Playwright, axe, PowerShell e contêiner Linux não privilegiado.
 
 Os pontos de entrada são `Program.cs`, `Controllers/`, `Services/`, `Models/`,
 `Data/`, `Views/`, `tests/` e `tools/`. O
