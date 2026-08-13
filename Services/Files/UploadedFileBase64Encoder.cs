@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Http;
+using System.Buffers;
 using System.Text;
 
 namespace Integracao.ControlID.PoC.Services.Files;
@@ -15,13 +16,25 @@ public sealed class UploadedFileBase64Encoder
         return Convert.ToBase64String(bytes);
     }
 
-    public async Task<string> EncodeValidatedAsync(
+    public Task<string> EncodeValidatedAsync(
         IFormFile? file,
         string emptyMessage,
         long maxBytes,
         UploadedFileValidation validation)
     {
-        var bytes = await ReadValidatedBytesAsync(file, emptyMessage, maxBytes, validation);
+        return EncodeValidatedAsync(file, emptyMessage, maxBytes, validation, CancellationToken.None);
+    }
+
+    public async Task<string> EncodeValidatedAsync(
+        IFormFile? file,
+        string emptyMessage,
+        long maxBytes,
+        UploadedFileValidation validation,
+        CancellationToken cancellationToken)
+    {
+        using var memory = await ReadToMemoryAsync(file, emptyMessage, maxBytes, cancellationToken);
+        var bytes = memory.GetBuffer().AsSpan(0, checked((int)memory.Length));
+        validation.Validate(file!, bytes);
         return Convert.ToBase64String(bytes);
     }
 
@@ -38,6 +51,16 @@ public sealed class UploadedFileBase64Encoder
 
     public async Task<byte[]> ReadBytesAsync(IFormFile? file, string emptyMessage, long maxBytes = DefaultMaxBytes)
     {
+        using var memory = await ReadToMemoryAsync(file, emptyMessage, maxBytes, CancellationToken.None);
+        return memory.ToArray();
+    }
+
+    private static async Task<MemoryStream> ReadToMemoryAsync(
+        IFormFile? file,
+        string emptyMessage,
+        long maxBytes,
+        CancellationToken cancellationToken)
+    {
         if (file == null || file.Length == 0)
             throw new InvalidOperationException(emptyMessage);
 
@@ -48,20 +71,32 @@ public sealed class UploadedFileBase64Encoder
         // arquivos excessivos e evita que cada controller implemente validacao
         // parcial ou divergente para o mesmo fluxo.
         await using var stream = file.OpenReadStream();
-        using var memory = new MemoryStream((int)Math.Min(file.Length, maxBytes > 0 ? maxBytes : int.MaxValue));
-        var buffer = new byte[81920];
-        long totalBytes = 0;
-        int read;
-        while ((read = await stream.ReadAsync(buffer)) > 0)
+        var memory = new MemoryStream(checked((int)Math.Min(file.Length, maxBytes > 0 ? maxBytes : int.MaxValue)));
+        var buffer = ArrayPool<byte>.Shared.Rent(81920);
+        try
         {
-            totalBytes += read;
-            if (maxBytes > 0 && totalBytes > maxBytes)
-                throw new InvalidOperationException($"O arquivo excede o limite de {FormatMegabytes(maxBytes)} MB permitido pela PoC.");
+            long totalBytes = 0;
+            int read;
+            while ((read = await stream.ReadAsync(buffer.AsMemory(0, buffer.Length), cancellationToken)) > 0)
+            {
+                totalBytes += read;
+                if (maxBytes > 0 && totalBytes > maxBytes)
+                    throw new InvalidOperationException($"O arquivo excede o limite de {FormatMegabytes(maxBytes)} MB permitido pela PoC.");
 
-            await memory.WriteAsync(buffer.AsMemory(0, read));
+                await memory.WriteAsync(buffer.AsMemory(0, read), cancellationToken);
+            }
+
+            return memory;
         }
-
-        return memory.ToArray();
+        catch
+        {
+            memory.Dispose();
+            throw;
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(buffer);
+        }
     }
 
     private static string FormatMegabytes(long bytes)

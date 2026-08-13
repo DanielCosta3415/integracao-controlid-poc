@@ -185,8 +185,11 @@ namespace Integracao.ControlID.PoC.Services.Security
         private static HttpContent BuildJsonContent(string? requestBody)
         {
             var rawJson = string.IsNullOrWhiteSpace(requestBody) ? "{}" : requestBody.Trim();
-            var json = JsonSerializer.Deserialize<JsonElement>(rawJson);
-            return JsonContent.Create(json);
+            using var document = JsonDocument.Parse(rawJson);
+            if (rawJson.IndexOfAny(['<', '>', '&']) >= 0)
+                return JsonContent.Create(document.RootElement.Clone());
+
+            return new StringContent(rawJson, Encoding.UTF8, "application/json");
         }
 
         public HttpContent BuildBinaryContent(ReadOnlyMemory<byte> payloadBytes)

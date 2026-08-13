@@ -25,10 +25,12 @@ só deve ser usado em `Development`; fora de `Development` a aplicação bloquei
 startup se essa opção estiver ativa.
 
 As métricas que consultam memória, disco e diretórios locais são atualizadas pelo
-`RuntimeCapacityMetricsBackgroundService`. O intervalo padrão é 30 segundos e
+`RuntimeCapacityMetricsBackgroundService`. O intervalo padrão é 300 segundos e
 pode ser configurado por `Observability:CapacitySnapshotIntervalSeconds` entre
-10 e 300 segundos. Assim, cada leitura de `/metrics` não repete varreduras do
-sistema de arquivos.
+60 e 3.600 segundos. A enumeração também é limitada por
+`Observability:CapacityMaxFilesPerScope` (10.000 por padrão) e publica
+`controlid.runtime.storage.scan.truncated` quando o teto é atingido. Assim, cada
+leitura de `/metrics` não repete varreduras do sistema de arquivos.
 
 ## Correlação e rastreamento
 

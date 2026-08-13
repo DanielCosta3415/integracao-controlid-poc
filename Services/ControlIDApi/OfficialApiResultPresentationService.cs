@@ -5,6 +5,11 @@ namespace Integracao.ControlID.PoC.Services.ControlIDApi
 {
     public sealed class OfficialApiResultPresentationService
     {
+        private static readonly JsonSerializerOptions IndentedJsonOptions = new()
+        {
+            WriteIndented = true
+        };
+
         public void EnsureSuccess(OfficialApiInvocationResult result, string message)
         {
             if (result.Success)
@@ -27,15 +32,17 @@ namespace Integracao.ControlID.PoC.Services.ControlIDApi
 
         public string FormatJson(string rawJson, OfficialApiJsonPayload? document)
         {
+            return FormatJsonPayload(rawJson, document);
+        }
+
+        public static string FormatJsonPayload(string rawJson, OfficialApiJsonPayload? document)
+        {
             if (document == null)
             {
                 return rawJson;
             }
 
-            return JsonSerializer.Serialize(document.RootElement, new JsonSerializerOptions
-            {
-                WriteIndented = true
-            });
+            return JsonSerializer.Serialize(document.RootElement, IndentedJsonOptions);
         }
 
         public string FormatResponseBody(OfficialApiInvocationResult result)

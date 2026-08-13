@@ -15,6 +15,8 @@ namespace Integracao.ControlID.PoC.Controllers
     public class AdvancedOfficialController : Controller
     {
         private const long MaxFacialImageBytes = 5L * 1024 * 1024;
+        private const int MaxFacialImageBatchCount = 20;
+        private const long MaxFacialImageBatchBytes = 20L * 1024 * 1024;
 
         private readonly OfficialControlIdApiService _apiService;
         private readonly UploadedFileBase64Encoder _fileEncoder;
@@ -219,7 +221,14 @@ namespace Integracao.ControlID.PoC.Controllers
                 if (userIds.Count != model.BatchFiles.Count)
                     throw new InvalidOperationException("A quantidade de IDs deve ser igual à quantidade de arquivos enviados no lote.");
 
-                var userImages = new List<object>();
+                if (model.BatchFiles.Count > MaxFacialImageBatchCount)
+                    throw new InvalidOperationException($"O lote aceita no maximo {MaxFacialImageBatchCount} imagens por envio.");
+
+                var aggregateBytes = model.BatchFiles.Sum(static file => file.Length);
+                if (aggregateBytes > MaxFacialImageBatchBytes)
+                    throw new InvalidOperationException("O lote de imagens excede o limite agregado de 20 MB permitido pela PoC.");
+
+                var userImages = new List<object>(model.BatchFiles.Count);
                 for (var index = 0; index < model.BatchFiles.Count; index++)
                 {
                     var file = model.BatchFiles[index];
@@ -232,7 +241,8 @@ namespace Integracao.ControlID.PoC.Controllers
                             file,
                             "Selecione arquivos JPG ou PNG validos para o cadastro em lote.",
                             MaxFacialImageBytes,
-                            UploadedFileValidation.JpegOrPng("Envie apenas arquivos JPG ou PNG validos para este fluxo."))
+                            UploadedFileValidation.JpegOrPng("Envie apenas arquivos JPG ou PNG validos para este fluxo."),
+                            HttpContext.RequestAborted)
                     });
                 }
 
@@ -277,7 +287,8 @@ namespace Integracao.ControlID.PoC.Controllers
                     model.TestFile,
                     "Selecione um arquivo JPG ou PNG para teste.",
                     MaxFacialImageBytes,
-                    UploadedFileValidation.JpegOrPng("Envie apenas arquivos JPG ou PNG validos para este fluxo."));
+                    UploadedFileValidation.JpegOrPng("Envie apenas arquivos JPG ou PNG validos para este fluxo."),
+                    HttpContext.RequestAborted);
 
                 var (result, document) = await _apiService.InvokeJsonAsync("user-test-image", base64Image);
                 if (!result.Success)
@@ -397,10 +408,7 @@ namespace Integracao.ControlID.PoC.Controllers
             if (document == null)
                 return rawJson;
 
-            return JsonSerializer.Serialize(document.RootElement, new JsonSerializerOptions
-            {
-                WriteIndented = true
-            });
+            return OfficialApiResultPresentationService.FormatJsonPayload(rawJson, document);
         }
 
         private static string GetContentType(string contentType, string fallback)

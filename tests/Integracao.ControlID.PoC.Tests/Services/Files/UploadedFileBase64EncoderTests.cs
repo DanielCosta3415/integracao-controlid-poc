@@ -52,7 +52,8 @@ public class UploadedFileBase64EncoderTests
             file,
             "Arquivo obrigatorio.",
             1024,
-            UploadedFileValidation.Png("PNG invalido."));
+            UploadedFileValidation.Png("PNG invalido."),
+            TestContext.Current.CancellationToken);
 
         Assert.Equal(Convert.ToBase64String(new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00 }), result);
     }
@@ -68,7 +69,8 @@ public class UploadedFileBase64EncoderTests
                 file,
                 "Arquivo obrigatorio.",
                 1024,
-                UploadedFileValidation.Png("PNG invalido.")));
+                UploadedFileValidation.Png("PNG invalido."),
+                TestContext.Current.CancellationToken));
 
         Assert.Equal("PNG invalido.", exception.Message);
     }
@@ -87,7 +89,8 @@ public class UploadedFileBase64EncoderTests
                 file,
                 "Arquivo obrigatorio.",
                 1024,
-                UploadedFileValidation.PemCertificate("Certificado invalido.")));
+                UploadedFileValidation.PemCertificate("Certificado invalido."),
+                TestContext.Current.CancellationToken));
 
         Assert.Equal("Certificado invalido.", exception.Message);
     }
@@ -103,7 +106,8 @@ public class UploadedFileBase64EncoderTests
             file,
             "Arquivo obrigatorio.",
             1024,
-            UploadedFileValidation.Mp4("Video invalido."));
+            UploadedFileValidation.Mp4("Video invalido."),
+            TestContext.Current.CancellationToken);
 
         Assert.Equal(Convert.ToBase64String(bytes), result);
     }

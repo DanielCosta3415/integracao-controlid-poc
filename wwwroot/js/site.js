@@ -649,6 +649,27 @@
   applyInteractionAriaFallbacks();
   applyAlertAccessibilityFallbacks();
 
+  document.querySelectorAll("input[type='file'][data-max-files]").forEach((input) => {
+    input.addEventListener("change", () => {
+      const files = Array.from(input.files || []);
+      const maxFiles = Number.parseInt(input.dataset.maxFiles || "0", 10);
+      const maxTotalBytes = Number.parseInt(input.dataset.maxTotalBytes || "0", 10);
+      const totalBytes = files.reduce((total, file) => total + file.size, 0);
+      let validationMessage = "";
+
+      if (maxFiles > 0 && files.length > maxFiles) {
+        validationMessage = `Selecione no máximo ${maxFiles} arquivos.`;
+      } else if (maxTotalBytes > 0 && totalBytes > maxTotalBytes) {
+        validationMessage = `O conjunto selecionado excede ${Math.round(maxTotalBytes / 1024 / 1024)} MB.`;
+      }
+
+      input.setCustomValidity(validationMessage);
+      if (validationMessage) {
+        input.reportValidity();
+      }
+    });
+  });
+
   const topMenus = Array.from(document.querySelectorAll("[data-topnav-menu]"));
   if (!topMenus.length) {
     return;
@@ -662,7 +683,7 @@
 
   // O menu superior usa <details> nativo; aqui mantemos a camada acessível e
   // o comportamento exclusivo sem recalcular a árvore de navegação inteira.
-  const syncMenuState = (menu) => {
+  const syncMenuState = (menu, updateLayout = true) => {
     const summary = menu.querySelector("[data-topnav-summary]");
     const panel = menu.querySelector("[data-topnav-panel]");
     if (summary) {
@@ -673,20 +694,23 @@
       panel.setAttribute("aria-hidden", String(!menu.open));
     }
 
-    updateTopMenuLayoutState();
+    if (updateLayout) {
+      updateTopMenuLayoutState();
+    }
   };
 
   const closeTopMenus = (exceptMenu = null) => {
     topMenus.forEach((menu) => {
       if (menu !== exceptMenu) {
         menu.removeAttribute("open");
-        syncMenuState(menu);
+        syncMenuState(menu, false);
       }
     });
+    updateTopMenuLayoutState();
   };
 
   topMenus.forEach((menu) => {
-    syncMenuState(menu);
+    syncMenuState(menu, false);
     menu.addEventListener("toggle", () => {
       syncMenuState(menu);
       if (menu.open) {
@@ -694,6 +718,7 @@
       }
     });
   });
+  updateTopMenuLayoutState();
 
   document.addEventListener("click", (event) => {
     const target = event.target;

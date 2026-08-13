@@ -42,7 +42,25 @@ namespace Integracao.ControlID.PoC.Controllers
 
             try
             {
-                var (systemResult, systemDocument) = await _apiService.InvokeJsonAsync("system-information");
+                var hasSession = _apiService.TryGetConnection(out _, out var sessionString);
+                var systemTask = _apiService.InvokeJsonDirectAsync(
+                    "system-information",
+                    deviceAddress,
+                    sessionString,
+                    cancellationToken: HttpContext.RequestAborted);
+                var doorTask = hasSession
+                    ? _apiService.InvokeJsonDirectAsync(
+                        "door-state",
+                        deviceAddress,
+                        sessionString,
+                        new { },
+                        cancellationToken: HttpContext.RequestAborted)
+                    : null;
+
+                if (doorTask != null)
+                    await Task.WhenAll(systemTask, doorTask);
+
+                var (systemResult, systemDocument) = await systemTask;
                 if (!systemResult.Success || systemDocument == null)
                 {
                     model.ErrorMessage = BuildErrorMessage(systemResult, "Erro ao consultar status do hardware");
@@ -53,9 +71,9 @@ namespace Integracao.ControlID.PoC.Controllers
                 string doorStateText = "Estado da porta indisponível";
                 string doorRawJson = string.Empty;
 
-                if (_apiService.TryGetConnection(out _, out _))
+                if (doorTask != null)
                 {
-                    var (doorResult, doorDocument) = await _apiService.InvokeJsonAsync("door-state", new { });
+                    var (doorResult, doorDocument) = await doorTask;
                     if (doorResult.Success && doorDocument != null)
                     {
                         doorOpen = TryExtractDoorOpen(doorDocument.RootElement);
@@ -101,7 +119,7 @@ namespace Integracao.ControlID.PoC.Controllers
                 return View(model);
             }
 
-            if (!_apiService.TryGetConnection(out _, out _))
+            if (!_apiService.TryGetConnection(out _, out var sessionString))
             {
                 model.ErrorMessage = "É necessário conectar-se e autenticar com um equipamento Control iD.";
                 return View(model);
@@ -109,13 +127,29 @@ namespace Integracao.ControlID.PoC.Controllers
 
             try
             {
+                var gpioTasks = Enumerable.Range(1, 8)
+                    .Select(async gpioNumber =>
+                    {
+                        var response = await _apiService.InvokeJsonDirectAsync(
+                            "gpio-state",
+                            deviceAddress,
+                            sessionString,
+                            new { gpio = gpioNumber },
+                            cancellationToken: HttpContext.RequestAborted);
+                        return (GpioNumber: gpioNumber, response.Result, response.Document);
+                    })
+                    .ToArray();
+                var gpioResults = await Task.WhenAll(gpioTasks);
+
                 var inputs = new Dictionary<string, bool>();
                 var outputs = new Dictionary<string, bool>();
-                var rawResponses = new List<string>();
+                var rawResponses = new List<string>(gpioResults.Length);
 
-                foreach (var gpioNumber in Enumerable.Range(1, 8))
+                foreach (var gpioResponse in gpioResults)
                 {
-                    var (result, document) = await _apiService.InvokeJsonAsync("gpio-state", new { gpio = gpioNumber });
+                    var gpioNumber = gpioResponse.GpioNumber;
+                    var result = gpioResponse.Result;
+                    var document = gpioResponse.Document;
                     if (!result.Success || document == null)
                         continue;
 
@@ -434,10 +468,7 @@ namespace Integracao.ControlID.PoC.Controllers
             if (document == null)
                 return rawJson;
 
-            return JsonSerializer.Serialize(document.RootElement, new JsonSerializerOptions
-            {
-                WriteIndented = true
-            });
+            return OfficialApiResultPresentationService.FormatJsonPayload(rawJson, document);
         }
     }
 

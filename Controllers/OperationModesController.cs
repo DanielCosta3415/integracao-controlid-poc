@@ -381,13 +381,22 @@ namespace Integracao.ControlID.PoC.Controllers
         /// <param name="model">ViewModel que recebera o estado remoto consolidado.</param>
         private async Task PopulateCurrentStateAsync(OperationModesViewModel model)
         {
+            if (!_apiService.TryGetConnection(out var deviceAddress, out var sessionString))
+                return;
+
+            var configurationTask = _apiService.InvokeJsonDirectAsync("get-configuration", deviceAddress, sessionString, new
+            {
+                general = new[] { "online", "local_identification" },
+                online_client = new[] { "server_id", "extract_template", "max_request_attempts" }
+            }, cancellationToken: HttpContext.RequestAborted);
+            var sessionTask = _apiService.InvokeJsonDirectAsync(
+                "session-is-valid", deviceAddress, sessionString, cancellationToken: HttpContext.RequestAborted);
+            var informationTask = _apiService.InvokeJsonDirectAsync(
+                "system-information", deviceAddress, sessionString, cancellationToken: HttpContext.RequestAborted);
+
             try
             {
-                var (_, document) = await _apiService.InvokeJsonAsync("get-configuration", new
-                {
-                    general = new[] { "online", "local_identification" },
-                    online_client = new[] { "server_id", "extract_template", "max_request_attempts" }
-                });
+                var (_, document) = await configurationTask;
 
                 if (document != null)
                 {
@@ -407,7 +416,7 @@ namespace Integracao.ControlID.PoC.Controllers
 
             try
             {
-                var (result, document) = await _apiService.InvokeJsonAsync("session-is-valid");
+                var (result, document) = await sessionTask;
                 model.SessionValidated = result.Success && (document == null || GetRootBool(document.RootElement, "session_is_valid", true));
                 model.SessionStatusSummary = model.SessionValidated
                     ? "Sessão oficial válida para aplicar perfis e upgrades."
@@ -422,7 +431,7 @@ namespace Integracao.ControlID.PoC.Controllers
 
             try
             {
-                var (_, document) = await _apiService.InvokeJsonAsync("system-information");
+                var (_, document) = await informationTask;
                 if (document != null)
                 {
                     model.DetectedProductModel = GetRootString(document.RootElement, "product_name");

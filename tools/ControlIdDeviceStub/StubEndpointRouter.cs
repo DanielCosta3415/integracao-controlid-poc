@@ -3,10 +3,13 @@ using System.Text.Json.Nodes;
 
 internal static class StubEndpointRouter
 {
-    public static IResult Route(HttpRequest request, string path, JsonNode? body, StubRuntimeState runtime)
+    public static IResult Route(
+        HttpRequest request,
+        string path,
+        JsonNode? body,
+        StubRuntimeState runtime,
+        StubState state)
     {
-        var state = runtime.Device;
-
         return path switch
         {
             "/login.fcgi" => Results.Json(new { session = state.Session }),

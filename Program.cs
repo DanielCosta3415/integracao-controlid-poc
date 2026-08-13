@@ -108,6 +108,7 @@ if (forwardedHeadersEnabled)
 builder.Services.Configure<SqliteRuntimeOptions>(builder.Configuration.GetSection("Database:Sqlite"));
 builder.Services.Configure<SensitiveDataProtectionOptions>(builder.Configuration.GetSection("Database:Encryption"));
 builder.Services.AddSingleton<SensitiveDataProtector>();
+builder.Services.AddSingleton<SensitiveDataProtectionVerificationState>();
 builder.Services.AddScoped<SensitiveDataProtectionStore>();
 builder.Services.AddSingleton<SqliteConnectionPragmaInterceptor>();
 builder.Services.AddScoped<SqliteRuntimePolicy>();
@@ -399,6 +400,7 @@ using (var protectionScope = app.Services.CreateScope())
         .GetRequiredService<IOptions<SensitiveDataProtectionOptions>>()
         .Value;
     var protectionStore = protectionScope.ServiceProvider.GetRequiredService<SensitiveDataProtectionStore>();
+    var verificationState = protectionScope.ServiceProvider.GetRequiredService<SensitiveDataProtectionVerificationState>();
 
     if (protectionOptions.ProtectLegacyDataOnStartup)
     {
@@ -414,6 +416,8 @@ using (var protectionScope = app.Services.CreateScope())
             throw new InvalidOperationException(
                 "Sensitive database columns contain legacy plaintext values. Run the explicit data-protection procedure before serving traffic.");
         }
+
+        verificationState.MarkVerified();
     }
 }
 

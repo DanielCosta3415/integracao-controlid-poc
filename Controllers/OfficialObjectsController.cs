@@ -331,10 +331,7 @@ namespace Integracao.ControlID.PoC.Controllers
             if (document == null)
                 return rawJson;
 
-            return JsonSerializer.Serialize(document.RootElement, new JsonSerializerOptions
-            {
-                WriteIndented = true
-            });
+            return OfficialApiResultPresentationService.FormatJsonPayload(rawJson, document);
         }
     }
 }

@@ -411,7 +411,7 @@ sealed class StubState
                     ["value"] = "1"
                 }
             ],
-            ["logs"] =
+            ["access_logs"] =
             [
                 new JsonObject
                 {
@@ -666,7 +666,7 @@ sealed class StubState
         var skipped = 0;
         foreach (var item in array)
         {
-            if (!MatchesWhere(item as JsonObject, where))
+            if (!StubObjectFilter.Matches(item as JsonObject, where))
                 continue;
 
             if (skipped++ < offset)
@@ -753,7 +753,7 @@ sealed class StubState
         {
             foreach (var item in array.OfType<JsonObject>())
             {
-                if (!MatchesWhere(item, where))
+                if (!StubObjectFilter.Matches(item, where))
                     continue;
 
                 Merge(item, values);
@@ -772,11 +772,14 @@ sealed class StubState
 
         if (where != null)
         {
-            for (var index = array.Count - 1; index >= 0; index--)
+            var survivors = new JsonArray();
+            foreach (var item in array)
             {
-                if (MatchesWhere(array[index] as JsonObject, where))
-                    array.RemoveAt(index);
+                if (!StubObjectFilter.Matches(item as JsonObject, where))
+                    survivors.Add(item?.DeepClone());
             }
+
+            _objects[NormalizeObjectName(objectName)] = survivors;
         }
 
         return new { success = true };
@@ -872,6 +875,7 @@ sealed class StubState
 
     private JsonArray GetObjectArray(string objectName)
     {
+        objectName = NormalizeObjectName(objectName);
         if (!_objects.TryGetValue(objectName, out var array))
         {
             array = new JsonArray();
@@ -879,6 +883,13 @@ sealed class StubState
         }
 
         return array;
+    }
+
+    private static string NormalizeObjectName(string objectName)
+    {
+        return string.Equals(objectName, "logs", StringComparison.OrdinalIgnoreCase)
+            ? "access_logs"
+            : objectName;
     }
 
     private static IEnumerable<JsonNode?> EnumerateNodes(JsonNode? node)
@@ -920,25 +931,6 @@ sealed class StubState
     private static string BuildMatchKey(JsonObject item, IReadOnlyList<string> matchKeys)
     {
         return string.Join('\u001f', matchKeys.Select(key => item[key]?.ToJsonString() ?? string.Empty));
-    }
-
-    private static bool MatchesWhere(JsonObject? item, JsonObject? where)
-    {
-        if (item == null)
-            return false;
-
-        if (where == null || where.Count == 0)
-            return true;
-
-        foreach (var property in where)
-        {
-            var existingValue = item[property.Key]?.ToJsonString() ?? string.Empty;
-            var requestedValue = property.Value?.ToJsonString() ?? string.Empty;
-            if (!string.Equals(existingValue, requestedValue, StringComparison.Ordinal))
-                return false;
-        }
-
-        return true;
     }
 
     private static bool UsesNumericIdentity(string objectName)

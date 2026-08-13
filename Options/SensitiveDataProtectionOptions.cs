@@ -6,4 +6,5 @@ public sealed class SensitiveDataProtectionOptions
     public bool ProtectLegacyDataOnStartup { get; set; }
     public bool RequireEncryptedVolume { get; set; }
     public bool EncryptedVolumeAttested { get; set; }
+    public int VerificationCacheSeconds { get; set; } = 300;
 }

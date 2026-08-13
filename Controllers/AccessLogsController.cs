@@ -34,8 +34,13 @@ namespace Integracao.ControlID.PoC.Controllers
 
             try
             {
-                var logs = await LoadLogsAsync();
-                model.AccessLogs = ApplyFilters(logs, userId, deviceId, @event, startDate, endDate)
+                var logs = await LoadLogsAsync(
+                    userId: userId,
+                    deviceId: deviceId,
+                    eventCode: @event,
+                    startDate: startDate,
+                    endDate: endDate);
+                model.AccessLogs = logs
                     .OrderByDescending(log => log.Time ?? DateTime.MinValue)
                     .ToList();
 
@@ -62,7 +67,7 @@ namespace Integracao.ControlID.PoC.Controllers
 
             try
             {
-                var log = (await LoadLogsAsync(id.Value)).FirstOrDefault();
+                var log = (await LoadLogsAsync(id: id.Value)).FirstOrDefault();
                 if (log != null)
                     return View(log);
             }
@@ -73,11 +78,15 @@ namespace Integracao.ControlID.PoC.Controllers
             return NotFound("Log não encontrado ou erro inesperado.");
         }
 
-        private async Task<List<AccessLogViewModel>> LoadLogsAsync(long? id = null)
+        private async Task<List<AccessLogViewModel>> LoadLogsAsync(
+            long? id = null,
+            long? userId = null,
+            long? deviceId = null,
+            int? eventCode = null,
+            DateTime? startDate = null,
+            DateTime? endDate = null)
         {
-            object payload = id.HasValue
-                ? new { @object = "logs", where = new { logs = new { id = id.Value } } }
-                : new { @object = "logs" };
+            var payload = AccessLogQueryBuilder.Build(id, userId, deviceId, eventCode, startDate, endDate);
 
             var (result, document) = await _officialApi.InvokeJsonAsync("load-objects", payload);
             if (!result.Success)
@@ -86,40 +95,9 @@ namespace Integracao.ControlID.PoC.Controllers
             if (document == null)
                 return [];
 
-            return ExtractArray(document.RootElement, "logs")
+            return ExtractArray(document.RootElement, "access_logs")
                 .Select(MapAccessLog)
                 .ToList();
-        }
-
-        private static IEnumerable<AccessLogViewModel> ApplyFilters(
-            IEnumerable<AccessLogViewModel> logs,
-            long? userId,
-            long? deviceId,
-            int? eventCode,
-            DateTime? startDate,
-            DateTime? endDate)
-        {
-            var query = logs;
-
-            if (userId.HasValue)
-                query = query.Where(log => log.UserId == userId.Value);
-
-            if (deviceId.HasValue)
-                query = query.Where(log => log.DeviceId == deviceId.Value);
-
-            if (eventCode.HasValue)
-                query = query.Where(log => log.Event == eventCode.Value);
-
-            if (startDate.HasValue)
-                query = query.Where(log => log.Time.HasValue && log.Time.Value >= startDate.Value);
-
-            if (endDate.HasValue)
-            {
-                var lastMoment = endDate.Value.Date.AddDays(1);
-                query = query.Where(log => log.Time.HasValue && log.Time.Value < lastMoment);
-            }
-
-            return query;
         }
 
         private static AccessLogViewModel MapAccessLog(JsonElement element)
@@ -214,6 +192,13 @@ namespace Integracao.ControlID.PoC.Controllers
             foreach (var propertyName in propertyNames)
             {
                 if (element.TryGetProperty(propertyName, out var property) &&
+                    property.ValueKind == JsonValueKind.Number &&
+                    property.TryGetInt64(out var unixSeconds))
+                {
+                    return DateTimeOffset.FromUnixTimeSeconds(unixSeconds).LocalDateTime;
+                }
+
+                if (element.TryGetProperty(propertyName, out property) &&
                     property.ValueKind == JsonValueKind.String &&
                     DateTime.TryParse(property.GetString(), out var parsed))
                 {

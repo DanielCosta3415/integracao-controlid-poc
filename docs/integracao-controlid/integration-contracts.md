@@ -122,6 +122,8 @@ Não há loader `.env` configurado. Use `appsettings.json`, User Secrets ou vari
 | `ControlIDApi__CircuitBreaker__Enabled` | Proteção contra falhas transitórias repetidas | Não | Default: true |
 | `ControlIDApi__CircuitBreaker__FailureThreshold` | Falhas consecutivas para abrir circuito | Não | Default: 5 |
 | `ControlIDApi__CircuitBreaker__BreakDurationSeconds` | Duração do circuito aberto | Não | Default: 30 |
+| `ControlIDApi__CircuitBreaker__MaxTrackedStates` | Teto de estados por equipamento/endpoint | Não | Default: 512; evita crescimento ilimitado |
+| `ControlIDApi__CircuitBreaker__StateRetentionSeconds` | Retenção de estados ociosos | Não | Default: 900 |
 | `OpenApi__Enabled` | Habilita Swagger fora de Development | Não | Padrão: `false`; Development habilita automaticamente |
 | `CallbackSecurity__MaxBodyBytes` | Limite de body em callbacks/push | Não | Default: 1048576 |
 | `CallbackSecurity__RequireSharedKey` | Exige shared key nos ingressos | Não | Obrigatório fora de Development |
@@ -155,7 +157,7 @@ Não há loader `.env` configurado. Use `appsettings.json`, User Secrets ou vari
 - Retry/backoff: não existe; seguro porque muitas operações oficiais não são idempotentes.
 - Idempotência: depende do endpoint externo; `load/get` tendem a ser seguros, `create/modify/destroy/reboot/reset` não devem ser repetidos automaticamente.
 - Rate limit: não implementado.
-- Circuit breaker/fallback: `OfficialApiCircuitBreaker` abre circuito por endpoint/equipamento após falhas transitórias repetidas (`408`, `429`, `5xx`, timeout ou falha inesperada).
+- Circuit breaker/fallback: `OfficialApiCircuitBreaker` abre circuito por endpoint/equipamento após falhas transitórias repetidas (`408`, `429`, `5xx`, timeout ou falha inesperada), mantém cardinalidade limitada e admite uma única tentativa no estado semiaberto.
 - Logs: endpoint id, método, path, target sem query/session, status e duração.
 - Dados sensíveis: credenciais, session, fotos, biometria, cartões, QR, payloads de usuários.
 

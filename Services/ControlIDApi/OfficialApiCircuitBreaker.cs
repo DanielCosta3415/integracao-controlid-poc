@@ -8,11 +8,16 @@ namespace Integracao.ControlID.PoC.Services.ControlIDApi;
 public sealed class OfficialApiCircuitBreaker
 {
     private readonly ConcurrentDictionary<string, CircuitState> _states = new();
+    private readonly object _maintenanceGate = new();
     private readonly ControlIdCircuitBreakerOptions _options;
+    private readonly TimeProvider _timeProvider;
 
-    public OfficialApiCircuitBreaker(IOptions<ControlIdCircuitBreakerOptions> options)
+    public OfficialApiCircuitBreaker(
+        IOptions<ControlIdCircuitBreakerOptions> options,
+        TimeProvider? timeProvider = null)
     {
         _options = options.Value;
+        _timeProvider = timeProvider ?? TimeProvider.System;
     }
 
     public bool TryAcquire(string endpointId, string deviceTarget, out TimeSpan retryAfter)
@@ -22,12 +27,18 @@ public sealed class OfficialApiCircuitBreaker
         if (!_options.Enabled)
             return true;
 
-        var state = _states.GetOrAdd(BuildKey(endpointId, deviceTarget), _ => new CircuitState());
+        var state = GetOrCreateState(BuildKey(endpointId, deviceTarget));
         lock (state)
         {
-            var now = DateTimeOffset.UtcNow;
-            if (state.OpenUntilUtc is null || state.OpenUntilUtc <= now)
+            var now = _timeProvider.GetUtcNow();
+            state.LastTouchedUtc = now;
+            if (state.OpenUntilUtc is null)
+                return true;
+
+            if (state.OpenUntilUtc <= now)
             {
+                state.HalfOpenProbeActive = true;
+                state.OpenUntilUtc = now.Add(BreakDuration);
                 return true;
             }
 
@@ -41,11 +52,15 @@ public sealed class OfficialApiCircuitBreaker
         if (!_options.Enabled)
             return;
 
-        var state = _states.GetOrAdd(BuildKey(endpointId, deviceTarget), _ => new CircuitState());
+        if (!_states.TryGetValue(BuildKey(endpointId, deviceTarget), out var state))
+            return;
+
         lock (state)
         {
             state.ConsecutiveFailures = 0;
             state.OpenUntilUtc = null;
+            state.HalfOpenProbeActive = false;
+            state.LastTouchedUtc = _timeProvider.GetUtcNow();
         }
     }
 
@@ -54,13 +69,15 @@ public sealed class OfficialApiCircuitBreaker
         if (!_options.Enabled)
             return;
 
-        var state = _states.GetOrAdd(BuildKey(endpointId, deviceTarget), _ => new CircuitState());
+        var state = GetOrCreateState(BuildKey(endpointId, deviceTarget));
         lock (state)
         {
             state.ConsecutiveFailures++;
-            if (state.ConsecutiveFailures >= FailureThreshold)
+            state.LastTouchedUtc = _timeProvider.GetUtcNow();
+            if (state.HalfOpenProbeActive || state.ConsecutiveFailures >= FailureThreshold)
             {
-                state.OpenUntilUtc = DateTimeOffset.UtcNow.Add(BreakDuration);
+                state.OpenUntilUtc = state.LastTouchedUtc.Add(BreakDuration);
+                state.HalfOpenProbeActive = false;
             }
         }
     }
@@ -76,6 +93,40 @@ public sealed class OfficialApiCircuitBreaker
 
     private TimeSpan BreakDuration => TimeSpan.FromSeconds(Math.Clamp(_options.BreakDurationSeconds, 1, 3600));
 
+    private int MaxTrackedStates => Math.Clamp(_options.MaxTrackedStates, 16, 4096);
+
+    private TimeSpan StateRetention => TimeSpan.FromSeconds(Math.Max(
+        Math.Clamp(_options.StateRetentionSeconds, 60, 86_400),
+        BreakDuration.TotalSeconds));
+
+    private CircuitState GetOrCreateState(string key)
+    {
+        if (_states.TryGetValue(key, out var existing))
+            return existing;
+
+        lock (_maintenanceGate)
+        {
+            if (_states.TryGetValue(key, out existing))
+                return existing;
+
+            var now = _timeProvider.GetUtcNow();
+            foreach (var candidate in _states)
+            {
+                if (now - candidate.Value.LastTouchedUtc > StateRetention)
+                    _states.TryRemove(candidate.Key, out _);
+            }
+
+            if (_states.Count >= MaxTrackedStates)
+            {
+                var oldest = _states.MinBy(static candidate => candidate.Value.LastTouchedUtc);
+                if (!string.IsNullOrEmpty(oldest.Key))
+                    _states.TryRemove(oldest.Key, out _);
+            }
+
+            return _states.GetOrAdd(key, _ => new CircuitState { LastTouchedUtc = now });
+        }
+    }
+
     private static string BuildKey(string endpointId, string deviceTarget)
     {
         return $"{deviceTarget.Trim().ToUpperInvariant()}::{endpointId.Trim().ToUpperInvariant()}";
@@ -86,5 +137,9 @@ public sealed class OfficialApiCircuitBreaker
         public int ConsecutiveFailures { get; set; }
 
         public DateTimeOffset? OpenUntilUtc { get; set; }
+
+        public bool HalfOpenProbeActive { get; set; }
+
+        public DateTimeOffset LastTouchedUtc { get; set; }
     }
 }

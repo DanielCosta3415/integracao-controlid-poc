@@ -70,6 +70,49 @@ public sealed class ControlIdDeviceStubScenarioTests
     }
 
     [Fact]
+    public void LoadObjects_applies_official_comparison_filters_to_access_logs()
+    {
+        var runtime = new StubRuntimeState();
+        var payload = JsonNode.Parse("""
+            {
+              "object": "access_logs",
+              "where": {
+                "access_logs": {
+                  "event": 7,
+                  "time": { ">=": 1712999999, "<": 1713000001 }
+                }
+              }
+            }
+            """);
+
+        var response = runtime.Device.LoadObjects(payload);
+        using var document = JsonDocument.Parse(JsonSerializer.Serialize(response));
+
+        Assert.Single(document.RootElement.GetProperty("access_logs").EnumerateArray());
+    }
+
+    [Fact]
+    public void DestroyObjects_rebuilds_survivors_without_skipping_records()
+    {
+        var runtime = new StubRuntimeState();
+        runtime.Reset(100, null);
+        var destroy = JsonNode.Parse("""
+            {
+              "object": "users",
+              "where": { "users": { "id": { "<": 51 } } }
+            }
+            """);
+
+        runtime.Device.DestroyObjects(destroy);
+        var response = runtime.Device.LoadObjects(JsonNode.Parse("""{"object":"users"}"""));
+        using var document = JsonDocument.Parse(JsonSerializer.Serialize(response));
+        var users = document.RootElement.GetProperty("users");
+
+        Assert.Equal(50, users.GetArrayLength());
+        Assert.Equal(51, users[0].GetProperty("id").GetInt64());
+    }
+
+    [Fact]
     public async Task Session_expired_scenario_returns_invalid_session_contract()
     {
         var runtime = new StubRuntimeState();

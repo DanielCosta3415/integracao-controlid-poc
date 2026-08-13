@@ -37,6 +37,43 @@ public class OperationalMetricsTests
     }
 
     [Fact]
+    public void RecordHttpRequest_BoundsArbitraryUnmatchedPathsToOneSeries()
+    {
+        OperationalMetrics.ResetForTests();
+
+        for (var index = 0; index < 5000; index++)
+        {
+            OperationalMetrics.RecordHttpRequest(
+                "GET",
+                "unmatched",
+                StatusCodes.Status404NotFound,
+                1);
+        }
+
+        var snapshot = OperationalMetrics.CaptureSnapshot();
+        var counter = Assert.Single(snapshot.Counters, metric => metric.Name == "controlid.http.requests");
+        var histogram = Assert.Single(snapshot.Histograms, metric => metric.Name == "controlid.http.request.duration");
+
+        Assert.Equal("/unmatched", counter.Tags["path"]);
+        Assert.Equal(5000, counter.Value);
+        Assert.Equal(5000, histogram.Count);
+    }
+
+    [Fact]
+    public void RecordGauge_UsesOneSeriesWhenTagOrderChanges()
+    {
+        OperationalMetrics.ResetForTests();
+
+        OperationalMetrics.RecordGauge("controlid.test.gauge", 1, ("scope", "local"), ("kind", "files"));
+        OperationalMetrics.RecordGauge("controlid.test.gauge", 2, ("kind", "files"), ("scope", "local"));
+
+        var gauge = Assert.Single(
+            OperationalMetrics.CaptureSnapshot().Gauges,
+            metric => metric.Name == "controlid.test.gauge");
+        Assert.Equal(2, gauge.Value);
+    }
+
+    [Fact]
     public void PrometheusFormat_RendersCountersAndDurationSummary()
     {
         OperationalMetrics.ResetForTests();

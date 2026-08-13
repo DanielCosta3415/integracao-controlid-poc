@@ -82,8 +82,8 @@
             <form asp-action="GetImageList" method="post" autocomplete="off" class="form-section">
                 <div class="app-form-grid">
                     <div>
-                        <label asp-for="UserIdsCsv" class="form-label"></label>
-                        <input asp-for="UserIdsCsv" class="form-control" />
+                        <label for="getListUserIdsCsv" class="form-label">IDs dos usuários</label>
+                        <input asp-for="UserIdsCsv" id="getListUserIdsCsv" class="form-control" />
                     </div>
                 </div>
 
@@ -142,13 +142,14 @@
         <form asp-action="SetImageList" method="post" enctype="multipart/form-data" autocomplete="off" class="form-section">
                 <div class="app-form-grid">
                     <div class="app-form-grid__full">
-                        <label asp-for="UserIdsCsv" class="form-label"></label>
-                        <input asp-for="UserIdsCsv" class="form-control" />
+                        <label for="batchUserIdsCsv" class="form-label">IDs dos usuários</label>
+                        <input asp-for="UserIdsCsv" id="batchUserIdsCsv" class="form-control" />
                     </div>
                     <div class="app-upload-field app-upload-field--wide">
                         <label asp-for="BatchFiles" class="form-label"></label>
-                        <input asp-for="BatchFiles" class="form-control" type="file" multiple accept=".jpg,.jpeg,.png,image/jpeg,image/png" />
-                        <p class="app-upload-field__hint">Envie exatamente a mesma quantidade de arquivos e IDs, preservando a ordem dos dois conjuntos.</p>
+                        <input asp-for="BatchFiles" class="form-control" type="file" multiple accept=".jpg,.jpeg,.png,image/jpeg,image/png" data-max-files="20" data-max-total-bytes="20971520" aria-describedby="batchFilesLimits batchFilesOrder" />
+                        <p id="batchFilesLimits" class="app-upload-field__hint">Limite: 20 imagens por lote, 5 MB por arquivo e 20 MB no total.</p>
+                        <p id="batchFilesOrder" class="app-upload-field__hint">Envie exatamente a mesma quantidade de arquivos e IDs, preservando a ordem dos dois conjuntos.</p>
                         <div class="app-upload-field__meta">
                             <span class="product-specific-token">Múltiplos arquivos</span>
                             <span class="product-specific-token">Fluxo: user_set_image_list</span>

@@ -29,7 +29,7 @@ public static class OfficialObjectPaging
         int page,
         HttpContext httpContext)
     {
-        var root = JsonNode.Parse(payload.RootElement.GetRawText()) as JsonObject;
+        var root = JsonSerializer.SerializeToNode(payload.RootElement) as JsonObject;
         var firstArray = root?.FirstOrDefault(static property => property.Value is JsonArray).Value as JsonArray;
         var hasNextPage = firstArray?.Count > PageSize;
 

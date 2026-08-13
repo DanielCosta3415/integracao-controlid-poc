@@ -2,6 +2,7 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
 using System.Globalization;
+using System.Text;
 
 namespace Integracao.ControlID.PoC.Services.Observability;
 
@@ -18,8 +19,10 @@ public static class OperationalMetrics
     private const string PushOperationsMetricName = "controlid.push.operations";
     private const string ProductFlowEventsMetricName = "controlid.product.flow.events";
     private const string ProductFlowDurationMetricName = "controlid.product.flow.duration";
+    private const int MaxSnapshotSeries = 2048;
 
     private static readonly Meter Meter = new(MeterName, "1.0.0");
+    private static readonly object SnapshotSeriesGate = new();
     private static readonly ConcurrentDictionary<string, CounterAccumulator> CounterSnapshots = new(StringComparer.Ordinal);
     private static readonly ConcurrentDictionary<string, HistogramAccumulator> HistogramSnapshots = new(StringComparer.Ordinal);
     private static readonly ConcurrentDictionary<string, GaugeAccumulator> GaugeSnapshots = new(StringComparer.Ordinal);
@@ -180,10 +183,15 @@ public static class OperationalMetrics
     /// </summary>
     public static void RecordGauge(string name, double value, params (string Name, string Value)[] tags)
     {
-        var normalizedTags = ToTagDictionary(CreateTags(
-            tags.Select(static tag => (tag.Name, NormalizeLabel(tag.Value))).ToArray()));
+        var normalizedTags = NormalizeTags(tags);
         var key = BuildSnapshotKey(name, normalizedTags);
-        var accumulator = GaugeSnapshots.GetOrAdd(key, _ => new GaugeAccumulator(name, normalizedTags));
+        var accumulator = GetOrAddBounded(
+            GaugeSnapshots,
+            key,
+            () => new GaugeAccumulator(name, ToTagDictionary(normalizedTags)));
+        if (accumulator is null)
+            return;
+
         accumulator.Record(value);
     }
 
@@ -196,17 +204,29 @@ public static class OperationalMetrics
 
     private static void IncrementCounter(string name, TagList tags, long amount)
     {
-        var normalizedTags = ToTagDictionary(tags);
+        var normalizedTags = ToNormalizedTags(tags);
         var key = BuildSnapshotKey(name, normalizedTags);
-        var accumulator = CounterSnapshots.GetOrAdd(key, _ => new CounterAccumulator(name, normalizedTags));
+        var accumulator = GetOrAddBounded(
+            CounterSnapshots,
+            key,
+            () => new CounterAccumulator(name, ToTagDictionary(normalizedTags)));
+        if (accumulator is null)
+            return;
+
         accumulator.Add(amount);
     }
 
     private static void RecordHistogram(string name, TagList tags, double value)
     {
-        var normalizedTags = ToTagDictionary(tags);
+        var normalizedTags = ToNormalizedTags(tags);
         var key = BuildSnapshotKey(name, normalizedTags);
-        var accumulator = HistogramSnapshots.GetOrAdd(key, _ => new HistogramAccumulator(name, normalizedTags));
+        var accumulator = GetOrAddBounded(
+            HistogramSnapshots,
+            key,
+            () => new HistogramAccumulator(name, ToTagDictionary(normalizedTags)));
+        if (accumulator is null)
+            return;
+
         accumulator.Record(value);
     }
 
@@ -219,27 +239,81 @@ public static class OperationalMetrics
         return tags;
     }
 
-    private static IReadOnlyDictionary<string, string> ToTagDictionary(TagList tags)
+    private static KeyValuePair<string, string>[] ToNormalizedTags(TagList tags)
     {
-        return tags
-            .ToDictionary(
-                static tag => tag.Key,
-                static tag => Convert.ToString(tag.Value, CultureInfo.InvariantCulture) ?? "unknown",
-                StringComparer.Ordinal);
+        var normalized = new KeyValuePair<string, string>[tags.Count];
+        var index = 0;
+        foreach (var tag in tags)
+        {
+            normalized[index++] = new KeyValuePair<string, string>(
+                tag.Key,
+                Convert.ToString(tag.Value, CultureInfo.InvariantCulture) ?? "unknown");
+        }
+
+        Array.Sort(normalized, static (left, right) => StringComparer.Ordinal.Compare(left.Key, right.Key));
+
+        return normalized;
     }
 
-    private static string BuildSnapshotKey(string name, IReadOnlyDictionary<string, string> tags)
+    private static KeyValuePair<string, string>[] NormalizeTags((string Name, string Value)[] tags)
     {
-        return $"{name}|{BuildTagSignature(tags)}";
+        var normalized = new KeyValuePair<string, string>[tags.Length];
+        for (var index = 0; index < tags.Length; index++)
+        {
+            normalized[index] = new KeyValuePair<string, string>(
+                tags[index].Name,
+                NormalizeLabel(tags[index].Value));
+        }
+
+        Array.Sort(normalized, static (left, right) => StringComparer.Ordinal.Compare(left.Key, right.Key));
+
+        return normalized;
+    }
+
+    private static IReadOnlyDictionary<string, string> ToTagDictionary(
+        IReadOnlyList<KeyValuePair<string, string>> tags)
+    {
+        return tags.ToDictionary(static tag => tag.Key, static tag => tag.Value, StringComparer.Ordinal);
+    }
+
+    private static string BuildSnapshotKey(string name, IReadOnlyList<KeyValuePair<string, string>> tags)
+    {
+        var builder = new StringBuilder(name.Length + (tags.Count * 24));
+        builder.Append(name);
+        foreach (var tag in tags)
+            builder.Append('|').Append(tag.Key).Append('=').Append(tag.Value);
+
+        return builder.ToString();
     }
 
     private static string BuildTagSignature(IReadOnlyDictionary<string, string> tags)
     {
-        return string.Join(
-            "|",
-            tags
-                .OrderBy(static tag => tag.Key, StringComparer.Ordinal)
-                .Select(static tag => $"{tag.Key}={tag.Value}"));
+        var builder = new StringBuilder(tags.Count * 24);
+        foreach (var tag in tags.OrderBy(static tag => tag.Key, StringComparer.Ordinal))
+            builder.Append(tag.Key).Append('=').Append(tag.Value).Append('|');
+
+        return builder.ToString();
+    }
+
+    private static TAccumulator? GetOrAddBounded<TAccumulator>(
+        ConcurrentDictionary<string, TAccumulator> snapshots,
+        string key,
+        Func<TAccumulator> factory)
+        where TAccumulator : class
+    {
+        if (snapshots.TryGetValue(key, out var existing))
+            return existing;
+
+        lock (SnapshotSeriesGate)
+        {
+            if (snapshots.TryGetValue(key, out existing))
+                return existing;
+
+            if (snapshots.Count >= MaxSnapshotSeries)
+                return null;
+
+            return snapshots.GetOrAdd(key, _ => factory());
+        }
     }
 
     private static string BuildStatusGroup(int statusCode)

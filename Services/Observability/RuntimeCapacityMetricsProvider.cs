@@ -12,6 +12,7 @@ public static class RuntimeCapacityMetricsProvider
     private const string DiskTotalMetric = "controlid.runtime.disk.total.bytes";
     private const string DiskFreeMetric = "controlid.runtime.disk.free.bytes";
     private const string DiskFreePercentMetric = "controlid.runtime.disk.free.percent";
+    private const string StorageScanTruncatedMetric = "controlid.runtime.storage.scan.truncated";
 
     /// <summary>
     /// Records coarse local capacity gauges without exposing host names, file paths,
@@ -22,31 +23,43 @@ public static class RuntimeCapacityMetricsProvider
         var configuration = services.GetService(typeof(IConfiguration)) as IConfiguration;
         var environment = services.GetService(typeof(IHostEnvironment)) as IHostEnvironment;
         var contentRoot = environment?.ContentRootPath ?? AppContext.BaseDirectory;
+        var maxFilesPerScope = Math.Clamp(
+            configuration?.GetValue<int?>("Observability:CapacityMaxFilesPerScope") ?? 10_000,
+            100,
+            100_000);
 
         OperationalMetrics.RecordGauge(ProcessMemoryMetric, Environment.WorkingSet, ("scope", "working_set"));
         OperationalMetrics.RecordGauge(ManagedHeapMetric, GC.GetTotalMemory(forceFullCollection: false), ("scope", "managed_heap"));
 
-        RecordStorageSize("sqlite", ResolveSqliteFileSet(configuration, contentRoot));
-        RecordStorageSize("logs", ResolvePath(contentRoot, configuration?["Logging:File:Path"] ?? "Logs"));
-        RecordStorageSize("artifacts", ResolvePath(contentRoot, "artifacts"));
-        RecordStorageSize("reports", ResolvePath(contentRoot, Path.Combine("docs", "reports")));
+        RecordStorageSize("sqlite", ResolveSqliteFileSet(configuration, contentRoot), maxFilesPerScope);
+        RecordStorageSize("logs", ResolvePath(contentRoot, configuration?["Logging:File:Path"] ?? "Logs"), maxFilesPerScope);
+        RecordStorageSize("artifacts", ResolvePath(contentRoot, "artifacts"), maxFilesPerScope);
+        RecordStorageSize("reports", ResolvePath(contentRoot, Path.Combine("docs", "reports")), maxFilesPerScope);
 
         RecordDiskCapacity("data", ResolveDirectoryForDisk(ResolveSqliteDataSource(configuration, contentRoot)));
         RecordDiskCapacity("logs", ResolvePath(contentRoot, configuration?["Logging:File:Path"] ?? "Logs"));
     }
 
-    private static void RecordStorageSize(string scope, IEnumerable<string> paths)
+    private static void RecordStorageSize(string scope, IEnumerable<string> paths, int maxFiles)
     {
         long total = 0;
+        var truncated = false;
         foreach (var path in paths)
-            total += GetPathSize(path);
+        {
+            var result = GetPathSize(path, maxFiles);
+            total += result.Bytes;
+            truncated |= result.Truncated;
+        }
 
         OperationalMetrics.RecordGauge(StorageLocalMetric, total, ("scope", scope));
+        OperationalMetrics.RecordGauge(StorageScanTruncatedMetric, truncated ? 1 : 0, ("scope", scope));
     }
 
-    private static void RecordStorageSize(string scope, string path)
+    private static void RecordStorageSize(string scope, string path, int maxFiles)
     {
-        OperationalMetrics.RecordGauge(StorageLocalMetric, GetPathSize(path), ("scope", scope));
+        var result = GetPathSize(path, maxFiles);
+        OperationalMetrics.RecordGauge(StorageLocalMetric, result.Bytes, ("scope", scope));
+        OperationalMetrics.RecordGauge(StorageScanTruncatedMetric, result.Truncated ? 1 : 0, ("scope", scope));
     }
 
     private static void RecordDiskCapacity(string scope, string path)
@@ -139,27 +152,37 @@ public static class RuntimeCapacityMetricsProvider
         return Path.GetDirectoryName(path) ?? AppContext.BaseDirectory;
     }
 
-    private static long GetPathSize(string path)
+    private static PathSizeResult GetPathSize(string path, int maxFiles)
     {
         try
         {
             if (File.Exists(path))
-                return new FileInfo(path).Length;
+                return new PathSizeResult(new FileInfo(path).Length, false);
 
             if (!Directory.Exists(path))
-                return 0;
+                return new PathSizeResult(0, false);
 
-            return Directory
-                .EnumerateFiles(path, "*", SearchOption.AllDirectories)
-                .Sum(file => new FileInfo(file).Length);
+            long bytes = 0;
+            var count = 0;
+            foreach (var file in Directory.EnumerateFiles(path, "*", SearchOption.AllDirectories))
+            {
+                if (count++ >= maxFiles)
+                    return new PathSizeResult(bytes, true);
+
+                bytes += new FileInfo(file).Length;
+            }
+
+            return new PathSizeResult(bytes, false);
         }
         catch (IOException)
         {
-            return 0;
+            return new PathSizeResult(0, false);
         }
         catch (UnauthorizedAccessException)
         {
-            return 0;
+            return new PathSizeResult(0, false);
         }
     }
+
+    private readonly record struct PathSizeResult(long Bytes, bool Truncated);
 }

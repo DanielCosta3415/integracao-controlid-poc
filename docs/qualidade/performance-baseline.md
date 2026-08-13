@@ -1,6 +1,6 @@
 # Linha de base de desempenho e capacidade
 
-> **Referência** · Público: desenvolvimento, QA, SRE e FinOps · Responsável: QA · Última validação: 2026-08-12.
+> **Referência** · Público: desenvolvimento, QA, SRE e FinOps · Responsável: QA · Última validação: 2026-08-13.
 
 Este documento governa medições reproduzíveis sem hardware. Ele complementa
 [docs/operacao/finops-capacity.md](../operacao/finops-capacity.md); números do simulador não representam limite de um
@@ -16,7 +16,12 @@ equipamento Control iD.
 - galeria de logos paralela sob o limitador por equipamento;
 - SQLite com `WAL`, espera ocupada de 5 s, chaves estrangeiras e `synchronous=NORMAL`;
 - simulador sem serialização intermediária na resposta de objetos;
-- cancelamento propagado nos downloads e no upload de vídeo.
+- cancelamento propagado nos downloads e no upload de vídeo;
+- proteção retroativa linear por `rowid` e readiness sem contagens completas recorrentes;
+- filtros e paginação de `access_logs` enviados ao equipamento antes da materialização;
+- consultas independentes de GPIO, VPN, catraca, hardware e modos executadas em paralelo sob o limitador;
+- lote facial limitado a 20 arquivos e 20 MiB agregados;
+- métricas, circuit breaker e varreduras de capacidade com cardinalidade e frequência limitadas.
 
 ## Método
 
@@ -39,14 +44,14 @@ Artefatos ignorados pelo Git:
 
 ## Resultado de referência
 
-Execução local em 2026-08-04:
+Execução local em 2026-08-13:
 
 | Massa | p95 observado | Vazão observada | Memória do stub |
 | ---: | ---: | ---: | ---: |
-| 100 | 1,97 ms | 54,82 req/s | 63,27 MiB |
-| 1.000 | 1,01 ms | 59,82 req/s | 74,57 MiB |
-| 10.000 | 1,02 ms | 62,66 req/s | 117,07 MiB |
-| 100.000 | 4,28 ms | 57,14 req/s | 427,88 MiB |
+| 100 | 1,86 ms | 53,75 req/s | 63,73 MiB |
+| 1.000 | 1,10 ms | 61,70 req/s | 73,84 MiB |
+| 10.000 | 1,17 ms | 61,99 req/s | 124,54 MiB |
+| 100.000 | 5,00 ms | 48,49 req/s | 506,15 MiB |
 
 Os valores variam por máquina e carga concorrente. O orçamento bloqueante e
 deliberadamente tolerante é p95 de até 1.000 ms e memória de até 768 MiB. Ele
@@ -60,6 +65,9 @@ amostra.
 | Busca de endpoint no catálogo indexado | `O(1)` | `O(1)` |
 | Paginação de `load_objects` | `O(offset + pageSize)` | `O(pageSize)` |
 | Create-or-modify no stub | `O(n + m)` | `O(n)` para índice |
+| Destruição de objetos no stub | `O(n)` | `O(n)` para sobreviventes |
+| Proteção retroativa por coluna | `O(n)` | `O(100)` por lote |
+| Relatório local de privacidade | uma viagem ao SQLite para oito contagens | `O(25)` parâmetros candidatos |
 | Sanitização de consulta | `O(c)` | `O(c)` |
 | Leitura/stream binário | `O(bytes)` | `O(buffer)` de aproximadamente 80 KiB |
 | Limpeza de nonce expirado | `O(k log n)` | `O(n)` |

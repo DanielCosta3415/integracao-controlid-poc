@@ -29,7 +29,7 @@ namespace Integracao.ControlID.PoC.Controllers
                 OpenCommand = new CatraOpenViewModel()
             };
 
-            if (!_officialApi.TryGetConnection(out _, out _))
+            if (!_officialApi.TryGetConnection(out var deviceAddress, out var sessionString))
             {
                 model.ErrorMessage = "É necessário conectar-se e autenticar com um equipamento Control iD.";
                 return View(model);
@@ -37,13 +37,17 @@ namespace Integracao.ControlID.PoC.Controllers
 
             try
             {
-                model.CatraEvents = (await LoadCatraEventsAsync())
+                var eventsTask = LoadCatraEventsAsync(deviceAddress, sessionString);
+                var infoTask = LoadCatraInfoAsync(deviceAddress, sessionString);
+                await Task.WhenAll(eventsTask, infoTask);
+
+                model.CatraEvents = (await eventsTask)
                     .Select(ToCatraEventViewModel)
                     .OrderByDescending(evt => evt.Time ?? evt.CreatedAt ?? DateTime.MinValue)
                     .ThenByDescending(evt => evt.Id)
                     .ToList();
 
-                await PopulateCatraInfoAsync(model);
+                PopulateCatraInfo(model, await infoTask);
             }
             catch (Exception ex)
             {
@@ -59,12 +63,12 @@ namespace Integracao.ControlID.PoC.Controllers
             if (id == null)
                 return NotFound();
 
-            if (!_officialApi.TryGetConnection(out _, out _))
+            if (!_officialApi.TryGetConnection(out var deviceAddress, out var sessionString))
                 return NotFound();
 
             try
             {
-                var catraEvent = (await LoadCatraEventsAsync(id.Value)).FirstOrDefault();
+                var catraEvent = (await LoadCatraEventsAsync(deviceAddress, sessionString, id.Value)).FirstOrDefault();
                 if (catraEvent != null)
                     return View(ToCatraEventViewModel(catraEvent));
             }
@@ -81,12 +85,12 @@ namespace Integracao.ControlID.PoC.Controllers
             if (id == null)
                 return NotFound();
 
-            if (!_officialApi.TryGetConnection(out _, out _))
+            if (!_officialApi.TryGetConnection(out var deviceAddress, out var sessionString))
                 return NotFound();
 
             try
             {
-                var catraEvent = (await LoadCatraEventsAsync(id.Value)).FirstOrDefault();
+                var catraEvent = (await LoadCatraEventsAsync(deviceAddress, sessionString, id.Value)).FirstOrDefault();
                 if (catraEvent != null)
                     return View(ToCatraEventViewModel(catraEvent));
             }
@@ -173,7 +177,10 @@ namespace Integracao.ControlID.PoC.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        private async Task<List<CatraEventRecord>> LoadCatraEventsAsync(long? id = null)
+        private async Task<List<CatraEventRecord>> LoadCatraEventsAsync(
+            string? deviceAddress = null,
+            string? sessionString = null,
+            long? id = null)
         {
             object payload = id.HasValue
                 ? new
@@ -183,7 +190,10 @@ namespace Integracao.ControlID.PoC.Controllers
                 }
                 : new { @object = "catra_events" };
 
-            var (result, document) = await _officialApi.InvokeJsonAsync("load-objects", payload);
+            var (result, document) = string.IsNullOrWhiteSpace(deviceAddress)
+                ? await _officialApi.InvokeJsonAsync("load-objects", payload)
+                : await _officialApi.InvokeJsonDirectAsync(
+                    "load-objects", deviceAddress, sessionString ?? string.Empty, payload, cancellationToken: HttpContext.RequestAborted);
             EnsureSuccess(result, "Erro ao consultar eventos da catraca");
 
             if (document == null)
@@ -194,9 +204,19 @@ namespace Integracao.ControlID.PoC.Controllers
                 .ToList();
         }
 
-        private async Task PopulateCatraInfoAsync(CatraEventListViewModel model)
+        private async Task<(OfficialApiInvocationResult Result, OfficialApiJsonPayload? Document)> LoadCatraInfoAsync(
+            string deviceAddress,
+            string sessionString)
         {
-            var (result, document) = await _officialApi.InvokeJsonAsync("get-catra-info");
+            return await _officialApi.InvokeJsonDirectAsync(
+                "get-catra-info", deviceAddress, sessionString, cancellationToken: HttpContext.RequestAborted);
+        }
+
+        private static void PopulateCatraInfo(
+            CatraEventListViewModel model,
+            (OfficialApiInvocationResult Result, OfficialApiJsonPayload? Document) response)
+        {
+            var (result, document) = response;
             if (!result.Success || document == null)
                 return;
 

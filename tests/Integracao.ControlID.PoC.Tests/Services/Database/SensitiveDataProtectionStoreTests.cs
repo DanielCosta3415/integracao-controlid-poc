@@ -60,4 +60,41 @@ public sealed class SensitiveDataProtectionStoreTests
         var session = await database.Context.Sessions.AsNoTracking().SingleAsync(TestContext.Current.CancellationToken);
         Assert.Equal("legacy-session", session.SessionString);
     }
+
+    [Fact]
+    public async Task ProtectLegacyValues_ProcessesMoreThanTwoBatchesWithoutSkippingRows()
+    {
+        using var database = new SqliteTestDatabase();
+        const int rowCount = 205;
+
+        using (var transaction = database.Connection.BeginTransaction())
+        await using (var command = database.Connection.CreateCommand())
+        {
+            command.Transaction = transaction;
+            command.CommandText = """
+                INSERT INTO Sessions
+                    (DeviceAddress, SessionString, DeviceName, DeviceSerial, Username, CreatedAt, IsActive)
+                VALUES
+                    ('https://device.local', @session, 'device', 'serial', 'operator', CURRENT_TIMESTAMP, 1);
+                """;
+            var sessionParameter = command.CreateParameter();
+            sessionParameter.ParameterName = "@session";
+            command.Parameters.Add(sessionParameter);
+
+            for (var index = 0; index < rowCount; index++)
+            {
+                sessionParameter.Value = $"legacy-session-{index}";
+                await command.ExecuteNonQueryAsync(TestContext.Current.CancellationToken);
+            }
+
+            await transaction.CommitAsync(TestContext.Current.CancellationToken);
+        }
+
+        var store = new SensitiveDataProtectionStore(database.Context, database.SensitiveDataProtector);
+
+        Assert.True(await store.HasUnprotectedValuesAsync(TestContext.Current.CancellationToken));
+        Assert.Equal(rowCount, await store.ProtectLegacyValuesAsync(TestContext.Current.CancellationToken));
+        Assert.False(await store.HasUnprotectedValuesAsync(TestContext.Current.CancellationToken));
+        Assert.Equal(0, await store.CountUnprotectedValuesAsync(TestContext.Current.CancellationToken));
+    }
 }

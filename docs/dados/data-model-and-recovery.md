@@ -229,6 +229,12 @@ powershell -ExecutionPolicy Bypass -File .\tools\protect-sensitive-sqlite-data.p
 versionados. Se a conversão falhar, preserve o backup, o chaveiro e o certificado,
 restaure a cópia e investigue antes de repetir.
 
+A conversão percorre cada coluna em lotes ordenados por `rowid`, sem revarrer
+linhas já protegidas. O readiness usa `SELECT EXISTS` e conserva a atestação por
+`Database:Encryption:VerificationCacheSeconds` (300 segundos por padrão); a
+contagem completa permanece reservada ao startup e aos procedimentos explícitos
+de auditoria.
+
 Em `Development`, o chaveiro fica em
 `artifacts/runtime/data-protection-keys`, fora do Git. Testes de integração e
 E2E usam diretórios temporários próprios para evitar compartilhamento de chaves

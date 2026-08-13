@@ -22,8 +22,9 @@ app.MapMethods("/{**path}", ["GET", "POST"], async (HttpContext context) =>
             return scenarioResult;
 
         var bodyJson = await StubRequestBodyReader.ReadJsonAsync(request, context.RequestAborted);
-        lock (runtime.Device)
-            return StubEndpointRouter.Route(request, path, bodyJson, runtime);
+        var device = runtime.Device;
+        lock (device)
+            return StubEndpointRouter.Route(request, path, bodyJson, runtime, device);
     }
     finally
     {

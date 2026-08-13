@@ -747,7 +747,18 @@ namespace Integracao.ControlID.PoC.Controllers
         {
             try
             {
-                var (infoResult, infoDocument) = await _apiService.InvokeJsonAsync("get-vpn-information");
+                if (!_apiService.TryGetConnection(out var deviceAddress, out var sessionString))
+                    return;
+
+                var infoTask = _apiService.InvokeJsonDirectAsync(
+                    "get-vpn-information", deviceAddress, sessionString, cancellationToken: HttpContext.RequestAborted);
+                var statusTask = _apiService.InvokeJsonDirectAsync(
+                    "get-vpn-status", deviceAddress, sessionString, cancellationToken: HttpContext.RequestAborted);
+                var fileTask = _apiService.InvokeJsonDirectAsync(
+                    "has-vpn-file", deviceAddress, sessionString, cancellationToken: HttpContext.RequestAborted);
+                await Task.WhenAll(infoTask, statusTask, fileTask);
+
+                var (infoResult, infoDocument) = await infoTask;
                 if (infoResult.Success)
                 {
                     model.InformationJson = FormatJson(infoResult.ResponseBody, infoDocument);
@@ -761,7 +772,7 @@ namespace Integracao.ControlID.PoC.Controllers
                     }
                 }
 
-                var (statusResult, statusDocument) = await _apiService.InvokeJsonAsync("get-vpn-status");
+                var (statusResult, statusDocument) = await statusTask;
                 if (statusResult.Success)
                 {
                     model.StatusJson = FormatJson(statusResult.ResponseBody, statusDocument);
@@ -774,7 +785,7 @@ namespace Integracao.ControlID.PoC.Controllers
                     }
                 }
 
-                var (fileResult, fileDocument) = await _apiService.InvokeJsonAsync("has-vpn-file");
+                var (fileResult, fileDocument) = await fileTask;
                 if (fileResult.Success)
                 {
                     model.FileStatusJson = FormatJson(fileResult.ResponseBody, fileDocument);
@@ -853,10 +864,7 @@ namespace Integracao.ControlID.PoC.Controllers
             if (document == null)
                 return rawJson;
 
-            return JsonSerializer.Serialize(document.RootElement, new JsonSerializerOptions
-            {
-                WriteIndented = true
-            });
+            return OfficialApiResultPresentationService.FormatJsonPayload(rawJson, document);
         }
     }
 

@@ -1,6 +1,8 @@
+using System.Data;
 using Integracao.ControlID.PoC.Data;
 using Integracao.ControlID.PoC.Helpers;
 using Integracao.ControlID.PoC.Models.Database;
+using Integracao.ControlID.PoC.Models.Security;
 using Integracao.ControlID.PoC.ViewModels.Privacy;
 using Microsoft.EntityFrameworkCore;
 
@@ -22,6 +24,7 @@ public sealed class PrivacySubjectReportService
         var matchedUsers = await FindMatchingUsersAsync(normalizedIdentifier, cancellationToken);
         var userIds = BuildCandidateUserIds(normalizedIdentifier, matchedUsers.Select(user => user.Id));
         var userKeys = BuildCandidateUserKeys(normalizedIdentifier, userIds, matchedUsers.Select(user => user.Username), matchedUsers.Select(user => user.Registration));
+        var counts = await CountRelatedRecordsAsync(userIds, userKeys, cancellationToken);
 
         var report = new PrivacySubjectReportViewModel
         {
@@ -44,56 +47,56 @@ public sealed class PrivacySubjectReportService
         report.DataCategories.Add(Category(
             "Sessoes locais",
             "Credencial/confidencial e tecnico identificavel",
-            await CountSessionsAsync(userKeys, cancellationToken),
+            counts.Sessions,
             "Curto prazo; sessoes podem ser encerradas pelo administrador.",
             "Encerrar sessoes ativas antes de exportar ou eliminar dados relacionados."));
 
         report.DataCategories.Add(Category(
             "Fotos faciais locais",
             "Sensivel quando identifica pessoa",
-            await CountByUserIdsAsync(_dbContext.Photos, userIds, cancellationToken),
+            counts.Photos,
             "Minimo necessario para homologacao; evitar dados reais na PoC.",
             "Confirmar base legal/RIPD antes de compartilhar ou eliminar; nao exportar Base64 por este relatorio."));
 
         report.DataCategories.Add(Category(
             "Templates biometricos locais",
             "Sensivel",
-            await CountByUserIdsAsync(_dbContext.BiometricTemplates, userIds, cancellationToken),
+            counts.BiometricTemplates,
             "Minimo necessario; alto risco.",
             "Exigir decisao DPO/juridico e nao exportar template bruto por canais inseguros."));
 
         report.DataCategories.Add(Category(
             "Cartoes RFID/tags",
             "Pessoal e credencial de acesso fisico",
-            await CountByUserIdsAsync(_dbContext.Cards, userIds, cancellationToken),
+            counts.Cards,
             "Minimo necessario para controle de acesso.",
             "Tratar valor do cartao como segredo operacional; revogar antes de eliminar quando aplicavel."));
 
         report.DataCategories.Add(Category(
             "QR Codes",
             "Pessoal e credencial de acesso fisico",
-            await CountByUserIdsAsync(_dbContext.QRCodes, userIds, cancellationToken),
+            counts.QrCodes,
             "Minimo necessario para controle de acesso.",
             "Tratar valor do QR Code como segredo operacional; revogar antes de eliminar quando aplicavel."));
 
         report.DataCategories.Add(Category(
             "Logs de acesso locais",
             "Pessoal/operacional",
-            await CountNullableUserIdAsync(userIds, cancellationToken),
+            counts.AccessLogs,
             "Minimo necessario para auditoria e QA.",
             "Avaliar obrigacao de preservacao antes de anonimizar, bloquear ou eliminar."));
 
         report.DataCategories.Add(Category(
             "Callbacks e monitoramento",
             "Pessoal, tecnico e possivelmente sensivel",
-            await CountMonitorEventsAsync(userKeys, cancellationToken),
+            counts.MonitorEvents,
             "Curto prazo; expurgo guiado por retencao.",
             "Payload bruto nao aparece neste relatorio; usar expurgo por retencao quando autorizado."));
 
         report.DataCategories.Add(Category(
             "Push e resultados",
             "Pessoal, tecnico e possivelmente sensivel",
-            await CountPushCommandsAsync(userKeys, cancellationToken),
+            counts.PushCommands,
             "Curto prazo; expurgo guiado por retencao.",
             "Payload bruto nao aparece neste relatorio; usar expurgo por retencao quando autorizado."));
 
@@ -124,13 +127,14 @@ public sealed class PrivacySubjectReportService
             return [];
 
         var numericId = long.TryParse(identifier, out var parsedId) ? parsedId : (long?)null;
+        var normalized = LocalIdentityPolicy.NormalizeIdentifier(identifier);
 
         return await _dbContext.Users
             .Where(user =>
                 (numericId.HasValue && user.Id == numericId.Value) ||
                 user.Registration == identifier ||
-                user.Username == identifier ||
-                user.Email == identifier ||
+                user.NormalizedUsername == normalized ||
+                user.NormalizedEmail == normalized ||
                 user.Phone == identifier)
             .Select(user => new MatchedUser(user.Id, user.Username, user.Registration))
             .Take(25)
@@ -186,60 +190,87 @@ public sealed class PrivacySubjectReportService
         };
     }
 
-    private static async Task<int> CountByUserIdsAsync<TEntity>(
-        IQueryable<TEntity> query,
+    private async Task<RelatedRecordCounts> CountRelatedRecordsAsync(
         IReadOnlyCollection<long> userIds,
+        IReadOnlyCollection<string> userKeys,
         CancellationToken cancellationToken)
-        where TEntity : class
     {
-        if (userIds.Count == 0)
-            return 0;
+        if (userIds.Count == 0 && userKeys.Count == 0)
+            return RelatedRecordCounts.Empty;
 
-        return typeof(TEntity).Name switch
+        var connection = _dbContext.Database.GetDbConnection();
+        var openedHere = connection.State != ConnectionState.Open;
+        if (openedHere)
+            await connection.OpenAsync(cancellationToken);
+
+        try
         {
-            nameof(PhotoLocal) => await query.Cast<PhotoLocal>().CountAsync(item => userIds.Contains(item.UserId), cancellationToken),
-            nameof(BiometricTemplateLocal) => await query.Cast<BiometricTemplateLocal>().CountAsync(item => userIds.Contains(item.UserId), cancellationToken),
-            nameof(CardLocal) => await query.Cast<CardLocal>().CountAsync(item => userIds.Contains(item.UserId), cancellationToken),
-            nameof(QRCodeLocal) => await query.Cast<QRCodeLocal>().CountAsync(item => userIds.Contains(item.UserId), cancellationToken),
-            _ => 0
-        };
+            await using var command = connection.CreateCommand();
+            var userIdParameters = AddParameters(command, "userId", userIds.Cast<object>());
+            var userKeyParameters = AddParameters(command, "userKey", userKeys.Cast<object>());
+            command.CommandText = $"""
+                SELECT
+                    (SELECT COUNT(*) FROM "Sessions" WHERE "Username" IN ({userKeyParameters})),
+                    (SELECT COUNT(*) FROM "Photos" WHERE "UserId" IN ({userIdParameters})),
+                    (SELECT COUNT(*) FROM "BiometricTemplates" WHERE "UserId" IN ({userIdParameters})),
+                    (SELECT COUNT(*) FROM "Cards" WHERE "UserId" IN ({userIdParameters})),
+                    (SELECT COUNT(*) FROM "QRCodes" WHERE "UserId" IN ({userIdParameters})),
+                    (SELECT COUNT(*) FROM "AccessLogs" WHERE "UserId" IN ({userIdParameters})),
+                    (SELECT COUNT(*) FROM "MonitorEvents" WHERE "UserId" IN ({userKeyParameters})),
+                    (SELECT COUNT(*) FROM "PushCommands" WHERE "UserId" IN ({userKeyParameters}));
+                """;
+
+            await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+            if (!await reader.ReadAsync(cancellationToken))
+                return RelatedRecordCounts.Empty;
+
+            return new RelatedRecordCounts(
+                reader.GetInt32(0),
+                reader.GetInt32(1),
+                reader.GetInt32(2),
+                reader.GetInt32(3),
+                reader.GetInt32(4),
+                reader.GetInt32(5),
+                reader.GetInt32(6),
+                reader.GetInt32(7));
+        }
+        finally
+        {
+            if (openedHere)
+                await connection.CloseAsync();
+        }
     }
 
-    private async Task<int> CountNullableUserIdAsync(IReadOnlyCollection<long> userIds, CancellationToken cancellationToken)
+    private static string AddParameters(
+        System.Data.Common.DbCommand command,
+        string prefix,
+        IEnumerable<object> values)
     {
-        if (userIds.Count == 0)
-            return 0;
+        var names = new List<string>();
+        foreach (var value in values)
+        {
+            var parameter = command.CreateParameter();
+            parameter.ParameterName = $"@{prefix}{names.Count}";
+            parameter.Value = value;
+            command.Parameters.Add(parameter);
+            names.Add(parameter.ParameterName);
+        }
 
-        return await _dbContext.AccessLogs
-            .CountAsync(item => item.UserId.HasValue && userIds.Contains(item.UserId.Value), cancellationToken);
-    }
-
-    private async Task<int> CountSessionsAsync(IReadOnlyCollection<string> userKeys, CancellationToken cancellationToken)
-    {
-        if (userKeys.Count == 0)
-            return 0;
-
-        return await _dbContext.Sessions
-            .CountAsync(item => userKeys.Contains(item.Username), cancellationToken);
-    }
-
-    private async Task<int> CountMonitorEventsAsync(IReadOnlyCollection<string> userKeys, CancellationToken cancellationToken)
-    {
-        if (userKeys.Count == 0)
-            return 0;
-
-        return await _dbContext.MonitorEvents
-            .CountAsync(item => userKeys.Contains(item.UserId), cancellationToken);
-    }
-
-    private async Task<int> CountPushCommandsAsync(IReadOnlyCollection<string> userKeys, CancellationToken cancellationToken)
-    {
-        if (userKeys.Count == 0)
-            return 0;
-
-        return await _dbContext.PushCommands
-            .CountAsync(item => userKeys.Contains(item.UserId), cancellationToken);
+        return names.Count == 0 ? "NULL" : string.Join(", ", names);
     }
 
     private sealed record MatchedUser(long Id, string Username, string Registration);
+
+    private sealed record RelatedRecordCounts(
+        int Sessions,
+        int Photos,
+        int BiometricTemplates,
+        int Cards,
+        int QrCodes,
+        int AccessLogs,
+        int MonitorEvents,
+        int PushCommands)
+    {
+        public static RelatedRecordCounts Empty { get; } = new(0, 0, 0, 0, 0, 0, 0, 0);
+    }
 }

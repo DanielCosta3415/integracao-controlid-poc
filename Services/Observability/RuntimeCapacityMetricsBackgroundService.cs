@@ -17,8 +17,8 @@ public sealed class RuntimeCapacityMetricsBackgroundService : BackgroundService
     {
         _services = services;
         _logger = logger;
-        var configuredSeconds = configuration.GetValue<int?>("Observability:CapacitySnapshotIntervalSeconds") ?? 30;
-        _interval = TimeSpan.FromSeconds(Math.Clamp(configuredSeconds, 10, 300));
+        var configuredSeconds = configuration.GetValue<int?>("Observability:CapacitySnapshotIntervalSeconds") ?? 300;
+        _interval = TimeSpan.FromSeconds(Math.Clamp(configuredSeconds, 60, 3600));
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)

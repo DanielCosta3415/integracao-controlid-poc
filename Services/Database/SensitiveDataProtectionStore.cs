@@ -50,6 +50,36 @@ public sealed class SensitiveDataProtectionStore
         }
     }
 
+    public async Task<bool> HasUnprotectedValuesAsync(CancellationToken cancellationToken = default)
+    {
+        var connection = _dbContext.Database.GetDbConnection();
+        var openedHere = connection.State != ConnectionState.Open;
+        if (openedHere)
+            await connection.OpenAsync(cancellationToken);
+
+        try
+        {
+            await using var command = connection.CreateCommand();
+            var checks = SensitiveDataColumnCatalog.All.Select(static column => $"""
+                EXISTS (
+                    SELECT 1
+                    FROM "{column.Table}"
+                    WHERE "{column.Column}" IS NOT NULL
+                      AND "{column.Column}" <> ''
+                      AND substr("{column.Column}", 1, 6) <> 'dp:v1:'
+                    LIMIT 1
+                )
+                """);
+            command.CommandText = $"SELECT {string.Join(" OR ", checks)};";
+            return Convert.ToInt32(await command.ExecuteScalarAsync(cancellationToken)) != 0;
+        }
+        finally
+        {
+            if (openedHere)
+                await connection.CloseAsync();
+        }
+    }
+
     public async Task<int> ProtectLegacyValuesAsync(CancellationToken cancellationToken = default)
     {
         var connection = _dbContext.Database.GetDbConnection();
@@ -78,6 +108,7 @@ public sealed class SensitiveDataProtectionStore
         CancellationToken cancellationToken)
     {
         var protectedCount = 0;
+        var lastRowId = 0L;
 
         while (true)
         {
@@ -87,11 +118,18 @@ public sealed class SensitiveDataProtectionStore
                 select.CommandText = $"""
                     SELECT rowid, "{column.Column}"
                     FROM "{column.Table}"
-                    WHERE "{column.Column}" IS NOT NULL
+                    WHERE rowid > @lastRowId
+                      AND "{column.Column}" IS NOT NULL
                       AND "{column.Column}" <> ''
                       AND substr("{column.Column}", 1, 6) <> 'dp:v1:'
+                    ORDER BY rowid
                     LIMIT {BatchSize};
                     """;
+
+                var lastRowIdParameter = select.CreateParameter();
+                lastRowIdParameter.ParameterName = "@lastRowId";
+                lastRowIdParameter.Value = lastRowId;
+                select.Parameters.Add(lastRowIdParameter);
 
                 await using var reader = await select.ExecuteReaderAsync(cancellationToken);
                 while (await reader.ReadAsync(cancellationToken))
@@ -102,26 +140,28 @@ public sealed class SensitiveDataProtectionStore
                 return protectedCount;
 
             await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
+            await using var update = connection.CreateCommand();
+            update.Transaction = transaction;
+            update.CommandText = $"UPDATE \"{column.Table}\" SET \"{column.Column}\" = @value WHERE rowid = @rowid;";
+
+            var valueParameter = update.CreateParameter();
+            valueParameter.ParameterName = "@value";
+            update.Parameters.Add(valueParameter);
+
+            var rowIdParameter = update.CreateParameter();
+            rowIdParameter.ParameterName = "@rowid";
+            update.Parameters.Add(rowIdParameter);
+
             foreach (var row in rows)
             {
-                await using var update = connection.CreateCommand();
-                update.Transaction = transaction;
-                update.CommandText = $"UPDATE \"{column.Table}\" SET \"{column.Column}\" = @value WHERE rowid = @rowid;";
-
-                var valueParameter = update.CreateParameter();
-                valueParameter.ParameterName = "@value";
                 valueParameter.Value = _protector.Protect(row.Value, column.Purpose);
-                update.Parameters.Add(valueParameter);
-
-                var rowIdParameter = update.CreateParameter();
-                rowIdParameter.ParameterName = "@rowid";
                 rowIdParameter.Value = row.RowId;
-                update.Parameters.Add(rowIdParameter);
 
                 protectedCount += await update.ExecuteNonQueryAsync(cancellationToken);
             }
 
             await transaction.CommitAsync(cancellationToken);
+            lastRowId = rows[^1].RowId;
         }
     }
 }

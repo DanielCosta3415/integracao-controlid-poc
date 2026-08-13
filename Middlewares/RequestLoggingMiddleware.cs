@@ -6,6 +6,7 @@ using Integracao.ControlID.PoC.Helpers;
 using Integracao.ControlID.PoC.Services.Analytics;
 using Integracao.ControlID.PoC.Services.Observability;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Logging;
 
 namespace Integracao.ControlID.PoC.Middlewares
@@ -36,7 +37,7 @@ namespace Integracao.ControlID.PoC.Middlewares
                 var correlationId = ObservabilityConstants.GetCorrelationId(context);
                 OperationalMetrics.RecordHttpRequest(
                     request.Method,
-                    request.Path.Value ?? string.Empty,
+                    ResolveMetricPath(context),
                     response.StatusCode,
                     sw.Elapsed.TotalMilliseconds);
                 RecordProductAnalytics(request, response.StatusCode, sw.Elapsed.TotalMilliseconds);
@@ -63,13 +64,20 @@ namespace Integracao.ControlID.PoC.Middlewares
                 sw.Stop();
                 OperationalMetrics.RecordHttpRequest(
                     context.Request.Method,
-                    context.Request.Path.Value ?? string.Empty,
+                    ResolveMetricPath(context),
                     StatusCodes.Status500InternalServerError,
                     sw.Elapsed.TotalMilliseconds);
                 RecordProductAnalytics(context.Request, StatusCodes.Status500InternalServerError, sw.Elapsed.TotalMilliseconds);
 
                 throw;
             }
+        }
+
+        private static string ResolveMetricPath(HttpContext context)
+        {
+            return context.GetEndpoint() is RouteEndpoint routeEndpoint
+                ? routeEndpoint.RoutePattern.RawText ?? "matched"
+                : "unmatched";
         }
 
         private static void RecordProductAnalytics(HttpRequest request, int statusCode, double elapsedMilliseconds)

@@ -19,6 +19,16 @@
   push protection, CodeQL gerenciado e integridade de `main` no GitHub;
 - removeu contato pessoal da interface e configurou o repositório local para
   usar o endereço `noreply` do GitHub em commits futuros.
+- linearizou a proteção retroativa e a exclusão de objetos do simulador;
+- reduziu varreduras de readiness, armazenamento, métricas e circuit breaker por
+  cache, limites de cardinalidade, retenção e tentativa semiaberta única;
+- limitou lotes faciais e removeu cópias desnecessárias de uploads e JSON;
+- paralelizou leituras independentes de GPIO, VPN, catraca, hardware e modos sob
+  o limitador existente por equipamento;
+- enviou paginação, ordenação e filtros de logs de acesso ao objeto oficial
+  `access_logs` antes da materialização;
+- consolidou oito contagens do relatório de privacidade em uma leitura SQLite e
+  fortaleceu o simulador para concorrência e filtros comparativos oficiais.
 
 ## Validação
 
