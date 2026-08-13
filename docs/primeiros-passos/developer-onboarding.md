@@ -119,7 +119,12 @@ testar com hardware real.
 
 ### Depuração
 
-- Visual Studio/Rider: use o perfil `Integracao.ControlID.PoC` de
+- Visual Studio: para suporte oficial a `net10.0`, use Visual Studio 2026 18.0
+  ou mais recente. A banda `10.0.3xx` pinada no projeto corresponde ao Visual
+  Studio 18.6. O Visual Studio 2022 17.14 pode executar a CLI `dotnet`, mas não
+  oferece suporte oficial ao destino `net10.0`; consulte a
+  [matriz oficial de versões](https://learn.microsoft.com/dotnet/core/porting/versioning-sdk-msbuild-vs).
+- Visual Studio/Rider compatível: use o perfil `Integracao.ControlID.PoC` de
   `Properties/launchSettings.json`.
 - VS Code: execute `dotnet run --project .\Integracao.ControlID.PoC.csproj` e
   anexe o depurador ao processo .NET quando necessário.

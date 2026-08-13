@@ -30,3 +30,9 @@ Obrigado por contribuir com a PoC. Antes de alterar código, leia o
 Alterações de contrato público, migrações destrutivas, exclusão de dados,
 dependências centrais, configuração de produção, deploy, commit e push exigem a
 confirmação humana definida em [AGENTS.md](AGENTS.md#ações-proibidas-sem-confirmação-humana).
+
+## Licenciamento
+
+Contribuições não alteram automaticamente o regime de direitos do projeto. O
+repositório não possui licença de código aberto; leia o [aviso de
+licenciamento](LICENSE) antes de usar ou redistribuir qualquer parte da solução.

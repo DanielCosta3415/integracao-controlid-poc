@@ -102,3 +102,4 @@ depender da disponibilidade de terceiros.
 - [Segurança](../SECURITY.md)
 - [Suporte](../SUPPORT.md)
 - [Regras para agentes](../AGENTS.md)
+- [Licenciamento](../LICENSE)
