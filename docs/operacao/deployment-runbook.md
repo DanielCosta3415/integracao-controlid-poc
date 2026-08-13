@@ -57,9 +57,11 @@ Reverse proxy:
 
 Artefatos versionados:
 
-- `Dockerfile`: multi-stage build, imagem runtime Alpine, usuário não root, porta
-  `8080`, volume esperado para `/app/data` e `/app/Logs`, healthcheck em
-  `/health/ready`.
+- `Dockerfile`: construção multiestágio com SDK `10.0.302-noble` e runtime
+  `10.0.11-noble`, usuário não root, porta `8080`, volume esperado para
+  `/app/data` e `/app/Logs` e healthcheck em `/health/ready`. As versões são
+  separadas e fixas para permanecerem compatíveis com `global.json`; `curl` é
+  instalado sem pacotes recomendados e usado exclusivamente pelo healthcheck.
 - `.dockerignore`: remove Git, bin/obj, logs, artefatos, `.env` e SQLite local do
   contexto de build.
 - `docker-compose.yml`: execução local/container com volumes nomeados, portas,

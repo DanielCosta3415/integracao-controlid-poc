@@ -67,13 +67,14 @@ public class DocumentationGovernanceContractTests
         Assert.All(
             new[] { applicationProject, testProject, stubProject, proxyProject },
             project => Assert.Contains("<TargetFramework>net10.0</TargetFramework>", project, StringComparison.Ordinal));
-        Assert.Contains("Microsoft.EntityFrameworkCore\" Version=\"10.0.10\"", applicationProject, StringComparison.Ordinal);
-        Assert.Contains("Microsoft.EntityFrameworkCore.Sqlite\" Version=\"10.0.10\"", applicationProject, StringComparison.Ordinal);
-        Assert.Contains("Microsoft.EntityFrameworkCore.Tools\" Version=\"10.0.10\"", applicationProject, StringComparison.Ordinal);
-        Assert.Contains("Microsoft.AspNetCore.Mvc.Testing\" Version=\"10.0.10\"", testProject, StringComparison.Ordinal);
-        Assert.Contains("ARG DOTNET_VERSION=10.0", dockerfile, StringComparison.Ordinal);
+        Assert.Contains("Microsoft.EntityFrameworkCore\" Version=\"10.0.11\"", applicationProject, StringComparison.Ordinal);
+        Assert.Contains("Microsoft.EntityFrameworkCore.Sqlite\" Version=\"10.0.11\"", applicationProject, StringComparison.Ordinal);
+        Assert.Contains("Microsoft.EntityFrameworkCore.Tools\" Version=\"10.0.11\"", applicationProject, StringComparison.Ordinal);
+        Assert.Contains("Microsoft.AspNetCore.Mvc.Testing\" Version=\"10.0.11\"", testProject, StringComparison.Ordinal);
+        Assert.Contains("ARG DOTNET_SDK_VERSION=10.0.302", dockerfile, StringComparison.Ordinal);
+        Assert.Contains("ARG DOTNET_RUNTIME_VERSION=10.0.11", dockerfile, StringComparison.Ordinal);
         Assert.Contains("\"dotnet-ef\"", toolManifest, StringComparison.Ordinal);
-        Assert.Contains("\"version\": \"10.0.10\"", toolManifest, StringComparison.Ordinal);
+        Assert.Contains("\"version\": \"10.0.11\"", toolManifest, StringComparison.Ordinal);
         Assert.Contains("ToolManifestPath", sbomGenerator, StringComparison.Ordinal);
         Assert.Contains("Type = \"DotnetTool\"", sbomGenerator, StringComparison.Ordinal);
     }

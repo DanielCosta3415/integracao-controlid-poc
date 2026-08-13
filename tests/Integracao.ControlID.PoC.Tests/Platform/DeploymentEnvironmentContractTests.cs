@@ -7,14 +7,20 @@ public class DeploymentEnvironmentContractTests
     {
         var dockerfile = ReadRepoFile("Dockerfile");
 
-        Assert.Contains("FROM mcr.microsoft.com/dotnet/sdk:${DOTNET_VERSION}-alpine AS build", dockerfile);
+        Assert.Contains("ARG DOTNET_SDK_VERSION=10.0.302", dockerfile);
+        Assert.Contains("ARG DOTNET_RUNTIME_VERSION=10.0.11", dockerfile);
+        Assert.Contains("FROM mcr.microsoft.com/dotnet/sdk:${DOTNET_SDK_VERSION}-noble AS build", dockerfile);
+        Assert.Contains("FROM mcr.microsoft.com/dotnet/aspnet:${DOTNET_RUNTIME_VERSION}-noble AS runtime", dockerfile);
         Assert.Contains("dotnet restore ./Integracao.ControlID.PoC.csproj --locked-mode", dockerfile);
         Assert.Contains("ASPNETCORE_URLS=http://+:8080", dockerfile);
         Assert.Contains("Data Source=/app/data/integracao_controlid.db", dockerfile);
         Assert.Contains("DataProtection__KeyPath=/app/data/data-protection-keys", dockerfile);
+        Assert.Contains("apt-get install --yes --no-install-recommends curl", dockerfile);
+        Assert.Contains("rm -rf /var/lib/apt/lists/*", dockerfile);
         Assert.Contains("USER app", dockerfile);
         Assert.Contains("EXPOSE 8080", dockerfile);
         Assert.Contains("HEALTHCHECK", dockerfile);
+        Assert.Contains("curl --fail --silent --show-error", dockerfile);
         Assert.Contains("/health/ready", dockerfile);
     }
 

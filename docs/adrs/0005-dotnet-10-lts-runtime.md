@@ -30,15 +30,26 @@ inconsistente e aumentaria o risco de regressão.
   banda de recursos.
 - Compilar os quatro projetos como `net10.0`.
 - Alinhar Entity Framework Core, provedor SQLite, ferramentas e
-  `Microsoft.AspNetCore.Mvc.Testing` em `10.0.10`.
-- Pinar `dotnet-ef` `10.0.10` no manifesto local para que scripts não dependam
+  `Microsoft.AspNetCore.Mvc.Testing` em `10.0.11`.
+- Pinar `dotnet-ef` `10.0.11` no manifesto local para que scripts não dependam
   de uma ferramenta global antiga.
 - Atualizar as integrações de infraestrutura compatíveis na mesma janela de
   regressão: Serilog, Swashbuckle e SQLitePCLRaw.
-- Usar imagens `mcr.microsoft.com/dotnet/sdk:10.0-alpine` e
-  `mcr.microsoft.com/dotnet/aspnet:10.0-alpine`.
+- Usar as imagens oficiais `mcr.microsoft.com/dotnet/sdk:10.0.302-noble` e
+  `mcr.microsoft.com/dotnet/aspnet:10.0.11-noble`. SDK e runtime têm argumentos
+  separados no Dockerfile para preservar a banda exigida por `global.json` e
+  permitir patches de segurança coordenados no runtime.
 - Manter o Dependabot restrito a patch/minor; nova atualização major exige ADR,
   lockfiles regenerados e os gates completos.
+
+### Atualização compatível de 2026-08-12
+
+Os pacotes Microsoft e `dotnet-ef` avançaram de `10.0.10` para `10.0.11` após
+o gate detectar o patch disponível. Na mesma validação, a etiqueta flutuante
+`sdk:10.0-alpine` passou a resolver o SDK `10.0.400`, incompatível com a banda
+`10.0.3xx` fixada em `global.json`. As imagens foram então separadas e fixadas
+em `sdk:10.0.302-noble` e `aspnet:10.0.11-noble`. A atualização não muda
+framework-alvo, contratos públicos, esquema de dados nem comportamento funcional.
 
 ## Contratos preservados
 
@@ -63,6 +74,9 @@ inconsistente e aumentaria o risco de regressão.
 
 - Desenvolvimento e CI precisam do SDK `10.0.302`; a CI o resolve pelo
   `global.json`.
+- Etiquetas flutuantes como `sdk:10.0-alpine` não são aceitas: em 2026-08-12,
+  essa etiqueta passou a entregar o SDK `10.0.400`, incompatível com o avanço
+  `latestPatch` da banda `10.0.3xx`.
 - O primeiro restore baixa uma nova árvore de dependências e regenera todos os
   lockfiles.
 - Swashbuckle 10 usa `Microsoft.OpenApi.OpenApiInfo`, sem o namespace antigo
@@ -78,7 +92,7 @@ inconsistente e aumentaria o risco de regressão.
 ## Reversão
 
 Reverter em conjunto `global.json`, os quatro `TargetFramework`, versões de
-pacotes, lockfiles, import do OpenAPI e `DOTNET_VERSION` do Dockerfile. Como não
+pacotes, lockfiles, import do OpenAPI e argumentos de versão do Dockerfile. Como não
 há alteração de esquema, a reversão de código não exige apagar ou transformar o
 SQLite. Depois, repetir restore bloqueado, build, testes, smoke e construção do
 contêiner; não reverta parcialmente apenas EF ou a imagem de runtime.

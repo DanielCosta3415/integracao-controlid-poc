@@ -1,8 +1,9 @@
 # syntax=docker/dockerfile:1
 
-ARG DOTNET_VERSION=10.0
+ARG DOTNET_SDK_VERSION=10.0.302
+ARG DOTNET_RUNTIME_VERSION=10.0.11
 
-FROM mcr.microsoft.com/dotnet/sdk:${DOTNET_VERSION}-alpine AS build
+FROM mcr.microsoft.com/dotnet/sdk:${DOTNET_SDK_VERSION}-noble AS build
 WORKDIR /src
 
 COPY Directory.Build.props global.json ./
@@ -17,7 +18,7 @@ RUN dotnet publish ./Integracao.ControlID.PoC.csproj \
     /p:UseAppHost=false \
     /p:ContinuousIntegrationBuild=true
 
-FROM mcr.microsoft.com/dotnet/aspnet:${DOTNET_VERSION}-alpine AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:${DOTNET_RUNTIME_VERSION}-noble AS runtime
 WORKDIR /app
 
 ENV ASPNETCORE_ENVIRONMENT=Production \
@@ -25,8 +26,9 @@ ENV ASPNETCORE_ENVIRONMENT=Production \
     DataProtection__KeyPath=/app/data/data-protection-keys \
     ConnectionStrings__DefaultConnection="Data Source=/app/data/integracao_controlid.db"
 
-RUN if ! grep -q '^app:' /etc/group; then addgroup -S app; fi && \
-    if ! id -u app >/dev/null 2>&1; then adduser -S -G app app; fi && \
+RUN apt-get update && \
+    apt-get install --yes --no-install-recommends curl && \
+    rm -rf /var/lib/apt/lists/* && \
     mkdir -p /app/data /app/Logs && \
     chown -R app:app /app
 
@@ -36,6 +38,6 @@ USER app
 EXPOSE 8080
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
-    CMD wget -q -O /dev/null http://127.0.0.1:8080/health/ready || exit 1
+    CMD curl --fail --silent --show-error --output /dev/null http://127.0.0.1:8080/health/ready || exit 1
 
 ENTRYPOINT ["dotnet", "Integracao.ControlID.PoC.dll"]

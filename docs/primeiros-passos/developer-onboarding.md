@@ -63,7 +63,7 @@ Para container, copie `.env.example` para `.env` fora do Git e substitua todos o
 placeholders.
 
 Resultado esperado: restores concluídos em modo locked, sem alteração nos
-`packages.lock.json`, e `dotnet-ef` local `10.0.10` disponível pelo manifesto
+`packages.lock.json`, e `dotnet-ef` local `10.0.11` disponível pelo manifesto
 `.config/dotnet-tools.json`. Falha de restore indica SDK incompatível, lockfile,
 manifesto inconsistente ou indisponibilidade do NuGet; não remova o modo locked
 para contornar o problema.

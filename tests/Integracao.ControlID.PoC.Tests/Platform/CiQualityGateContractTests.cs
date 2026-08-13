@@ -79,8 +79,8 @@ public class CiQualityGateContractTests
         var vendorAudit = ReadRepoFile("tools", "audit-vendor-dependencies.ps1");
         var supplyChainDocs = ReadRepoFile("docs", "seguranca-privacidade", "supply-chain-review.md");
 
-        Assert.Contains("if ! grep -q '^app:' /etc/group; then addgroup -S app; fi", dockerfile, StringComparison.Ordinal);
-        Assert.Contains("if ! id -u app >/dev/null 2>&1; then adduser -S -G app app; fi", dockerfile, StringComparison.Ordinal);
+        Assert.Contains("mkdir -p /app/data /app/Logs", dockerfile, StringComparison.Ordinal);
+        Assert.Contains("chown -R app:app /app", dockerfile, StringComparison.Ordinal);
         Assert.Contains("USER app", dockerfile, StringComparison.Ordinal);
         Assert.Contains("Get-NormalizedFileSha256", vendorAudit, StringComparison.Ordinal);
         Assert.Contains("Replace(\"`r`n\", \"`n\").Replace(\"`r\", \"`n\")", vendorAudit, StringComparison.Ordinal);

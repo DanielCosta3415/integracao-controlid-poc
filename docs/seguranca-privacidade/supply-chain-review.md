@@ -2,14 +2,15 @@
 
 > **Referência** · Público: manutenção, AppSec e release · Responsável: Segurança/Privacidade · Última validação: 2026-08-12.
 
-Baseline para revisoes de dependências, licenças e SBOM deste repositório.
+Baseline para revisões de dependências, licenças e SBOM deste repositório.
 
 ## Escopo
 
 - Gerenciador principal: NuGet.
 - Runtime: .NET 10 LTS, SDK `10.0.302` definido em `global.json`.
-- Lockfiles: `packages.lock.json` na raiz, em `tests/Integracao.ControlID.PoC.Tests/` e nos dois projetos em `tools/`.
-- Ferramenta local: `dotnet-ef` `10.0.10` pinado em
+- Lockfiles: `packages.lock.json` na raiz, nos dois projetos em `tests/` e nos
+  dois projetos em `tools/`.
+- Ferramenta local: `dotnet-ef` `10.0.11` pinado em
   `.config/dotnet-tools.json`; não dependa de instalação global para migração ou
   teste de restauração.
 - Frontend: bibliotecas estáticas vendorizadas em `wwwroot/lib`; não há `package.json`, `npm`, `pnpm` ou `yarn`.
@@ -55,7 +56,7 @@ Saída padrão:
 artifacts/sbom/sbom.spdx.json
 ```
 
-O diretório `artifacts/` e ignorado pelo Git para evitar versionar artefatos locais. Publique o SBOM apenas em canal controlado de release/auditoria.
+O diretório `artifacts/` é ignorado pelo Git para evitar versionar artefatos locais. Publique o SBOM apenas em canal controlado de release/auditoria.
 
 O SBOM cobre pacotes NuGet lockados, o `dotnet-ef` do manifesto local e
 dependências vendorizadas declaradas em `wwwroot/lib/vendor-dependencies.json`.
@@ -125,6 +126,11 @@ revisão jurídica de distribuição.
 
 Não declare proveniência assinada sem registro, identidade e verificação reais.
 SBOM descreve componentes; não prova sozinho origem confiável ou ausência de risco.
+
+As imagens de construção e execução são fixadas, respectivamente, em
+`10.0.302-noble` e `10.0.11-noble`. Não substitua essas versões por uma etiqueta
+flutuante de linha (`10.0`): ela pode mudar de banda do SDK e deixar de atender o
+`global.json`, mesmo sem alteração no repositório.
 
 ## Navegação documental
 
