@@ -307,7 +307,7 @@ namespace Integracao.ControlID.PoC.Controllers
                 _logger.LogError(
                     ex,
                     "Failed to persist push result for command {CommandId}. Device {DeviceRef}.",
-                    commandId,
+                    PrivacyLogHelper.SanitizeForLog(commandId),
                     PrivacyLogHelper.PseudonymizeIdentifier(Request.Query["device_id"].ToString()));
 
                 return StatusCode(StatusCodes.Status500InternalServerError, new { error = "Nao foi possivel persistir o resultado push." });
